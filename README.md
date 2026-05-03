@@ -1,9 +1,9 @@
-# Zed
+# Kal'tsit·Esperanta
 
 [![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
 [![CI](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml/badge.svg)](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml)
 
-Welcome to Zed, a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
+Welcome to Kal'tsit·Esperanta, a high-performance, multiplayer code editor from the creators of [Logos](https://github.com/zixiao-labs/logos)
 
 ---
 
@@ -40,6 +40,8 @@ We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automati
 ## Sponsorship
 
 Zed is developed by **Zed Industries, Inc.**, a for-profit company.
+
+This is the fork version from **Zixiao Labs** (because the upstream rejected our PR, we had to release this version separately).
 
 If you’d like to financially support the project, you can do so via GitHub Sponsors.
 Sponsorships go directly to Zed Industries and are used as general company revenue.
