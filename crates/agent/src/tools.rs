@@ -19,6 +19,8 @@ mod move_path_tool;
 mod open_tool;
 mod read_file_tool;
 mod rename_tool;
+mod restore_file_from_disk_tool;
+mod save_file_tool;
 mod spawn_agent_tool;
 mod symbol_locator;
 mod terminal_tool;
@@ -33,29 +35,6 @@ use serde::{
     Deserialize, Deserializer,
     de::{DeserializeOwned, Error as _},
 };
-
-/// Deserialize a value that may have been provided as a JSON-encoded string
-/// instead of the structured value. Some models occasionally stringify nested
-/// arguments, so we accept either form.
-pub(crate) fn deserialize_maybe_stringified<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-where
-    T: DeserializeOwned,
-    D: Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum ValueOrJsonString<T> {
-        Value(T),
-        String(String),
-    }
-
-    match ValueOrJsonString::<T>::deserialize(deserializer)? {
-        ValueOrJsonString::Value(value) => Ok(value),
-        ValueOrJsonString::String(string) => serde_json::from_str::<T>(&string).map_err(|error| {
-            D::Error::custom(format!("failed to parse stringified value: {error}"))
-        }),
-    }
-}
 
 pub use apply_code_action_tool::*;
 pub use context_server_registry::*;
@@ -75,6 +54,8 @@ pub use move_path_tool::*;
 pub use open_tool::*;
 pub use read_file_tool::*;
 pub use rename_tool::*;
+pub use restore_file_from_disk_tool::*;
+pub use save_file_tool::*;
 pub use spawn_agent_tool::*;
 pub use symbol_locator::*;
 pub use terminal_tool::*;
@@ -169,6 +150,8 @@ tools! {
     OpenTool,
     ReadFileTool,
     RenameTool,
+    RestoreFileFromDiskTool,
+    SaveFileTool,
     SpawnAgentTool,
     TerminalTool,
     UpdatePlanTool,

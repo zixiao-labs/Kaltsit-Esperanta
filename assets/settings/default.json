@@ -1119,6 +1119,7 @@
           "list_directory": true,
           "project_notifications": false,
           "move_path": true,
+          "now": true,
           "rename_symbol": true,
           "read_file": true,
           "open": true,

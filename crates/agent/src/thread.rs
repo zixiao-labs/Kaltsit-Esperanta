@@ -2,16 +2,14 @@ use crate::{
     ApplyCodeActionTool, CodeActionStore, ContextServerRegistry, CopyPathTool, CreateDirectoryTool,
     DbLanguageModel, DbThread, DeletePathTool, DiagnosticsTool, EditFileTool, FetchTool,
     FindPathTool, FindReferencesTool, GetCodeActionsTool, GoToDefinitionTool, GrepTool,
-    ListDirectoryTool, MovePathTool, OpenTool, ProjectSnapshot, ReadFileTool, RenameTool,
-    SpawnAgentTool, SystemPromptTemplate, Templates, TerminalTool, ToolPermissionDecision,
-    UpdatePlanTool, WebSearchTool, WriteFileTool, decide_permission_from_settings,
+    ListDirectoryTool, MovePathTool, NowTool, OpenTool, ProjectSnapshot, ReadFileTool, RenameTool,
+    RestoreFileFromDiskTool, SaveFileTool, SpawnAgentTool, SystemPromptTemplate, Template,
+    Templates, TerminalTool, ToolPermissionDecision, UpdatePlanTool, WebSearchTool,
+    decide_permission_from_settings,
 };
 use acp_thread::{MentionUri, UserMessageId};
 use action_log::ActionLog;
-use feature_flags::{
-    ExperimentalSystemPromptFeatureFlag, FeatureFlagAppExt as _, LspToolFeatureFlag,
-    RenameToolFeatureFlag, UpdatePlanToolFeatureFlag,
-};
+use feature_flags::{FeatureFlagAppExt as _, LspToolFeatureFlag, UpdatePlanToolFeatureFlag};
 
 use agent_client_protocol::schema as acp;
 use agent_settings::{
@@ -1620,19 +1618,20 @@ impl Thread {
         self.add_tool(WebSearchTool);
 
         self.add_tool(DiagnosticsTool::new(self.project.clone()));
-
-        let code_action_store: CodeActionStore = cx.new(|_cx| None);
-        self.add_tool(FindReferencesTool::new(self.project.clone()));
-        self.add_tool(GetCodeActionsTool::new(
-            self.project.clone(),
-            code_action_store.clone(),
-        ));
-        self.add_tool(ApplyCodeActionTool::new(
-            self.project.clone(),
-            code_action_store,
-        ));
-        self.add_tool(GoToDefinitionTool::new(self.project.clone()));
-        self.add_tool(RenameTool::new(self.project.clone()));
+        if cx.has_flag::<LspToolFeatureFlag>() {
+            let code_action_store: CodeActionStore = cx.new(|_cx| None);
+            self.add_tool(FindReferencesTool::new(self.project.clone()));
+            self.add_tool(GetCodeActionsTool::new(
+                self.project.clone(),
+                code_action_store.clone(),
+            ));
+            self.add_tool(ApplyCodeActionTool::new(
+                self.project.clone(),
+                code_action_store,
+            ));
+            self.add_tool(GoToDefinitionTool::new(self.project.clone()));
+            self.add_tool(RenameTool::new(self.project.clone()));
+        }
 
         if self.depth() < MAX_SUBAGENT_DEPTH {
             self.add_tool(SpawnAgentTool::new(environment));
