@@ -1,0 +1,119 @@
+name: Sync from upstream
+
+on:
+  schedule:
+    # Every Monday at 05:17 UTC.
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_URL: https://github.com/zed-industries/zed.git
+      UPSTREAM_BRANCH: main
+      SYNC_BRANCH: sync/upstream
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          fetch-depth: 0
+          # Use SYNC_PAT if you need this PR to trigger other workflows
+          # (the default GITHUB_TOKEN does not trigger workflow-on-PR runs).
+          token: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch upstream "$UPSTREAM_BRANCH"
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          if git merge-base --is-ancestor "upstream/$UPSTREAM_BRANCH" "origin/$UPSTREAM_BRANCH"; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "origin/$UPSTREAM_BRANCH already contains upstream/$UPSTREAM_BRANCH."
+          else
+            COUNT=$(git rev-list --count "origin/$UPSTREAM_BRANCH..upstream/$UPSTREAM_BRANCH")
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+            echo "$COUNT new upstream commits to sync."
+          fi
+
+      - name: Prepare sync branch
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git checkout -B "$SYNC_BRANCH" "origin/$UPSTREAM_BRANCH"
+
+      - name: Merge upstream
+        if: steps.check.outputs.has_changes == 'true'
+        id: merge
+        run: |
+          if git merge --no-ff --no-edit \
+              -m "Merge upstream/$UPSTREAM_BRANCH" \
+              "upstream/$UPSTREAM_BRANCH"; then
+            echo "conflicts=false" >> "$GITHUB_OUTPUT"
+            echo "Merge succeeded cleanly."
+          else
+            echo "conflicts=true" >> "$GITHUB_OUTPUT"
+            echo "Merge produced conflicts; committing as-is for human resolution."
+            git add -A
+            git commit -m "Merge upstream/$UPSTREAM_BRANCH (conflicts pending resolution)"
+          fi
+
+      - name: Push sync branch
+        if: steps.check.outputs.has_changes == 'true'
+        run: git push --force origin "$SYNC_BRANCH"
+
+      - name: Open or update pull request
+        if: steps.check.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ steps.merge.outputs.conflicts }}" = "true" ]; then
+            TITLE="Sync from upstream (conflicts to resolve)"
+          else
+            TITLE="Sync from upstream"
+          fi
+
+          {
+            echo "Automated sync from \`zed-industries/zed:$UPSTREAM_BRANCH\`."
+            echo
+            echo "- New upstream commits: ${{ steps.check.outputs.count }}"
+            echo "- Triggered by: \`${{ github.event_name }}\`"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            if [ "${{ steps.merge.outputs.conflicts }}" = "true" ]; then
+              echo
+              echo "> [!WARNING]"
+              echo "> The merge produced conflicts. Check out \`$SYNC_BRANCH\`, resolve the conflict markers, and push to this branch before merging."
+            fi
+            echo
+            echo "Release Notes:"
+            echo
+            echo "- N/A"
+          } > /tmp/pr_body.md
+
+          PR_NUMBER=$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr edit "$PR_NUMBER" --title "$TITLE" --body-file /tmp/pr_body.md
+          else
+            gh pr create \
+              --base "$UPSTREAM_BRANCH" \
+              --head "$SYNC_BRANCH" \
+              --title "$TITLE" \
+              --body-file /tmp/pr_body.md
+          fi
