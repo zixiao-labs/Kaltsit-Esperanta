@@ -10,7 +10,7 @@ on:
     - v*
 jobs:
   run_tests_mac:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
+    if: (github.repository_owner == 'zixiao-labs')
     runs-on: namespace-profile-mac-large
     steps:
     - name: steps::checkout_repo

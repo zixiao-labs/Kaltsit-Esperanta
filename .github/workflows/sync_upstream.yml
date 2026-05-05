@@ -83,6 +83,7 @@ jobs:
         if: steps.check.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           if [ "${{ steps.merge.outputs.conflicts }}" = "true" ]; then
             TITLE="Sync from upstream (conflicts to resolve)"
