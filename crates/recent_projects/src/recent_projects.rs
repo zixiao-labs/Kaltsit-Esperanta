@@ -1159,8 +1159,99 @@ impl PickerDelegate for RecentProjectsDelegate {
                 cx.emit(DismissEvent);
             }
             Some(ProjectPickerEntry::RecentProject(selected_match)) => {
-                let candidate_id = selected_match.candidate_id;
-                self.open_recent_projects(candidate_id, secondary, window, cx);
+                let Some(workspace) = self.workspace.upgrade() else {
+                    return;
+                };
+                let Some(candidate_workspace) = self.workspaces.get(selected_match.candidate_id)
+                else {
+                    return;
+                };
+
+                let replace_current_window = self.create_new_window == secondary;
+                let candidate_workspace_id = candidate_workspace.workspace_id;
+                let candidate_workspace_location = candidate_workspace.location.clone();
+                let candidate_workspace_paths = candidate_workspace.paths.clone();
+
+                workspace.update(cx, |workspace, cx| {
+                    if workspace.database_id() == Some(candidate_workspace_id) {
+                        return;
+                    }
+                    match candidate_workspace_location {
+                        SerializedWorkspaceLocation::Local => {
+                            let paths = candidate_workspace_paths.paths().to_vec();
+                            if replace_current_window {
+                                if let Some(handle) =
+                                    window.window_handle().downcast::<MultiWorkspace>()
+                                {
+                                    cx.defer(move |cx| {
+                                        if let Some(task) = handle
+                                            .update(cx, |multi_workspace, window, cx| {
+                                                multi_workspace.open_project(
+                                                    paths,
+                                                    OpenMode::Activate,
+                                                    window,
+                                                    cx,
+                                                )
+                                            })
+                                            .log_err()
+                                        {
+                                            task.detach_and_log_err(cx);
+                                        }
+                                    });
+                                }
+                                return;
+                            } else {
+                                workspace
+                                    .open_workspace_for_paths(
+                                        OpenMode::NewWindow,
+                                        paths,
+                                        window,
+                                        cx,
+                                    )
+                                    .detach_and_prompt_err(
+                                        "Failed to open project",
+                                        window,
+                                        cx,
+                                        |_, _, _| None,
+                                    );
+                            }
+                        }
+                        SerializedWorkspaceLocation::Remote(mut connection) => {
+                            let app_state = workspace.app_state().clone();
+                            let replace_window = if replace_current_window {
+                                window.window_handle().downcast::<MultiWorkspace>()
+                            } else {
+                                None
+                            };
+                            let open_options = OpenOptions {
+                                requesting_window: replace_window,
+                                ..Default::default()
+                            };
+                            if let RemoteConnectionOptions::Ssh(connection) = &mut connection {
+                                RemoteSettings::get_global(cx)
+                                    .fill_connection_options_from_settings(connection);
+                            };
+                            let paths = candidate_workspace_paths.paths().to_vec();
+                            cx.spawn_in(window, async move |_, cx| {
+                                open_remote_project(
+                                    connection.clone(),
+                                    paths,
+                                    app_state,
+                                    open_options,
+                                    cx,
+                                )
+                                .await
+                            })
+                            .detach_and_prompt_err(
+                                "Failed to open project",
+                                window,
+                                cx,
+                                |_, _, _| None,
+                            );
+                        }
+                    }
+                });
+                cx.emit(DismissEvent);
             }
             _ => {}
         }
@@ -2203,10 +2294,14 @@ impl RecentProjectsDelegate {
         if let Some(ProjectPickerEntry::RecentProject(selected_match)) =
             self.filtered_entries.get(ix)
         {
+<<<<<<< HEAD
             let Some(recent_workspace) = self.workspaces.get(selected_match.candidate_id).cloned()
             else {
                 return;
             };
+=======
+            let recent_workspace = self.workspaces[selected_match.candidate_id].clone();
+>>>>>>> 11e5f6a83f (Improve grouping of worktrees by repo in recent projects (#55715))
             let fs = self
                 .workspace
                 .upgrade()
