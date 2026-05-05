@@ -62,3 +62,17 @@ Esperanta itself does not accept sponsorship. If you'd like to financially suppo
 - **Zed Industries, Inc.** — Esperanta would not exist without their work; this is a derivative of Zed under the same licenses.
 - **Kal'tsit** — character from *Arknights* by Hypergryph; theme inspiration only, no affiliation.
 
+## FAQ
+
+**Q: Why are there 1,848 Contributors?**
+
+A: Because we're built on Zed, and upstream contributor information was preserved during history synchronization.
+
+This is out of respect for the open-source community. (Actually, an accident occurred during synchronization.)
+
+**Q: Who are the actual maintainers?**
+
+A: Only @Amiya167 and closure-bot.
+
+The other 1,846 people probably don't know they're here.
+
