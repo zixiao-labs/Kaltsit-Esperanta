@@ -1,33 +1,43 @@
-# Zed
+# Kal'tsit·Esperanta
 
 [![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
-[![CI](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml/badge.svg)](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml)
 
-Welcome to Zed, a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
+Kal'tsit·Esperanta is a high-performance, multiplayer code editor maintained by [Zixiao Labs](https://github.com/zixiao-labs) — **基于 [Zed](https://github.com/zed-industries/zed) 二次开发**.
+
+It is a sister project to [Logos Editor Workstation](https://github.com/zixiao-labs/logos), Zixiao Labs' Electron-based editor; the two share design goals but target different stacks.
 
 ---
 
-### Installation
+## What's different from Zed
 
-On macOS, Linux, and Windows you can [download Zed directly](https://zed.dev/download) or install Zed via your local package manager ([macOS](https://zed.dev/docs/installation#macos)/[Linux](https://zed.dev/docs/linux#installing-via-a-package-manager)/[Windows](https://zed.dev/docs/windows#package-managers)).
+- **Chinese-first localization** — UI, settings, and docs translated for native Chinese readers.
+- **Kal'tsit theme** — a dedicated dark/light theme pair, inspired by *Arknights*' Kal'tsit.
+- **Self-hosted auth** *(planned)* — swap Zed's hosted account for [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps) OAuth/SSO.
+- **Self-hosted collab** *(planned)* — keep Zed's CRDT, but route auth, presence, and WebRTC signaling through your own Wuling DevOps instance.
 
-Other platforms are not yet available:
+See [dev-plan.md](./dev-plan.md) for the full roadmap.
 
-- Web ([tracking issue](https://github.com/zed-industries/zed/issues/5396))
+## Installation
 
-### Developing Zed
+Esperanta does not yet ship pre-built binaries — please build from source:
 
-- [Building Zed for macOS](./docs/src/development/macos.md)
-- [Building Zed for Linux](./docs/src/development/linux.md)
-- [Building Zed for Windows](./docs/src/development/windows.md)
+- [Building for macOS](./docs/src/development/macos.md)
+- [Building for Linux](./docs/src/development/linux.md)
+- [Building for Windows](./docs/src/development/windows.md)
 
-### Contributing
+If you just want vanilla Zed, install it directly from [zed.dev/download](https://zed.dev/download).
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for ways you can contribute to Zed.
+## Contributing
 
-Also... we're hiring! Check out our [jobs](https://zed.dev/jobs) page for open roles.
+This fork is maintained by Zixiao Labs — please file issues and PRs against this repo, not upstream Zed.
 
-### Licensing
+For changes that are not Esperanta-specific (general bug fixes, new editor features), please send them upstream first when possible; we periodically rebase on `zed-industries/zed` and will pick up your work that way.
+
+The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution conventions) applies here as well.
+
+## Licensing
+
+Esperanta inherits Zed's licensing — see [LICENSE-AGPL](./LICENSE-AGPL), [LICENSE-APACHE](./LICENSE-APACHE), and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
 
 License information for third party dependencies must be correctly provided for CI to pass.
 
@@ -37,10 +47,18 @@ We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automati
 - Is the error `failed to satisfy license requirements` for a dependency? If so, first determine what license the project has and whether this system is sufficient to comply with this license's requirements. If you're unsure, ask a lawyer. Once you've verified that this system is acceptable add the license's SPDX identifier to the `accepted` array in `script/licenses/zed-licenses.toml`.
 - Is `cargo-about` unable to find the license for a dependency? If so, add a clarification field at the end of `script/licenses/zed-licenses.toml`, as specified in the [cargo-about book](https://embarkstudios.github.io/cargo-about/cli/generate/config.html#crate-configuration).
 
-## Sponsorship
+## Sponsoring upstream Zed
 
-Zed is developed by **Zed Industries, Inc.**, a for-profit company.
+Esperanta itself does not accept sponsorship. If you'd like to financially support the project this fork is built on, Zed Industries accepts sponsorship via GitHub Sponsors — funds go directly to Zed Industries as general company revenue, with no perks or entitlements.
 
-If you’d like to financially support the project, you can do so via GitHub Sponsors.
-Sponsorships go directly to Zed Industries and are used as general company revenue.
-There are no perks or entitlements associated with sponsorship.
+## Friendly Links
+
+- [Zed](https://github.com/zed-industries/zed) — the upstream this fork is based on.
+- [Logos Editor Workstation](https://github.com/zixiao-labs/logos) — sister Electron-based editor from Zixiao Labs.
+- [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps) — Zixiao Labs DevOps platform; auth & collab backend for the planned integration *(WIP)*.
+
+## Acknowledgements
+
+- **Zed Industries, Inc.** — Esperanta would not exist without their work; this is a derivative of Zed under the same licenses.
+- **Kal'tsit** — character from *Arknights* by Hypergryph; theme inspiration only, no affiliation.
+
