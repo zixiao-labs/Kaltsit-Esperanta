@@ -1,0 +1,98 @@
+name: Rust Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+concurrency:
+  group: rust-check-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  fmt:
+    name: cargo fmt
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup component add rustfmt
+
+      - name: cargo fmt --all -- --check
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: cargo clippy
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup component add clippy
+
+      - name: Install Linux build dependencies
+        run: ./script/linux
+
+      - name: Download wasi-sdk
+        run: ./script/download-wasi-sdk
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.5
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          shared-key: rust-check-clippy
+
+      - name: ./script/clippy
+        run: ./script/clippy
+
+  check:
+    name: cargo check --workspace
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - name: Install Linux build dependencies
+        run: ./script/linux
+
+      - name: Download wasi-sdk
+        run: ./script/download-wasi-sdk
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.5
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          shared-key: rust-check-check
+
+      - name: cargo check --workspace
+        run: cargo check --workspace

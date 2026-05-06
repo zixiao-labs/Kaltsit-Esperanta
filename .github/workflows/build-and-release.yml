@@ -1,0 +1,273 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - v*.*.*
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or branch to build (defaults to the workflow ref)."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+concurrency:
+  group: build-and-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundle-mac:
+    name: Bundle macOS (${{ matrix.arch }})
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: macos-14
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            target: x86_64-apple-darwin
+          - arch: aarch64
+            target: aarch64-apple-darwin
+    env:
+      # All five must be present for bundle-mac to actually sign + notarize.
+      # If any are missing, the script falls back to an ad-hoc / unsigned build.
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      APPLE_NOTARIZATION_KEY: ${{ secrets.APPLE_NOTARIZATION_KEY }}
+      APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
+      APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add ${{ matrix.target }}
+
+      - name: Install Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.5
+        with:
+          shared-key: bundle-mac-${{ matrix.arch }}
+
+      - name: ./script/bundle-mac ${{ matrix.target }}
+        run: ./script/bundle-mac ${{ matrix.target }}
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: macos-${{ matrix.arch }}
+          path: |
+            target/${{ matrix.target }}/release/Kaltsit-Esperanta-${{ matrix.arch }}.dmg
+            target/Kaltsit-Esperanta-remote-server-macos-${{ matrix.arch }}.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  bundle-linux:
+    name: Bundle Linux (x86_64)
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add x86_64-unknown-linux-musl
+
+      - name: Install Linux build dependencies
+        run: ./script/linux
+
+      - name: Download wasi-sdk
+        run: ./script/download-wasi-sdk
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.5
+        with:
+          shared-key: bundle-linux
+
+      - name: ./script/bundle-linux
+        run: ./script/bundle-linux
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: linux-x86_64
+          path: |
+            target/release/Kaltsit-Esperanta-linux-x86_64.tar.gz
+            target/Kaltsit-Esperanta-remote-server-linux-x86_64.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  bundle-windows:
+    name: Bundle Windows (x86_64)
+    if: github.repository_owner == 'zixiao-labs'
+    # bundle-windows.ps1 expects Inno Setup 6 at its default path, which the
+    # windows-2022 runner image ships out of the box. windows-2025 currently
+    # does not (https://github.com/actions/runner-images/issues/11228), so
+    # pin explicitly until the script is updated.
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Rust toolchain (rust-toolchain.toml)
+        shell: pwsh
+        run: |
+          rustup show active-toolchain
+          rustup target add x86_64-pc-windows-msvc
+
+      - name: Install Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.5
+        with:
+          shared-key: bundle-windows
+
+      - name: ./script/bundle-windows.ps1
+        shell: pwsh
+        env:
+          # Self-signed signing is OPTIONAL. Provide both secrets to enable it.
+          # WINDOWS_SIGNING_PFX_BASE64: base64-encoded .pfx file
+          # WINDOWS_SIGNING_PFX_PASSWORD: password protecting the .pfx
+          WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+          WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ($env:WINDOWS_SIGNING_PFX_BASE64) {
+              Write-Host "Self-signed code signing enabled."
+              $pfxPath = "$env:RUNNER_TEMP\zed-cert.pfx"
+              [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
+              $env:WINDOWS_SIGNING_PFX_PATH = $pfxPath
+
+              # Replace the upstream sign.ps1 (which uses Azure Trusted Signing)
+              # with a signtool-based variant pointed at our self-signed PFX.
+              # Built as an array of single-quoted lines (and joined with newlines)
+              # so the embedded PowerShell variables are written to disk verbatim
+              # rather than expanded here, and so YAML block-scalar indentation
+              # rules don't fight PowerShell here-string terminator rules.
+              $selfSigned = @(
+                  'param([Parameter(Mandatory = $true)][string]$filePath)',
+                  '$ErrorActionPreference = "Stop"',
+                  '$pfx = $env:WINDOWS_SIGNING_PFX_PATH',
+                  '$pwd = $env:WINDOWS_SIGNING_PFX_PASSWORD',
+                  '$signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue |',
+                  '    Sort-Object FullName -Descending | Select-Object -First 1',
+                  'if (-not $signtool) { throw "signtool.exe not found under the Windows 10 SDK." }',
+                  'foreach ($f in ($filePath -split ",")) {',
+                  '    & $signtool.FullName sign /f $pfx /p $pwd /fd SHA256 /tr "http://timestamp.digicert.com" /td SHA256 $f',
+                  '    if ($LASTEXITCODE -ne 0) { throw "signtool failed for $f" }',
+                  '}'
+              ) -join "`r`n"
+              Set-Content -Path "crates/zed/resources/windows/sign.ps1" -Value $selfSigned -Encoding UTF8
+
+              # bundle-windows.ps1::CheckEnvironmentVariables refuses to run when
+              # $env:CI is set unless every Azure-signing variable exists. Provide
+              # harmless placeholders; our replacement sign.ps1 ignores them.
+              $env:AZURE_TENANT_ID = "self-signed"
+              $env:AZURE_CLIENT_ID = "self-signed"
+              $env:AZURE_CLIENT_SECRET = "self-signed"
+              $env:ACCOUNT_NAME = "self-signed"
+              $env:CERT_PROFILE_NAME = "self-signed"
+              $env:ENDPOINT = "self-signed"
+              $env:FILE_DIGEST = "SHA256"
+              $env:TIMESTAMP_DIGEST = "SHA256"
+              $env:TIMESTAMP_SERVER = "http://timestamp.digicert.com"
+          } else {
+              Write-Host "No Windows signing secrets configured; building unsigned."
+              # Clearing CI tells bundle-windows.ps1 to skip every signing step.
+              $env:CI = ""
+          }
+
+          ./script/bundle-windows.ps1 -Architecture x86_64
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: windows-x86_64
+          path: |
+            target/Kaltsit-Esperanta-x86_64.exe
+            target/Kaltsit-Esperanta-remote-server-windows-x86_64.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Create GitHub release
+    if: github.repository_owner == 'zixiao-labs' && startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - bundle-mac
+      - bundle-linux
+      - bundle-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          fetch-depth: 0
+          # SYNC_PAT lets the closure-bot identity create the release; the default
+          # GITHUB_TOKEN would mark the release as authored by github-actions[bot].
+          token: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: dist
+
+      - name: Flatten release assets
+        run: |
+          mkdir -p release
+          find dist -type f \
+            \( -name "*.dmg" -o -name "*.tar.gz" -o -name "*.gz" \
+               -o -name "*.exe" -o -name "*.zip" \) \
+            -exec cp {} release/ \;
+          echo "Assets staged for release:"
+          ls -la release/
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; uploading assets with --clobber."
+            gh release upload "$TAG" release/* --clobber
+          else
+            echo "Creating draft release $TAG."
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --draft \
+              --generate-notes \
+              release/*
+          fi
