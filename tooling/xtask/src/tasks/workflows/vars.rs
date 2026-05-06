@@ -9,14 +9,20 @@ use crate::tasks::workflows::{runners::Platform, steps::NamedJob};
 
 macro_rules! secret {
     ($secret_name:ident) => {
-        #[allow(dead_code, reason = "kept available for future signing/observability integrations")]
+        #[allow(
+            dead_code,
+            reason = "kept available for future signing/observability integrations"
+        )]
         pub const $secret_name: &str = concat!("${{ secrets.", stringify!($secret_name), " }}");
     };
 }
 
 macro_rules! var {
     ($var_name:ident) => {
-        #[allow(dead_code, reason = "kept available for future signing/observability integrations")]
+        #[allow(
+            dead_code,
+            reason = "kept available for future signing/observability integrations"
+        )]
         pub const $var_name: &str = concat!("${{ vars.", stringify!($var_name), " }}");
     };
 }

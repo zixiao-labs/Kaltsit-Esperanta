@@ -131,7 +131,11 @@ fn publish_nightly_release_job(bundle: &ReleaseBundleJobs) -> NamedJob {
         job: steps::release_job(&bundle.jobs())
             .runs_on(runners::LINUX_MEDIUM)
             .add_step(authenticate_step)
-            .add_step(steps::checkout_repo().with_full_history().with_token(&token))
+            .add_step(
+                steps::checkout_repo()
+                    .with_full_history()
+                    .with_token(&token),
+            )
             .add_step(download_workflow_artifacts())
             .add_step(steps::script("ls -lR ./artifacts"))
             .add_step(prep_release_artifacts())

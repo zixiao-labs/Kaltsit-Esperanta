@@ -235,9 +235,7 @@ fn docs_job(channel_expr: impl Into<String>, checkout_ref: Option<String>) -> Na
         job: docs_deploy_steps(
             docs_build_steps(
                 release_job(&[])
-                    .cond(Expression::new(
-                        "github.repository_owner == 'zixiao-labs'",
-                    ))
+                    .cond(Expression::new("github.repository_owner == 'zixiao-labs'"))
                     .name("Build and Deploy Docs")
                     .add_step(resolve_step),
                 checkout_ref,
