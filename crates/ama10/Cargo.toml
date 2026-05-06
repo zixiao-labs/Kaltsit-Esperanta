@@ -4,7 +4,26 @@ version = "0.1.0"
 publish.workspace = true
 edition.workspace = true
 
+[lib]
+path = "src/ama10.rs"
+
+[[bin]]
+name = "ama10"
+path = "src/main.rs"
+
 [dependencies]
+chrono.workspace = true
+progenitor-client.workspace = true
+# NOTE: deliberately NOT inheriting the workspace `reqwest` alias. The
+# workspace ships `zed-reqwest` (a fork of reqwest) under the `reqwest` name,
+# but `progenitor-client` is built against upstream `reqwest 0.13` from
+# crates.io, and the two `Request`/`Error`/`HeaderValue` types are distinct.
+# Pulling in stock reqwest here keeps the generated client self-consistent;
+# we'll add a shim layer when this is integrated into the editor in Stage 2.
+reqwest = { version = "0.13", features = ["json"] }
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+# Regenerate the Wuling DevOps API client used by `ama10`.
+#
+# This script:
+#   1. Syncs the OpenAPI spec from the Wuling-DevOps repo (sibling checkout, or override
+#      via WULING_OPENAPI_PATH) into `crates/ama10/api/wuling-openapi.yaml`.
+#   2. Patches the spec version `3.1.0` -> `3.0.3` because the spec only uses 3.0
+#      idioms (`nullable: true`) and `progenitor` only consumes OpenAPI 3.0.
+#   3. Runs `cargo progenitor` to generate a Rust client crate.
+#   4. Copies the generated source into `crates/ama10/src/wuling_api/generated.rs`,
+#      with a do-not-edit header.
+#
+# Re-run whenever the upstream spec changes. The generated file is committed to
+# the repo so reviewers can see the API surface diff.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE_SPEC="${WULING_OPENAPI_PATH:-$REPO_ROOT/../Wuling-DevOps/api/openapi.yaml}"
+VENDORED_SPEC="$REPO_ROOT/crates/ama10/api/wuling-openapi.yaml"
+GENERATED_FILE="$REPO_ROOT/crates/ama10/src/wuling_api/generated.rs"
+GEN_NAME="wuling-api-client"
+GEN_VERSION="0.0.0-stage1"
+
+if [[ ! -f "$SOURCE_SPEC" ]]; then
+    echo "ERROR: OpenAPI spec not found at: $SOURCE_SPEC" >&2
+    echo "Set WULING_OPENAPI_PATH, or check out Wuling-DevOps as a sibling of this repo." >&2
+    exit 1
+fi
+
+echo "==> Syncing spec from $SOURCE_SPEC"
+mkdir -p "$(dirname "$VENDORED_SPEC")"
+cp "$SOURCE_SPEC" "$VENDORED_SPEC"
+
+echo "==> Patching openapi version (3.1.0 -> 3.0.3) for progenitor compatibility"
+sed -i.bak 's/openapi: 3.1.0/openapi: 3.0.3/' "$VENDORED_SPEC"
+rm -f "$VENDORED_SPEC.bak"
+
+# progenitor refuses to generate when an operation lacks `operationId`. The
+# upstream spec doesn't set them yet, so we deterministically inject one of the
+# form `{method}_{slug(path)}` (e.g. `get_orgs_by_org_slug_projects`) before
+# generating. If/when upstream adds explicit operationIds, this step becomes a
+# no-op for those operations.
+echo "==> Injecting operationIds where missing"
+python3 - "$VENDORED_SPEC" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+import yaml  # PyYAML
+
+METHODS = {"get", "post", "put", "patch", "delete", "head", "options", "trace"}
+PATH_PARAM_RE = re.compile(r"^\{(\w+)\}$")
+
+
+def slugify(path: str) -> str:
+    # /api/v1/orgs/{org_slug}/projects -> orgs_by_org_slug_projects
+    path = path.lstrip("/")
+    for prefix in ("api/v1/", "api/"):
+        if path.startswith(prefix):
+            path = path[len(prefix):]
+            break
+    parts: list[str] = []
+    for seg in path.split("/"):
+        if not seg:
+            continue
+        m = PATH_PARAM_RE.match(seg)
+        if m:
+            parts.append(f"by_{m.group(1)}")
+        else:
+            parts.append(re.sub(r"[^a-zA-Z0-9]+", "_", seg).strip("_"))
+    return "_".join(p for p in parts if p) or "root"
+
+
+spec_path = Path(sys.argv[1])
+spec = yaml.safe_load(spec_path.read_text())
+
+# Drop git-smart-HTTP endpoints. They use custom content types
+# (application/x-git-upload-pack-request etc.) that progenitor refuses, and
+# they're streaming binary protocols that we don't want to generate a JSON
+# client for anyway. Use libgit2 / `git` directly for these.
+paths = spec.get("paths") or {}
+dropped_paths = [p for p in list(paths.keys()) if ".git/" in p]
+for p in dropped_paths:
+    del paths[p]
+
+injected = 0
+patched_bodies = 0
+for path, ops in paths.items():
+    if not isinstance(ops, dict):
+        continue
+    for key, op in ops.items():
+        if key.lower() not in METHODS or not isinstance(op, dict):
+            continue
+        if not op.get("operationId"):
+            op["operationId"] = f"{key.lower()}_{slugify(path)}"
+            injected += 1
+        # Safety net: if any future operation lands a content entry without
+        # a schema, default to a binary blob so progenitor doesn't choke.
+        for container in (op.get("requestBody"),) + tuple(
+            (op.get("responses") or {}).values()
+        ):
+            if not isinstance(container, dict):
+                continue
+            for body in (container.get("content") or {}).values():
+                if not isinstance(body, dict):
+                    continue
+                if "schema" not in body:
+                    body["schema"] = {"type": "string", "format": "binary"}
+                    patched_bodies += 1
+
+spec_path.write_text(yaml.safe_dump(spec, sort_keys=False, allow_unicode=True))
+print(
+    f"    dropped {len(dropped_paths)} git-smart-HTTP paths, "
+    f"injected {injected} operationIds, {patched_bodies} binary schemas"
+)
+PY
+
+if ! command -v cargo-progenitor >/dev/null 2>&1; then
+    echo "==> cargo-progenitor not found; installing..."
+    cargo install cargo-progenitor
+fi
+
+# progenitor's bundled rustfmt config uses unstable features
+# (wrap_comments, normalize_doc_attributes), so the formatting step crashes
+# under stable rustfmt. Pick the most recently installed nightly toolchain
+# and point RUSTFMT at its rustfmt binary.
+NIGHTLY_TC="$(rustup toolchain list 2>/dev/null \
+    | awk '{print $1}' \
+    | grep -E '^nightly-[0-9]' \
+    | sort -r \
+    | head -1 \
+    || true)"
+if [[ -z "$NIGHTLY_TC" ]]; then
+    echo "ERROR: no dated nightly toolchain installed." >&2
+    echo "Install one with:" >&2
+    echo "    rustup toolchain install nightly --component rustfmt" >&2
+    exit 1
+fi
+NIGHTLY_RUSTFMT="$(rustup which rustfmt --toolchain "$NIGHTLY_TC" 2>/dev/null || true)"
+if [[ -z "$NIGHTLY_RUSTFMT" || ! -x "$NIGHTLY_RUSTFMT" ]]; then
+    echo "ERROR: rustfmt missing from toolchain $NIGHTLY_TC." >&2
+    echo "Install with: rustup component add rustfmt --toolchain $NIGHTLY_TC" >&2
+    exit 1
+fi
+
+OUT_DIR="$(mktemp -d -t wuling-progenitor-XXXXXX)"
+trap 'rm -rf "$OUT_DIR"' EXIT
+
+echo "==> Generating client into $OUT_DIR"
+echo "    using nightly rustfmt: $NIGHTLY_RUSTFMT"
+RUSTFMT="$NIGHTLY_RUSTFMT" cargo progenitor \
+    --input "$VENDORED_SPEC" \
+    --output "$OUT_DIR" \
+    --name "$GEN_NAME" \
+    --version "$GEN_VERSION"
+
+if [[ ! -f "$OUT_DIR/src/lib.rs" ]]; then
+    echo "ERROR: progenitor did not produce src/lib.rs in $OUT_DIR" >&2
+    exit 1
+fi
+
+mkdir -p "$(dirname "$GENERATED_FILE")"
+{
+    cat <<'HEADER'
+// @generated
+// AUTO-GENERATED by script/regen-wuling-api.sh. Do not edit by hand.
+// Source: crates/ama10/api/wuling-openapi.yaml
+//
+// To regenerate after the upstream spec changes:
+//     script/regen-wuling-api.sh
+
+#![allow(
+    clippy::all,
+    dead_code,
+    unused_imports,
+    unused_qualifications,
+    missing_docs,
+    rustdoc::broken_intra_doc_links
+)]
+
+HEADER
+    cat "$OUT_DIR/src/lib.rs"
+} > "$GENERATED_FILE"
+
+echo "==> Generated client written to $GENERATED_FILE"
+
+# Surface the runtime dep version that the generated code expects, so the
+# operator can sync `progenitor-client` in the workspace Cargo.toml if it drifts.
+if [[ -f "$OUT_DIR/Cargo.toml" ]]; then
+    echo
+    echo "==> Generated crate's progenitor-client dep:"
+    grep -E '^progenitor-client' "$OUT_DIR/Cargo.toml" || true
+fi
