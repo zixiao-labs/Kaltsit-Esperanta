@@ -328,8 +328,7 @@ pub struct NamedJob<J: JobType = RunJob> {
 //     }
 // }
 
-pub(crate) const DEFAULT_REPOSITORY_OWNER_GUARD: &str =
-    "github.repository_owner == 'zixiao-labs'";
+pub(crate) const DEFAULT_REPOSITORY_OWNER_GUARD: &str = "github.repository_owner == 'zixiao-labs'";
 
 pub fn repository_owner_guard_expression(trigger_always: bool) -> Expression {
     Expression::new(format!(
@@ -546,7 +545,10 @@ impl TokenPermissions {
 
 pub(crate) struct GenerateAppToken<'a> {
     job_name: String,
-    #[allow(dead_code, reason = "kept for API parity with upstream's App-token helper")]
+    #[allow(
+        dead_code,
+        reason = "kept for API parity with upstream's App-token helper"
+    )]
     app_id: &'a str,
     app_secret: &'a str,
     repository_target: Option<RepositoryTarget>,
