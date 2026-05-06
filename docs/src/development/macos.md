@@ -1,13 +1,13 @@
 ---
-title: Building Zed for macOS
-description: "Guide to building zed for macos for Zed development."
+title: Building Esperanta for macOS
+description: "Guide to building Esperanta for macOS development."
 ---
 
-# Building Zed for macOS
+# Building Esperanta for macOS
 
 ## Repository
 
-Clone the [Zed repository](https://github.com/zed-industries/zed).
+Clone the [Esperanta repository](https://github.com/zixiao-labs/Kaltsit-Esperanta).
 
 ## Dependencies
 

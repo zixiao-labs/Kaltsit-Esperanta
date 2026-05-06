@@ -84,8 +84,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          MERGE_CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+          UPSTREAM_COUNT: ${{ steps.check.outputs.count }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [ "${{ steps.merge.outputs.conflicts }}" = "true" ]; then
+          if [ "$MERGE_CONFLICTS" = "true" ]; then
             TITLE="Sync from upstream (conflicts to resolve)"
           else
             TITLE="Sync from upstream"
@@ -94,10 +98,10 @@ jobs:
           {
             echo "Automated sync from \`zed-industries/zed:$UPSTREAM_BRANCH\`."
             echo
-            echo "- New upstream commits: ${{ steps.check.outputs.count }}"
-            echo "- Triggered by: \`${{ github.event_name }}\`"
-            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            if [ "${{ steps.merge.outputs.conflicts }}" = "true" ]; then
+            echo "- New upstream commits: $UPSTREAM_COUNT"
+            echo "- Triggered by: \`$EVENT_NAME\`"
+            echo "- Run: $RUN_URL"
+            if [ "$MERGE_CONFLICTS" = "true" ]; then
               echo
               echo "> [!WARNING]"
               echo "> The merge produced conflicts. Check out \`$SYNC_BRANCH\`, resolve the conflict markers, and push to this branch before merging."

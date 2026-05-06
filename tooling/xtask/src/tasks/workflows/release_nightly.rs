@@ -1,9 +1,6 @@
 use crate::tasks::workflows::{
     nix_build::build_nix,
-    release::{
-        ReleaseBundleJobs, create_sentry_release, download_workflow_artifacts, notify_on_failure,
-        prep_release_artifacts,
-    },
+    release::{ReleaseBundleJobs, download_workflow_artifacts, prep_release_artifacts},
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests::{clippy, run_platform_tests_no_filter},
     runners::{Arch, Platform, ReleaseChannel},
@@ -44,8 +41,7 @@ pub fn release_nightly() -> Workflow {
         None,
         &[&style, &tests],
     );
-    let update_nightly_tag = update_nightly_tag_job(&bundle);
-    let notify_on_failure = notify_on_failure(&bundle.jobs());
+    let publish_nightly = publish_nightly_release_job(&bundle);
 
     named::workflow()
         .on(Event::default()
@@ -65,8 +61,7 @@ pub fn release_nightly() -> Workflow {
         })
         .add_job(nix_linux_x86.name, nix_linux_x86.job)
         .add_job(nix_mac_arm.name, nix_mac_arm.job)
-        .add_job(update_nightly_tag.name, update_nightly_tag.job)
-        .add_job(notify_on_failure.name, notify_on_failure.job)
+        .add_job(publish_nightly.name, publish_nightly.job)
 }
 
 fn check_style() -> NamedJob {
@@ -90,40 +85,56 @@ fn release_job(deps: &[&NamedJob]) -> Job {
     }
 }
 
-fn update_nightly_tag_job(bundle: &ReleaseBundleJobs) -> NamedJob {
-    fn update_nightly_tag() -> Step<Run> {
+// The Esperanta fork publishes nightly artifacts to a GitHub Releases
+// prerelease tagged `nightly`, replacing upstream's DigitalOcean Spaces
+// `script/upload-nightly` flow. The tag is force-moved to the current commit,
+// then the prerelease is recreated and re-uploaded so asset names stay stable
+// run-to-run. Authentication uses `secrets.SYNC_PAT` (the same PAT used by
+// `sync_upstream.yml`) — the default `GITHUB_TOKEN` from a scheduled workflow
+// is not guaranteed to have `contents: write`.
+fn publish_nightly_release_job(bundle: &ReleaseBundleJobs) -> NamedJob {
+    fn publish_nightly_release(token: &vars::StepOutput) -> Step<Run> {
         named::bash(indoc::indoc! {r#"
-            if [ "$(git rev-parse nightly)" = "$(git rev-parse HEAD)" ]; then
-              echo "Nightly tag already points to current commit. Skipping tagging."
+            NIGHTLY_REV=$(git rev-parse nightly 2>/dev/null || echo "")
+            HEAD_REV=$(git rev-parse HEAD)
+            if [ "$NIGHTLY_REV" = "$HEAD_REV" ]; then
+              echo "Nightly tag already points to current commit. Skipping republish."
               exit 0
             fi
             git config user.name github-actions
             git config user.email github-actions@github.com
             git tag -f nightly
             git push origin nightly --force
+
+            # Recreate the prerelease so it points at the new tag and the
+            # asset list reflects exactly the current run. `gh release delete`
+            # without `--cleanup-tag` leaves the git tag we just pushed alone.
+            gh release delete nightly \
+                --yes \
+                --repo "$GITHUB_REPOSITORY" \
+                2>/dev/null || true
+            gh release create nightly \
+                --prerelease \
+                --title "Nightly" \
+                --notes "Nightly build from commit \`$HEAD_REV\`" \
+                --repo "$GITHUB_REPOSITORY" \
+                release-artifacts/*
         "#})
+        .add_env(("GITHUB_TOKEN", token.to_string()))
     }
 
+    let (authenticate_step, token) = steps::authenticate_as_zippy().into();
+    let publish_step = publish_nightly_release(&token);
+
     NamedJob {
-        name: "update_nightly_tag".to_owned(),
+        name: "publish_nightly_release".to_owned(),
         job: steps::release_job(&bundle.jobs())
             .runs_on(runners::LINUX_MEDIUM)
-            .add_step(steps::checkout_repo().with_full_history())
+            .add_step(authenticate_step)
+            .add_step(steps::checkout_repo().with_full_history().with_token(&token))
             .add_step(download_workflow_artifacts())
             .add_step(steps::script("ls -lR ./artifacts"))
             .add_step(prep_release_artifacts())
-            .add_step(
-                steps::script("./script/upload-nightly")
-                    .add_env((
-                        "DIGITALOCEAN_SPACES_ACCESS_KEY",
-                        vars::DIGITALOCEAN_SPACES_ACCESS_KEY,
-                    ))
-                    .add_env((
-                        "DIGITALOCEAN_SPACES_SECRET_KEY",
-                        vars::DIGITALOCEAN_SPACES_SECRET_KEY,
-                    )),
-            )
-            .add_step(update_nightly_tag())
-            .add_step(create_sentry_release()),
+            .add_step(publish_step),
     }
 }

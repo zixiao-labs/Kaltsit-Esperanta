@@ -16,8 +16,8 @@ on:
         default: ''
 jobs:
   fetch_extension_repos:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions') && github.ref == 'refs/heads/main'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
     - name: checkout_zed_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -81,10 +81,9 @@ jobs:
           return filteredRepos;
         result-encoding: json
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: extension_workflow_rollout::fetch_extension_repos::generate_workflow_files
       run: |
         cargo xtask workflows "$COMMIT_SHA"
@@ -106,7 +105,7 @@ jobs:
     needs:
     - fetch_extension_repos
     if: needs.fetch_extension_repos.outputs.repos != '[]'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         repo: ${{ fromJson(needs.fetch_extension_repos.outputs.repos) }}
@@ -115,15 +114,15 @@ jobs:
     steps:
     - id: generate-token
       name: steps::generate_token
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-        owner: zed-extensions
-        repositories: ${{ matrix.repo }}
-        permission-pull-requests: write
-        permission-contents: write
-        permission-workflows: write
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: checkout_extension_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
@@ -183,8 +182,8 @@ jobs:
           ${{ inputs.change-description }}
         commit-message: Update CI workflows to `${{ steps.short-sha.outputs.sha_short }}`
         branch: update-workflows
-        committer: zed-zippy[bot] <234243425+zed-zippy[bot]@users.noreply.github.com>
-        author: zed-zippy[bot] <234243425+zed-zippy[bot]@users.noreply.github.com>
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         base: main
         delete-branch: true
         token: ${{ steps.generate-token.outputs.token }}
@@ -205,15 +204,19 @@ jobs:
     needs:
     - rollout_workflows_to_extension
     if: inputs.filter-repos == ''
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::generate_token
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-        permission-contents: write
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:

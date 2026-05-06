@@ -9,9 +9,9 @@ on:
     - collab-production
 jobs:
   style:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
+    if: github.repository_owner == 'zixiao-labs'
     name: Check formatting and Clippy lints
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -26,10 +26,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -42,7 +41,7 @@ jobs:
     needs:
     - style
     name: Run tests
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -57,10 +56,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -84,7 +82,7 @@ jobs:
     - style
     - tests
     name: Publish collab server image
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: deploy_collab::publish::install_doctl
       uses: digitalocean/action-doctl@v2
@@ -110,7 +108,7 @@ jobs:
     needs:
     - publish
     name: Deploy new server image
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd

@@ -2,7 +2,7 @@ use gh_workflow::*;
 
 use crate::tasks::workflows::steps::{CommonJobConditions, NamedJob, named};
 
-use super::{runners, steps};
+use super::{runners, steps, vars};
 
 /// Generates the danger.yml workflow
 pub fn danger() -> Workflow {
@@ -26,16 +26,15 @@ fn danger_job() -> NamedJob {
     }
 
     pub fn run() -> Step<Run> {
+        // Upstream Zed proxies Danger through `danger-proxy.zed.dev` so it can
+        // authenticate to GitHub without exposing repo-scoped secrets to PRs
+        // from forks. The Esperanta fork doesn't have that proxy, so we hand
+        // Danger the workflow's `GITHUB_TOKEN` directly. For PRs from forks
+        // this token is automatically downgraded to read-only by GitHub —
+        // Danger can read but not comment in that case, which is the expected
+        // trade-off for a small fork without dedicated bot infrastructure.
         named::bash("pnpm run --dir script/danger danger ci")
-            // This GitHub token is not used, but the value needs to be here to prevent
-            // Danger from throwing an error.
-            .add_env(("GITHUB_TOKEN", "not_a_real_token"))
-            // All requests are instead proxied through a proxy that allows Danger to securely authenticate with GitHub
-            // while still being able to run on PRs from forks.
-            .add_env((
-                "DANGER_GITHUB_API_BASE_URL",
-                "https://danger-proxy.zed.dev/github",
-            ))
+            .add_env(("GITHUB_TOKEN", vars::GITHUB_TOKEN))
     }
 
     NamedJob {

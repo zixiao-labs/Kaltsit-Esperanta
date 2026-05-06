@@ -21,7 +21,7 @@ on:
         type: string
 jobs:
   run_unit_evals:
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -32,10 +32,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -45,12 +44,7 @@ jobs:
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: ./script/run-unit-evals
       run: ./script/run-unit-evals
       env:
@@ -60,7 +54,7 @@ jobs:
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
         UNIT_EVAL_COMMIT: ${{ inputs.commit_sha }}
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |

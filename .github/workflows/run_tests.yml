@@ -16,8 +16,8 @@ on:
     - v[0-9]+.[0-9]+.x
 jobs:
   orchestrate:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -129,18 +129,17 @@ jobs:
       run_tests: ${{ steps.filter.outputs.run_tests }}
       changed_extensions: ${{ steps.filter.outputs.changed_extensions }}
   check_style:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-4x8-ubuntu-2204
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
         clean: false
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_pnpm
       uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
       with:
@@ -177,7 +176,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: self-32vcpu-windows-2022
+    runs-on: windows-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -189,25 +188,18 @@ jobs:
         Copy-Item -Path "./.cargo/ci-config.toml" -Destination "./../.cargo/config.toml"
       shell: pwsh
     - name: steps::setup_sccache
-      run: ./script/setup-sccache.ps1
-      shell: pwsh
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy.ps1
       shell: pwsh
     - name: steps::show_sccache_stats
-      run: if ($env:RUSTC_WRAPPER) { & $env:RUSTC_WRAPPER --show-stats }; exit 0
-      shell: pwsh
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   clippy_linux:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true'
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -221,31 +213,25 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
       run: ./script/download-wasi-sdk
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   clippy_mac:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -256,27 +242,21 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   clippy_mac_x86_64:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -287,29 +267,23 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::install_rustup_target
       run: rustup target add x86_64-apple-darwin
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy --target x86_64-apple-darwin
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   run_tests_windows:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: self-32vcpu-windows-2022
+    runs-on: windows-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -328,19 +302,12 @@ jobs:
       run: ./script/clear-target-dir-if-larger-than.ps1 350 200
       shell: pwsh
     - name: steps::setup_sccache
-      run: ./script/setup-sccache.ps1
-      shell: pwsh
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn${{ needs.orchestrate.outputs.changed_packages && format(' -E "{0}"', needs.orchestrate.outputs.changed_packages) || '' }}
       shell: pwsh
     - name: steps::show_sccache_stats
-      run: if ($env:RUSTC_WRAPPER) { & $env:RUSTC_WRAPPER --show-stats }; exit 0
-      shell: pwsh
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -351,7 +318,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -365,10 +332,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -382,16 +348,11 @@ jobs:
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn${{ needs.orchestrate.outputs.changed_packages && format(' -E "{0}"', needs.orchestrate.outputs.changed_packages) || '' }}
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -409,7 +370,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -420,10 +381,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_node
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
@@ -433,16 +393,11 @@ jobs:
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn${{ needs.orchestrate.outputs.changed_packages && format(' -E "{0}"', needs.orchestrate.outputs.changed_packages) || '' }}
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -452,7 +407,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -462,10 +417,9 @@ jobs:
       with:
         clean: false
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -475,18 +429,13 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - id: run_doctests
       name: run_tests::doctests::run_doctests
       run: |
         cargo test --workspace --doc --no-fail-fast
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -496,7 +445,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-8x16-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -510,27 +459,21 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
       run: ./script/download-wasi-sdk
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: cargo build -p collab
       run: cargo build -p collab
     - name: cargo build --workspace --bins --examples
       run: cargo build --workspace --bins --examples
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -540,7 +483,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -551,10 +494,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: run_tests::build_visual_tests_binary::cargo_build_visual_tests
       run: cargo build -p zed --bin zed_visual_test_runner --features visual-tests
     - name: steps::cleanup_cargo_config
@@ -565,7 +507,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-8x16-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -576,26 +518,20 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: run_tests::check_wasm::install_nightly_wasm_toolchain
       run: rustup toolchain install nightly --component rust-src --target wasm32-unknown-unknown
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: run_tests::check_wasm::cargo_check_wasm
       run: cargo -Zbuild-std=std,panic_abort check --target wasm32-unknown-unknown -p gpui_platform
       env:
         CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS: -C target-feature=+atomics,+bulk-memory,+mutable-globals
         RUSTC_BOOTSTRAP: '1'
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -605,7 +541,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -615,10 +551,9 @@ jobs:
       with:
         clean: false
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: run_tests::check_dependencies::install_cargo_machete
       uses: taiki-e/install-action@02cc5f8ca9f2301050c0c099055816a41ee05507
       with:
@@ -637,7 +572,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_docs == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       DOCS_AMPLITUDE_API_KEY: ${{ secrets.DOCS_AMPLITUDE_API_KEY }}
       CC: clang
@@ -652,10 +587,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -690,17 +624,16 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_licenses == 'true' && github.event_name != 'merge_group'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
         clean: false
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: ./script/check-licenses
       run: ./script/check-licenses
     - name: ./script/generate-licenses
@@ -709,7 +642,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_action_checks == 'true'
-    runs-on: namespace-profile-8x16-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -725,10 +658,9 @@ jobs:
       env:
         ACTIONLINT_BIN: ${{ steps.get_actionlint.outputs.executable }}
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: run_tests::check_scripts::check_xtask_workflows
       run: |
         cargo xtask workflows
@@ -742,7 +674,7 @@ jobs:
     needs:
     - orchestrate
     if: needs.orchestrate.outputs.run_tests == 'true'
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       GIT_AUTHOR_NAME: Protobuf Action
       GIT_AUTHOR_EMAIL: ci@zed.dev
@@ -813,8 +745,8 @@ jobs:
     - check_licenses
     - check_scripts
     - extension_tests
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions') && always()
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs' && always()
+    runs-on: ubuntu-latest
     steps:
     - name: run_tests::tests_pass
       run: |

@@ -224,7 +224,7 @@ Once the master connection is established, Zed will check to see if the remote s
 
 If it is not there or the version mismatches, Zed will try to download the latest version. By default, it will download from `https://zed.dev` directly, but if you set: `{"upload_binary_over_ssh":true}` in your settings for that server, it will download the binary to your local machine and then upload it to the remote server.
 
-If you'd like to maintain the server binary yourself you can. You can either download our prebuilt versions from [GitHub](https://github.com/zed-industries/zed/releases), or [build your own](https://zed.dev/docs/development) with `cargo build -p remote_server --release`. If you do this, you must upload it to `~/.zed_server/zed-remote-server-{RELEASE_CHANNEL}-{VERSION}` on the server, for example `~/.zed_server/zed-remote-server-stable-0.217.3+stable.105.80433cb239e868271457ac376673a5f75bc4adb1`. The version must exactly match the version of Zed itself you are using.
+If you'd like to maintain the server binary yourself you can. You can either download our prebuilt versions from [GitHub](https://github.com/zixiao-labs/Kaltsit-Esperanta/releases), or [build your own](https://zed.dev/docs/development) with `cargo build -p remote_server --release`. If you do this, you must upload it to `~/.zed_server/zed-remote-server-{RELEASE_CHANNEL}-{VERSION}` on the server, for example `~/.zed_server/zed-remote-server-stable-0.217.3+stable.105.80433cb239e868271457ac376673a5f75bc4adb1`. The version must exactly match the version of Zed itself you are using.
 
 ## Maintaining the SSH connection
 
@@ -234,7 +234,7 @@ Each connection tries to run the development server in proxy mode. This mode wil
 
 In the case that reconnecting fails, the daemon will not be re-used. That said, unsaved changes are by default persisted locally, so that you do not lose work. You can always reconnect to the project at a later date and Zed will restore unsaved changes.
 
-If you are struggling with connection issues, you should be able to see more information in the Zed log `cmd-shift-p Open Log`. If you are seeing things that are unexpected, please file a [GitHub issue](https://github.com/zed-industries/zed/issues/new) or reach out in the #support forums on [Discord](https://zed.dev/community-links).
+If you are struggling with connection issues, you should be able to see more information in the Zed log `cmd-shift-p Open Log`. If you are seeing things that are unexpected, please file a [GitHub issue](https://github.com/zixiao-labs/Kaltsit-Esperanta/issues/new) or reach out in [GitHub Discussions](https://github.com/zixiao-labs/Kaltsit-Esperanta/discussions).
 
 ## Supported SSH Options
 

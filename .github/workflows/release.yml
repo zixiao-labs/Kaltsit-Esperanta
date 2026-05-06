@@ -10,8 +10,8 @@ on:
     - v*
 jobs:
   run_tests_mac:
-    if: (github.repository_owner == 'zixiao-labs')
-    runs-on: namespace-profile-mac-large
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -22,10 +22,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_node
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
@@ -35,24 +34,19 @@ jobs:
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
         rm -rf ./../.cargo
     timeout-minutes: 60
   run_tests_linux:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -66,10 +60,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -83,16 +76,11 @@ jobs:
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -107,8 +95,8 @@ jobs:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 500ms --health-timeout 5s --health-retries 10
   run_tests_windows:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: self-32vcpu-windows-2022
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: windows-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -127,19 +115,12 @@ jobs:
       run: ./script/clear-target-dir-if-larger-than.ps1 350 200
       shell: pwsh
     - name: steps::setup_sccache
-      run: ./script/setup-sccache.ps1
-      shell: pwsh
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::cargo_nextest
       run: cargo nextest run --workspace --no-fail-fast --no-tests=warn
       shell: pwsh
     - name: steps::show_sccache_stats
-      run: if ($env:RUSTC_WRAPPER) { & $env:RUSTC_WRAPPER --show-stats }; exit 0
-      shell: pwsh
+      run: echo "sccache disabled (no stats)"
     - name: steps::cleanup_cargo_config
       if: always()
       run: |
@@ -147,8 +128,8 @@ jobs:
       shell: pwsh
     timeout-minutes: 60
   clippy_mac:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-mac-large
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: macos-14
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -159,25 +140,19 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   clippy_linux:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -191,29 +166,23 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
       run: ./script/download-wasi-sdk
     - name: steps::setup_sccache
-      run: ./script/setup-sccache
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy
     - name: steps::show_sccache_stats
-      run: sccache --show-stats || true
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   clippy_windows:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: self-32vcpu-windows-2022
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: windows-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -225,23 +194,16 @@ jobs:
         Copy-Item -Path "./.cargo/ci-config.toml" -Destination "./../.cargo/config.toml"
       shell: pwsh
     - name: steps::setup_sccache
-      run: ./script/setup-sccache.ps1
-      shell: pwsh
-      env:
-        R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        SCCACHE_BUCKET: sccache-zed
+      run: echo "sccache disabled"
     - name: steps::clippy
       run: ./script/clippy.ps1
       shell: pwsh
     - name: steps::show_sccache_stats
-      run: if ($env:RUSTC_WRAPPER) { & $env:RUSTC_WRAPPER --show-stats }; exit 0
-      shell: pwsh
+      run: echo "sccache disabled (no stats)"
     timeout-minutes: 60
   check_scripts:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-8x16-ubuntu-2204
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -257,10 +219,9 @@ jobs:
       env:
         ACTIONLINT_BIN: ${{ steps.get_actionlint.outputs.executable }}
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: run_tests::check_scripts::check_xtask_workflows
       run: |
         cargo xtask workflows
@@ -271,16 +232,20 @@ jobs:
         fi
     timeout-minutes: 60
   create_draft_release:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::authenticate_as_zippy
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-        permission-contents: write
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
@@ -298,68 +263,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
     timeout-minutes: 60
-  compliance_check:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
-    steps:
-    - name: steps::checkout_repo
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      with:
-        clean: false
-        fetch-depth: 0
-        ref: ${{ github.ref }}
-    - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
-      with:
-        cache: rust
-        path: ~/.rustup
-    - id: run-compliance-check
-      name: release::add_compliance_steps::run_compliance_check
-      run: |
-        cargo xtask compliance version "$GITHUB_REF_NAME" --report-path "compliance-report-${GITHUB_REF_NAME}.md"
-      env:
-        GITHUB_APP_ID: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        GITHUB_APP_KEY: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-      continue-on-error: true
-    - name: '@actions/upload-artifact compliance-report-${{ github.ref_name }}.md'
-      if: always()
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
-      with:
-        name: compliance-report-${{ github.ref_name }}.md
-        path: compliance-report-${{ github.ref_name }}.md
-        if-no-files-found: error
-    - name: send_compliance_slack_notification
-      if: ${{ always() }}
-      run: |
-        if [ "$COMPLIANCE_OUTCOME" == "success" ]; then
-            STATUS="✅ Compliance check passed for $COMPLIANCE_TAG"
-            MESSAGE=$(printf "%s\n\nReport: %s" "$STATUS" "$ARTIFACT_URL")
-        else
-            STATUS="❌ Preliminary compliance check failed (but this can still be fixed while the builds are running!) for $COMPLIANCE_TAG"
-            MESSAGE=$(printf "%s\n\nReport: %s\nPRs needing review: %s" "$STATUS" "$ARTIFACT_URL" "https://github.com/zed-industries/zed/pulls?q=is%3Apr+is%3Aclosed+label%3A%22PR+state%3Aneeds+review%22")
-        fi
-
-        curl -X POST -H 'Content-type: application/json' \
-            --data "$(jq -n --arg text "$MESSAGE" '{"text": $text}')" \
-            "$SLACK_WEBHOOK"
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_WORKFLOW_FAILURES }}
-        COMPLIANCE_OUTCOME: ${{ steps.run-compliance-check.outcome }}
-        COMPLIANCE_TAG: ${{ github.ref_name }}
-        ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
-    outputs:
-      outcome: ${{ steps.run-compliance-check.outputs.outcome }}
-    timeout-minutes: 60
   bundle_linux_aarch64:
     needs:
     - run_tests_linux
     - clippy_linux
     - check_scripts
-    runs-on: namespace-profile-8x32-ubuntu-2004-arm-m4
+    runs-on: ubuntu-24.04-arm
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
       CC: clang-18
       CXX: clang++-18
     steps:
@@ -368,9 +280,7 @@ jobs:
       with:
         clean: false
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -395,11 +305,10 @@ jobs:
     - run_tests_linux
     - clippy_linux
     - check_scripts
-    runs-on: namespace-profile-32x64-ubuntu-2004
+    runs-on: ubuntu-latest
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
       CC: clang-18
       CXX: clang++-18
     steps:
@@ -408,9 +317,7 @@ jobs:
       with:
         clean: false
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -435,16 +342,10 @@ jobs:
     - run_tests_mac
     - clippy_mac
     - check_scripts
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
-      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-      APPLE_NOTARIZATION_KEY: ${{ secrets.APPLE_NOTARIZATION_KEY }}
-      APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
-      APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -455,9 +356,7 @@ jobs:
       with:
         node-version: '20'
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: run_bundling::bundle_mac::bundle_mac
@@ -480,16 +379,10 @@ jobs:
     - run_tests_mac
     - clippy_mac
     - check_scripts
-    runs-on: namespace-profile-mac-large
+    runs-on: macos-14
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
-      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-      APPLE_NOTARIZATION_KEY: ${{ secrets.APPLE_NOTARIZATION_KEY }}
-      APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
-      APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -500,9 +393,7 @@ jobs:
       with:
         node-version: '20'
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: steps::clear_target_dir_if_large
       run: ./script/clear-target-dir-if-larger-than 350 200
     - name: run_bundling::bundle_mac::bundle_mac
@@ -525,29 +416,17 @@ jobs:
     - run_tests_windows
     - clippy_windows
     - check_scripts
-    runs-on: self-32vcpu-windows-2022
+    runs-on: windows-latest
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_SIGNING_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_SIGNING_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_SIGNING_CLIENT_SECRET }}
-      ACCOUNT_NAME: ${{ vars.AZURE_SIGNING_ACCOUNT_NAME }}
-      CERT_PROFILE_NAME: ${{ vars.AZURE_SIGNING_CERT_PROFILE_NAME }}
-      ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
-      FILE_DIGEST: SHA256
-      TIMESTAMP_DIGEST: SHA256
-      TIMESTAMP_SERVER: http://timestamp.acs.microsoft.com
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
         clean: false
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: run_bundling::bundle_windows::bundle_windows
       run: script/bundle-windows.ps1 -Architecture aarch64
       shell: pwsh
@@ -570,29 +449,17 @@ jobs:
     - run_tests_windows
     - clippy_windows
     - check_scripts
-    runs-on: self-32vcpu-windows-2022
+    runs-on: windows-latest
     env:
       CARGO_INCREMENTAL: 0
       ZED_CLIENT_CHECKSUM_SEED: ${{ secrets.ZED_CLIENT_CHECKSUM_SEED }}
-      ZED_MINIDUMP_ENDPOINT: ${{ secrets.ZED_SENTRY_MINIDUMP_ENDPOINT }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_SIGNING_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_SIGNING_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_SIGNING_CLIENT_SECRET }}
-      ACCOUNT_NAME: ${{ vars.AZURE_SIGNING_ACCOUNT_NAME }}
-      CERT_PROFILE_NAME: ${{ vars.AZURE_SIGNING_CERT_PROFILE_NAME }}
-      ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
-      FILE_DIGEST: SHA256
-      TIMESTAMP_DIGEST: SHA256
-      TIMESTAMP_SERVER: http://timestamp.acs.microsoft.com
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
         clean: false
     - name: steps::setup_sentry
-      uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
-      with:
-        token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: echo "sentry integration disabled"
     - name: run_bundling::bundle_windows::bundle_windows
       run: script/bundle-windows.ps1 -Architecture x86_64
       shell: pwsh
@@ -619,7 +486,7 @@ jobs:
     - bundle_mac_x86_64
     - bundle_windows_aarch64
     - bundle_windows_x86_64
-    runs-on: namespace-profile-4x8-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
     - name: release::download_workflow_artifacts
       uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
@@ -643,21 +510,21 @@ jobs:
         mv ./artifacts/zed-remote-server-linux-x86_64.gz/zed-remote-server-linux-x86_64.gz release-artifacts/zed-remote-server-linux-x86_64.gz
         mv ./artifacts/zed-remote-server-windows-aarch64.zip/zed-remote-server-windows-aarch64.zip release-artifacts/zed-remote-server-windows-aarch64.zip
         mv ./artifacts/zed-remote-server-windows-x86_64.zip/zed-remote-server-windows-x86_64.zip release-artifacts/zed-remote-server-windows-x86_64.zip
-    - name: gh release upload "$GITHUB_REF_NAME" --repo=zed-industries/zed release-artifacts/*
-      run: gh release upload "$GITHUB_REF_NAME" --repo=zed-industries/zed release-artifacts/*
+    - name: gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" release-artifacts/*
+      run: gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" release-artifacts/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   validate_release_assets:
     needs:
     - upload_release_assets
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - name: release::validate_release_assets
       run: |
         EXPECTED_ASSETS='["Zed-aarch64.dmg", "Zed-x86_64.dmg", "zed-linux-aarch64.tar.gz", "zed-linux-x86_64.tar.gz", "Zed-x86_64.exe", "Zed-aarch64.exe", "zed-remote-server-macos-aarch64.gz", "zed-remote-server-macos-x86_64.gz", "zed-remote-server-linux-aarch64.gz", "zed-remote-server-linux-x86_64.gz", "zed-remote-server-windows-aarch64.zip", "zed-remote-server-windows-x86_64.zip"]'
         TAG="$GITHUB_REF_NAME"
 
-        ACTUAL_ASSETS=$(gh release view "$TAG" --repo=zed-industries/zed --json assets -q '[.assets[].name]')
+        ACTUAL_ASSETS=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '[.assets[].name]')
 
         MISSING_ASSETS=$(echo "$EXPECTED_ASSETS" | jq -r --argjson actual "$ACTUAL_ASSETS" '. - $actual | .[]')
 
@@ -670,70 +537,23 @@ jobs:
         echo "All expected assets are present in the release."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  release_compliance_check:
-    needs:
-    - upload_release_assets
-    - compliance_check
-    runs-on: namespace-profile-8x16-ubuntu-2204
-    steps:
-    - name: steps::checkout_repo
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      with:
-        clean: false
-        fetch-depth: 0
-        ref: ${{ github.ref }}
-    - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
-      with:
-        cache: rust
-        path: ~/.rustup
-    - id: run-compliance-check
-      name: release::add_compliance_steps::run_compliance_check
-      run: |
-        cargo xtask compliance version "$GITHUB_REF_NAME" --report-path "compliance-report-${GITHUB_REF_NAME}.md"
-      env:
-        GITHUB_APP_ID: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        GITHUB_APP_KEY: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-    - name: '@actions/upload-artifact compliance-report-${{ github.ref_name }}.md'
-      if: always()
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
-      with:
-        name: compliance-report-${{ github.ref_name }}.md
-        path: compliance-report-${{ github.ref_name }}.md
-        if-no-files-found: error
-        overwrite: true
-    - name: send_compliance_slack_notification
-      if: ${{ failure() || needs.compliance_check.outputs.outcome != 'success' }}
-      run: |
-        if [ "$COMPLIANCE_OUTCOME" == "success" ]; then
-            STATUS="✅ Compliance check passed for $COMPLIANCE_TAG"
-            MESSAGE=$(printf "%s\n\nReport: %s" "$STATUS" "$ARTIFACT_URL")
-        else
-            STATUS="❌ Compliance check failed for $COMPLIANCE_TAG"
-            MESSAGE=$(printf "%s\n\nReport: %s\nPRs needing review: %s" "$STATUS" "$ARTIFACT_URL" "https://github.com/zed-industries/zed/pulls?q=is%3Apr+is%3Aclosed+label%3A%22PR+state%3Aneeds+review%22")
-        fi
-
-        curl -X POST -H 'Content-type: application/json' \
-            --data "$(jq -n --arg text "$MESSAGE" '{"text": $text}')" \
-            "$SLACK_WEBHOOK"
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_WORKFLOW_FAILURES }}
-        COMPLIANCE_OUTCOME: ${{ steps.run-compliance-check.outcome }}
-        COMPLIANCE_TAG: ${{ github.ref_name }}
-        ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
   auto_release_preview:
     needs:
     - validate_release_assets
-    - release_compliance_check
     if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-pre')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::authenticate_as_zippy
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
@@ -741,10 +561,9 @@ jobs:
         ref: ${{ github.ref }}
         token: ${{ steps.generate-token.outputs.token }}
     - id: auto-release-preview
-      name: release::auto_release_preview::auto_release_preview
+      name: release::auto_release_preview::auto_release_preview_step
       run: |
         tag="$GITHUB_REF_NAME"
-        release_published=false
 
         if [[ ! "$tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)-pre$ ]]; then
             echo "::error::expected preview release tag in the form vMAJOR.MINOR.PATCH-pre, got $tag"
@@ -770,120 +589,10 @@ jobs:
         fi
 
         if [[ "$should_release" == "true" ]]; then
-            gh release edit "$tag" --repo=zed-industries/zed --draft=false
-            release_published=true
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false
         fi
-
-        echo "release_published=$release_published" >> "$GITHUB_OUTPUT"
       env:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-    outputs:
-      release_published: ${{ steps.auto-release-preview.outputs.release_published }}
-  push_release_update_notification:
-    needs:
-    - create_draft_release
-    - upload_release_assets
-    - validate_release_assets
-    - release_compliance_check
-    - auto_release_preview
-    - run_tests_mac
-    - run_tests_linux
-    - run_tests_windows
-    - clippy_mac
-    - clippy_linux
-    - clippy_windows
-    - check_scripts
-    - bundle_linux_aarch64
-    - bundle_linux_x86_64
-    - bundle_mac_aarch64
-    - bundle_mac_x86_64
-    - bundle_windows_aarch64
-    - bundle_windows_x86_64
-    if: always()
-    runs-on: namespace-profile-2x4-ubuntu-2404
-    steps:
-    - id: generate-webhook-message
-      name: release::generate_slack_message
-      run: |
-        MESSAGE=$(if [ "$DRAFT_RESULT" == "failure" ]; then
-            echo "❌ Draft release creation failed for $TAG: $RUN_URL"
-        else
-            RELEASE_URL=$(gh release view "$TAG" --repo=zed-industries/zed --json url -q '.url')
-            if [ "$UPLOAD_RESULT" == "failure" ]; then
-                echo "❌ Release asset upload failed for $TAG: $RELEASE_URL"
-            elif [ "$UPLOAD_RESULT" == "cancelled" ] || [ "$UPLOAD_RESULT" == "skipped" ]; then
-                FAILED_JOBS=""
-                if [ "$RESULT_RUN_TESTS_MAC" == "failure" ];then FAILED_JOBS="$FAILED_JOBS run_tests_mac"; fi
-                if [ "$RESULT_RUN_TESTS_LINUX" == "failure" ];then FAILED_JOBS="$FAILED_JOBS run_tests_linux"; fi
-                if [ "$RESULT_RUN_TESTS_WINDOWS" == "failure" ];then FAILED_JOBS="$FAILED_JOBS run_tests_windows"; fi
-                if [ "$RESULT_CLIPPY_MAC" == "failure" ];then FAILED_JOBS="$FAILED_JOBS clippy_mac"; fi
-                if [ "$RESULT_CLIPPY_LINUX" == "failure" ];then FAILED_JOBS="$FAILED_JOBS clippy_linux"; fi
-                if [ "$RESULT_CLIPPY_WINDOWS" == "failure" ];then FAILED_JOBS="$FAILED_JOBS clippy_windows"; fi
-                if [ "$RESULT_CHECK_SCRIPTS" == "failure" ];then FAILED_JOBS="$FAILED_JOBS check_scripts"; fi
-                if [ "$RESULT_BUNDLE_LINUX_AARCH64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_linux_aarch64"; fi
-                if [ "$RESULT_BUNDLE_LINUX_X86_64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_linux_x86_64"; fi
-                if [ "$RESULT_BUNDLE_MAC_AARCH64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_mac_aarch64"; fi
-                if [ "$RESULT_BUNDLE_MAC_X86_64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_mac_x86_64"; fi
-                if [ "$RESULT_BUNDLE_WINDOWS_AARCH64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_windows_aarch64"; fi
-                if [ "$RESULT_BUNDLE_WINDOWS_X86_64" == "failure" ];then FAILED_JOBS="$FAILED_JOBS bundle_windows_x86_64"; fi
-                FAILED_JOBS=$(echo "$FAILED_JOBS" | xargs)
-                if [ "$UPLOAD_RESULT" == "cancelled" ]; then
-                    if [ -n "$FAILED_JOBS" ]; then
-                        echo "❌ Release job for $TAG was cancelled, most likely because tests \`$FAILED_JOBS\` failed: $RUN_URL"
-                    else
-                        echo "❌ Release job for $TAG was cancelled: $RUN_URL"
-                    fi
-                else
-                    if [ -n "$FAILED_JOBS" ]; then
-                        echo "❌ Tests \`$FAILED_JOBS\` for $TAG failed: $RUN_URL"
-                    else
-                        echo "❌ Tests for $TAG failed: $RUN_URL"
-                    fi
-                fi
-            elif [ "$COMPLIANCE_RESULT" == "failure" ]; then
-                # We already notify within that job
-                echo ""
-            elif [ "$VALIDATE_RESULT" == "failure" ]; then
-                echo "❌ Release validation failed for $TAG: missing assets: $RUN_URL"
-            elif [ "$AUTO_RELEASE_RESULT" == "failure" ]; then
-                echo "❌ Auto release failed for $TAG: $RUN_URL"
-            elif [ "$AUTO_RELEASE_RESULT" == "success" ] && [ "$AUTO_RELEASE_PUBLISHED" == "true" ]; then
-                echo "✅ Release $TAG was auto-released successfully: $RELEASE_URL"
-            else
-                echo "👀 Release $TAG sitting freshly baked in the oven and waiting to be published: $RELEASE_URL"
-            fi
-        fi
-        )
-        echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
-      env:
-        GH_TOKEN: ${{ github.token }}
-        DRAFT_RESULT: ${{ needs.create_draft_release.result }}
-        UPLOAD_RESULT: ${{ needs.upload_release_assets.result }}
-        VALIDATE_RESULT: ${{ needs.validate_release_assets.result }}
-        COMPLIANCE_RESULT: ${{ needs.release_compliance_check.result }}
-        AUTO_RELEASE_RESULT: ${{ needs.auto_release_preview.result }}
-        AUTO_RELEASE_PUBLISHED: ${{ needs.auto_release_preview.outputs.release_published }}
-        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        TAG: ${{ github.ref_name }}
-        RESULT_RUN_TESTS_MAC: ${{ needs.run_tests_mac.result }}
-        RESULT_RUN_TESTS_LINUX: ${{ needs.run_tests_linux.result }}
-        RESULT_RUN_TESTS_WINDOWS: ${{ needs.run_tests_windows.result }}
-        RESULT_CLIPPY_MAC: ${{ needs.clippy_mac.result }}
-        RESULT_CLIPPY_LINUX: ${{ needs.clippy_linux.result }}
-        RESULT_CLIPPY_WINDOWS: ${{ needs.clippy_windows.result }}
-        RESULT_CHECK_SCRIPTS: ${{ needs.check_scripts.result }}
-        RESULT_BUNDLE_LINUX_AARCH64: ${{ needs.bundle_linux_aarch64.result }}
-        RESULT_BUNDLE_LINUX_X86_64: ${{ needs.bundle_linux_x86_64.result }}
-        RESULT_BUNDLE_MAC_AARCH64: ${{ needs.bundle_mac_aarch64.result }}
-        RESULT_BUNDLE_MAC_X86_64: ${{ needs.bundle_mac_x86_64.result }}
-        RESULT_BUNDLE_WINDOWS_AARCH64: ${{ needs.bundle_windows_aarch64.result }}
-        RESULT_BUNDLE_WINDOWS_X86_64: ${{ needs.bundle_windows_x86_64.result }}
-    - name: release::send_slack_message
-      if: steps.generate-webhook-message.outputs.message != ''
-      run: 'curl -X POST -H ''Content-type: application/json'' --data "$(jq -n --arg text "$SLACK_MESSAGE" ''{"text": $text}'')" "$SLACK_WEBHOOK"'
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_WORKFLOW_FAILURES }}
-        SLACK_MESSAGE: ${{ steps.generate-webhook-message.outputs.message }}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
   cancel-in-progress: true

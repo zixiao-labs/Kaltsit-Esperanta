@@ -98,7 +98,7 @@ fn resolve_versions() -> (steps::NamedJob, ResolvedOutputs) {
     let job = named::job(
         Job::default()
             .cond(Expression::new(
-                "github.repository_owner == 'zed-industries'",
+                "github.repository_owner == 'zixiao-labs'",
             ))
             .runs_on(runners::LINUX_XL)
             .add_step(authenticate)

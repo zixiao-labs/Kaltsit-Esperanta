@@ -86,5 +86,5 @@ You can also enable familiar keybindings:
 Zed is open source. Join us on GitHub or in Discord to contribute code, report bugs, or suggest features.
 
 - [Discord](https://discord.com/invite/zedindustries)
-- [GitHub Discussions](https://github.com/zed-industries/zed/discussions)
+- [GitHub Discussions](https://github.com/zixiao-labs/Kaltsit-Esperanta/discussions)
 - [Zed Reddit](https://www.reddit.com/r/ZedEditor)

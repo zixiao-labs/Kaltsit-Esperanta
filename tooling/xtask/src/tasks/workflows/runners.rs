@@ -1,18 +1,24 @@
-pub const LINUX_SMALL: Runner = Runner("namespace-profile-2x4-ubuntu-2404");
+// All runner constants now point at GitHub-hosted runners. The Esperanta fork
+// does not have access to Namespace Cloud runners or the self-hosted Windows
+// fleet that upstream Zed uses. If a future iteration adds beefier private
+// runners, change the right-hand side here — call sites do not need to know.
+pub const LINUX_SMALL: Runner = Runner("ubuntu-latest");
 pub const LINUX_DEFAULT: Runner = LINUX_XL;
-pub const LINUX_XL: Runner = Runner("namespace-profile-16x32-ubuntu-2204");
-pub const LINUX_LARGE: Runner = Runner("namespace-profile-8x16-ubuntu-2204");
-pub const LINUX_MEDIUM: Runner = Runner("namespace-profile-4x8-ubuntu-2204");
+pub const LINUX_XL: Runner = Runner("ubuntu-latest");
+pub const LINUX_LARGE: Runner = Runner("ubuntu-latest");
+pub const LINUX_MEDIUM: Runner = Runner("ubuntu-latest");
 
-// Using Ubuntu 20.04 for minimal glibc version
-pub const LINUX_X86_BUNDLER: Runner = Runner("namespace-profile-32x64-ubuntu-2004");
-pub const LINUX_ARM_BUNDLER: Runner = Runner("namespace-profile-8x32-ubuntu-2004-arm-m4");
+// On GH-hosted, x86_64 = ubuntu-latest, aarch64 = ubuntu-24.04-arm.
+// We accept the newer Ubuntu (and consequently a newer glibc) on the fork —
+// the upstream "use 20.04 for minimal glibc" constraint targets corporate
+// Linux distros which is not a goal we maintain here.
+pub const LINUX_X86_BUNDLER: Runner = Runner("ubuntu-latest");
+pub const LINUX_ARM_BUNDLER: Runner = Runner("ubuntu-24.04-arm");
 
-// Larger Ubuntu runner with glibc 2.39 for extension bundling
-pub const LINUX_LARGE_RAM: Runner = Runner("namespace-profile-8x32-ubuntu-2404");
+pub const LINUX_LARGE_RAM: Runner = Runner("ubuntu-latest");
 
-pub const MAC_DEFAULT: Runner = Runner("namespace-profile-mac-large");
-pub const WINDOWS_DEFAULT: Runner = Runner("self-32vcpu-windows-2022");
+pub const MAC_DEFAULT: Runner = Runner("macos-14");
+pub const WINDOWS_DEFAULT: Runner = Runner("windows-latest");
 
 pub struct Runner(&'static str);
 

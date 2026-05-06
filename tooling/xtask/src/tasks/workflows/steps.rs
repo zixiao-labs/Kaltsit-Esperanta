@@ -12,6 +12,7 @@ pub(crate) fn use_clang(job: Job) -> Job {
         .add_env(Env::new("CXX", "clang++"))
 }
 
+#[allow(dead_code, reason = "kept for future signing/cache integrations")]
 const SCCACHE_R2_BUCKET: &str = "sccache-zed";
 
 pub(crate) const BASH_SHELL: &str = "bash -euxo pipefail {0}";
@@ -161,13 +162,13 @@ pub fn setup_node() -> Step<Use> {
     .add_with(("node-version", "20"))
 }
 
-pub fn setup_sentry() -> Step<Use> {
-    named::uses(
-        "matbour",
-        "setup-sentry-cli",
-        "3e938c54b3018bdd019973689ef984e033b0454b",
-    )
-    .add_with(("token", vars::SENTRY_AUTH_TOKEN))
+pub fn setup_sentry() -> Step<Run> {
+    // The Esperanta fork does not push minidumps or releases to Sentry. This
+    // helper used to call matbour/setup-sentry-cli; it is now a no-op so that
+    // existing call sites in run_bundling/release_nightly compile unchanged.
+    // Restore the action invocation here if/when a fork-side Sentry project
+    // is wired up.
+    named::bash(r#"echo "sentry integration disabled""#)
 }
 
 pub fn prettier() -> Step<Run> {
@@ -250,57 +251,47 @@ pub fn install_rustup_target(target: &str) -> Step<Run> {
 }
 
 pub fn cache_rust_dependencies_namespace() -> Step<Use> {
+    // Upstream uses a Namespace Cloud cache action against a private cache
+    // bucket. The fork has no Namespace account, so we substitute Swatinem's
+    // GH-hosted-friendly rust cache, which keys off Cargo.lock and persists
+    // ~/.cargo/{registry,git} and target/ across runs of the same workflow.
+    // The function name is preserved so the ~21 callers across the workflow
+    // module do not need to change.
     named::uses(
-        "namespacelabs",
-        "nscloud-cache-action",
-        "a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9", // v1
+        "Swatinem",
+        "rust-cache",
+        "9d47c6ad4b02e050fd481d890b2ea34778fd09d6", // v2.7.8
     )
-    .add_with(("cache", "rust"))
-    .add_with(("path", "~/.rustup"))
+    .add_with(("save-if", "${{ github.ref == 'refs/heads/main' }}"))
 }
 
-pub fn setup_sccache(platform: Platform) -> Step<Run> {
-    let step = match platform {
-        Platform::Windows => named::pwsh("./script/setup-sccache.ps1"),
-        Platform::Linux | Platform::Mac => named::bash("./script/setup-sccache"),
-    };
-    step.add_env(("R2_ACCOUNT_ID", vars::R2_ACCOUNT_ID))
-        .add_env(("R2_ACCESS_KEY_ID", vars::R2_ACCESS_KEY_ID))
-        .add_env(("R2_SECRET_ACCESS_KEY", vars::R2_SECRET_ACCESS_KEY))
-        .add_env(("SCCACHE_BUCKET", SCCACHE_R2_BUCKET))
+pub fn setup_sccache(_platform: Platform) -> Step<Run> {
+    // The shared sccache R2 bucket belongs to zed-industries; we drop sccache
+    // wholesale rather than provision a fork-side one. This stub keeps
+    // existing call sites compiling.
+    named::bash(r#"echo "sccache disabled""#)
 }
 
-pub fn show_sccache_stats(platform: Platform) -> Step<Run> {
-    match platform {
-        // Use $env:RUSTC_WRAPPER (absolute path) because GITHUB_PATH changes
-        // don't take effect until the next step in PowerShell.
-        // Check if RUSTC_WRAPPER is set first (it won't be for fork PRs without secrets).
-        Platform::Windows => {
-            named::pwsh("if ($env:RUSTC_WRAPPER) { & $env:RUSTC_WRAPPER --show-stats }; exit 0")
-        }
-        Platform::Linux | Platform::Mac => named::bash("sccache --show-stats || true"),
-    }
+pub fn show_sccache_stats(_platform: Platform) -> Step<Run> {
+    named::bash(r#"echo "sccache disabled (no stats)""#)
 }
 
-pub fn cache_nix_dependencies_namespace() -> Step<Use> {
-    named::uses(
-        "namespacelabs",
-        "nscloud-cache-action",
-        "a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9", // v1
-    )
-    .add_with(("cache", "nix"))
+pub fn cache_nix_dependencies_namespace() -> Step<Run> {
+    // Upstream Zed runs nix builds on Namespace runners, where the
+    // `nscloud-cache-action` provides a persistent /nix store via bind-mount.
+    // The Esperanta fork uses GitHub-hosted runners which can't host that
+    // action; this is a no-op so the helper still slots into existing call
+    // sites in nix_build. First-run nix builds will populate the store from
+    // scratch; if nightly nix runs become a bottleneck, swap this for
+    // `actions/cache@v4` keyed on flake.lock pointed at /nix.
+    named::bash(r#"echo "nix store cache disabled (no Namespace runner)""#)
 }
 
-pub fn cache_nix_store_macos() -> Step<Use> {
-    // On macOS, `/nix` is on a read-only root filesystem so nscloud's `cache: nix`
-    // cannot mount or symlink there. Instead we cache a user-writable directory and
-    // use nix-store --import/--export in separate steps to transfer store paths.
-    named::uses(
-        "namespacelabs",
-        "nscloud-cache-action",
-        "a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9", // v1
-    )
-    .add_with(("path", "~/nix-cache"))
+pub fn cache_nix_store_macos() -> Step<Run> {
+    // Same rationale as cache_nix_dependencies_namespace, but for macOS where
+    // /nix is on the read-only system volume; upstream cached `~/nix-cache`
+    // (a user-writable substituter) via Namespace. No-op on GH-hosted.
+    named::bash(r#"echo "macOS nix store cache disabled (no Namespace runner)""#)
 }
 
 pub fn setup_linux() -> Step<Run> {
@@ -338,7 +329,7 @@ pub struct NamedJob<J: JobType = RunJob> {
 // }
 
 pub(crate) const DEFAULT_REPOSITORY_OWNER_GUARD: &str =
-    "(github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')";
+    "github.repository_owner == 'zixiao-labs'";
 
 pub fn repository_owner_guard_expression(trigger_always: bool) -> Expression {
     Expression::new(format!(
@@ -542,6 +533,7 @@ pub(crate) enum TokenPermissions {
 }
 
 impl TokenPermissions {
+    #[allow(dead_code, reason = "PAT-mode auth ignores per-permission scoping")]
     pub fn environment_name(&self) -> &'static str {
         match self {
             TokenPermissions::Contents => "permission-contents",
@@ -554,6 +546,7 @@ impl TokenPermissions {
 
 pub(crate) struct GenerateAppToken<'a> {
     job_name: String,
+    #[allow(dead_code, reason = "kept for API parity with upstream's App-token helper")]
     app_id: &'a str,
     app_secret: &'a str,
     repository_target: Option<RepositoryTarget>,
@@ -576,44 +569,29 @@ impl<'a> GenerateAppToken<'a> {
     }
 }
 
-impl<'a> From<GenerateAppToken<'a>> for (Step<Use>, StepOutput) {
+impl<'a> From<GenerateAppToken<'a>> for (Step<Run>, StepOutput) {
     fn from(token: GenerateAppToken<'a>) -> Self {
+        // The Esperanta fork has no GitHub App; the helper used to call
+        // `actions/create-github-app-token` to mint a short-lived install
+        // token. Both `app_id` and `app_secret` are now redirected to
+        // `secrets.SYNC_PAT` (see `vars::ZED_ZIPPY_APP_ID` /
+        // `ZED_ZIPPY_APP_PRIVATE_KEY`), so we simply expose that PAT as the
+        // `token` step output and ignore the requested `repository_target` /
+        // `permissions` (a PAT inherits whatever the owning user has access
+        // to). All call sites that destructure `(step, token)` and reference
+        // `token` keep working because the StepOutput contract is unchanged.
+        let _ = (token.repository_target, token.permissions);
         let step = Step::new(token.job_name)
-            .uses(
-                "actions",
-                "create-github-app-token",
-                "f8d387b68d61c58ab83c6c016672934102569859",
-            )
+            .run(indoc::indoc! {r#"
+                if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+                    echo "::error::SYNC_PAT secret is not configured" >&2
+                    exit 1
+                fi
+                echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+                echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+            "#})
             .id("generate-token")
-            .add_with(
-                Input::default()
-                    .add("app-id", token.app_id)
-                    .add("private-key", token.app_secret)
-                    .when_some(
-                        token.repository_target,
-                        |input,
-                         RepositoryTarget {
-                             owner,
-                             repositories,
-                         }| {
-                            input
-                                .when_some(owner, |input, owner| input.add("owner", owner))
-                                .when_some(repositories, |input, repositories| {
-                                    input.add("repositories", repositories)
-                                })
-                        },
-                    )
-                    .when_some(token.permissions, |input, permissions| {
-                        permissions
-                            .into_iter()
-                            .fold(input, |input, (permission, level)| {
-                                input.add(
-                                    permission.environment_name(),
-                                    serde_json::to_value(&level).unwrap_or_default(),
-                                )
-                            })
-                    }),
-            );
+            .add_env(("ESPERANTA_BOT_TOKEN", token.app_secret));
 
         let generated_token = StepOutput::new(&step, "token");
         (step, generated_token)
@@ -621,7 +599,9 @@ impl<'a> From<GenerateAppToken<'a>> for (Step<Use>, StepOutput) {
 }
 
 pub(crate) struct RepositoryTarget {
+    #[allow(dead_code, reason = "PAT-mode ignores explicit repo targeting")]
     owner: Option<String>,
+    #[allow(dead_code, reason = "PAT-mode ignores explicit repo targeting")]
     repositories: Option<String>,
 }
 
@@ -820,8 +800,14 @@ pub(crate) fn update_ref(
     }
 }
 
+// Bot identity used when CI commits version bumps, branch creation, etc. on
+// behalf of the fork. Upstream uses a dedicated GitHub App ("zed-zippy"); we
+// fall back to the generic github-actions[bot] identity, which any commit
+// pushed with `secrets.SYNC_PAT` (i.e. a regular user PAT) is allowed to
+// claim. If the fork later registers its own App, replace these strings with
+// the App's bot username and noreply email.
 const ZED_ZIPPY_COMMITTER: &str =
-    "zed-zippy[bot] <234243425+zed-zippy[bot]@users.noreply.github.com>";
+    "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>";
 
 pub(crate) struct CreatePrStep {
     title: String,

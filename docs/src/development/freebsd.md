@@ -1,15 +1,15 @@
 ---
-title: Building Zed for FreeBSD
-description: "Guide to building zed for freebsd for Zed development."
+title: Building Esperanta for FreeBSD
+description: "Guide to building Esperanta for FreeBSD development."
 ---
 
-# Building Zed for FreeBSD
+# Building Esperanta for FreeBSD
 
 FreeBSD is not currently a supported platform, so this guide is a work in progress.
 
 ## Repository
 
-Clone the [Zed repository](https://github.com/zed-industries/zed).
+Clone the [Esperanta repository](https://github.com/zixiao-labs/Kaltsit-Esperanta).
 
 ## Dependencies
 
@@ -19,7 +19,7 @@ Clone the [Zed repository](https://github.com/zed-industries/zed).
   script/freebsd
   ```
 
-  If preferred, you can inspect [`script/freebsd`](https://github.com/zed-industries/zed/blob/main/script/freebsd) and perform the steps manually.
+  If preferred, you can inspect [`script/freebsd`](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/script/freebsd) and perform the steps manually.
 
 ## Building from source
 

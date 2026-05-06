@@ -191,10 +191,15 @@ pub fn check() -> Step<Run> {
 }
 
 fn verify_version_did_not_change(version_changed: StepOutput) -> Step<Run> {
+    // Upstream uses `zed-zippy[bot]` (their GitHub App) to skip this check on
+    // automated version bump PRs. The fork's bump workflows go through
+    // `peter-evans/create-pull-request` configured to commit as
+    // `github-actions[bot]` (see ZED_ZIPPY_COMMITTER in steps.rs), so we look
+    // for that author here instead.
     named::bash(indoc! {r#"
-        if [[ "$VERSION_CHANGED" == "true" && "$GITHUB_EVENT_NAME" == "pull_request" && "$PR_USER_LOGIN" != "zed-zippy[bot]" ]] ; then
+        if [[ "$VERSION_CHANGED" == "true" && "$GITHUB_EVENT_NAME" == "pull_request" && "$PR_USER_LOGIN" != "github-actions[bot]" ]] ; then
             echo "Version change detected in your change!"
-            echo "Version changes happen in separate PRs and will be performed by the zed-zippy bot"
+            echo "Version changes happen in separate PRs and will be performed by the github-actions bot"
             exit 42
         fi
         "#
