@@ -75,4 +75,3 @@ This is out of respect for the open-source community. (Actually, an accident occ
 A: Only @Amiya167 and closure-bot.
 
 The other 1,846 people probably don't know they're here.
-

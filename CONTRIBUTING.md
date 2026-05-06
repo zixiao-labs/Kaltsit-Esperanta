@@ -1,15 +1,15 @@
-# Contributing to Zed
+# Contributing to Kaltsit-Esperanta
 
-Thank you for helping us make Zed better!
+Thank you for helping us make Kaltsit-Esperanta better!
 
-All activity in Zed forums is subject to our [Code of
-Conduct](https://zed.dev/code-of-conduct). Additionally, contributors must sign
-our [Contributor License Agreement](https://zed.dev/cla) before their
+All activity in Kaltsit-Esperanta forums is subject to our [Code of
+Conduct](./CODE_OF_CONDUCT.md). Additionally, contributors must sign
+our ····We do not currently have CLA, please use DCO for now. before their
 contributions can be merged.
 
 ## Contribution ideas
 
-Zed is a large project with a number of priorities. We spend most of
+Kaltsit-Esperanta is a large project with a number of priorities. We spend most of
 our time working on what we believe the product needs, but we also love working
 with the community to improve the product in ways we haven't thought of (or had time to get to yet!)
 
@@ -131,7 +131,7 @@ Although there are few hard and fast rules, typically we don't merge:
 - Stylistic code changes that do not alter any app logic. Reducing allocations, removing `.unwrap()`s, fixing typos is great; making code "more readable" — maybe not so much.
 - Anything that seems AI-generated without understanding the output.
 
-## Bird's-eye view of Zed
+## Bird's-eye view of Kaltsit-Esperanta
 
 We suggest you keep the [Zed glossary](docs/src/development/glossary.md) at your side when starting out. It lists and explains some of the structures and terms you will see throughout the codebase.
 
@@ -151,6 +151,4 @@ Zed is made up of several smaller crates - let's go over those you're most likel
 - [`cli`](/crates/cli) is the CLI crate which invokes the Zed binary.
 - [`zed`](/crates/zed) is where all things come together, and the `main` entry point for Zed.
 
-## Packaging Zed
-
-Check our [notes for packaging Zed](https://zed.dev/docs/development/linux#notes-for-packaging-zed).
+## Packaging Kaltsit-Esperanta

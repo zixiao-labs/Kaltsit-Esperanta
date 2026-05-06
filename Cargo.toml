@@ -249,7 +249,7 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask",
+    "tooling/xtask", "crates/ama10",
 ]
 default-members = ["crates/zed"]
 
