@@ -1,15 +1,15 @@
 ---
-title: Building Zed for Windows
-description: "Guide to building zed for windows for Zed development."
+title: Building Esperanta for Windows
+description: "Guide to building Esperanta for Windows development."
 ---
 
-# Building Zed for Windows
+# Building Esperanta for Windows
 
 > The following commands may be executed in any shell.
 
 ## Repository
 
-Clone the [Zed repository](https://github.com/zed-industries/zed).
+Clone the [Esperanta repository](https://github.com/zixiao-labs/Kaltsit-Esperanta).
 
 ## Dependencies
 

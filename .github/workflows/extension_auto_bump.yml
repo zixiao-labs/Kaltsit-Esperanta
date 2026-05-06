@@ -12,8 +12,8 @@ on:
     - '!extensions/*.md'
 jobs:
   detect_changed_extensions:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -67,8 +67,8 @@ jobs:
       max-parallel: 1
     uses: ./.github/workflows/extension_bump.yml
     secrets:
-      app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-      app-secret: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
+      app-id: ${{ secrets.SYNC_PAT }}
+      app-secret: ${{ secrets.SYNC_PAT }}
     with:
       working-directory: ${{ matrix.extension }}
       force-bump: false

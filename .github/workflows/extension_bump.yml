@@ -30,8 +30,8 @@ on:
         required: true
 jobs:
   check_version_changed:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
@@ -69,25 +69,29 @@ jobs:
     needs:
     - check_version_changed
     if: |-
-      (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions') &&
+      github.repository_owner == 'zixiao-labs' &&
       (inputs.force-bump == true || needs.check_version_changed.outputs.version_changed == 'false')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::generate_token
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.app-id }}
-        private-key: ${{ secrets.app-secret }}
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.app-secret }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
         clean: false
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: extension_bump::install_bump_2_version
       run: pip install bump2version --break-system-packages
     - id: bump-version
@@ -144,8 +148,8 @@ jobs:
         body: ${{ steps.bump-version.outputs.body }}
         commit-message: ${{ steps.bump-version.outputs.title }}
         branch: ${{ steps.bump-version.outputs.branch_name }}
-        committer: zed-zippy[bot] <234243425+zed-zippy[bot]@users.noreply.github.com>
-        author: zed-zippy[bot] <234243425+zed-zippy[bot]@users.noreply.github.com>
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         base: main
         delete-branch: true
         token: ${{ steps.generate-token.outputs.token }}
@@ -159,15 +163,20 @@ jobs:
   create_version_label:
     needs:
     - check_version_changed
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions') && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check_version_changed.outputs.version_changed == 'true'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check_version_changed.outputs.version_changed == 'true'
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::generate_token
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.app-id }}
-        private-key: ${{ secrets.app-secret }}
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.app-secret }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:
@@ -209,17 +218,20 @@ jobs:
     needs:
     - check_version_changed
     - create_version_label
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::generate_token
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.app-id }}
-        private-key: ${{ secrets.app-secret }}
-        owner: zed-industries
-        repositories: extensions
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.app-secret }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:

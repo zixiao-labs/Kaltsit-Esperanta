@@ -146,7 +146,7 @@ By default, Zed uses **regional profiles** which keep your data within the same 
 Although the data remains stored only in the source Region, your input prompts and output results might move outside of your source Region during cross-Region inference.
 All data will be transmitted encrypted across Amazon's secure network.
 
-We will support Cross-Region inference for each of the models on a best-effort basis, please refer to the [Cross-Region Inference method Code](https://github.com/zed-industries/zed/blob/main/crates/bedrock/src/models.rs#L297).
+We will support Cross-Region inference for each of the models on a best-effort basis, please refer to the [Cross-Region Inference method Code](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/crates/bedrock/src/models.rs#L297).
 
 For the most up-to-date supported regions and models, refer to the [Supported Models and Regions for Cross Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html).
 

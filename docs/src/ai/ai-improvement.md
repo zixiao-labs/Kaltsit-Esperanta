@@ -85,7 +85,7 @@ Note: Zed's `disabled_globs` settings will prevent predictions from being reques
 Zed does not collect training data for our edit prediction model unless the following conditions are met:
 
 1. **You opt in** – Toggle "Training Data Collection" under the **Privacy** section of the edit prediction status bar menu (click the edit prediction icon in the status bar).
-2. **The project is open source** — detected via LICENSE file ([see detection logic](https://github.com/zed-industries/zed/blob/main/crates/edit_prediction/src/license_detection.rs))
+2. **The project is open source** — detected via LICENSE file ([see detection logic](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/crates/edit_prediction/src/license_detection.rs))
 3. **The file isn't excluded** — via `disabled_globs`
 
 ### File Exclusions

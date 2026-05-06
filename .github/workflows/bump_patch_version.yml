@@ -10,15 +10,20 @@ on:
         type: string
 jobs:
   run_bump_patch_version:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    if: github.repository_owner == 'zixiao-labs'
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::authenticate_as_zippy
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:

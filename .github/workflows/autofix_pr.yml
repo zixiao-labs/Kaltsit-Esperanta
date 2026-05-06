@@ -15,7 +15,7 @@ on:
         default: 'true'
 jobs:
   run_autofix:
-    runs-on: namespace-profile-16x32-ubuntu-2204
+    runs-on: ubuntu-latest
     env:
       CC: clang
       CXX: clang++
@@ -34,10 +34,9 @@ jobs:
         mkdir -p ./../.cargo
         cp ./.cargo/ci-config.toml ./../.cargo/config.toml
     - name: steps::cache_rust_dependencies_namespace
-      uses: namespacelabs/nscloud-cache-action@a90bb5d4b27522ce881c6e98eebd7d7e6d1653f9
+      uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6
       with:
-        cache: rust
-        path: ~/.rustup
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: steps::setup_linux
       run: ./script/linux
     - name: steps::download_wasi_sdk
@@ -91,16 +90,19 @@ jobs:
     needs:
     - run_autofix
     if: needs.run_autofix.outputs.has_changes == 'true'
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: steps::authenticate_as_zippy
-      uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-      with:
-        app-id: ${{ secrets.ZED_ZIPPY_APP_ID }}
-        private-key: ${{ secrets.ZED_ZIPPY_APP_PRIVATE_KEY }}
-        permission-contents: write
-        permission-workflows: write
+      run: |
+        if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
+            echo "::error::SYNC_PAT secret is not configured" >&2
+            exit 1
+        fi
+        echo "::add-mask::$ESPERANTA_BOT_TOKEN"
+        echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
+      env:
+        ESPERANTA_BOT_TOKEN: ${{ secrets.SYNC_PAT }}
     - name: steps::checkout_repo
       uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
       with:

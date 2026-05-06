@@ -39,7 +39,7 @@ Telemetry is sent from the application to our servers every 5 minutes (or when 5
 
 Crash reports consist of a [minidump](https://learn.microsoft.com/en-us/windows/win32/debug/minidump-files) and debug metadata. Reports are sent on the next launch after a crash, allowing Zed to identify and fix issues without requiring you to file a bug report.
 
-You can inspect what data is sent in the `Panic` struct in [crates/telemetry_events/src/telemetry_events.rs](https://github.com/zed-industries/zed/blob/main/crates/telemetry_events/src/telemetry_events.rs). See also: [Debugging Crashes](./development/debugging-crashes.md).
+You can inspect what data is sent in the `Panic` struct in [crates/telemetry_events/src/telemetry_events.rs](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/crates/telemetry_events/src/telemetry_events.rs). See also: [Debugging Crashes](./development/debugging-crashes.md).
 
 ### Client-Side Metrics
 
@@ -56,7 +56,7 @@ Usage data is tied to a random telemetry ID. If you've authenticated, this ID ma
 
 To audit what Zed has reported, run {#action zed::OpenTelemetryLog} from the command palette or click `Help > View Telemetry Log`.
 
-For the full list of event types, see the `Event` enum in [telemetry_events.rs](https://github.com/zed-industries/zed/blob/main/crates/telemetry_events/src/telemetry_events.rs).
+For the full list of event types, see the `Event` enum in [telemetry_events.rs](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/crates/telemetry_events/src/telemetry_events.rs).
 
 ### Server-Side Metrics
 
@@ -66,4 +66,4 @@ For details on AI data handling, see [Zed AI Features and Privacy](./ai/ai-impro
 
 ## Concerns and Questions
 
-If you have concerns about telemetry, you can [open an issue](https://github.com/zed-industries/zed/issues/new/choose) or email hi@zed.dev.
+If you have concerns about telemetry, you can [open an issue](https://github.com/zixiao-labs/Kaltsit-Esperanta/issues/new/choose) or email hi@zed.dev.

@@ -236,7 +236,7 @@ fn docs_job(channel_expr: impl Into<String>, checkout_ref: Option<String>) -> Na
             docs_build_steps(
                 release_job(&[])
                     .cond(Expression::new(
-                        "github.repository_owner == 'zed-industries'",
+                        "github.repository_owner == 'zixiao-labs'",
                     ))
                     .name("Build and Deploy Docs")
                     .add_step(resolve_step),
@@ -257,8 +257,8 @@ pub(crate) fn deploy_docs_workflow_call(
         .with_repository_owner_guard()
         .permissions(Permissions::default().contents(Level::Read))
         .uses(
-            "zed-industries",
-            "zed",
+            "zixiao-labs",
+            "Kaltsit-Esperanta",
             ".github/workflows/deploy_docs.yml",
             "main",
         )

@@ -9,12 +9,14 @@ use crate::tasks::workflows::{runners::Platform, steps::NamedJob};
 
 macro_rules! secret {
     ($secret_name:ident) => {
+        #[allow(dead_code, reason = "kept available for future signing/observability integrations")]
         pub const $secret_name: &str = concat!("${{ secrets.", stringify!($secret_name), " }}");
     };
 }
 
 macro_rules! var {
     ($var_name:ident) => {
+        #[allow(dead_code, reason = "kept available for future signing/observability integrations")]
         pub const $var_name: &str = concat!("${{ vars.", stringify!($var_name), " }}");
     };
 }
@@ -42,8 +44,14 @@ secret!(ZED_CLIENT_CHECKSUM_SEED);
 secret!(ZED_CLOUD_PROVIDER_ADDITIONAL_MODELS_JSON);
 secret!(ZED_SENTRY_MINIDUMP_ENDPOINT);
 secret!(SLACK_APP_ZED_UNIT_EVALS_BOT_TOKEN);
-secret!(ZED_ZIPPY_APP_ID);
-secret!(ZED_ZIPPY_APP_PRIVATE_KEY);
+secret!(SYNC_PAT);
+// In upstream Zed these point at a dedicated GitHub App ("zed-zippy"). The
+// Esperanta fork does not have a GitHub App, so all helpers that previously
+// generated short-lived app tokens now fall through to the SYNC_PAT secret.
+// The constants are kept so unrelated workflows (extension_bump, autofix_pr,
+// publish_extension_cli, ...) continue to compile without edits.
+pub const ZED_ZIPPY_APP_ID: &str = SYNC_PAT;
+pub const ZED_ZIPPY_APP_PRIVATE_KEY: &str = SYNC_PAT;
 secret!(DISCORD_WEBHOOK_RELEASE_NOTES);
 secret!(WINGET_TOKEN);
 secret!(VERCEL_TOKEN);
@@ -61,29 +69,18 @@ var!(AZURE_SIGNING_CERT_PROFILE_NAME);
 var!(AZURE_SIGNING_ENDPOINT);
 
 pub fn bundle_envs(platform: Platform) -> Env {
+    // The fork ships unsigned binaries: macOS bundles are ad-hoc signed inside
+    // ./script/bundle-mac when no Developer ID is present, and Windows bundles
+    // are unsigned. Code-signing envs are intentionally omitted here so the
+    // workflow does not require fork-specific secrets that may not exist yet.
+    // When Azure Trusted Signing or a self-signed cert is configured, re-add
+    // the relevant envs to the corresponding match arm.
     let env = Env::default()
         .add("CARGO_INCREMENTAL", 0)
-        .add("ZED_CLIENT_CHECKSUM_SEED", ZED_CLIENT_CHECKSUM_SEED)
-        .add("ZED_MINIDUMP_ENDPOINT", ZED_SENTRY_MINIDUMP_ENDPOINT);
+        .add("ZED_CLIENT_CHECKSUM_SEED", ZED_CLIENT_CHECKSUM_SEED);
 
     match platform {
-        Platform::Linux => env,
-        Platform::Mac => env
-            .add("MACOS_CERTIFICATE", MACOS_CERTIFICATE)
-            .add("MACOS_CERTIFICATE_PASSWORD", MACOS_CERTIFICATE_PASSWORD)
-            .add("APPLE_NOTARIZATION_KEY", APPLE_NOTARIZATION_KEY)
-            .add("APPLE_NOTARIZATION_KEY_ID", APPLE_NOTARIZATION_KEY_ID)
-            .add("APPLE_NOTARIZATION_ISSUER_ID", APPLE_NOTARIZATION_ISSUER_ID),
-        Platform::Windows => env
-            .add("AZURE_TENANT_ID", AZURE_SIGNING_TENANT_ID)
-            .add("AZURE_CLIENT_ID", AZURE_SIGNING_CLIENT_ID)
-            .add("AZURE_CLIENT_SECRET", AZURE_SIGNING_CLIENT_SECRET)
-            .add("ACCOUNT_NAME", AZURE_SIGNING_ACCOUNT_NAME)
-            .add("CERT_PROFILE_NAME", AZURE_SIGNING_CERT_PROFILE_NAME)
-            .add("ENDPOINT", AZURE_SIGNING_ENDPOINT)
-            .add("FILE_DIGEST", "SHA256")
-            .add("TIMESTAMP_DIGEST", "SHA256")
-            .add("TIMESTAMP_SERVER", "http://timestamp.acs.microsoft.com"),
+        Platform::Linux | Platform::Mac | Platform::Windows => env,
     }
 }
 
