@@ -1,0 +1,1277 @@
+openapi: 3.0.3
+info:
+  title: Wuling DevOps API
+  version: 0.1.0-stage1
+  description: "Stage 1 of the Wuling DevOps platform.\n\nWhat's implemented:\n  -\
+    \ Auth (register, login, /me, personal access tokens)\n  - Orgs and Projects (CRUD)\n\
+    \  - Repositories (CRUD + libgit2-backed read APIs)\n  - Git smart HTTP (clone/fetch/push)\n\
+    \  - Issues (CRUD, labels, comments, assignees)\n\nPlanned for later stages (URLs\
+    \ reserved, not yet served):\n  - Merge Requests, Pipelines, Wiki, Insight\n\n\
+    All errors use the JSON envelope:\n  { \"error\": { \"code\": \"<stable_code>\"\
+    , \"message\": \"<human msg>\", \"details\": {} } }\n"
+servers:
+- url: http://localhost:8080
+  description: Local dev
+security:
+- bearerAuth: []
+paths:
+  /healthz:
+    get:
+      summary: Liveness + DB health check
+      security: []
+      responses:
+        '200':
+          description: ok
+        '503':
+          description: unavailable
+      operationId: get_healthz
+  /version:
+    get:
+      summary: Version metadata
+      security: []
+      responses:
+        '200':
+          description: ok
+      operationId: get_version
+  /api/v1/auth/register:
+    post:
+      summary: Create an account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: account created (response includes a fresh JWT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+      operationId: post_auth_register
+  /api/v1/auth/login:
+    post:
+      summary: Exchange username/password for a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      operationId: post_auth_login
+  /api/v1/auth/me:
+    get:
+      summary: Return the authenticated user
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      operationId: get_auth_me
+  /api/v1/auth/tokens:
+    get:
+      summary: List the caller's personal access tokens
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/AccessTokenView'
+      operationId: get_auth_tokens
+    post:
+      summary: Create a new personal access token (raw value returned ONCE)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                  maxLength: 64
+                scopes:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: string
+                    enum:
+                    - repo:read
+                    - repo:write
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenView'
+      operationId: post_auth_tokens
+  /api/v1/auth/tokens/{token_id}:
+    delete:
+      summary: Revoke a PAT
+      parameters:
+      - in: path
+        name: token_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: deleted
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: delete_auth_tokens_by_token_id
+  /api/v1/orgs:
+    get:
+      summary: List orgs the caller belongs to
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orgs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Org'
+      operationId: get_orgs
+    post:
+      summary: Create a new (non-personal) org; caller becomes its owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              properties:
+                slug:
+                  type: string
+                  minLength: 2
+                  maxLength: 64
+                display_name:
+                  type: string
+                  maxLength: 128
+                description:
+                  type: string
+                  maxLength: 512
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Org'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+      operationId: post_orgs
+  /api/v1/orgs/{org_slug}:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    get:
+      summary: Fetch an org by slug
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Org'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug
+  /api/v1/orgs/{org_slug}/projects:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    get:
+      summary: List projects in an org
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects
+    post:
+      summary: Create a project under an org
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              properties:
+                slug:
+                  type: string
+                  minLength: 2
+                  maxLength: 64
+                display_name:
+                  type: string
+                description:
+                  type: string
+                visibility:
+                  type: string
+                  enum:
+                  - private
+                  - internal
+                  - public
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+      operationId: post_orgs_by_org_slug_projects
+  /api/v1/orgs/{org_slug}/projects/{project_slug}:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    get:
+      summary: Fetch a project by slug
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    get:
+      summary: List repos in a project
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  repos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Repo'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos
+    post:
+      summary: Create a repo (initialises a bare repo on disk via libgit2)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - slug
+              properties:
+                slug:
+                  type: string
+                  minLength: 2
+                  maxLength: 64
+                display_name:
+                  type: string
+                description:
+                  type: string
+                default_branch:
+                  type: string
+                  default: main
+                visibility:
+                  type: string
+                  enum:
+                  - private
+                  - internal
+                  - public
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repo'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+      operationId: post_orgs_by_org_slug_projects_by_project_slug_repos
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/RepoSlug'
+    get:
+      summary: Fetch a repo by slug
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repo'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/refs:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/RepoSlug'
+    get:
+      summary: List refs (branches + tags), backed by libgit2
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ref'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_refs
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/commits:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/RepoSlug'
+    - in: query
+      name: ref
+      schema:
+        type: string
+      description: Branch, tag, or commit oid; defaults to the default branch.
+    - in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    get:
+      summary: List commits reachable from ref
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Commit'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_commits
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/tree:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/RepoSlug'
+    - in: query
+      name: ref
+      schema:
+        type: string
+    - in: query
+      name: path
+      schema:
+        type: string
+    get:
+      summary: List entries in a tree (defaults to repo root at default branch)
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  oid:
+                    type: string
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TreeEntry'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_tree
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/blob:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/RepoSlug'
+    - in: query
+      name: oid
+      schema:
+        type: string
+    - in: query
+      name: ref
+      schema:
+        type: string
+    - in: query
+      name: path
+      schema:
+        type: string
+    get:
+      summary: Read a blob; supply either oid or (ref, path)
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  oid:
+                    type: string
+                  size:
+                    type: integer
+                  is_binary:
+                    type: boolean
+                  encoding:
+                    type: string
+                    enum:
+                    - utf-8
+                    - base64
+                  content:
+                    type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_blob
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/issues:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    get:
+      summary: List issues in a project
+      parameters:
+      - in: query
+        name: state
+        schema:
+          type: string
+          enum:
+          - open
+          - closed
+      - in: query
+        name: label
+        schema:
+          type: string
+        description: Filter by label name (case-insensitive).
+      - in: query
+        name: assignee
+        schema:
+          type: string
+        description: User UUID or username.
+      - in: query
+        name: author
+        schema:
+          type: string
+        description: User UUID or username.
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Substring match against title and body (case-insensitive).
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issues:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_issues
+    post:
+      summary: Create an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueRequest'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: post_orgs_by_org_slug_projects_by_project_slug_issues
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/issues/{number}:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/IssueNumber'
+    get:
+      summary: Get an issue by its per-project number
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_issues_by_number
+    patch:
+      summary: Edit an issue (author or org owner/admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchIssueRequest'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: patch_orgs_by_org_slug_projects_by_project_slug_issues_by_number
+    delete:
+      summary: Delete an issue (org owner/admin only)
+      responses:
+        '204':
+          description: deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: delete_orgs_by_org_slug_projects_by_project_slug_issues_by_number
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/issues/{number}/comments:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - $ref: '#/components/parameters/IssueNumber'
+    get:
+      summary: List comments on an issue
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IssueComment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_issues_by_number_comments
+    post:
+      summary: Post a comment on an issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - body
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 65536
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueComment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: post_orgs_by_org_slug_projects_by_project_slug_issues_by_number_comments
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/labels:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    get:
+      summary: List labels in a project
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  labels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Label'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: get_orgs_by_org_slug_projects_by_project_slug_labels
+    post:
+      summary: Create a label (org owner/admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                color:
+                  type: string
+                  description: 6-character hex (with or without leading "#"). Defaults
+                    to 888888.
+                description:
+                  type: string
+                  maxLength: 256
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: post_orgs_by_org_slug_projects_by_project_slug_labels
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/labels/{label_id}:
+    parameters:
+    - $ref: '#/components/parameters/OrgSlug'
+    - $ref: '#/components/parameters/ProjectSlug'
+    - in: path
+      name: label_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    delete:
+      summary: Delete a label (org owner/admin only)
+      responses:
+        '204':
+          description: deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      operationId: delete_orgs_by_org_slug_projects_by_project_slug_labels_by_label_id
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    basicAuth:
+      type: http
+      scheme: basic
+      description: 'Used by Git CLI only. The "password" is either a personal access
+        token
+
+        (preferred — recognised by the `wlpat_` prefix) or the user''s account
+
+        password.
+
+
+        **Security:** credentials are sent on every request, so basic auth
+
+        MUST be used over HTTPS in production — configure server URLs as
+
+        `https://` and terminate TLS in front of the API. For local
+
+        development against `localhost` plain HTTP is acceptable.
+
+
+        Operators should prefer personal access tokens (`wlpat_…`) over
+
+        account passwords, and consider OAuth/bearer-token flows for
+
+        non-CLI clients.
+
+        '
+  parameters:
+    OrgSlug:
+      in: path
+      name: org_slug
+      required: true
+      schema:
+        type: string
+    ProjectSlug:
+      in: path
+      name: project_slug
+      required: true
+      schema:
+        type: string
+    RepoSlug:
+      in: path
+      name: repo_slug
+      required: true
+      schema:
+        type: string
+    IssueNumber:
+      in: path
+      name: number
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      description: Per-project monotonically increasing issue number (e.g. 1, 2, 3
+        ...).
+  responses:
+    UnauthorizedError:
+      description: missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ForbiddenError:
+      description: caller lacks permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConflictError:
+      description: resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              enum:
+              - validation
+              - unauthorized
+              - forbidden
+              - not_found
+              - conflict
+              - already_exists
+              - rate_limited
+              - unsupported
+              - bad_request
+              - internal
+              - unavailable
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+        display_name:
+          type: string
+        is_admin:
+          type: boolean
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    RegisterRequest:
+      type: object
+      required:
+      - username
+      - email
+      - password
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 64
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+        display_name:
+          type: string
+          maxLength: 128
+    LoginRequest:
+      type: object
+      required:
+      - login
+      - password
+      properties:
+        login:
+          type: string
+          description: username or email
+        password:
+          type: string
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+    AccessTokenView:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        token:
+          type: string
+          description: Raw token value, returned only on creation.
+    Org:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        is_personal:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - private
+          - internal
+          - public
+        created_at:
+          type: string
+          format: date-time
+    Repo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        default_branch:
+          type: string
+        visibility:
+          type: string
+          enum:
+          - private
+          - internal
+          - public
+        is_empty:
+          type: boolean
+        size_bytes:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+    Ref:
+      type: object
+      properties:
+        name:
+          type: string
+        oid:
+          type: string
+        is_branch:
+          type: boolean
+        is_tag:
+          type: boolean
+    TreeEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        oid:
+          type: string
+        filemode:
+          type: integer
+        kind:
+          type: string
+          enum:
+          - blob
+          - tree
+          - submodule
+          - tag
+          - other
+    Signature:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        when:
+          type: string
+          format: date-time
+    Commit:
+      type: object
+      properties:
+        oid:
+          type: string
+        tree_oid:
+          type: string
+        author:
+          $ref: '#/components/schemas/Signature'
+        committer:
+          $ref: '#/components/schemas/Signature'
+        message:
+          type: string
+        parents:
+          type: array
+          items:
+            type: string
+    UserRef:
+      type: object
+      description: Lightweight user reference embedded in issue/comment payloads.
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        display_name:
+          type: string
+    Label:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+          description: 6-character hex (no leading "#").
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    IssueState:
+      type: string
+      enum:
+      - open
+      - closed
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          format: int64
+        title:
+          type: string
+        body:
+          type: string
+        state:
+          $ref: '#/components/schemas/IssueState'
+        author:
+          $ref: '#/components/schemas/UserRef'
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
+        closed_by:
+          $ref: '#/components/schemas/UserRef'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        comment_count:
+          type: integer
+          format: int64
+    CreateIssueRequest:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 256
+        body:
+          type: string
+          maxLength: 65536
+        labels:
+          type: array
+          items:
+            type: string
+            format: uuid
+        assignees:
+          type: array
+          items:
+            type: string
+            format: uuid
+    PatchIssueRequest:
+      type: object
+      description: 'Patch an issue. Omitted fields are left untouched; arrays (labels,
+
+        assignees) are replaced wholesale when present (use [] to clear).
+
+        '
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 256
+        body:
+          type: string
+          maxLength: 65536
+        state:
+          $ref: '#/components/schemas/IssueState'
+        labels:
+          type: array
+          items:
+            type: string
+            format: uuid
+        assignees:
+          type: array
+          items:
+            type: string
+            format: uuid
+    IssueComment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        issue_id:
+          type: string
+          format: uuid
+        author:
+          $ref: '#/components/schemas/UserRef'
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
