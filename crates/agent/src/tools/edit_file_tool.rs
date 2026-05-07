@@ -27,7 +27,9 @@ const DEFAULT_UI_TEXT: &str = "Editing file";
 /// To create a new file or overwrite an existing one with completely new contents, use the `write_file` tool instead.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct EditFileToolInput {
-    /// The full path of the file to create or modify in the project.
+
+    /// The full path of the file to edit in the project.
+
     ///
     /// WARNING: When specifying which file path need changing, you MUST start each path with one of the project's root directories.
     ///
@@ -88,6 +90,7 @@ impl EditFileTool {
         event_stream: &ToolCallEventStream,
         cx: &mut App,
     ) -> Task<Result<()>> {
+
         super::tool_permissions::authorize_file_edit(
             EditFileTool::NAME,
             path,
@@ -138,6 +141,10 @@ impl EditFileTool {
         self.action_log.update(cx, |log, cx| {
             log.buffer_edited(buffer.clone(), cx);
         });
+
+        self.session_context
+            .authorize(Self::NAME, path, event_stream, cx)
+>>>>>>> 7e7760a776 (agent, recent_projects: resolve upstream/main merge conflicts)
     }
 
     async fn process_streaming_edits(

@@ -2294,14 +2294,6 @@ impl RecentProjectsDelegate {
         if let Some(ProjectPickerEntry::RecentProject(selected_match)) =
             self.filtered_entries.get(ix)
         {
-<<<<<<< HEAD
-            let Some(recent_workspace) = self.workspaces.get(selected_match.candidate_id).cloned()
-            else {
-                return;
-            };
-=======
-            let recent_workspace = self.workspaces[selected_match.candidate_id].clone();
->>>>>>> 11e5f6a83f (Improve grouping of worktrees by repo in recent projects (#55715))
             let fs = self
                 .workspace
                 .upgrade()
