@@ -444,9 +444,9 @@ impl Render for WelcomePage {
         };
 
         let welcome_label = if self.fallback_to_recent_projects {
-            "Welcome back to Zed"
+            "Welcome back to Kal'tsit·Esperanta"
         } else {
-            "Welcome to Zed"
+            "Welcome to Kal'tsit·Esperanta"
         };
 
         h_flex()
