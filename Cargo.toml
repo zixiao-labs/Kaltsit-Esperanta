@@ -14,6 +14,7 @@ members = [
     "crates/askpass",
     "crates/assets",
     "crates/audio",
+    "crates/ama10",
     "crates/auto_update",
     "crates/auto_update_helper",
     "crates/auto_update_ui",
@@ -250,7 +251,7 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask", "crates/ama10",
+    "tooling/xtask",
 ]
 default-members = ["crates/zed"]
 
