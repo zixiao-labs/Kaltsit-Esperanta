@@ -5,6 +5,7 @@ mod create_directory_tool;
 mod delete_path_tool;
 mod diagnostics_tool;
 mod edit_file_tool;
+mod edit_session;
 #[cfg(all(test, feature = "unit-eval"))]
 mod evals;
 mod fetch_tool;
@@ -27,10 +28,41 @@ mod terminal_tool;
 mod tool_permissions;
 mod update_plan_tool;
 mod web_search_tool;
+mod write_file_tool;
 
 use crate::AgentTool;
 use language_model::{LanguageModelRequestTool, LanguageModelToolSchemaFormat};
+use serde::{
+    Deserialize, Deserializer,
+    de::{DeserializeOwned, Error as _},
+};
 
+<<<<<<< HEAD
+=======
+/// Deserialize a value that may have been provided as a JSON-encoded string
+/// instead of the structured value. Some models occasionally stringify nested
+/// arguments, so we accept either form.
+pub(crate) fn deserialize_maybe_stringified<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: DeserializeOwned,
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum ValueOrJsonString<T> {
+        Value(T),
+        String(String),
+    }
+
+    match ValueOrJsonString::<T>::deserialize(deserializer)? {
+        ValueOrJsonString::Value(value) => Ok(value),
+        ValueOrJsonString::String(string) => serde_json::from_str::<T>(&string).map_err(|error| {
+            D::Error::custom(format!("failed to parse stringified value: {error}"))
+        }),
+    }
+}
+
+>>>>>>> upstream/main
 pub use apply_code_action_tool::*;
 pub use context_server_registry::*;
 pub use copy_path_tool::*;
@@ -58,6 +90,7 @@ pub use terminal_tool::*;
 pub use tool_permissions::*;
 pub use update_plan_tool::*;
 pub use web_search_tool::*;
+pub use write_file_tool::*;
 
 macro_rules! tools {
     ($($tool:ty),* $(,)?) => {
@@ -152,4 +185,5 @@ tools! {
     TerminalTool,
     UpdatePlanTool,
     WebSearchTool,
+    WriteFileTool,
 }
