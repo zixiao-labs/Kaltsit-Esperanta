@@ -73,9 +73,9 @@ impl MoveToApplicationsRequest {
         let response = cx
             .prompt(
                 PromptLevel::Info,
-                "Move Zed to Applications?",
+                "Move Esperanta to Applications?",
                 Some(
-                    "Zed is running from a temporary location. Move it to Applications to finish installing it.",
+                    "Esperanta is running from a temporary location. Move it to Applications to finish installing it.",
                 ),
                 &[
                     PromptButton::ok("Yes"),
@@ -196,9 +196,9 @@ impl Render for InstallingZedModal {
                     .child(
                         v_flex()
                             .gap_1()
-                            .child(Label::new("Moving Zed to Applications"))
+                            .child(Label::new("Moving Esperanta to Applications"))
                             .child(
-                                Label::new("Zed will reopen when installation is complete.")
+                                Label::new("Esperanta will reopen when installation is complete.")
                                     .size(LabelSize::Small)
                                     .color(Color::Muted),
                             ),
