@@ -37,8 +37,6 @@ use serde::{
     de::{DeserializeOwned, Error as _},
 };
 
-<<<<<<< HEAD
-=======
 /// Deserialize a value that may have been provided as a JSON-encoded string
 /// instead of the structured value. Some models occasionally stringify nested
 /// arguments, so we accept either form.
@@ -62,7 +60,6 @@ where
     }
 }
 
->>>>>>> upstream/main
 pub use apply_code_action_tool::*;
 pub use context_server_registry::*;
 pub use copy_path_tool::*;

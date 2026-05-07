@@ -2186,14 +2186,10 @@ impl RecentProjectsDelegate {
         if let Some(ProjectPickerEntry::RecentProject(selected_match)) =
             self.filtered_entries.get(ix)
         {
-<<<<<<< HEAD
-            let recent_workspace = self.workspaces[selected_match.candidate_id].clone();
-=======
             let Some(recent_workspace) = self.workspaces.get(selected_match.candidate_id).cloned()
             else {
                 return;
             };
->>>>>>> upstream/main
             let fs = self
                 .workspace
                 .upgrade()
