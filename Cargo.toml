@@ -14,6 +14,7 @@ members = [
     "crates/askpass",
     "crates/assets",
     "crates/audio",
+    "crates/ama10",
     "crates/auto_update",
     "crates/auto_update_helper",
     "crates/auto_update_ui",
@@ -61,6 +62,7 @@ members = [
     "crates/edit_prediction_types",
     "crates/edit_prediction_ui",
     "crates/editor",
+    "crates/editor_benchmarks",
     "crates/encoding_selector",
     "crates/env_var",
     "crates/etw_tracing",
@@ -249,7 +251,7 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask", "crates/ama10",
+    "tooling/xtask",
 ]
 default-members = ["crates/zed"]
 
