@@ -4,6 +4,16 @@
 mod reliability;
 mod zed;
 
+// Ensure the binary name stays in sync with APP_NAME so that the paths used
+// at runtime (data dir, config dir, etc.) match what the binary is called.
+const _: () = assert!(
+    paths::APP_NAME_LOWERCASE
+        .as_bytes()
+        .eq_ignore_ascii_case(env!("CARGO_BIN_NAME").as_bytes()),
+    "paths::APP_NAME_LOWERCASE must match the binary name. \
+     Forks: update APP_NAME in crates/paths/src/paths.rs when renaming the binary.",
+);
+
 use agent::{SharedThread, ThreadStore};
 use agent_client_protocol::schema as acp;
 use agent_ui::AgentPanel;
@@ -22,8 +32,8 @@ use futures::{StreamExt, channel::oneshot, future};
 use git::GitHostingProviderRegistry;
 use git_ui::clone::clone_and_open;
 use gpui::{
-    App, AppContext, Application, AsyncApp, Focusable as _, QuitMode, Task, UpdateGlobal as _,
-    block_on,
+    App, AppContext, Application, AsyncApp, Focusable as _, QuitMode, Task, TaskExt,
+    UpdateGlobal as _, block_on,
 };
 use gpui_platform;
 
@@ -76,7 +86,7 @@ use crate::zed::{CrashHandler, OpenRequestKind, eager_load_active_theme_and_icon
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn files_not_created_on_launch(errors: HashMap<io::ErrorKind, Vec<&Path>>) {
-    let message = "Zed failed to launch";
+    let message = "Esperanta failed to launch";
     let error_details = errors
         .into_iter()
         .flat_map(|(kind, paths)| {
@@ -138,7 +148,7 @@ fn fail_to_open_window_async(e: anyhow::Error, cx: &mut AsyncApp) {
 
 fn fail_to_open_window(e: anyhow::Error, _cx: &mut App) {
     eprintln!(
-        "Zed failed to open a window: {e:?}. See https://zed.dev/docs/linux for troubleshooting steps."
+        "Esperanta failed to open a window: {e:?}. See https://zed.dev/docs/linux for troubleshooting steps."
     );
     #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
     {
@@ -158,7 +168,7 @@ fn fail_to_open_window(e: anyhow::Error, _cx: &mut App) {
             proxy
                 .add_notification(
                     notification_id,
-                    Notification::new("Zed failed to launch")
+                    Notification::new("Esperanta failed to launch")
                         .body(Some(
                             format!(
                                 "{e:?}. See https://zed.dev/docs/linux for troubleshooting steps."
@@ -304,7 +314,7 @@ fn main() {
             client::telemetry::os_name(),
             client::telemetry::os_version(),
         );
-        println!("Zed System Specs (from CLI):\n{}", system_specs);
+        println!("Esperanta System Specs (from CLI):\n{}", system_specs);
         return;
     }
 
@@ -491,7 +501,7 @@ fn main() {
         handle_keymap_file_changes(user_keymap_file_rx, user_keymap_watcher, cx);
 
         let user_agent = format!(
-            "Zed/{} ({}; {})",
+            "Kaltsit-Esperanta/{} ({}; {})",
             AppVersion::global(cx),
             std::env::consts::OS,
             std::env::consts::ARCH
