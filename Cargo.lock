@@ -3045,6 +3045,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "closure-agent"
+version = "0.1.0"
+
+[[package]]
 name = "cloud_api_client"
 version = "0.1.0"
 dependencies = [
@@ -8634,7 +8638,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.62.2",
+ "windows-core 0.57.0",
 ]
 
 [[package]]

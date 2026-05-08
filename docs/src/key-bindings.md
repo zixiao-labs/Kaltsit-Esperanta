@@ -79,8 +79,9 @@ You can see all of Zed's default bindings for each platform in the default keyma
 - [Windows](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/assets/keymaps/default-windows.json)
 - [Linux](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/assets/keymaps/default-linux.json).
 
-If you want to debug problems with custom keymaps, you can use {#action dev::OpenKeyContextView} from the command palette.
-Please file [an issue](https://github.com/zed-industries/zed) if you run into something you think should work but isn't.
+
+If you want to debug problems with custom keymaps, you can use `dev: Open Key Context View` from the command palette.
+Please file [an issue](https://github.com/zixiao-labs/Kaltsit-Esperanta/issues) if you run into something you think should work but isn't.
 
 ### Keybinding Syntax
 
