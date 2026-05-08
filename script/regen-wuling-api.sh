@@ -160,6 +160,46 @@ if [[ ! -f "$OUT_DIR/src/lib.rs" ]]; then
     exit 1
 fi
 
+# Nightly rustfmt's `normalize_doc_attributes` pass occasionally fails to
+# insert a separating newline when converting #[doc = "..."] attributes into
+# `///` line comments, leaving the next item declaration glued onto the same
+# line as a doc comment. Because `///` consumes to end-of-line, the function
+# signature becomes part of the comment and its body parses as orphan code
+# at the impl level, blowing up the build. Detect and split those lines.
+echo "==> Post-processing: splitting doc comments fused to following item"
+python3 - "$OUT_DIR/src/lib.rs" <<'PY'
+import re
+import sys
+
+path = sys.argv[1]
+src = open(path).read()
+
+ITEM = re.compile(
+    r'\s{2,}(pub\s+(?:async\s+)?fn\b'
+    r'|pub\s+(?:struct|enum|trait|use|mod|const|static|type)\b'
+    r'|impl\b|#\[)'
+)
+
+out_lines = []
+splits = 0
+for line in src.splitlines():
+    stripped = line.lstrip()
+    if not stripped.startswith('///'):
+        out_lines.append(line)
+        continue
+    m = ITEM.search(line)
+    if not m:
+        out_lines.append(line)
+        continue
+    splits += 1
+    indent = line[:len(line) - len(stripped)]
+    out_lines.append(line[:m.start()].rstrip())
+    out_lines.append(indent + line[m.start():].lstrip())
+
+open(path, 'w').write('\n'.join(out_lines) + '\n')
+print(f"    split {splits} fused doc/item lines")
+PY
+
 mkdir -p "$(dirname "$GENERATED_FILE")"
 {
     cat <<'HEADER'
