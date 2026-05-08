@@ -15,9 +15,9 @@
 )]
 
 #[allow(unused_imports)]
-use progenitor_client::{encode_path, ClientHooks, OperationInfo, RequestBuilderExt};
-#[allow(unused_imports)]
 pub use progenitor_client::{ByteStream, ClientInfo, Error, ResponseValue};
+#[allow(unused_imports)]
+use progenitor_client::{ClientHooks, OperationInfo, RequestBuilderExt, encode_path};
 /// Types used as operation parameters and responses.
 #[allow(clippy::all)]
 pub mod types {
@@ -4038,8 +4038,8 @@ pub mod types {
 
     /// Generation of default values for serde.
     pub mod defaults {
-        pub(super) fn post_orgs_by_org_slug_projects_by_project_slug_repos_body_default_branch(
-        ) -> ::std::string::String {
+        pub(super) fn post_orgs_by_org_slug_projects_by_project_slug_repos_body_default_branch()
+        -> ::std::string::String {
             "main".to_string()
         }
     }
@@ -4935,8 +4935,7 @@ impl Client {
             .headers(header_map)
             .build()?;
         let info = OperationInfo {
-            operation_id:
-                "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_commits",
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_commits",
         };
         self.pre(&mut request, &info).await?;
         let result = self.exec(request, &info).await;
@@ -5493,8 +5492,7 @@ impl Client {
             .headers(header_map)
             .build()?;
         let info = OperationInfo {
-            operation_id:
-                "post_orgs_by_org_slug_projects_by_project_slug_issues_by_number_comments",
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_issues_by_number_comments",
         };
         self.pre(&mut request, &info).await?;
         let result = self.exec(request, &info).await;
