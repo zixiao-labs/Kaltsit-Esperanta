@@ -31,9 +31,9 @@ Status: ✅ Done · 🚧 In progress · ⬜ Planned
 
 ## Stage 3 · Self-hosted Collab ⬜
 
-**Goal:** 把实时协作切到 Wuling DevOps,**不动** Zed 的 CRDT。
+**Goal:** 把实时协作切到 Wuling DevOps,~~**不动** Zed 的 CRDT。~~
 
-- ⬜ **保留** 现有 CRDT 与冲突解决逻辑,不做改动
+~~- ⬜ **保留** 现有 CRDT 与冲突解决逻辑,不做改动~~
 - ⬜ 用 Wuling DevOps 作为协作认证服务器(依赖 Stage 2)
 - ⬜ 完整保留协作能力:共享编辑、对端终端、对端文件系统、对端 Debug、对端 Run、AI 助手
 - ⬜ 把 WebRTC 信令重定向到自托管端点(音视频栈本身不动)
@@ -42,7 +42,7 @@ Status: ✅ Done · 🚧 In progress · ⬜ Planned
 
 **Depends on:** Stage 2。
 
-**Non-goals:** 重写 CRDT、改协作 UX、替换 WebRTC 实现。
+~~**Non-goals:** 重写 CRDT、改协作 UX、替换 WebRTC 实现。~~ 协作是AGPL，要重造一遍，出BUG再说
 
 ---
 
