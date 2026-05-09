@@ -1,4 +1,5 @@
-set -o pipefail
+#!/bin/bash
+set -euo pipefail
 
 echo " █████╗ ███╗   ███╗ █████╗  ██╗ ██████╗ "
 echo "██╔══██╗████╗ ████║██╔══██╗███║██╔═████╗"
@@ -20,25 +21,13 @@ BIN_NAME="Kaltsit-Esperanta"
 APP_NAME="Kaltsit-Esperanta"
 
 echo "check xcode"
-xcode-select --version
-if [ $? -ne 0 ]; then
-    echo "xcode not installed"
-    exit 1
-fi
+xcode-select --version || { echo "xcode not installed"; exit 1; }
 
 echo "check brew"
-brew --version
-if [ $? -ne 0 ]; then
-    echo "brew not installed"
-    exit 1
-fi
+brew --version || { echo "brew not installed"; exit 1; }
 
 echo "check rustup"
-rustup --version
-if [ $? -ne 0 ]; then
-    echo "rustup not installed"
-    exit 1
-fi
+rustup --version || { echo "rustup not installed"; exit 1; }
 
 echo "🧰 Setup Toolchain"
 rustup show active-toolchain || rustup toolchain install
