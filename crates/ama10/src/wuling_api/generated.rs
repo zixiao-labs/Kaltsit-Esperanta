@@ -386,6 +386,311 @@ pub mod types {
         }
     }
 
+    ///`CreateMergeRequestRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "source_ref",
+    ///    "target_ref",
+    ///    "title"
+    ///  ],
+    ///  "properties": {
+    ///    "body": {
+    ///      "type": "string",
+    ///      "maxLength": 65536
+    ///    },
+    ///    "source_ref": {
+    ///      "description": "Branch to merge from. Bare names like \"feat/x\"
+    /// are accepted and\npromoted to \"refs/heads/feat/x\".\n",
+    ///      "type": "string"
+    ///    },
+    ///    "target_ref": {
+    ///      "description": "Branch to merge into.",
+    ///      "type": "string"
+    ///    },
+    ///    "title": {
+    ///      "type": "string",
+    ///      "maxLength": 256,
+    ///      "minLength": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct CreateMergeRequestRequest {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<CreateMergeRequestRequestBody>,
+        ///Branch to merge from. Bare names like "feat/x" are accepted and
+        ///promoted to "refs/heads/feat/x".
+        pub source_ref: ::std::string::String,
+        ///Branch to merge into.
+        pub target_ref: ::std::string::String,
+        pub title: CreateMergeRequestRequestTitle,
+    }
+
+    ///`CreateMergeRequestRequestBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 65536
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateMergeRequestRequestBody(::std::string::String);
+    impl ::std::ops::Deref for CreateMergeRequestRequestBody {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateMergeRequestRequestBody> for ::std::string::String {
+        fn from(value: CreateMergeRequestRequestBody) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateMergeRequestRequestBody {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 65536usize {
+                return Err("longer than 65536 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateMergeRequestRequestBody {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`CreateMergeRequestRequestTitle`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 256,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateMergeRequestRequestTitle(::std::string::String);
+    impl ::std::ops::Deref for CreateMergeRequestRequestTitle {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateMergeRequestRequestTitle> for ::std::string::String {
+        fn from(value: CreateMergeRequestRequestTitle) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateMergeRequestRequestTitle {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 256usize {
+                return Err("longer than 256 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateMergeRequestRequestTitle {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`CreateMrReviewRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "state"
+    ///  ],
+    ///  "properties": {
+    ///    "body": {
+    ///      "type": "string",
+    ///      "maxLength": 65536
+    ///    },
+    ///    "state": {
+    ///      "$ref": "#/components/schemas/ReviewState"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct CreateMrReviewRequest {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<CreateMrReviewRequestBody>,
+        pub state: ReviewState,
+    }
+
+    ///`CreateMrReviewRequestBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 65536
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateMrReviewRequestBody(::std::string::String);
+    impl ::std::ops::Deref for CreateMrReviewRequestBody {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateMrReviewRequestBody> for ::std::string::String {
+        fn from(value: CreateMrReviewRequestBody) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateMrReviewRequestBody {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 65536usize {
+                return Err("longer than 65536 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateMrReviewRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateMrReviewRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateMrReviewRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateMrReviewRequestBody {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
     ///`Error`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1002,6 +1307,281 @@ pub mod types {
         }
     }
 
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "comments": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MRComment"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsResponse
+    {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub comments: ::std::vec::Vec<MrComment>,
+    }
+
+    impl :: std :: default :: Default for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsResponse { fn default () -> Self { Self { comments : Default :: default () , } } }
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommitsResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/Commit"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommitsResponse
+    {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub commits: ::std::vec::Vec<Commit>,
+    }
+
+    impl ::std::default::Default
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommitsResponse
+    {
+        fn default() -> Self {
+            Self {
+                commits: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberDiffResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "base_oid": {
+    ///      "type": "string"
+    ///    },
+    ///    "files": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MRDiffEntry"
+    ///      }
+    ///    },
+    ///    "source_oid": {
+    ///      "type": "string"
+    ///    },
+    ///    "target_oid": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberDiffResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub base_oid: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub files: ::std::vec::Vec<MrDiffEntry>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub source_oid: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub target_oid: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberDiffResponse
+    {
+        fn default() -> Self {
+            Self {
+                base_oid: Default::default(),
+                files: Default::default(),
+                source_oid: Default::default(),
+                target_oid: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberReviewsResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "reviews": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MRReview"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberReviewsResponse
+    {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub reviews: ::std::vec::Vec<MrReview>,
+    }
+
+    impl ::std::default::Default
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberReviewsResponse
+    {
+        fn default() -> Self {
+            Self {
+                reviews: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "merge_requests": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MergeRequest"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub merge_requests: ::std::vec::Vec<MergeRequest>,
+    }
+
+    impl ::std::default::Default
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsResponse
+    {
+        fn default() -> Self {
+            Self {
+                merge_requests: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "open",
+    ///    "merged",
+    ///    "closed"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState {
+        #[serde(rename = "open")]
+        Open,
+        #[serde(rename = "merged")]
+        Merged,
+        #[serde(rename = "closed")]
+        Closed,
+    }
+
+    impl ::std::fmt::Display
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState
+    {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Open => f.write_str("open"),
+                Self::Merged => f.write_str("merged"),
+                Self::Closed => f.write_str("closed"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState
+    {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "open" => Ok(Self::Open),
+                "merged" => Ok(Self::Merged),
+                "closed" => Ok(Self::Closed),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str>
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String>
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String>
+        for GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugRefsResponse`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1526,6 +2106,774 @@ pub mod types {
         pub password: ::std::string::String,
     }
 
+    ///`MergeMrRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "strategy"
+    ///  ],
+    ///  "properties": {
+    ///    "message": {
+    ///      "description": "Optional commit message override for merge-commit
+    /// and squash. The\nff strategy ignores this field — fast-forward updates
+    /// don't make\nnew commits.\n",
+    ///      "type": "string",
+    ///      "maxLength": 65536
+    ///    },
+    ///    "strategy": {
+    ///      "$ref": "#/components/schemas/MergeStrategy"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct MergeMrRequest {
+        ///Optional commit message override for merge-commit and squash. The
+        ///ff strategy ignores this field — fast-forward updates don't make
+        ///new commits.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub message: ::std::option::Option<MergeMrRequestMessage>,
+        pub strategy: MergeStrategy,
+    }
+
+    ///Optional commit message override for merge-commit and squash. The
+    ///ff strategy ignores this field — fast-forward updates don't make
+    ///new commits.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Optional commit message override for merge-commit and
+    /// squash. The\nff strategy ignores this field — fast-forward updates don't
+    /// make\nnew commits.\n",
+    ///  "type": "string",
+    ///  "maxLength": 65536
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct MergeMrRequestMessage(::std::string::String);
+    impl ::std::ops::Deref for MergeMrRequestMessage {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<MergeMrRequestMessage> for ::std::string::String {
+        fn from(value: MergeMrRequestMessage) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for MergeMrRequestMessage {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 65536usize {
+                return Err("longer than 65536 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for MergeMrRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for MergeMrRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for MergeMrRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for MergeMrRequestMessage {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`MergeRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "author": {
+    ///      "$ref": "#/components/schemas/UserRef"
+    ///    },
+    ///    "body": {
+    ///      "type": "string"
+    ///    },
+    ///    "closed_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "closed_by": {
+    ///      "$ref": "#/components/schemas/UserRef"
+    ///    },
+    ///    "comment_count": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "merge_commit_oid": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "merge_strategy": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/MergeStrategy"
+    ///            }
+    ///          ]
+    ///        }
+    ///      ]
+    ///    },
+    ///    "merged_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "merged_by": {
+    ///      "$ref": "#/components/schemas/UserRef"
+    ///    },
+    ///    "number": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "project_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "repo_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "review_count": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "source_oid_at_open": {
+    ///      "type": "string"
+    ///    },
+    ///    "source_ref": {
+    ///      "type": "string"
+    ///    },
+    ///    "state": {
+    ///      "$ref": "#/components/schemas/MRState"
+    ///    },
+    ///    "target_oid_at_open": {
+    ///      "type": "string"
+    ///    },
+    ///    "target_ref": {
+    ///      "type": "string"
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct MergeRequest {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub author: ::std::option::Option<UserRef>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub closed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub closed_by: ::std::option::Option<UserRef>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub comment_count: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub merge_commit_oid: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub merge_strategy: ::std::option::Option<MergeStrategy>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub merged_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub merged_by: ::std::option::Option<UserRef>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub number: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub project_id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub repo_id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub review_count: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub source_oid_at_open: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub source_ref: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<MrState>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub target_oid_at_open: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub target_ref: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub updated_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for MergeRequest {
+        fn default() -> Self {
+            Self {
+                author: Default::default(),
+                body: Default::default(),
+                closed_at: Default::default(),
+                closed_by: Default::default(),
+                comment_count: Default::default(),
+                created_at: Default::default(),
+                id: Default::default(),
+                merge_commit_oid: Default::default(),
+                merge_strategy: Default::default(),
+                merged_at: Default::default(),
+                merged_by: Default::default(),
+                number: Default::default(),
+                project_id: Default::default(),
+                repo_id: Default::default(),
+                review_count: Default::default(),
+                source_oid_at_open: Default::default(),
+                source_ref: Default::default(),
+                state: Default::default(),
+                target_oid_at_open: Default::default(),
+                target_ref: Default::default(),
+                title: Default::default(),
+                updated_at: Default::default(),
+            }
+        }
+    }
+
+    ///`MergeStrategy`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "ff",
+    ///    "merge-commit",
+    ///    "squash"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum MergeStrategy {
+        #[serde(rename = "ff")]
+        Ff,
+        #[serde(rename = "merge-commit")]
+        MergeCommit,
+        #[serde(rename = "squash")]
+        Squash,
+    }
+
+    impl ::std::fmt::Display for MergeStrategy {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Ff => f.write_str("ff"),
+                Self::MergeCommit => f.write_str("merge-commit"),
+                Self::Squash => f.write_str("squash"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for MergeStrategy {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "ff" => Ok(Self::Ff),
+                "merge-commit" => Ok(Self::MergeCommit),
+                "squash" => Ok(Self::Squash),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for MergeStrategy {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for MergeStrategy {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for MergeStrategy {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`MrComment`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "author": {
+    ///      "$ref": "#/components/schemas/UserRef"
+    ///    },
+    ///    "body": {
+    ///      "type": "string"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "mr_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct MrComment {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub author: ::std::option::Option<UserRef>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub mr_id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub updated_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for MrComment {
+        fn default() -> Self {
+            Self {
+                author: Default::default(),
+                body: Default::default(),
+                created_at: Default::default(),
+                id: Default::default(),
+                mr_id: Default::default(),
+                updated_at: Default::default(),
+            }
+        }
+    }
+
+    ///`MrDiffEntry`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "additions": {
+    ///      "type": "integer"
+    ///    },
+    ///    "deletions": {
+    ///      "type": "integer"
+    ///    },
+    ///    "old_path": {
+    ///      "description": "Set on renames/copies; otherwise empty.",
+    ///      "type": "string"
+    ///    },
+    ///    "patch": {
+    ///      "description": "Unified diff text for this file. Populated only
+    /// when the request\nincluded `?include=patch`.\n",
+    ///      "type": "string"
+    ///    },
+    ///    "path": {
+    ///      "type": "string"
+    ///    },
+    ///    "status": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "added",
+    ///        "modified",
+    ///        "deleted",
+    ///        "renamed",
+    ///        "copied",
+    ///        "typechange",
+    ///        "other"
+    ///      ]
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct MrDiffEntry {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub additions: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub deletions: ::std::option::Option<i64>,
+        ///Set on renames/copies; otherwise empty.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub old_path: ::std::option::Option<::std::string::String>,
+        ///Unified diff text for this file. Populated only when the request
+        ///included `?include=patch`.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub patch: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub path: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub status: ::std::option::Option<MrDiffEntryStatus>,
+    }
+
+    impl ::std::default::Default for MrDiffEntry {
+        fn default() -> Self {
+            Self {
+                additions: Default::default(),
+                deletions: Default::default(),
+                old_path: Default::default(),
+                patch: Default::default(),
+                path: Default::default(),
+                status: Default::default(),
+            }
+        }
+    }
+
+    ///`MrDiffEntryStatus`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "added",
+    ///    "modified",
+    ///    "deleted",
+    ///    "renamed",
+    ///    "copied",
+    ///    "typechange",
+    ///    "other"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum MrDiffEntryStatus {
+        #[serde(rename = "added")]
+        Added,
+        #[serde(rename = "modified")]
+        Modified,
+        #[serde(rename = "deleted")]
+        Deleted,
+        #[serde(rename = "renamed")]
+        Renamed,
+        #[serde(rename = "copied")]
+        Copied,
+        #[serde(rename = "typechange")]
+        Typechange,
+        #[serde(rename = "other")]
+        Other,
+    }
+
+    impl ::std::fmt::Display for MrDiffEntryStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Added => f.write_str("added"),
+                Self::Modified => f.write_str("modified"),
+                Self::Deleted => f.write_str("deleted"),
+                Self::Renamed => f.write_str("renamed"),
+                Self::Copied => f.write_str("copied"),
+                Self::Typechange => f.write_str("typechange"),
+                Self::Other => f.write_str("other"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for MrDiffEntryStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "added" => Ok(Self::Added),
+                "modified" => Ok(Self::Modified),
+                "deleted" => Ok(Self::Deleted),
+                "renamed" => Ok(Self::Renamed),
+                "copied" => Ok(Self::Copied),
+                "typechange" => Ok(Self::Typechange),
+                "other" => Ok(Self::Other),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for MrDiffEntryStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for MrDiffEntryStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for MrDiffEntryStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`MrReview`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "author": {
+    ///      "$ref": "#/components/schemas/UserRef"
+    ///    },
+    ///    "body": {
+    ///      "type": "string"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "mr_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "state": {
+    ///      "$ref": "#/components/schemas/ReviewState"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct MrReview {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub author: ::std::option::Option<UserRef>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub mr_id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<ReviewState>,
+    }
+
+    impl ::std::default::Default for MrReview {
+        fn default() -> Self {
+            Self {
+                author: Default::default(),
+                body: Default::default(),
+                created_at: Default::default(),
+                id: Default::default(),
+                mr_id: Default::default(),
+                state: Default::default(),
+            }
+        }
+    }
+
+    ///`MrState`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "open",
+    ///    "merged",
+    ///    "closed"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum MrState {
+        #[serde(rename = "open")]
+        Open,
+        #[serde(rename = "merged")]
+        Merged,
+        #[serde(rename = "closed")]
+        Closed,
+    }
+
+    impl ::std::fmt::Display for MrState {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Open => f.write_str("open"),
+                Self::Merged => f.write_str("merged"),
+                Self::Closed => f.write_str("closed"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for MrState {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "open" => Ok(Self::Open),
+                "merged" => Ok(Self::Merged),
+                "closed" => Ok(Self::Closed),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for MrState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for MrState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for MrState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`Org`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1797,6 +3145,200 @@ pub mod types {
     }
 
     impl<'de> ::serde::Deserialize<'de> for PatchIssueRequestTitle {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///Update title or body. Omitted fields are left untouched.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Update title or body. Omitted fields are left
+    /// untouched.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "body": {
+    ///      "type": "string",
+    ///      "maxLength": 65536
+    ///    },
+    ///    "title": {
+    ///      "type": "string",
+    ///      "maxLength": 256,
+    ///      "minLength": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PatchMergeRequestRequest {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub body: ::std::option::Option<PatchMergeRequestRequestBody>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<PatchMergeRequestRequestTitle>,
+    }
+
+    impl ::std::default::Default for PatchMergeRequestRequest {
+        fn default() -> Self {
+            Self {
+                body: Default::default(),
+                title: Default::default(),
+            }
+        }
+    }
+
+    ///`PatchMergeRequestRequestBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 65536
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PatchMergeRequestRequestBody(::std::string::String);
+    impl ::std::ops::Deref for PatchMergeRequestRequestBody {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<PatchMergeRequestRequestBody> for ::std::string::String {
+        fn from(value: PatchMergeRequestRequestBody) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for PatchMergeRequestRequestBody {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 65536usize {
+                return Err("longer than 65536 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PatchMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PatchMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PatchMergeRequestRequestBody {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for PatchMergeRequestRequestBody {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`PatchMergeRequestRequestTitle`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 256,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PatchMergeRequestRequestTitle(::std::string::String);
+    impl ::std::ops::Deref for PatchMergeRequestRequestTitle {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<PatchMergeRequestRequestTitle> for ::std::string::String {
+        fn from(value: PatchMergeRequestRequestTitle) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for PatchMergeRequestRequestTitle {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 256usize {
+                return Err("longer than 256 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PatchMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PatchMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PatchMergeRequestRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for PatchMergeRequestRequestTitle {
         fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
         where
             D: ::serde::Deserializer<'de>,
@@ -3030,6 +4572,52 @@ pub mod types {
         }
     }
 
+    ///`PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "body"
+    ///  ],
+    ///  "properties": {
+    ///    "body": {
+    ///      "type": "string",
+    ///      "maxLength": 65536,
+    ///      "minLength": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBody { pub body : PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody , }
+    ///`PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 65536,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody(
+        ::std::string::String,
+    );
+    impl :: std :: ops :: Deref for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { type Target = :: std :: string :: String ; fn deref (& self) -> & :: std :: string :: String { & self . 0 } }
+    impl :: std :: convert :: From < PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody > for :: std :: string :: String { fn from (value : PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody) -> Self { value . 0 } }
+    impl :: std :: str :: FromStr for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { type Err = self :: error :: ConversionError ; fn from_str (value : & str) -> :: std :: result :: Result < Self , self :: error :: ConversionError > { if value . chars () . count () > 65536usize { return Err ("longer than 65536 characters" . into ()) ; } if value . chars () . count () < 1usize { return Err ("shorter than 1 characters" . into ()) ; } Ok (Self (value . to_string ())) } }
+    impl :: std :: convert :: TryFrom < & str > for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { type Error = self :: error :: ConversionError ; fn try_from (value : & str) -> :: std :: result :: Result < Self , self :: error :: ConversionError > { value . parse () } }
+    impl :: std :: convert :: TryFrom < & :: std :: string :: String > for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { type Error = self :: error :: ConversionError ; fn try_from (value : & :: std :: string :: String) -> :: std :: result :: Result < Self , self :: error :: ConversionError > { value . parse () } }
+    impl :: std :: convert :: TryFrom < :: std :: string :: String > for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { type Error = self :: error :: ConversionError ; fn try_from (value : :: std :: string :: String) -> :: std :: result :: Result < Self , self :: error :: ConversionError > { value . parse () } }
+    impl < 'de > :: serde :: Deserialize < 'de > for PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBodyBody { fn deserialize < D > (deserializer : D ,) -> :: std :: result :: Result < Self , D :: Error > where D : :: serde :: Deserializer < 'de > , { :: std :: string :: String :: deserialize (deserializer) ? . parse () . map_err (| e : self :: error :: ConversionError | { < D :: Error as :: serde :: de :: Error > :: custom (e . to_string () ,) }) } }
     ///`Project`
     ///
     /// <details><summary>JSON schema</summary>
@@ -3685,6 +5273,89 @@ pub mod types {
         }
     }
 
+    ///`ReviewState`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "approved",
+    ///    "changes_requested",
+    ///    "commented"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum ReviewState {
+        #[serde(rename = "approved")]
+        Approved,
+        #[serde(rename = "changes_requested")]
+        ChangesRequested,
+        #[serde(rename = "commented")]
+        Commented,
+    }
+
+    impl ::std::fmt::Display for ReviewState {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Approved => f.write_str("approved"),
+                Self::ChangesRequested => f.write_str("changes_requested"),
+                Self::Commented => f.write_str("commented"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for ReviewState {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "approved" => Ok(Self::Approved),
+                "changes_requested" => Ok(Self::ChangesRequested),
+                "commented" => Ok(Self::Commented),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for ReviewState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for ReviewState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for ReviewState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`Signature`
     ///
     /// <details><summary>JSON schema</summary>
@@ -4056,9 +5727,11 @@ pub mod types {
 ///  - Repositories (CRUD + libgit2-backed read APIs)
 ///  - Git smart HTTP (clone/fetch/push)
 ///  - Issues (CRUD, labels, comments, assignees)
+///  - Merge Requests (open/diff/merge with FF/merge-commit/squash, comments,
+///    reviews)
 ///
 ///Planned for later stages (URLs reserved, not yet served):
-///  - Merge Requests, Pipelines, Wiki, Insight
+///  - Pipelines, Wiki, Insight
 ///
 ///All errors use the JSON envelope:
 ///  { "error": { "code": "<stable_code>", "message": "<human msg>", "details":
@@ -5141,6 +6814,9 @@ impl Client {
         let response = result?;
         match response.status().as_u16() {
             200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
             401u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
@@ -5606,6 +7282,9 @@ impl Client {
         let response = result?;
         match response.status().as_u16() {
             201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
             401u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
@@ -5660,6 +7339,883 @@ impl Client {
         let response = result?;
         match response.status().as_u16() {
             204u16 => Ok(ResponseValue::empty(response)),
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List merge requests on a repo
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `author`: User UUID or username.
+    /// - `limit`
+    /// - `state`
+    /// - `target_ref`: Exact match on the target ref (e.g. "refs/heads/main").
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        author: Option<&'a str>,
+        limit: Option<::std::num::NonZeroU64>,
+        state: Option<
+            types::GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsState,
+        >,
+        target_ref: Option<&'a str>,
+    ) -> Result<
+        ResponseValue<
+            types::GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsResponse,
+        >,
+        Error<types::Error>,
+    > {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("author", &author))
+            .query(&progenitor_client::QueryParam::new("limit", &limit))
+            .query(&progenitor_client::QueryParam::new("state", &state))
+            .query(&progenitor_client::QueryParam::new(
+                "target_ref",
+                &target_ref,
+            ))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Open a merge request
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests`
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        body: &'a types::CreateMergeRequestRequest,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Get a merge request by its per-project number
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Edit title/body (author or org owner/admin only)
+    ///
+    ///Sends a `PATCH` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `body`
+    pub async fn patch_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+        body: &'a types::PatchMergeRequestRequest,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .patch(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "patch_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Per-file diff between merge base and source tip
+    ///
+    ///For open MRs, the diff is computed from the live source/target refs.
+    ///For merged/closed MRs, the snapshot OIDs recorded at open time are
+    ///used so the historical view stays stable even if the source ref is
+    ///later deleted.
+    ///
+    ///By default each file entry omits the unified patch text to keep
+    ///responses small; pass `include=patch` to populate it.
+    ///
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/diff`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `include`: Comma-separated optional fields. Currently the only
+    ///   recognised
+    ///token is `patch`, which adds a unified diff string to each file
+    ///entry.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_diff < 'a > (& 'a self , org_slug : & 'a str , project_slug : & 'a str , repo_slug : & 'a str , number : :: std :: num :: NonZeroU64 , include : Option < & 'a str >) -> Result < ResponseValue < types :: GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberDiffResponse > , Error < types :: Error > , >{
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/diff",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("include", &include))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_diff",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Commits reachable from source but not target
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/commits`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `limit`
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_commits < 'a > (& 'a self , org_slug : & 'a str , project_slug : & 'a str , repo_slug : & 'a str , number : :: std :: num :: NonZeroU64 , limit : Option < :: std :: num :: NonZeroU64 >) -> Result < ResponseValue < types :: GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommitsResponse > , Error < types :: Error > , >{
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/commits",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("limit", &limit))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_commits",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Merge an open MR with a chosen strategy
+    ///
+    ///Three strategies are supported. `ff` requires the target to be an
+    ///ancestor of the source; pick `merge-commit` (true 2-parent merge
+    ///commit) or `squash` (single-parent commit with the merged tree)
+    ///when the branches have diverged.
+    ///
+    ///On a merge conflict the response is 409 and the MR remains open.
+    ///
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/merge`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `body`
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_merge<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+        body: &'a types::MergeMrRequest,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/merge",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_merge",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            409u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Close an open MR without merging
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/close`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_close<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/close",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_close",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            409u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Reopen a previously closed MR (merged MRs cannot be reopened)
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/reopen`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reopen<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+    ) -> Result<ResponseValue<types::MergeRequest>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/reopen",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reopen",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            409u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List comments on an MR
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/comments`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_comments < 'a > (& 'a self , org_slug : & 'a str , project_slug : & 'a str , repo_slug : & 'a str , number : :: std :: num :: NonZeroU64) -> Result < ResponseValue < types :: GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsResponse > , Error < types :: Error > , >{
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/comments",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_comments",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Post a comment on an MR
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/comments`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `body`
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_comments<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+        body : & 'a types :: PostOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberCommentsBody,
+    ) -> Result<ResponseValue<types::MrComment>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/comments",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_comments",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List reviews on an MR
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/reviews`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reviews < 'a > (& 'a self , org_slug : & 'a str , project_slug : & 'a str , repo_slug : & 'a str , number : :: std :: num :: NonZeroU64) -> Result < ResponseValue < types :: GetOrgsByOrgSlugProjectsByProjectSlugReposByRepoSlugMergeRequestsByNumberReviewsResponse > , Error < types :: Error > , >{
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/reviews",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reviews",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Post a review on an MR
+    ///
+    ///Sends a `POST` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/
+    /// merge-requests/{number}/reviews`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `repo_slug`
+    /// - `number`: Per-project monotonically increasing merge-request number.
+    /// - `body`
+    pub async fn post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reviews<
+        'a,
+    >(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        repo_slug: &'a str,
+        number: ::std::num::NonZeroU64,
+        body: &'a types::CreateMrReviewRequest,
+    ) -> Result<ResponseValue<types::MrReview>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests/{}/reviews",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&repo_slug.to_string()),
+            encode_path(&number.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_orgs_by_org_slug_projects_by_project_slug_repos_by_repo_slug_merge_requests_by_number_reviews",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
             401u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
