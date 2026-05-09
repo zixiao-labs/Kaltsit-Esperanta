@@ -1,3 +1,5 @@
+set -o pipefail
+
 echo " █████╗ ███╗   ███╗ █████╗  ██╗ ██████╗ "
 echo "██╔══██╗████╗ ████║██╔══██╗███║██╔═████╗"
 echo "███████║██╔████╔██║███████║╚██║██║██╔██║"
@@ -62,11 +64,16 @@ version_info=$(rustc --version --verbose)
 host_line=$(echo "$version_info" | grep host)
 target_triple=${host_line#*: }
 
-rustup target add $target_triple
+if [ -z "$target_triple" ]; then
+    echo "ERROR: failed to detect target triple from rustc --version" >&2
+    exit 1
+fi
+
+rustup target add "$target_triple"
 
 echo "🔨 Build Kal'tsit"
 
-cargo build ${build_flag} --package zed --package cli --target $target_triple
+cargo build "$build_flag" --package zed --package cli --target "$target_triple"
 
 echo "✅ Build Complete"
 
@@ -74,14 +81,16 @@ echo "📦 Package App"
 
 pushd crates/zed
 cp Cargo.toml Cargo.toml.backup
+trap 'mv Cargo.toml.backup Cargo.toml 2>/dev/null || true; popd 2>/dev/null || true' EXIT ERR
 sed \
     -i.backup \
     "s/package.metadata.bundle-${channel}/package.metadata.bundle/" \
     Cargo.toml
 
-app_path=$(cargo bundle ${build_flag} --target $target_triple --select-workspace-root | xargs)
+app_path=$(cargo bundle "$build_flag" --target "$target_triple" --select-workspace-root | xargs)
 
 mv Cargo.toml.backup Cargo.toml
+trap - EXIT ERR
 popd
 echo "Bundled ${app_path}"
 

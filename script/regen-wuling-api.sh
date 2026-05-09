@@ -198,6 +198,19 @@ for line in src.splitlines():
 
 open(path, 'w').write('\n'.join(out_lines) + '\n')
 print(f"    split {splits} fused doc/item lines")
+
+# Re-scan to verify no fused lines remain
+remaining_fused = []
+for line_num, line in enumerate(open(path).readlines(), 1):
+    stripped = line.lstrip()
+    if stripped.startswith('///') and ITEM.search(line):
+        remaining_fused.append((line_num, line.rstrip()))
+
+if remaining_fused:
+    print(f"\nERROR: {len(remaining_fused)} fused doc/item lines remain in {path}:", file=sys.stderr)
+    for line_num, line in remaining_fused[:5]:  # Show first 5
+        print(f"  Line {line_num}: {line[:80]}...", file=sys.stderr)
+    sys.exit(1)
 PY
 
 mkdir -p "$(dirname "$GENERATED_FILE")"
