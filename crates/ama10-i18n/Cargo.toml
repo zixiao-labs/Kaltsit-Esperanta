@@ -1,0 +1,10 @@
+[package]
+name = "ama10-i18n"
+version = "26.0.0"
+publish.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
