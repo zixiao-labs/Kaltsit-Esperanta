@@ -1,0 +1,13 @@
+[package]
+name = "ama10-i18n"
+version = "0.1.0"
+publish.workspace = true
+edition.workspace = true
+
+[lib]
+path = "src/ama10_i18n.rs"
+
+[dependencies]
+
+[lints]
+workspace = true

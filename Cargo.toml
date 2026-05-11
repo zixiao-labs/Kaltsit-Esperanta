@@ -251,7 +251,7 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask", "crates/closure-agent",
+    "tooling/xtask", "crates/closure-agent", "crates/ama10-i18n", "crates/mantra",
 ]
 default-members = ["crates/zed"]
 
