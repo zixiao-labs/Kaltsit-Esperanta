@@ -1,0 +1,10 @@
+[package]
+name = "mantra"
+version = "0.1.0"
+publish.workspace = true
+edition.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
