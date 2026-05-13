@@ -121,6 +121,72 @@ pub mod types {
         }
     }
 
+    ///`ActivityDay`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "date": {
+    ///      "description": "YYYY-MM-DD (UTC)",
+    ///      "type": "string"
+    ///    },
+    ///    "issues_closed": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "issues_opened": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "mrs_merged": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "mrs_opened": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct ActivityDay {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commits: ::std::option::Option<i64>,
+        ///YYYY-MM-DD (UTC)
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub date: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub issues_closed: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub issues_opened: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub mrs_merged: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub mrs_opened: ::std::option::Option<i64>,
+    }
+
+    impl ::std::default::Default for ActivityDay {
+        fn default() -> Self {
+            Self {
+                commits: Default::default(),
+                date: Default::default(),
+                issues_closed: Default::default(),
+                issues_opened: Default::default(),
+                mrs_merged: Default::default(),
+                mrs_opened: Default::default(),
+            }
+        }
+    }
+
     ///`Commit`
     ///
     /// <details><summary>JSON schema</summary>
@@ -179,6 +245,48 @@ pub mod types {
                 oid: Default::default(),
                 parents: Default::default(),
                 tree_oid: Default::default(),
+            }
+        }
+    }
+
+    ///`ContributorStat`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "email": {
+    ///      "type": "string"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct ContributorStat {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commits: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub email: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for ContributorStat {
+        fn default() -> Self {
+            Self {
+                commits: Default::default(),
+                email: Default::default(),
+                name: Default::default(),
             }
         }
     }
@@ -691,6 +799,212 @@ pub mod types {
         }
     }
 
+    ///`CreateSshKeyRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "public_key",
+    ///    "title"
+    ///  ],
+    ///  "properties": {
+    ///    "public_key": {
+    ///      "description": "One-line OpenSSH public key (the contents of
+    /// `~/.ssh/id_*.pub`).\nAccepts ssh-rsa, ssh-ed25519, ecdsa-sha2-*; rejects
+    /// everything\nelse with 400.\n",
+    ///      "type": "string",
+    ///      "maxLength": 8192,
+    ///      "minLength": 1
+    ///    },
+    ///    "title": {
+    ///      "description": "Human label for the key (e.g. \"laptop\",
+    /// \"ci-runner\").",
+    ///      "type": "string",
+    ///      "maxLength": 128,
+    ///      "minLength": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct CreateSshKeyRequest {
+        ///One-line OpenSSH public key (the contents of `~/.ssh/id_*.pub`).
+        ///Accepts ssh-rsa, ssh-ed25519, ecdsa-sha2-*; rejects everything
+        ///else with 400.
+        pub public_key: CreateSshKeyRequestPublicKey,
+        ///Human label for the key (e.g. "laptop", "ci-runner").
+        pub title: CreateSshKeyRequestTitle,
+    }
+
+    ///One-line OpenSSH public key (the contents of `~/.ssh/id_*.pub`).
+    ///Accepts ssh-rsa, ssh-ed25519, ecdsa-sha2-*; rejects everything
+    ///else with 400.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "One-line OpenSSH public key (the contents of
+    /// `~/.ssh/id_*.pub`).\nAccepts ssh-rsa, ssh-ed25519, ecdsa-sha2-*; rejects
+    /// everything\nelse with 400.\n",
+    ///  "type": "string",
+    ///  "maxLength": 8192,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateSshKeyRequestPublicKey(::std::string::String);
+    impl ::std::ops::Deref for CreateSshKeyRequestPublicKey {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateSshKeyRequestPublicKey> for ::std::string::String {
+        fn from(value: CreateSshKeyRequestPublicKey) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateSshKeyRequestPublicKey {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 8192usize {
+                return Err("longer than 8192 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateSshKeyRequestPublicKey {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateSshKeyRequestPublicKey {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateSshKeyRequestPublicKey {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateSshKeyRequestPublicKey {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///Human label for the key (e.g. "laptop", "ci-runner").
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Human label for the key (e.g. \"laptop\",
+    /// \"ci-runner\").",
+    ///  "type": "string",
+    ///  "maxLength": 128,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateSshKeyRequestTitle(::std::string::String);
+    impl ::std::ops::Deref for CreateSshKeyRequestTitle {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateSshKeyRequestTitle> for ::std::string::String {
+        fn from(value: CreateSshKeyRequestTitle) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateSshKeyRequestTitle {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 128usize {
+                return Err("longer than 128 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateSshKeyRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateSshKeyRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateSshKeyRequestTitle {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateSshKeyRequestTitle {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
     ///`Error`
     ///
     /// <details><summary>JSON schema</summary>
@@ -913,6 +1227,39 @@ pub mod types {
         }
     }
 
+    ///`GetAuthSshKeysResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "ssh_keys": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/SSHKey"
+    ///      },
+    ///      "maxItems": 100
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetAuthSshKeysResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub ssh_keys: ::std::vec::Vec<SshKey>,
+    }
+
+    impl ::std::default::Default for GetAuthSshKeysResponse {
+        fn default() -> Self {
+            Self {
+                ssh_keys: Default::default(),
+            }
+        }
+    }
+
     ///`GetAuthTokensResponse`
     ///
     /// <details><summary>JSON schema</summary>
@@ -942,6 +1289,70 @@ pub mod types {
         fn default() -> Self {
             Self {
                 tokens: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugInsightsActivityResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "days": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/ActivityDay"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugInsightsActivityResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub days: ::std::vec::Vec<ActivityDay>,
+    }
+
+    impl ::std::default::Default for GetOrgsByOrgSlugProjectsByProjectSlugInsightsActivityResponse {
+        fn default() -> Self {
+            Self {
+                days: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugInsightsContributorsResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "contributors": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/ContributorStat"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugInsightsContributorsResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub contributors: ::std::vec::Vec<ContributorStat>,
+    }
+
+    impl ::std::default::Default for GetOrgsByOrgSlugProjectsByProjectSlugInsightsContributorsResponse {
+        fn default() -> Self {
+            Self {
+                contributors: Default::default(),
             }
         }
     }
@@ -1684,6 +2095,70 @@ pub mod types {
         }
     }
 
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugWikiHistoryResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/GitCommit"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugWikiHistoryResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub commits: ::std::vec::Vec<GitCommit>,
+    }
+
+    impl ::std::default::Default for GetOrgsByOrgSlugProjectsByProjectSlugWikiHistoryResponse {
+        fn default() -> Self {
+            Self {
+                commits: Default::default(),
+            }
+        }
+    }
+
+    ///`GetOrgsByOrgSlugProjectsByProjectSlugWikiPagesResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "pages": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/WikiPage"
+    ///      }
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetOrgsByOrgSlugProjectsByProjectSlugWikiPagesResponse {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub pages: ::std::vec::Vec<WikiPage>,
+    }
+
+    impl ::std::default::Default for GetOrgsByOrgSlugProjectsByProjectSlugWikiPagesResponse {
+        fn default() -> Self {
+            Self {
+                pages: Default::default(),
+            }
+        }
+    }
+
     ///`GetOrgsByOrgSlugProjectsResponse`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1744,6 +2219,177 @@ pub mod types {
         fn default() -> Self {
             Self {
                 orgs: Default::default(),
+            }
+        }
+    }
+
+    ///A single commit as returned by the libgit2 wrapper.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A single commit as returned by the libgit2 wrapper.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "author": {
+    ///      "type": "object",
+    ///      "properties": {
+    ///        "email": {
+    ///          "type": "string"
+    ///        },
+    ///        "name": {
+    ///          "type": "string"
+    ///        },
+    ///        "when": {
+    ///          "type": "string",
+    ///          "format": "date-time"
+    ///        }
+    ///      }
+    ///    },
+    ///    "committer": {
+    ///      "type": "object",
+    ///      "properties": {
+    ///        "email": {
+    ///          "type": "string"
+    ///        },
+    ///        "name": {
+    ///          "type": "string"
+    ///        },
+    ///        "when": {
+    ///          "type": "string",
+    ///          "format": "date-time"
+    ///        }
+    ///      }
+    ///    },
+    ///    "message": {
+    ///      "type": "string"
+    ///    },
+    ///    "oid": {
+    ///      "type": "string"
+    ///    },
+    ///    "parents": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+    ///    },
+    ///    "tree_oid": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GitCommit {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub author: ::std::option::Option<GitCommitAuthor>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub committer: ::std::option::Option<GitCommitCommitter>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub message: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub oid: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub parents: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub tree_oid: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for GitCommit {
+        fn default() -> Self {
+            Self {
+                author: Default::default(),
+                committer: Default::default(),
+                message: Default::default(),
+                oid: Default::default(),
+                parents: Default::default(),
+                tree_oid: Default::default(),
+            }
+        }
+    }
+
+    ///`GitCommitAuthor`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "email": {
+    ///      "type": "string"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "when": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GitCommitAuthor {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub email: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub when: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for GitCommitAuthor {
+        fn default() -> Self {
+            Self {
+                email: Default::default(),
+                name: Default::default(),
+                when: Default::default(),
+            }
+        }
+    }
+
+    ///`GitCommitCommitter`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "email": {
+    ///      "type": "string"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "when": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GitCommitCommitter {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub email: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub when: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for GitCommitCommitter {
+        fn default() -> Self {
+            Self {
+                email: Default::default(),
+                name: Default::default(),
+                when: Default::default(),
             }
         }
     }
@@ -2072,6 +2718,78 @@ pub mod types {
                 id: Default::default(),
                 name: Default::default(),
                 project_id: Default::default(),
+            }
+        }
+    }
+
+    ///`LanguageStats`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "bytes": {
+    ///      "description": "Total UTF-8 bytes per detected language across the
+    /// walked tree.\nBinary blobs are skipped; languages are inferred from
+    /// file\nextension and a small basename map (Dockerfile, Makefile,
+    /// ...).\n",
+    ///      "type": "object",
+    ///      "additionalProperties": {
+    ///        "type": "integer",
+    ///        "format": "int64"
+    ///      }
+    ///    },
+    ///    "files": {
+    ///      "description": "File counts per language.",
+    ///      "type": "object",
+    ///      "additionalProperties": {
+    ///        "type": "integer",
+    ///        "format": "int64"
+    ///      }
+    ///    },
+    ///    "truncated": {
+    ///      "description": "True when the walker hit its blob cap before
+    /// reaching every\nfile. In that case the byte and file counts are a lower
+    /// bound,\nnot an exact total. Omitted (treated as false) when the
+    /// walk\ncompleted in full.\n",
+    ///      "type": "boolean"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct LanguageStats {
+        ///Total UTF-8 bytes per detected language across the walked tree.
+        ///Binary blobs are skipped; languages are inferred from file
+        ///extension and a small basename map (Dockerfile, Makefile, ...).
+        #[serde(
+            default,
+            skip_serializing_if = ":: std :: collections :: HashMap::is_empty"
+        )]
+        pub bytes: ::std::collections::HashMap<::std::string::String, i64>,
+        ///File counts per language.
+        #[serde(
+            default,
+            skip_serializing_if = ":: std :: collections :: HashMap::is_empty"
+        )]
+        pub files: ::std::collections::HashMap<::std::string::String, i64>,
+        ///True when the walker hit its blob cap before reaching every
+        ///file. In that case the byte and file counts are a lower bound,
+        ///not an exact total. Omitted (treated as false) when the walk
+        ///completed in full.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub truncated: ::std::option::Option<bool>,
+    }
+
+    impl ::std::default::Default for LanguageStats {
+        fn default() -> Self {
+            Self {
+                bytes: Default::default(),
+                files: Default::default(),
+                truncated: Default::default(),
             }
         }
     }
@@ -4774,6 +5492,191 @@ pub mod types {
         }
     }
 
+    ///`PutWikiPageRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "content"
+    ///  ],
+    ///  "properties": {
+    ///    "content": {
+    ///      "type": "string",
+    ///      "maxLength": 1048576
+    ///    },
+    ///    "message": {
+    ///      "description": "Optional commit message. Defaults to \"Update
+    /// <path>\".",
+    ///      "type": "string",
+    ///      "maxLength": 512
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PutWikiPageRequest {
+        pub content: PutWikiPageRequestContent,
+        ///Optional commit message. Defaults to "Update <path>".
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub message: ::std::option::Option<PutWikiPageRequestMessage>,
+    }
+
+    ///`PutWikiPageRequestContent`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 1048576
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PutWikiPageRequestContent(::std::string::String);
+    impl ::std::ops::Deref for PutWikiPageRequestContent {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<PutWikiPageRequestContent> for ::std::string::String {
+        fn from(value: PutWikiPageRequestContent) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for PutWikiPageRequestContent {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 1048576usize {
+                return Err("longer than 1048576 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PutWikiPageRequestContent {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PutWikiPageRequestContent {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PutWikiPageRequestContent {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for PutWikiPageRequestContent {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///Optional commit message. Defaults to "Update <path>".
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Optional commit message. Defaults to \"Update
+    /// <path>\".",
+    ///  "type": "string",
+    ///  "maxLength": 512
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PutWikiPageRequestMessage(::std::string::String);
+    impl ::std::ops::Deref for PutWikiPageRequestMessage {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<PutWikiPageRequestMessage> for ::std::string::String {
+        fn from(value: PutWikiPageRequestMessage) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for PutWikiPageRequestMessage {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 512usize {
+                return Err("longer than 512 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PutWikiPageRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PutWikiPageRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PutWikiPageRequestMessage {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for PutWikiPageRequestMessage {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
     ///`Ref`
     ///
     /// <details><summary>JSON schema</summary>
@@ -5398,6 +6301,77 @@ pub mod types {
         }
     }
 
+    ///`SshKey`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "fingerprint": {
+    ///      "description": "SHA256:... fingerprint as ssh-keygen prints.",
+    ///      "type": "string"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "last_used_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "public_key": {
+    ///      "description": "Canonical authorized_keys line (key type + base64
+    /// blob, no\ncomment). Always normalised on insert.\n",
+    ///      "type": "string"
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct SshKey {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        ///SHA256:... fingerprint as ssh-keygen prints.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub fingerprint: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub last_used_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        ///Canonical authorized_keys line (key type + base64 blob, no
+        ///comment). Always normalised on insert.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub public_key: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for SshKey {
+        fn default() -> Self {
+            Self {
+                created_at: Default::default(),
+                fingerprint: Default::default(),
+                id: Default::default(),
+                last_used_at: Default::default(),
+                public_key: Default::default(),
+                title: Default::default(),
+            }
+        }
+    }
+
     ///`TokenResponse`
     ///
     /// <details><summary>JSON schema</summary>
@@ -5707,6 +6681,104 @@ pub mod types {
         }
     }
 
+    ///`WikiPage`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "path": {
+    ///      "type": "string"
+    ///    },
+    ///    "size": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct WikiPage {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub path: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub size: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub updated_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for WikiPage {
+        fn default() -> Self {
+            Self {
+                path: Default::default(),
+                size: Default::default(),
+                updated_at: Default::default(),
+            }
+        }
+    }
+
+    ///`WikiPageContent`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "commit_oid": {
+    ///      "type": "string"
+    ///    },
+    ///    "html": {
+    ///      "description": "Markdown rendered to HTML via goldmark (GFM) and
+    /// sanitized through\nbluemonday's UGCPolicy. Safe to render directly into
+    /// the DOM.\n",
+    ///      "type": "string"
+    ///    },
+    ///    "path": {
+    ///      "type": "string"
+    ///    },
+    ///    "raw": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct WikiPageContent {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commit_oid: ::std::option::Option<::std::string::String>,
+        ///Markdown rendered to HTML via goldmark (GFM) and sanitized through
+        ///bluemonday's UGCPolicy. Safe to render directly into the DOM.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub html: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub path: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub raw: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for WikiPageContent {
+        fn default() -> Self {
+            Self {
+                commit_oid: Default::default(),
+                html: Default::default(),
+                path: Default::default(),
+                raw: Default::default(),
+            }
+        }
+    }
+
     /// Generation of default values for serde.
     pub mod defaults {
         pub(super) fn post_orgs_by_org_slug_projects_by_project_slug_repos_body_default_branch()
@@ -5722,16 +6794,18 @@ pub mod types {
 ///Stage 1 of the Wuling DevOps platform.
 ///
 ///What's implemented:
-///  - Auth (register, login, /me, personal access tokens)
+///  - Auth (register, login, /me, personal access tokens, SSH public keys)
 ///  - Orgs and Projects (CRUD)
 ///  - Repositories (CRUD + libgit2-backed read APIs)
-///  - Git smart HTTP (clone/fetch/push)
+///  - Git smart HTTP (clone/fetch/push) and Git over SSH (default :2222)
 ///  - Issues (CRUD, labels, comments, assignees)
 ///  - Merge Requests (open/diff/merge with FF/merge-commit/squash, comments,
 ///    reviews)
+///  - Wiki (per-project Markdown pages backed by a separate Git repo)
+///  - Insights (per-project activity, contributors, language stats)
 ///
 ///Planned for later stages (URLs reserved, not yet served):
-///  - Pipelines, Wiki, Insight
+///  - Pipelines
 ///
 ///All errors use the JSON envelope:
 ///  { "error": { "code": "<stable_code>", "message": "<human msg>", "details":
@@ -6071,6 +7145,127 @@ impl Client {
             .build()?;
         let info = OperationInfo {
             operation_id: "delete_auth_tokens_by_token_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            204u16 => Ok(ResponseValue::empty(response)),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List the caller's registered SSH public keys
+    ///
+    ///Sends a `GET` request to `/api/v1/auth/ssh-keys`
+    pub async fn get_auth_ssh_keys<'a>(
+        &'a self,
+    ) -> Result<ResponseValue<types::GetAuthSshKeysResponse>, Error<()>> {
+        let url = format!("{}/api/v1/auth/ssh-keys", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_auth_ssh_keys",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Register an SSH public key (used by the embedded Git-over-SSH server)
+    ///
+    ///Sends a `POST` request to `/api/v1/auth/ssh-keys`
+    pub async fn post_auth_ssh_keys<'a>(
+        &'a self,
+        body: &'a types::CreateSshKeyRequest,
+    ) -> Result<ResponseValue<types::SshKey>, Error<types::Error>> {
+        let url = format!("{}/api/v1/auth/ssh-keys", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_auth_ssh_keys",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            409u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Revoke a registered SSH key
+    ///
+    ///Sends a `DELETE` request to `/api/v1/auth/ssh-keys/{key_id}`
+    pub async fn delete_auth_ssh_keys_by_key_id<'a>(
+        &'a self,
+        key_id: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<()>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/auth/ssh-keys/{}",
+            self.baseurl,
+            encode_path(&key_id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .delete(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "delete_auth_ssh_keys_by_key_id",
         };
         self.pre(&mut request, &info).await?;
         let result = self.exec(request, &info).await;
@@ -8225,6 +9420,444 @@ impl Client {
             404u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List every Markdown page in the project wiki
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/wiki/pages`
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_wiki_pages<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+    ) -> Result<
+        ResponseValue<types::GetOrgsByOrgSlugProjectsByProjectSlugWikiPagesResponse>,
+        Error<types::Error>,
+    > {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/wiki/pages",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_wiki_pages",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Fetch a single page (raw Markdown + sanitized HTML)
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/wiki/pages/{path}`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `path`: Forward-slash separated path ending in ".md" (e.g. "Home.md",
+    ///"docs/usage.md"). Nested paths are supported up to 8 levels deep.
+    ///
+    ///The interior "/" separators must be percent-encoded by the client
+    ///so the whole path is delivered as a single path segment. For
+    ///example, `docs/usage.md` is sent as `docs%2Fusage.md`. Servers
+    ///decode the segment once before validating the wiki path.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        path: &'a str,
+    ) -> Result<ResponseValue<types::WikiPageContent>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/wiki/pages/{}",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&path.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Create or update a page (commits via libgit2)
+    ///
+    ///Sends a `PUT` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/wiki/pages/{path}`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `path`: Forward-slash separated path ending in ".md" (e.g. "Home.md",
+    ///"docs/usage.md"). Nested paths are supported up to 8 levels deep.
+    ///
+    ///The interior "/" separators must be percent-encoded by the client
+    ///so the whole path is delivered as a single path segment. For
+    ///example, `docs/usage.md` is sent as `docs%2Fusage.md`. Servers
+    ///decode the segment once before validating the wiki path.
+    ///
+    /// - `body`
+    pub async fn put_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        path: &'a str,
+        body: &'a types::PutWikiPageRequest,
+    ) -> Result<ResponseValue<types::WikiPageContent>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/wiki/pages/{}",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&path.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .put(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "put_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Delete a page (creates a deletion commit)
+    ///
+    ///Sends a `DELETE` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/wiki/pages/{path}`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `path`: Forward-slash separated path ending in ".md" (e.g. "Home.md",
+    ///"docs/usage.md"). Nested paths are supported up to 8 levels deep.
+    ///
+    ///The interior "/" separators must be percent-encoded by the client
+    ///so the whole path is delivered as a single path segment. For
+    ///example, `docs/usage.md` is sent as `docs%2Fusage.md`. Servers
+    ///decode the segment once before validating the wiki path.
+    pub async fn delete_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        path: &'a str,
+    ) -> Result<ResponseValue<()>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/wiki/pages/{}",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+            encode_path(&path.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .delete(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "delete_orgs_by_org_slug_projects_by_project_slug_wiki_pages_by_path",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            204u16 => Ok(ResponseValue::empty(response)),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Recent commits on the wiki repo's default branch
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/wiki/history`
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_wiki_history<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        limit: Option<::std::num::NonZeroU64>,
+    ) -> Result<
+        ResponseValue<types::GetOrgsByOrgSlugProjectsByProjectSlugWikiHistoryResponse>,
+        Error<()>,
+    > {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/wiki/history",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("limit", &limit))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_wiki_history",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Per-day rollup of issues / MRs / commits across the project
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/insights/activity`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `since`: Time window for the rollup. Accepts "<n>d", "<n>w", "<n>y" or
+    ///   a
+    ///bare integer in seconds. Default 30d.
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_insights_activity<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        since: Option<&'a str>,
+    ) -> Result<
+        ResponseValue<types::GetOrgsByOrgSlugProjectsByProjectSlugInsightsActivityResponse>,
+        Error<()>,
+    > {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/insights/activity",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("since", &since))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_insights_activity",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Top contributors by commit count for a repo over a window
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/insights/contributors`
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_insights_contributors<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        limit: Option<::std::num::NonZeroU64>,
+        repo: &'a str,
+        since: Option<&'a str>,
+    ) -> Result<
+        ResponseValue<types::GetOrgsByOrgSlugProjectsByProjectSlugInsightsContributorsResponse>,
+        Error<()>,
+    > {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/insights/contributors",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("limit", &limit))
+            .query(&progenitor_client::QueryParam::new("repo", &repo))
+            .query(&progenitor_client::QueryParam::new("since", &since))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_insights_contributors",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Bytes and file counts per detected language across the latest tree
+    ///
+    ///Sends a `GET` request to
+    /// `/api/v1/orgs/{org_slug}/projects/{project_slug}/insights/languages`
+    ///
+    ///Arguments:
+    /// - `org_slug`
+    /// - `project_slug`
+    /// - `ref_`: Branch or revspec; defaults to the repo's default branch.
+    /// - `repo`
+    pub async fn get_orgs_by_org_slug_projects_by_project_slug_insights_languages<'a>(
+        &'a self,
+        org_slug: &'a str,
+        project_slug: &'a str,
+        ref_: Option<&'a str>,
+        repo: &'a str,
+    ) -> Result<ResponseValue<types::LanguageStats>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/orgs/{}/projects/{}/insights/languages",
+            self.baseurl,
+            encode_path(&org_slug.to_string()),
+            encode_path(&project_slug.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("ref", &ref_))
+            .query(&progenitor_client::QueryParam::new("repo", &repo))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_orgs_by_org_slug_projects_by_project_slug_insights_languages",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
             _ => Err(Error::UnexpectedResponse(response)),
         }
     }
