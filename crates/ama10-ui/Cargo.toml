@@ -1,0 +1,15 @@
+[package]
+name = "ama10-ui"
+version = "0.1.0"
+description = "AMa10 UI"
+publish.workspace = true
+edition.workspace = true
+license = "GPL-3.0"
+
+[dependencies]
+gpui.workspace = true
+ama10.workspace = true
+menu.workspace = true
+
+[lints]
+workspace = true

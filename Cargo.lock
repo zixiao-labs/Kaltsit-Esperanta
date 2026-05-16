@@ -571,7 +571,7 @@ dependencies = [
 
 [[package]]
 name = "ama10"
-version = "0.1.0"
+version = "26.0.0"
 dependencies = [
  "chrono",
  "progenitor-client",
@@ -584,6 +584,15 @@ dependencies = [
 [[package]]
 name = "ama10-i18n"
 version = "0.1.0"
+
+[[package]]
+name = "ama10-ui"
+version = "0.1.0"
+dependencies = [
+ "ama10",
+ "gpui",
+ "menu",
+]
 
 [[package]]
 name = "ambient-authority"
@@ -9001,6 +9010,15 @@ dependencies = [
  "smol",
  "util",
  "workspace",
+]
+
+[[package]]
+name = "installer"
+version = "0.1.0"
+dependencies = [
+ "gpui",
+ "terminal",
+ "ui",
 ]
 
 [[package]]
@@ -22562,6 +22580,8 @@ dependencies = [
  "agent_servers",
  "agent_settings",
  "agent_ui",
+ "ama10",
+ "ama10-ui",
  "anyhow",
  "ashpd",
  "askpass",

@@ -72,3 +72,15 @@
 
 - ama10 故意没有继承工作区的 `reqwest`（那是 `zed-reqwest` fork）。`progenitor-client` 是针对上游 `reqwest 0.13` 编译的，两边的 `Request`/`Error`/`HeaderValue` 是不同类型，混用会编译失败。Stage 2 集成进编辑器时再补一层 shim。
 - 生成出来的客户端整个 `#![allow(clippy::all, ...)]`，review 时关注 `wuling_api.rs`（手写 shim 入口）和 `api/wuling-openapi.yaml`（spec diff），不必逐行看 `generated.rs`。
+
+
+## 为啥不贡献回上游
+
+因为上游已经明确[Out of Scope](https://github.com/zed-industries/zed/pull/53719)
+
+暂时不尝试贡献，但是新的插件系统和脚本语言可以再试一次Feature Request（不指望能被上游Accepted Proposal以及可以开cherry pick pr，纯工作量证明，因为不证明工作量可能会导致我们失去工作并被Cladude Code CLI取代），bug修复一直可以cherry pick
+
+## 许可证
+
+- 手写的 Rust 代码（`src/`、`Cargo.toml`、本 README 等）：**MIT**。
+- `api/wuling-openapi.yaml` 同步自 [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps)；由 progenitor 生成的 `src/wuling_api/generated.rs` 派生自该 spec，**Apache-2.0**。上游的 LICENSE / NOTICE 副本放在 `api/LICENSE-APACHE` 与 `api/NOTICE`，按 Apache License §4(d) 保留。

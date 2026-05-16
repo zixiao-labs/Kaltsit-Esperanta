@@ -512,6 +512,15 @@ impl Telemetry {
     }
 
     fn report_event(self: &Arc<Self>, mut event: Event) {
+        // ESPERANTA: telemetry currently still points at upstream `zed.dev`
+        // endpoints (see `build_request`). Until our own ingestion endpoint is
+        // wired up, drop every event before it can be queued or flushed. Flip
+        // `ESPERANTA_TELEMETRY_DISABLED` to `false` to restore upstream
+        // behavior.
+        const ESPERANTA_TELEMETRY_DISABLED: bool = true;
+        if ESPERANTA_TELEMETRY_DISABLED {
+            return;
+        }
         let mut state = self.state.lock();
         // RUST_LOG=telemetry=trace to debug telemetry events
         log::trace!(target: "telemetry", "{:?}", event);
@@ -606,6 +615,18 @@ impl Telemetry {
     }
 
     pub async fn flush_events_inner(self: &Arc<Self>) -> Result<()> {
+        // ESPERANTA: see the matching guard in `report_event`. Belt-and-braces
+        // kill switch on the actual network path so anything that bypasses
+        // `report_event` (older queued events, direct callers in tests, etc.)
+        // still can't reach upstream zed.dev.
+        const ESPERANTA_TELEMETRY_DISABLED: bool = true;
+        if ESPERANTA_TELEMETRY_DISABLED {
+            let mut state = self.state.lock();
+            state.first_event_date_time = None;
+            state.events_queue.clear();
+            state.flush_events_task.take();
+            return Ok(());
+        }
         let (json_bytes, request_body) = {
             let mut state = self.state.lock();
             state.first_event_date_time = None;
