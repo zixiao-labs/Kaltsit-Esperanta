@@ -251,7 +251,17 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask", "crates/closure-agent", "crates/ama10-i18n", "crates/mantra", "crates/ama10-ui", "crates/installer",
+    "tooling/xtask",
+
+    #
+    # Esperanta crates
+    #
+
+    "crates/closure-agent",
+    "crates/ama10-i18n",
+    "crates/mantra",
+    "crates/ama10-ui",
+    "crates/installer",
 ]
 default-members = ["crates/zed"]
 

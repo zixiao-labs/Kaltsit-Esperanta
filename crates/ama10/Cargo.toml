@@ -1,6 +1,6 @@
 [package]
 name = "ama10"
-version = "26.0.0"
+version = "0.2.2"
 description = "AMa10 SDK（Wuling SDK Rust）"
 publish.workspace = true
 edition.workspace = true

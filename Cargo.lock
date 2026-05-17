@@ -571,7 +571,7 @@ dependencies = [
 
 [[package]]
 name = "ama10"
-version = "26.0.0"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "progenitor-client",

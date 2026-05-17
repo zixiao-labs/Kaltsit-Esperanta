@@ -78,7 +78,7 @@
 
 因为上游已经明确[Out of Scope](https://github.com/zed-industries/zed/pull/53719)
 
-暂时不尝试贡献，但是新的插件系统和脚本语言可以再试一次Feature Request（不指望能被上游Accepted Proposal以及可以开cherry pick pr，纯工作量证明，因为不证明工作量可能会导致我们失去工作并被Cladude Code CLI取代），bug修复一直可以cherry pick
+暂时不尝试贡献，但是新的插件系统和脚本语言可以再试一次Feature Request（不指望能被上游Accepted Proposal以及可以开cherry pick pr，纯工作量证明，因为不证明工作量可能会导致我们失去工作并被Claude Code CLI取代），bug修复一直可以cherry pick
 
 ## 许可证
 
