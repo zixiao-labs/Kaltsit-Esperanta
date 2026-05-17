@@ -79,6 +79,20 @@ const FLUSH_INTERVAL: Duration = Duration::from_secs(1);
 
 #[cfg(not(debug_assertions))]
 const FLUSH_INTERVAL: Duration = Duration::from_secs(60 * 5);
+
+// ESPERANTA: telemetry currently still points at upstream `zed.dev`
+// endpoints (see `build_request`). Until our own ingestion endpoint is
+// wired up, drop every event before it can be queued or flushed. Flip
+// this to `false` to restore upstream behavior.
+//
+// Tests need the queueing/flushing machinery to actually run, so the
+// kill switch is off under `cfg(test)`; the tests use `FakeHttpClient`
+// and never touch the network.
+#[cfg(not(test))]
+const ESPERANTA_TELEMETRY_DISABLED: bool = true;
+#[cfg(test)]
+const ESPERANTA_TELEMETRY_DISABLED: bool = false;
+
 static ZED_CLIENT_CHECKSUM_SEED: LazyLock<Option<Vec<u8>>> = LazyLock::new(|| {
     option_env!("ZED_CLIENT_CHECKSUM_SEED")
         .map(|s| s.as_bytes().into())
@@ -512,6 +526,9 @@ impl Telemetry {
     }
 
     fn report_event(self: &Arc<Self>, mut event: Event) {
+        if ESPERANTA_TELEMETRY_DISABLED {
+            return;
+        }
         let mut state = self.state.lock();
         // RUST_LOG=telemetry=trace to debug telemetry events
         log::trace!(target: "telemetry", "{:?}", event);
@@ -606,6 +623,16 @@ impl Telemetry {
     }
 
     pub async fn flush_events_inner(self: &Arc<Self>) -> Result<()> {
+        // ESPERANTA: belt-and-braces kill switch on the actual network path
+        // so anything that bypasses `report_event` (older queued events,
+        // direct callers in tests, etc.) still can't reach upstream zed.dev.
+        if ESPERANTA_TELEMETRY_DISABLED {
+            let mut state = self.state.lock();
+            state.first_event_date_time = None;
+            state.events_queue.clear();
+            state.flush_events_task.take();
+            return Ok(());
+        }
         let (json_bytes, request_body) = {
             let mut state = self.state.lock();
             state.first_event_date_time = None;

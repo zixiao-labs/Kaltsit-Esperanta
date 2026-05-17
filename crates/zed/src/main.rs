@@ -655,9 +655,17 @@ fn main() {
         });
         AppState::set_global(app_state.clone(), cx);
 
-        auto_update::init(client.clone(), cx);
+        // ESPERANTA: auto-update temporarily disabled. The upstream feed
+        // (`https://zed.dev/api/releases/...`) would resolve to a
+        // zed-industries build, not a Kal'tsit·Esperanta build, so polling it
+        // is at best useless and at worst would prompt users to "upgrade"
+        // their way out of this fork. Re-enable once the release feed is
+        // pointed at our own infra.
+        // auto_update::init(client.clone(), cx);
         dap_adapters::init(cx);
-        auto_update_ui::init(cx);
+        // ESPERANTA: paired with the disable above — `auto_update_ui::init`
+        // only registers UI surfaces for the auto-updater, so we drop it too.
+        // auto_update_ui::init(cx);
         reliability::init(client.clone(), cx);
         extension_host::init(
             extension_host_proxy.clone(),
@@ -700,6 +708,7 @@ fn main() {
         acp_tools::init(cx);
         zed::telemetry_log::init(cx);
         zed::remote_debug::init(cx);
+        zed::ama10::init(cx);
         edit_prediction_ui::init(cx);
         web_search::init(cx);
         web_search_providers::init(app_state.client.clone(), app_state.user_store.clone(), cx);

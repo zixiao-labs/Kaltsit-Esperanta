@@ -1,8 +1,15 @@
 [package]
 name = "ama10"
-version = "0.1.0"
+version = "0.2.2"
+description = "AMa10 SDK（Wuling SDK Rust）"
 publish.workspace = true
 edition.workspace = true
+# Hand-written Rust here is MIT (Kal'tsit·Esperanta authors). The OpenAPI spec
+# bundled in `api/wuling-openapi.yaml` and the `progenitor`-generated code in
+# `src/wuling_api/generated.rs` are derived from Wuling DevOps (Apache-2.0); see
+# `api/LICENSE-APACHE` and `api/NOTICE` for the upstream attribution required
+# by section 4 of the Apache License.
+license = "MIT AND Apache-2.0"
 
 [lib]
 path = "src/ama10.rs"

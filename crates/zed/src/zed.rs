@@ -1,3 +1,4 @@
+pub mod ama10;
 mod app_menus;
 pub mod edit_prediction_registry;
 #[cfg(target_os = "macos")]

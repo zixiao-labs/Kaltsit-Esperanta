@@ -251,7 +251,17 @@ members = [
 
     "tooling/compliance",
     "tooling/perf",
-    "tooling/xtask", "crates/closure-agent", "crates/ama10-i18n", "crates/mantra",
+    "tooling/xtask",
+
+    #
+    # Esperanta crates
+    #
+
+    "crates/closure-agent",
+    "crates/ama10-i18n",
+    "crates/mantra",
+    "crates/ama10-ui",
+    "crates/installer",
 ]
 default-members = ["crates/zed"]
 
@@ -281,6 +291,9 @@ audio = { path = "crates/audio" }
 auto_update = { path = "crates/auto_update" }
 auto_update_ui = { path = "crates/auto_update_ui" }
 aws_http_client = { path = "crates/aws_http_client" }
+ama10 = { path = "crates/ama10" }
+ama10-ui = { path = "crates/ama10-ui" }
+mantra = { path = "crates/mantra" }
 bedrock = { path = "crates/bedrock" }
 breadcrumbs = { path = "crates/breadcrumbs" }
 buffer_diff = { path = "crates/buffer_diff" }
