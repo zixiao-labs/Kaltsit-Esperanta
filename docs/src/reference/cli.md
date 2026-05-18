@@ -85,6 +85,8 @@ Reuse an existing window, replacing its current workspace with the new paths:
 zed -r ~/projects/different-project
 ```
 
+By default (without `-n`, `-a`, or `-r`), directories open in the current window's sidebar. You can change this default with the `cli_default_open_behavior` setting. See [Windows & Projects](../windows-and-projects.md) for more details.
+
 ### `--diff <OLD_PATH> <NEW_PATH>`
 
 Open a diff view comparing two files. Can be specified multiple times:
@@ -154,11 +156,19 @@ This creates a temporary file with the stdin content and opens it in Zed.
 
 ## URL Handling
 
-The CLI can open `zed://`, `http://`, and `https://` URLs:
+The CLI can open `zed://`, `file://`, and `ssh://` URLs:
 
 ```sh
 zed zed://settings
+<<<<<<< HEAD
 zed https://github.com/zixiao-labs/Kaltsit-Esperanta
+=======
+zed file:///Users/whatever/.zshrc
+zed ssh://me@example.com/abs/path
+zed ssh://me@example.com:/abs/path
+zed ssh://me@example.com/~/project
+zed ssh://me@example.com:~/project
+>>>>>>> upstream/main
 ```
 
 ## Using Zed as Your Default Editor
