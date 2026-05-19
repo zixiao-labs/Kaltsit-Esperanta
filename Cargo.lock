@@ -593,11 +593,18 @@ dependencies = [
 name = "ama10"
 version = "0.2.2"
 dependencies = [
+ "anyhow",
  "chrono",
+ "credentials_provider",
+ "futures 0.3.32",
+ "gpui",
+ "log",
  "progenitor-client",
  "reqwest 0.13.3",
  "serde",
  "serde_json",
+ "smol",
+ "url",
  "uuid",
 ]
 
@@ -610,8 +617,20 @@ name = "ama10-ui"
 version = "0.1.0"
 dependencies = [
  "ama10",
+ "anyhow",
+ "credentials_provider",
+ "futures 0.3.32",
  "gpui",
+ "log",
  "menu",
+ "paths",
+ "serde",
+ "serde_json",
+ "smol",
+ "theme",
+ "ui",
+ "url",
+ "workspace",
 ]
 
 [[package]]

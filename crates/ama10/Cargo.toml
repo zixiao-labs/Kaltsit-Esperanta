@@ -19,17 +19,25 @@ name = "ama10"
 path = "src/main.rs"
 
 [dependencies]
+anyhow.workspace = true
 chrono.workspace = true
+credentials_provider.workspace = true
+futures.workspace = true
+gpui.workspace = true
+log.workspace = true
 progenitor-client.workspace = true
 # NOTE: deliberately NOT inheriting the workspace `reqwest` alias. The
 # workspace ships `zed-reqwest` (a fork of reqwest) under the `reqwest` name,
 # but `progenitor-client` is built against upstream `reqwest 0.13` from
 # crates.io, and the two `Request`/`Error`/`HeaderValue` types are distinct.
 # Pulling in stock reqwest here keeps the generated client self-consistent;
-# we'll add a shim layer when this is integrated into the editor in Stage 2.
+# the auth client in `src/auth.rs` uses the same stock reqwest so request
+# types match between the OpenAPI client and the OAuth flow code.
 reqwest = { version = "0.13", features = ["json"] }
 serde.workspace = true
 serde_json.workspace = true
+smol.workspace = true
+url.workspace = true
 uuid.workspace = true
 
 [lints]
