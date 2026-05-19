@@ -158,7 +158,7 @@ The CLI can open `zed://`, `http://`, and `https://` URLs:
 
 ```sh
 zed zed://settings
-zed https://github.com/zixiao-labs/Kaltsit-Esperanta
+zed https://github.com/zed-industries/zed
 ```
 
 ## Using Zed as Your Default Editor
