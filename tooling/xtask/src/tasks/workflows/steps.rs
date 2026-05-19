@@ -64,7 +64,6 @@ enum FetchDepth {
 #[derive(Default)]
 pub(crate) struct CheckoutStep {
     fetch_depth: FetchDepth,
-    fetch_tags: bool,
     name: Option<String>,
     token: Option<String>,
     path: Option<String>,
@@ -112,11 +111,6 @@ impl CheckoutStep {
         self.ref_ = Some(ref_.to_string());
         self
     }
-
-    pub fn with_fetch_tags(mut self) -> Self {
-        self.fetch_tags = true;
-        self
-    }
 }
 
 impl From<CheckoutStep> for Step<Use> {
@@ -139,7 +133,6 @@ impl From<CheckoutStep> for Step<Use> {
             .when_some(value.repository, |step, repository| {
                 step.add_with(("repository", repository))
             })
-            .when(value.fetch_tags, |step| step.add_with(("fetch-tags", true)))
             .when_some(value.ref_, |step, ref_| step.add_with(("ref", ref_)))
             .when_some(value.token, |step, token| step.add_with(("token", token)))
     }
@@ -647,7 +640,6 @@ pub(crate) struct UploadArtifactStep {
     if_no_files_found: Option<IfNoFilesFound>,
     retention_days: Option<u32>,
     if_condition: Option<Expression>,
-    overwrite: bool,
 }
 
 impl UploadArtifactStep {
@@ -663,11 +655,6 @@ impl UploadArtifactStep {
 
     pub fn if_condition(mut self, condition: Expression) -> Self {
         self.if_condition = Some(condition);
-        self
-    }
-
-    pub fn overwrite(mut self, overwrite: bool) -> Self {
-        self.overwrite = overwrite;
         self
     }
 }
@@ -687,7 +674,6 @@ impl From<UploadArtifactStep> for Step<Use> {
             .when_some(value.if_condition, |step, condition| {
                 step.if_condition(condition)
             })
-            .when(value.overwrite, |step| step.add_with(("overwrite", true)))
     }
 }
 
@@ -939,24 +925,12 @@ impl GitRef {
         }
     }
 
-    fn update_ref_path(&self) -> String {
-        match self {
-            Self::Tag(name) => format!("tags/{name}"),
-            Self::Branch(name) => format!("heads/{name}"),
-        }
-    }
-
     fn kind(&self) -> &'static str {
         match self {
             Self::Tag(_) => "tag",
             Self::Branch(_) => "branch",
         }
     }
-}
-
-enum RefOperation {
-    Create,
-    Update { force: bool },
 }
 
 pub(crate) enum RefSha {
@@ -966,7 +940,6 @@ pub(crate) enum RefSha {
 
 struct RefOp {
     git_ref: GitRef,
-    operation: RefOperation,
     sha: RefSha,
     token: String,
 }
@@ -979,24 +952,14 @@ impl<T: ToString> From<T> for RefSha {
 
 impl From<RefOp> for Step<Use> {
     fn from(op: RefOp) -> Self {
-        let (api_method, ref_path, force_line) = match &op.operation {
-            RefOperation::Create => ("createRef", op.git_ref.create_ref_path(), String::new()),
-            RefOperation::Update { force } => (
-                "updateRef",
-                op.git_ref.update_ref_path(),
-                format!(",\n    force: {force}"),
-            ),
-        };
-        let step_name = match &op.operation {
-            RefOperation::Create => format!("steps::create_{}", op.git_ref.kind()),
-            RefOperation::Update { .. } => format!("steps::update_{}", op.git_ref.kind()),
-        };
+        let ref_path = op.git_ref.create_ref_path();
+        let step_name = format!("steps::create_{}", op.git_ref.kind());
         let script = indoc::formatdoc! {r#"
-            github.rest.git.{api_method}({{
+            github.rest.git.createRef({{
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: '{ref_path}',
-                sha: {sha}{force_line}
+                sha: {sha}
             }})
             "#,
             sha = match &op.sha {
@@ -1018,21 +981,6 @@ pub(crate) fn create_ref(
 ) -> impl Into<Step<Use>> {
     RefOp {
         git_ref,
-        operation: RefOperation::Create,
-        sha: sha.into(),
-        token: token.to_string(),
-    }
-}
-
-pub(crate) fn update_ref(
-    git_ref: GitRef,
-    sha: impl Into<RefSha>,
-    token: &StepOutput,
-    force: bool,
-) -> impl Into<Step<Use>> {
-    RefOp {
-        git_ref,
-        operation: RefOperation::Update { force },
         sha: sha.into(),
         token: token.to_string(),
     }
