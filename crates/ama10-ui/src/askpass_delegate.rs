@@ -83,7 +83,11 @@ pub async fn lookup_for_host(
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
     if stored.expires_at_unix > 0 && now > stored.expires_at_unix {
-        log::info!("ama10: stored token expired at {} (now {})", stored.expires_at_unix, now);
+        log::info!(
+            "ama10: stored token expired at {} (now {})",
+            stored.expires_at_unix,
+            now
+        );
         return Ok(LookupResult::FallThrough);
     }
 

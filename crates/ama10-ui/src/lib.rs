@@ -26,7 +26,7 @@ pub mod sign_in;
 
 use gpui::App;
 
-pub use askpass_delegate::{lookup_for_host, LookupResult};
+pub use askpass_delegate::{LookupResult, lookup_for_host};
 pub use settings::WulingConfig;
 pub use sign_in::{spawn_sign_in, spawn_sign_out};
 

@@ -32,10 +32,7 @@ use crate::settings::WulingConfig;
 /// `creds_provider_factory` returns the platform credentials store. We pass
 /// it in rather than capturing globally so tests can swap an in-memory
 /// implementation; production wiring in zed::ama10 hands us the real one.
-pub async fn run_device_flow(
-    cx: &AsyncApp,
-    creds: Arc<dyn CredentialsProvider>,
-) -> Result<String> {
+pub async fn run_device_flow(cx: &AsyncApp, creds: Arc<dyn CredentialsProvider>) -> Result<String> {
     let config = WulingConfig::load();
     let client = WulingClient::new(config.server.clone(), creds);
 
@@ -46,7 +43,14 @@ pub async fn run_device_flow(
         well_known.desktop_official_client_id
     );
 
-    let scopes = ["user:read", "repo:read", "issue:read", "mr:read", "git:read", "git:write"];
+    let scopes = [
+        "user:read",
+        "repo:read",
+        "issue:read",
+        "mr:read",
+        "git:read",
+        "git:write",
+    ];
     let dev = client.device_flow_begin(&well_known, &scopes).await?;
     log::info!(
         "ama10: visit {} and enter code {}",
@@ -67,7 +71,10 @@ pub async fn run_device_flow(
         cx.background_executor()
             .timer(Duration::from_secs(interval_secs))
             .await;
-        match client.device_flow_poll(&well_known, &dev.device_code).await? {
+        match client
+            .device_flow_poll(&well_known, &dev.device_code)
+            .await?
+        {
             PollResult::Pending => continue,
             PollResult::SlowDown => {
                 interval_secs = interval_secs.saturating_add(5).min(30);
@@ -84,11 +91,7 @@ pub async fn run_device_flow(
     }
 }
 
-async fn finalise_sign_in(
-    client: &WulingClient,
-    cx: &AsyncApp,
-    tokens: &Tokens,
-) -> Result<String> {
+async fn finalise_sign_in(client: &WulingClient, cx: &AsyncApp, tokens: &Tokens) -> Result<String> {
     let me = client.current_user(&tokens.access_token).await?;
     let expires_at = UNIX_EPOCH
         .elapsed()
@@ -105,11 +108,9 @@ async fn finalise_sign_in(
 /// modal can keep the future and await it themselves; this convenience just
 /// fires-and-forgets so the command palette action returns immediately.
 pub fn spawn_sign_in(cx: &mut App, creds: Arc<dyn CredentialsProvider>) {
-    cx.spawn(async move |cx| {
-        match run_device_flow(cx, creds).await {
-            Ok(username) => log::info!("ama10: sign-in succeeded ({username})"),
-            Err(err) => log::error!("ama10: sign-in failed: {err:#}"),
-        }
+    cx.spawn(async move |cx| match run_device_flow(cx, creds).await {
+        Ok(username) => log::info!("ama10: sign-in succeeded ({username})"),
+        Err(err) => log::error!("ama10: sign-in failed: {err:#}"),
     })
     .detach();
 }

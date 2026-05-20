@@ -216,8 +216,7 @@ impl WulingClient {
         let status = resp.status();
         let bytes = resp.bytes().await?;
         if status.is_success() {
-            let tokens: Tokens =
-                serde_json::from_slice(&bytes).context("decode token response")?;
+            let tokens: Tokens = serde_json::from_slice(&bytes).context("decode token response")?;
             return Ok(PollResult::Issued(tokens));
         }
         let err: OAuthErr =

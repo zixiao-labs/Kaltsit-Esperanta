@@ -75,20 +75,16 @@ impl WulingConfig {
     pub fn save(&self) -> Result<()> {
         let path = Self::path();
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).with_context(|| {
-                format!("create config dir {}", parent.display())
-            })?;
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("create config dir {}", parent.display()))?;
         }
         let payload = serde_json::to_vec_pretty(&FileShape {
             server_url: Some(self.server.as_str().to_string()),
         })?;
         let tmp = path.with_extension("json.tmp");
-        std::fs::write(&tmp, payload).with_context(|| {
-            format!("write temp config {}", tmp.display())
-        })?;
-        std::fs::rename(&tmp, &path).with_context(|| {
-            format!("rename to {}", path.display())
-        })?;
+        std::fs::write(&tmp, payload)
+            .with_context(|| format!("write temp config {}", tmp.display()))?;
+        std::fs::rename(&tmp, &path).with_context(|| format!("rename to {}", path.display()))?;
         Ok(())
     }
 }
