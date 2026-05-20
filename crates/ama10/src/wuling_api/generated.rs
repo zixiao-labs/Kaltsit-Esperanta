@@ -187,6 +187,208 @@ pub mod types {
         }
     }
 
+    ///A row in /api/v1/oauth/authorizations — the durable consent record
+    ///joining the user, the client they granted, and the scopes granted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A row in /api/v1/oauth/authorizations — the durable
+    /// consent record\njoining the user, the client they granted, and the
+    /// scopes granted.\n",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "description": "Public client_id string, not the internal UUID.",
+    ///      "type": "string"
+    ///    },
+    ///    "client_logo_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "client_name": {
+    ///      "type": "string"
+    ///    },
+    ///    "granted_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "is_first_party": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 64
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct AuthorizationView {
+        ///Public client_id string, not the internal UUID.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_logo_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_name: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub granted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_first_party: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub scopes: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub updated_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for AuthorizationView {
+        fn default() -> Self {
+            Self {
+                client_id: Default::default(),
+                client_logo_url: Default::default(),
+                client_name: Default::default(),
+                granted_at: Default::default(),
+                id: Default::default(),
+                is_first_party: Default::default(),
+                scopes: Default::default(),
+                updated_at: Default::default(),
+            }
+        }
+    }
+
+    ///Payload the consent SPA fetches via /authorize/preview.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Payload the consent SPA fetches via
+    /// /authorize/preview.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "client": {
+    ///      "$ref": "#/components/schemas/ClientPublicView"
+    ///    },
+    ///    "expires_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "req": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "scopes_requested": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 64
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct AuthorizePreview {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client: ::std::option::Option<ClientPublicView>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub expires_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub req: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub scopes_requested: ::std::vec::Vec<::std::string::String>,
+    }
+
+    impl ::std::default::Default for AuthorizePreview {
+        fn default() -> Self {
+            Self {
+                client: Default::default(),
+                expires_at: Default::default(),
+                req: Default::default(),
+                scopes_requested: Default::default(),
+            }
+        }
+    }
+
+    ///Public, unauthenticated view of an OAuth client.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Public, unauthenticated view of an OAuth client.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "description": {
+    ///      "type": "string"
+    ///    },
+    ///    "homepage_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "is_first_party": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "logo_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct ClientPublicView {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub description: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub homepage_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_first_party: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub logo_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for ClientPublicView {
+        fn default() -> Self {
+            Self {
+                client_id: Default::default(),
+                description: Default::default(),
+                homepage_url: Default::default(),
+                is_first_party: Default::default(),
+                logo_url: Default::default(),
+                name: Default::default(),
+            }
+        }
+    }
+
     ///`Commit`
     ///
     /// <details><summary>JSON schema</summary>
@@ -799,6 +1001,281 @@ pub mod types {
         }
     }
 
+    ///`CreateOAuthAppRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "default_scopes",
+    ///    "name",
+    ///    "redirect_uris"
+    ///  ],
+    ///  "properties": {
+    ///    "default_scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 20,
+    ///      "minItems": 1
+    ///    },
+    ///    "description": {
+    ///      "type": "string",
+    ///      "maxLength": 512
+    ///    },
+    ///    "homepage_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "is_confidential": {
+    ///      "description": "Public (false) by default — fits SPA / desktop /
+    /// CLI apps that cannot keep a secret.",
+    ///      "type": "boolean"
+    ///    },
+    ///    "logo_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "name": {
+    ///      "type": "string",
+    ///      "maxLength": 128,
+    ///      "minLength": 1
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "format": "uri"
+    ///      },
+    ///      "maxItems": 8,
+    ///      "minItems": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct CreateOAuthAppRequest {
+        pub default_scopes: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub description: ::std::option::Option<CreateOAuthAppRequestDescription>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub homepage_url: ::std::option::Option<::std::string::String>,
+        ///Public (false) by default — fits SPA / desktop / CLI apps that
+        /// cannot keep a secret.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_confidential: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub logo_url: ::std::option::Option<::std::string::String>,
+        pub name: CreateOAuthAppRequestName,
+        pub redirect_uris: ::std::vec::Vec<::std::string::String>,
+    }
+
+    ///`CreateOAuthAppRequestDescription`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 512
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateOAuthAppRequestDescription(::std::string::String);
+    impl ::std::ops::Deref for CreateOAuthAppRequestDescription {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateOAuthAppRequestDescription> for ::std::string::String {
+        fn from(value: CreateOAuthAppRequestDescription) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateOAuthAppRequestDescription {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 512usize {
+                return Err("longer than 512 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateOAuthAppRequestDescription {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`CreateOAuthAppRequestName`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 128,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct CreateOAuthAppRequestName(::std::string::String);
+    impl ::std::ops::Deref for CreateOAuthAppRequestName {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<CreateOAuthAppRequestName> for ::std::string::String {
+        fn from(value: CreateOAuthAppRequestName) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for CreateOAuthAppRequestName {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 128usize {
+                return Err("longer than 128 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for CreateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for CreateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for CreateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for CreateOAuthAppRequestName {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`CreateOAuthAppResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "app": {
+    ///      "$ref": "#/components/schemas/OAuthAppView"
+    ///    },
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "client_secret": {
+    ///      "description": "Raw secret. Shown exactly once on create / reset;
+    /// the server\nstores only HMAC. If you lose it, you must call
+    /// /reset-secret.\nPublic clients (is_confidential=false) get an empty
+    /// string here.\n",
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct CreateOAuthAppResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub app: ::std::option::Option<OAuthAppView>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<::std::string::String>,
+        ///Raw secret. Shown exactly once on create / reset; the server
+        ///stores only HMAC. If you lose it, you must call /reset-secret.
+        ///Public clients (is_confidential=false) get an empty string here.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_secret: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for CreateOAuthAppResponse {
+        fn default() -> Self {
+            Self {
+                app: Default::default(),
+                client_id: Default::default(),
+                client_secret: Default::default(),
+            }
+        }
+    }
+
     ///`CreateSshKeyRequest`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1002,6 +1479,70 @@ pub mod types {
                 .map_err(|e: self::error::ConversionError| {
                     <D::Error as ::serde::de::Error>::custom(e.to_string())
                 })
+        }
+    }
+
+    ///RFC 8628 §3.2 response for /device_authorization.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "RFC 8628 §3.2 response for /device_authorization.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "device_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_in": {
+    ///      "type": "integer"
+    ///    },
+    ///    "interval": {
+    ///      "type": "integer"
+    ///    },
+    ///    "user_code": {
+    ///      "description": "Human-typable code (shaped like ABCD-1234).",
+    ///      "type": "string"
+    ///    },
+    ///    "verification_uri": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "verification_uri_complete": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct DeviceCodeResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub device_code: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub expires_in: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub interval: ::std::option::Option<i64>,
+        ///Human-typable code (shaped like ABCD-1234).
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub user_code: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub verification_uri: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub verification_uri_complete: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for DeviceCodeResponse {
+        fn default() -> Self {
+            Self {
+                device_code: Default::default(),
+                expires_in: Default::default(),
+                interval: Default::default(),
+                user_code: Default::default(),
+                verification_uri: Default::default(),
+                verification_uri_complete: Default::default(),
+            }
         }
     }
 
@@ -1227,6 +1768,129 @@ pub mod types {
         }
     }
 
+    ///`GetAdminUsersResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "users": {
+    ///      "description": "Capped at 100 rows server-side
+    /// (see\n`userstore.ListUsers`). When the admin queue grows beyond\nthat,
+    /// future versions will switch to a cursor-paginated\nresponse.\n",
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/User"
+    ///      },
+    ///      "maxItems": 100
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct GetAdminUsersResponse {
+        ///Capped at 100 rows server-side (see
+        ///`userstore.ListUsers`). When the admin queue grows beyond
+        ///that, future versions will switch to a cursor-paginated
+        ///response.
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub users: ::std::vec::Vec<User>,
+    }
+
+    impl ::std::default::Default for GetAdminUsersResponse {
+        fn default() -> Self {
+            Self {
+                users: Default::default(),
+            }
+        }
+    }
+
+    ///`GetAdminUsersStatus`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "pending",
+    ///    "approved",
+    ///    "rejected"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum GetAdminUsersStatus {
+        #[serde(rename = "pending")]
+        Pending,
+        #[serde(rename = "approved")]
+        Approved,
+        #[serde(rename = "rejected")]
+        Rejected,
+    }
+
+    impl ::std::fmt::Display for GetAdminUsersStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Pending => f.write_str("pending"),
+                Self::Approved => f.write_str("approved"),
+                Self::Rejected => f.write_str("rejected"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for GetAdminUsersStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "pending" => Ok(Self::Pending),
+                "approved" => Ok(Self::Approved),
+                "rejected" => Ok(Self::Rejected),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for GetAdminUsersStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for GetAdminUsersStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for GetAdminUsersStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`GetAuthSshKeysResponse`
     ///
     /// <details><summary>JSON schema</summary>
@@ -1290,6 +1954,237 @@ pub mod types {
             Self {
                 tokens: Default::default(),
             }
+        }
+    }
+
+    ///`GetOauthAuthorizeCodeChallengeMethod`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "default": "S256",
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "S256"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum GetOauthAuthorizeCodeChallengeMethod {
+        S256,
+    }
+
+    impl ::std::fmt::Display for GetOauthAuthorizeCodeChallengeMethod {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::S256 => f.write_str("S256"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for GetOauthAuthorizeCodeChallengeMethod {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "S256" => Ok(Self::S256),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for GetOauthAuthorizeCodeChallengeMethod {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for GetOauthAuthorizeCodeChallengeMethod {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for GetOauthAuthorizeCodeChallengeMethod {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::default::Default for GetOauthAuthorizeCodeChallengeMethod {
+        fn default() -> Self {
+            GetOauthAuthorizeCodeChallengeMethod::S256
+        }
+    }
+
+    ///`GetOauthAuthorizeResponseType`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "code"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum GetOauthAuthorizeResponseType {
+        #[serde(rename = "code")]
+        Code,
+    }
+
+    impl ::std::fmt::Display for GetOauthAuthorizeResponseType {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Code => f.write_str("code"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for GetOauthAuthorizeResponseType {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "code" => Ok(Self::Code),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for GetOauthAuthorizeResponseType {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for GetOauthAuthorizeResponseType {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for GetOauthAuthorizeResponseType {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`GetOauthAuthorizeState`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 256,
+    ///  "minLength": 8
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct GetOauthAuthorizeState(::std::string::String);
+    impl ::std::ops::Deref for GetOauthAuthorizeState {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<GetOauthAuthorizeState> for ::std::string::String {
+        fn from(value: GetOauthAuthorizeState) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for GetOauthAuthorizeState {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 256usize {
+                return Err("longer than 256 characters".into());
+            }
+            if value.chars().count() < 8usize {
+                return Err("shorter than 8 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for GetOauthAuthorizeState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for GetOauthAuthorizeState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for GetOauthAuthorizeState {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for GetOauthAuthorizeState {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
         }
     }
 
@@ -3592,6 +4487,347 @@ pub mod types {
         }
     }
 
+    ///OAuth App as seen by its owner or by an admin. client_secret is NOT
+    ///included — it appears only in CreateOAuthAppResponse and the
+    ///reset-secret response, both of which return the raw secret exactly
+    ///once.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "OAuth App as seen by its owner or by an admin.
+    /// client_secret is NOT\nincluded — it appears only in
+    /// CreateOAuthAppResponse and the\nreset-secret response, both of which
+    /// return the raw secret exactly\nonce.\n",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "default_scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 20
+    ///    },
+    ///    "description": {
+    ///      "type": "string"
+    ///    },
+    ///    "homepage_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "is_confidential": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "is_first_party": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "logo_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "format": "uri"
+    ///      },
+    ///      "maxItems": 8
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct OAuthAppView {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub default_scopes: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub description: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub homepage_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub id: ::std::option::Option<::uuid::Uuid>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_confidential: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_first_party: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub logo_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub redirect_uris: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub updated_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+    }
+
+    impl ::std::default::Default for OAuthAppView {
+        fn default() -> Self {
+            Self {
+                client_id: Default::default(),
+                created_at: Default::default(),
+                default_scopes: Default::default(),
+                description: Default::default(),
+                homepage_url: Default::default(),
+                id: Default::default(),
+                is_confidential: Default::default(),
+                is_first_party: Default::default(),
+                logo_url: Default::default(),
+                name: Default::default(),
+                redirect_uris: Default::default(),
+                updated_at: Default::default(),
+            }
+        }
+    }
+
+    ///`OAuthConfirmResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "access_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "new_account": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "token_type": {
+    ///      "examples": [
+    ///        "Bearer"
+    ///      ],
+    ///      "type": "string"
+    ///    },
+    ///    "user": {
+    ///      "$ref": "#/components/schemas/User"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct OAuthConfirmResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub access_token: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub expires_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub new_account: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub token_type: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub user: ::std::option::Option<User>,
+    }
+
+    impl ::std::default::Default for OAuthConfirmResponse {
+        fn default() -> Self {
+            Self {
+                access_token: Default::default(),
+                expires_at: Default::default(),
+                new_account: Default::default(),
+                token_type: Default::default(),
+                user: Default::default(),
+            }
+        }
+    }
+
+    ///RFC 6749 §5.2 error envelope (distinct from the internal API envelope).
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "RFC 6749 §5.2 error envelope (distinct from the
+    /// internal API envelope).",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "error": {
+    ///      "type": "string"
+    ///    },
+    ///    "error_description": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct OAuthError {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub error: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub error_description: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for OAuthError {
+        fn default() -> Self {
+            Self {
+                error: Default::default(),
+                error_description: Default::default(),
+            }
+        }
+    }
+
+    ///RFC 6749 §5.1 token response.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "RFC 6749 §5.1 token response.",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "access_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_in": {
+    ///      "type": "integer"
+    ///    },
+    ///    "refresh_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "scope": {
+    ///      "description": "Space-separated granted scopes.",
+    ///      "type": "string"
+    ///    },
+    ///    "token_type": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "Bearer"
+    ///      ]
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct OAuthTokenResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub access_token: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub expires_in: ::std::option::Option<i64>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub refresh_token: ::std::option::Option<::std::string::String>,
+        ///Space-separated granted scopes.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub scope: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub token_type: ::std::option::Option<OAuthTokenResponseTokenType>,
+    }
+
+    impl ::std::default::Default for OAuthTokenResponse {
+        fn default() -> Self {
+            Self {
+                access_token: Default::default(),
+                expires_in: Default::default(),
+                refresh_token: Default::default(),
+                scope: Default::default(),
+                token_type: Default::default(),
+            }
+        }
+    }
+
+    ///`OAuthTokenResponseTokenType`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "Bearer"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum OAuthTokenResponseTokenType {
+        Bearer,
+    }
+
+    impl ::std::fmt::Display for OAuthTokenResponseTokenType {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Bearer => f.write_str("Bearer"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for OAuthTokenResponseTokenType {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "Bearer" => Ok(Self::Bearer),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for OAuthTokenResponseTokenType {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for OAuthTokenResponseTokenType {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for OAuthTokenResponseTokenType {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`Org`
     ///
     /// <details><summary>JSON schema</summary>
@@ -3649,6 +4885,35 @@ pub mod types {
                 id: Default::default(),
                 is_personal: Default::default(),
                 slug: Default::default(),
+            }
+        }
+    }
+
+    ///`PatchAdminOauthAppsByIdBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "is_first_party": {
+    ///      "type": "boolean"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PatchAdminOauthAppsByIdBody {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_first_party: ::std::option::Option<bool>,
+    }
+
+    impl ::std::default::Default for PatchAdminOauthAppsByIdBody {
+        fn default() -> Self {
+            Self {
+                is_first_party: Default::default(),
             }
         }
     }
@@ -4069,6 +5334,445 @@ pub mod types {
         }
     }
 
+    ///`PatchUserRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "approval_note": {
+    ///      "type": "string",
+    ///      "maxLength": 512
+    ///    },
+    ///    "approval_status": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "pending",
+    ///        "approved",
+    ///        "rejected"
+    ///      ]
+    ///    },
+    ///    "is_active": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "is_admin": {
+    ///      "type": "boolean"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PatchUserRequest {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub approval_note: ::std::option::Option<PatchUserRequestApprovalNote>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub approval_status: ::std::option::Option<PatchUserRequestApprovalStatus>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_active: ::std::option::Option<bool>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub is_admin: ::std::option::Option<bool>,
+    }
+
+    impl ::std::default::Default for PatchUserRequest {
+        fn default() -> Self {
+            Self {
+                approval_note: Default::default(),
+                approval_status: Default::default(),
+                is_active: Default::default(),
+                is_admin: Default::default(),
+            }
+        }
+    }
+
+    ///`PatchUserRequestApprovalNote`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 512
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct PatchUserRequestApprovalNote(::std::string::String);
+    impl ::std::ops::Deref for PatchUserRequestApprovalNote {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<PatchUserRequestApprovalNote> for ::std::string::String {
+        fn from(value: PatchUserRequestApprovalNote) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for PatchUserRequestApprovalNote {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 512usize {
+                return Err("longer than 512 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PatchUserRequestApprovalNote {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PatchUserRequestApprovalNote {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PatchUserRequestApprovalNote {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for PatchUserRequestApprovalNote {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`PatchUserRequestApprovalStatus`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "pending",
+    ///    "approved",
+    ///    "rejected"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PatchUserRequestApprovalStatus {
+        #[serde(rename = "pending")]
+        Pending,
+        #[serde(rename = "approved")]
+        Approved,
+        #[serde(rename = "rejected")]
+        Rejected,
+    }
+
+    impl ::std::fmt::Display for PatchUserRequestApprovalStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Pending => f.write_str("pending"),
+                Self::Approved => f.write_str("approved"),
+                Self::Rejected => f.write_str("rejected"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PatchUserRequestApprovalStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "pending" => Ok(Self::Pending),
+                "approved" => Ok(Self::Approved),
+                "rejected" => Ok(Self::Rejected),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PatchUserRequestApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PatchUserRequestApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PatchUserRequestApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`PendingAccountResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "message": {
+    ///      "type": "string"
+    ///    },
+    ///    "status": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "pending",
+    ///        "rejected"
+    ///      ]
+    ///    },
+    ///    "user": {
+    ///      "$ref": "#/components/schemas/User"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PendingAccountResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub message: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub status: ::std::option::Option<PendingAccountResponseStatus>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub user: ::std::option::Option<User>,
+    }
+
+    impl ::std::default::Default for PendingAccountResponse {
+        fn default() -> Self {
+            Self {
+                message: Default::default(),
+                status: Default::default(),
+                user: Default::default(),
+            }
+        }
+    }
+
+    ///`PendingAccountResponseStatus`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "pending",
+    ///    "rejected"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PendingAccountResponseStatus {
+        #[serde(rename = "pending")]
+        Pending,
+        #[serde(rename = "rejected")]
+        Rejected,
+    }
+
+    impl ::std::fmt::Display for PendingAccountResponseStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Pending => f.write_str("pending"),
+                Self::Rejected => f.write_str("rejected"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PendingAccountResponseStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "pending" => Ok(Self::Pending),
+                "rejected" => Ok(Self::Rejected),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PendingAccountResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PendingAccountResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PendingAccountResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`PostAuthOauthGithubConfirmBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "action"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "link",
+    ///        "new"
+    ///      ]
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostAuthOauthGithubConfirmBody {
+        pub action: PostAuthOauthGithubConfirmBodyAction,
+    }
+
+    ///`PostAuthOauthGithubConfirmBodyAction`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "link",
+    ///    "new"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PostAuthOauthGithubConfirmBodyAction {
+        #[serde(rename = "link")]
+        Link,
+        #[serde(rename = "new")]
+        New,
+    }
+
+    impl ::std::fmt::Display for PostAuthOauthGithubConfirmBodyAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Link => f.write_str("link"),
+                Self::New => f.write_str("new"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PostAuthOauthGithubConfirmBodyAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "link" => Ok(Self::Link),
+                "new" => Ok(Self::New),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PostAuthOauthGithubConfirmBodyAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PostAuthOauthGithubConfirmBodyAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PostAuthOauthGithubConfirmBodyAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     ///`PostAuthTokensBody`
     ///
     /// <details><summary>JSON schema</summary>
@@ -4263,6 +5967,524 @@ pub mod types {
         ) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
+    }
+
+    ///`PostOauthAppsByIdResetSecretResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "client_secret": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthAppsByIdResetSecretResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_secret: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for PostOauthAppsByIdResetSecretResponse {
+        fn default() -> Self {
+            Self {
+                client_secret: Default::default(),
+            }
+        }
+    }
+
+    ///`PostOauthAuthorizeDecisionBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "decision",
+    ///    "req"
+    ///  ],
+    ///  "properties": {
+    ///    "decision": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "allow",
+    ///        "deny"
+    ///      ]
+    ///    },
+    ///    "req": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthAuthorizeDecisionBody {
+        pub decision: PostOauthAuthorizeDecisionBodyDecision,
+        pub req: ::uuid::Uuid,
+    }
+
+    ///`PostOauthAuthorizeDecisionBodyDecision`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "allow",
+    ///    "deny"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PostOauthAuthorizeDecisionBodyDecision {
+        #[serde(rename = "allow")]
+        Allow,
+        #[serde(rename = "deny")]
+        Deny,
+    }
+
+    impl ::std::fmt::Display for PostOauthAuthorizeDecisionBodyDecision {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Allow => f.write_str("allow"),
+                Self::Deny => f.write_str("deny"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PostOauthAuthorizeDecisionBodyDecision {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "allow" => Ok(Self::Allow),
+                "deny" => Ok(Self::Deny),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PostOauthAuthorizeDecisionBodyDecision {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PostOauthAuthorizeDecisionBodyDecision {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PostOauthAuthorizeDecisionBodyDecision {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`PostOauthAuthorizeDecisionResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "redirect_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthAuthorizeDecisionResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub redirect_url: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for PostOauthAuthorizeDecisionResponse {
+        fn default() -> Self {
+            Self {
+                redirect_url: Default::default(),
+            }
+        }
+    }
+
+    ///`PostOauthDeviceApproveBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "user_code"
+    ///  ],
+    ///  "properties": {
+    ///    "user_code": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthDeviceApproveBody {
+        pub user_code: ::std::string::String,
+    }
+
+    ///`PostOauthDeviceApproveResponse`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "status": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "approved"
+    ///      ]
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthDeviceApproveResponse {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub status: ::std::option::Option<PostOauthDeviceApproveResponseStatus>,
+    }
+
+    impl ::std::default::Default for PostOauthDeviceApproveResponse {
+        fn default() -> Self {
+            Self {
+                status: Default::default(),
+            }
+        }
+    }
+
+    ///`PostOauthDeviceApproveResponseStatus`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "approved"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PostOauthDeviceApproveResponseStatus {
+        #[serde(rename = "approved")]
+        Approved,
+    }
+
+    impl ::std::fmt::Display for PostOauthDeviceApproveResponseStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Approved => f.write_str("approved"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PostOauthDeviceApproveResponseStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "approved" => Ok(Self::Approved),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PostOauthDeviceApproveResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PostOauthDeviceApproveResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PostOauthDeviceApproveResponseStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`PostOauthDeviceAuthorizationBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "scope": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthDeviceAuthorizationBody {
+        pub client_id: ::std::string::String,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub scope: ::std::option::Option<::std::string::String>,
+    }
+
+    ///`PostOauthDeviceDenyBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "user_code"
+    ///  ],
+    ///  "properties": {
+    ///    "user_code": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthDeviceDenyBody {
+        pub user_code: ::std::string::String,
+    }
+
+    ///`PostOauthRevokeBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "token"
+    ///  ],
+    ///  "properties": {
+    ///    "token": {
+    ///      "type": "string"
+    ///    },
+    ///    "token_type_hint": {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "access_token",
+    ///        "refresh_token"
+    ///      ]
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthRevokeBody {
+        pub token: ::std::string::String,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub token_type_hint: ::std::option::Option<PostOauthRevokeBodyTokenTypeHint>,
+    }
+
+    ///`PostOauthRevokeBodyTokenTypeHint`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "access_token",
+    ///    "refresh_token"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum PostOauthRevokeBodyTokenTypeHint {
+        #[serde(rename = "access_token")]
+        AccessToken,
+        #[serde(rename = "refresh_token")]
+        RefreshToken,
+    }
+
+    impl ::std::fmt::Display for PostOauthRevokeBodyTokenTypeHint {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::AccessToken => f.write_str("access_token"),
+                Self::RefreshToken => f.write_str("refresh_token"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for PostOauthRevokeBodyTokenTypeHint {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "access_token" => Ok(Self::AccessToken),
+                "refresh_token" => Ok(Self::RefreshToken),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for PostOauthRevokeBodyTokenTypeHint {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for PostOauthRevokeBodyTokenTypeHint {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for PostOauthRevokeBodyTokenTypeHint {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    ///`PostOauthTokenBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "required": [
+    ///    "grant_type"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "client_secret": {
+    ///      "type": "string"
+    ///    },
+    ///    "code": {
+    ///      "type": "string"
+    ///    },
+    ///    "code_verifier": {
+    ///      "type": "string"
+    ///    },
+    ///    "device_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "grant_type": {
+    ///      "type": "string"
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "refresh_token": {
+    ///      "type": "string"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct PostOauthTokenBody {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_secret: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub code: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub code_verifier: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub device_code: ::std::option::Option<::std::string::String>,
+        pub grant_type: ::std::string::String,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub redirect_uri: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub refresh_token: ::std::option::Option<::std::string::String>,
     }
 
     ///`PostOrgsBody`
@@ -6570,6 +8792,235 @@ pub mod types {
         }
     }
 
+    ///`UpdateOAuthAppRequest`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "default_scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 20,
+    ///      "minItems": 1
+    ///    },
+    ///    "description": {
+    ///      "type": "string",
+    ///      "maxLength": 512
+    ///    },
+    ///    "homepage_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "logo_url": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "name": {
+    ///      "type": "string",
+    ///      "maxLength": 128,
+    ///      "minLength": 1
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "format": "uri"
+    ///      },
+    ///      "maxItems": 8,
+    ///      "minItems": 1
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct UpdateOAuthAppRequest {
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub default_scopes: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub description: ::std::option::Option<UpdateOAuthAppRequestDescription>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub homepage_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub logo_url: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub name: ::std::option::Option<UpdateOAuthAppRequestName>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub redirect_uris: ::std::vec::Vec<::std::string::String>,
+    }
+
+    impl ::std::default::Default for UpdateOAuthAppRequest {
+        fn default() -> Self {
+            Self {
+                default_scopes: Default::default(),
+                description: Default::default(),
+                homepage_url: Default::default(),
+                logo_url: Default::default(),
+                name: Default::default(),
+                redirect_uris: Default::default(),
+            }
+        }
+    }
+
+    ///`UpdateOAuthAppRequestDescription`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 512
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct UpdateOAuthAppRequestDescription(::std::string::String);
+    impl ::std::ops::Deref for UpdateOAuthAppRequestDescription {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<UpdateOAuthAppRequestDescription> for ::std::string::String {
+        fn from(value: UpdateOAuthAppRequestDescription) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for UpdateOAuthAppRequestDescription {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 512usize {
+                return Err("longer than 512 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for UpdateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for UpdateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for UpdateOAuthAppRequestDescription {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for UpdateOAuthAppRequestDescription {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
+    ///`UpdateOAuthAppRequestName`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "maxLength": 128,
+    ///  "minLength": 1
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct UpdateOAuthAppRequestName(::std::string::String);
+    impl ::std::ops::Deref for UpdateOAuthAppRequestName {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<UpdateOAuthAppRequestName> for ::std::string::String {
+        fn from(value: UpdateOAuthAppRequestName) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for UpdateOAuthAppRequestName {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            if value.chars().count() > 128usize {
+                return Err("longer than 128 characters".into());
+            }
+            if value.chars().count() < 1usize {
+                return Err("shorter than 1 characters".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for UpdateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for UpdateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for UpdateOAuthAppRequestName {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for UpdateOAuthAppRequestName {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
+        }
+    }
+
     ///`User`
     ///
     /// <details><summary>JSON schema</summary>
@@ -6578,6 +9029,27 @@ pub mod types {
     ///{
     ///  "type": "object",
     ///  "properties": {
+    ///    "approval_note": {
+    ///      "type": "string"
+    ///    },
+    ///    "approval_status": {
+    ///      "description": "Account approval state. Pending and rejected users
+    /// cannot log in\n(the login handler returns 403 with the matching
+    /// message).\n",
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "pending",
+    ///        "approved",
+    ///        "rejected"
+    ///      ]
+    ///    },
+    ///    "approved_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
     ///    "created_at": {
     ///      "type": "string",
     ///      "format": "date-time"
@@ -6586,6 +9058,11 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "email": {
+    ///      "type": "string"
+    ///    },
+    ///    "github_login": {
+    ///      "description": "GitHub login, set once the account is linked via
+    /// OAuth.",
     ///      "type": "string"
     ///    },
     ///    "id": {
@@ -6608,11 +9085,22 @@ pub mod types {
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
     pub struct User {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub approval_note: ::std::option::Option<::std::string::String>,
+        ///Account approval state. Pending and rejected users cannot log in
+        ///(the login handler returns 403 with the matching message).
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub approval_status: ::std::option::Option<UserApprovalStatus>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub approved_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub created_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub display_name: ::std::option::Option<::std::string::String>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub email: ::std::option::Option<::std::string::String>,
+        ///GitHub login, set once the account is linked via OAuth.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub github_login: ::std::option::Option<::std::string::String>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub id: ::std::option::Option<::uuid::Uuid>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -6626,14 +9114,105 @@ pub mod types {
     impl ::std::default::Default for User {
         fn default() -> Self {
             Self {
+                approval_note: Default::default(),
+                approval_status: Default::default(),
+                approved_at: Default::default(),
                 created_at: Default::default(),
                 display_name: Default::default(),
                 email: Default::default(),
+                github_login: Default::default(),
                 id: Default::default(),
                 is_active: Default::default(),
                 is_admin: Default::default(),
                 username: Default::default(),
             }
+        }
+    }
+
+    ///Account approval state. Pending and rejected users cannot log in
+    ///(the login handler returns 403 with the matching message).
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Account approval state. Pending and rejected users
+    /// cannot log in\n(the login handler returns 403 with the matching
+    /// message).\n",
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "pending",
+    ///    "approved",
+    ///    "rejected"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum UserApprovalStatus {
+        #[serde(rename = "pending")]
+        Pending,
+        #[serde(rename = "approved")]
+        Approved,
+        #[serde(rename = "rejected")]
+        Rejected,
+    }
+
+    impl ::std::fmt::Display for UserApprovalStatus {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Pending => f.write_str("pending"),
+                Self::Approved => f.write_str("approved"),
+                Self::Rejected => f.write_str("rejected"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for UserApprovalStatus {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "pending" => Ok(Self::Pending),
+                "approved" => Ok(Self::Approved),
+                "rejected" => Ok(Self::Rejected),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for UserApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for UserApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for UserApprovalStatus {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -6678,6 +9257,213 @@ pub mod types {
                 id: Default::default(),
                 username: Default::default(),
             }
+        }
+    }
+
+    ///IdP discovery document. Public, returned with `Cache-Control: public,
+    ///max-age=300` so a desktop client can poll it cheaply on first
+    ///connection. Esperanta uses `desktop_official_client_id` to skip the
+    ///manual client_id step on a self-hosted instance.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "IdP discovery document. Public, returned with
+    /// `Cache-Control: public,\nmax-age=300` so a desktop client can poll it
+    /// cheaply on first\nconnection. Esperanta uses
+    /// `desktop_official_client_id` to skip the\nmanual client_id step on a
+    /// self-hosted instance.\n",
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "authorization_endpoint": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "code_challenge_methods_supported": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "enum": [
+    ///          "S256"
+    ///        ]
+    ///      },
+    ///      "maxItems": 4
+    ///    },
+    ///    "desktop_official_client_id": {
+    ///      "description": "client_id of the seeded first-party desktop app.",
+    ///      "type": "string"
+    ///    },
+    ///    "device_authorization_endpoint": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "frontend_device_verification_uri": {
+    ///      "description": "URL of the SPA page where a user enters their
+    /// user_code (i.e.\n`verification_uri` in RFC 8628 terms).\n",
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "grant_types_supported": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 8
+    ///    },
+    ///    "issuer": {
+    ///      "description": "Absolute origin of this instance.",
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "response_types_supported": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 8
+    ///    },
+    ///    "revocation_endpoint": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "scopes_supported": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      },
+    ///      "maxItems": 64
+    ///    },
+    ///    "token_endpoint": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    }
+    ///  }
+    ///}
+    /// ```
+    /// </details>
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
+    pub struct WellKnownDoc {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authorization_endpoint: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub code_challenge_methods_supported:
+            ::std::vec::Vec<WellKnownDocCodeChallengeMethodsSupportedItem>,
+        ///client_id of the seeded first-party desktop app.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub desktop_official_client_id: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub device_authorization_endpoint: ::std::option::Option<::std::string::String>,
+        ///URL of the SPA page where a user enters their user_code (i.e.
+        ///`verification_uri` in RFC 8628 terms).
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub frontend_device_verification_uri: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub grant_types_supported: ::std::vec::Vec<::std::string::String>,
+        ///Absolute origin of this instance.
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub issuer: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub response_types_supported: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub revocation_endpoint: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+        pub scopes_supported: ::std::vec::Vec<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub token_endpoint: ::std::option::Option<::std::string::String>,
+    }
+
+    impl ::std::default::Default for WellKnownDoc {
+        fn default() -> Self {
+            Self {
+                authorization_endpoint: Default::default(),
+                code_challenge_methods_supported: Default::default(),
+                desktop_official_client_id: Default::default(),
+                device_authorization_endpoint: Default::default(),
+                frontend_device_verification_uri: Default::default(),
+                grant_types_supported: Default::default(),
+                issuer: Default::default(),
+                response_types_supported: Default::default(),
+                revocation_endpoint: Default::default(),
+                scopes_supported: Default::default(),
+                token_endpoint: Default::default(),
+            }
+        }
+    }
+
+    ///`WellKnownDocCodeChallengeMethodsSupportedItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "S256"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum WellKnownDocCodeChallengeMethodsSupportedItem {
+        S256,
+    }
+
+    impl ::std::fmt::Display for WellKnownDocCodeChallengeMethodsSupportedItem {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::S256 => f.write_str("S256"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for WellKnownDocCodeChallengeMethodsSupportedItem {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "S256" => Ok(Self::S256),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for WellKnownDocCodeChallengeMethodsSupportedItem {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String>
+        for WellKnownDocCodeChallengeMethodsSupportedItem
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String>
+        for WellKnownDocCodeChallengeMethodsSupportedItem
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -7002,6 +9788,143 @@ impl Client {
             401u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Begin the GitHub OAuth login flow
+    ///
+    ///302-redirects the browser to GitHub's `/authorize` endpoint with
+    ///state + PKCE, after dropping a short-lived signed HttpOnly cookie that
+    ///the callback handler validates. Must be hit via a top-level browser
+    ///navigation (the redirect can't follow XHR).
+    ///
+    ///
+    ///Sends a `GET` request to `/api/v1/auth/oauth/github/start`
+    ///
+    ///Arguments:
+    /// - `return_to`: Path on the frontend to navigate to after a successful
+    ///   login. Echoed back in the callback fragment.
+    pub async fn get_auth_oauth_github_start<'a>(
+        &'a self,
+        return_to: Option<&'a str>,
+    ) -> Result<ResponseValue<ByteStream>, Error<types::Error>> {
+        let url = format!("{}/api/v1/auth/oauth/github/start", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .query(&progenitor_client::QueryParam::new("return_to", &return_to))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_auth_oauth_github_start",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200..=299 => Ok(ResponseValue::stream(response)),
+            503u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Complete the GitHub OAuth login flow
+    ///
+    ///Exchanges the authorization code for a GitHub access token using the
+    ///PKCE verifier stashed in the state cookie, then either logs an existing
+    ///user in, creates a brand-new local account, or redirects to the
+    ///`/oauth/confirm-link` page when the GitHub email matches a local
+    ///account that isn't yet linked. Result is communicated to the SPA via
+    ///the URL fragment on a 302 to `<frontend>/oauth/callback`.
+    ///
+    ///
+    ///Sends a `GET` request to `/api/v1/auth/oauth/github/callback`
+    pub async fn get_auth_oauth_github_callback<'a>(
+        &'a self,
+        code: &'a str,
+        state: &'a str,
+    ) -> Result<ResponseValue<ByteStream>, Error<()>> {
+        let url = format!("{}/api/v1/auth/oauth/github/callback", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .query(&progenitor_client::QueryParam::new("code", &code))
+            .query(&progenitor_client::QueryParam::new("state", &state))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_auth_oauth_github_callback",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200..=299 => Ok(ResponseValue::stream(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Confirm a GitHub OAuth account-link decision
+    ///
+    ///Called from `/oauth/confirm-link` after the user picks "link" (merge
+    ///the GitHub identity onto the existing local account) or "new" (create
+    ///a fresh account, ignoring the email collision).
+    ///
+    ///
+    ///Sends a `POST` request to `/api/v1/auth/oauth/github/confirm`
+    pub async fn post_auth_oauth_github_confirm<'a>(
+        &'a self,
+        body: &'a types::PostAuthOauthGithubConfirmBody,
+    ) -> Result<ResponseValue<types::OAuthConfirmResponse>, Error<types::Error>> {
+        let url = format!("{}/api/v1/auth/oauth/github/confirm", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_auth_oauth_github_confirm",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
             _ => Err(Error::UnexpectedResponse(response)),
         }
     }
@@ -7274,6 +10197,874 @@ impl Client {
         match response.status().as_u16() {
             204u16 => Ok(ResponseValue::empty(response)),
             404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Discovery document — endpoint URLs and the official desktop client_id
+    ///
+    ///Sends a `GET` request to `/.well-known/wuling-clients`
+    pub async fn get_well_known_wuling_clients<'a>(
+        &'a self,
+    ) -> Result<ResponseValue<types::WellKnownDoc>, Error<()>> {
+        let url = format!("{}/.well-known/wuling-clients", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_well_known_wuling_clients",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Start an Authorization Code (+ PKCE) flow
+    ///
+    ///Validates query parameters, stashes them server-side, and redirects
+    ///the browser to `<frontend>/oauth/authorize?req=<opaque>`. PKCE is
+    ///mandatory for every client (including first-party).
+    ///
+    ///
+    ///Sends a `GET` request to `/api/v1/oauth/authorize`
+    pub async fn get_oauth_authorize<'a>(
+        &'a self,
+        client_id: &'a str,
+        code_challenge: &'a str,
+        code_challenge_method: Option<types::GetOauthAuthorizeCodeChallengeMethod>,
+        redirect_uri: &'a str,
+        response_type: types::GetOauthAuthorizeResponseType,
+        scope: &'a str,
+        state: &'a types::GetOauthAuthorizeState,
+    ) -> Result<ResponseValue<ByteStream>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/authorize", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .query(&progenitor_client::QueryParam::new("client_id", &client_id))
+            .query(&progenitor_client::QueryParam::new(
+                "code_challenge",
+                &code_challenge,
+            ))
+            .query(&progenitor_client::QueryParam::new(
+                "code_challenge_method",
+                &code_challenge_method,
+            ))
+            .query(&progenitor_client::QueryParam::new(
+                "redirect_uri",
+                &redirect_uri,
+            ))
+            .query(&progenitor_client::QueryParam::new(
+                "response_type",
+                &response_type,
+            ))
+            .query(&progenitor_client::QueryParam::new("scope", &scope))
+            .query(&progenitor_client::QueryParam::new("state", &state))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_oauth_authorize",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200..=299 => Ok(ResponseValue::stream(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Consent-UI metadata fetch
+    ///
+    ///Sends a `GET` request to `/api/v1/oauth/authorize/preview`
+    pub async fn get_oauth_authorize_preview<'a>(
+        &'a self,
+        req: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<types::AuthorizePreview>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/authorize/preview", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("req", &req))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_oauth_authorize_preview",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Consent-UI decision (allow/deny)
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/authorize/decision`
+    pub async fn post_oauth_authorize_decision<'a>(
+        &'a self,
+        body: &'a types::PostOauthAuthorizeDecisionBody,
+    ) -> Result<ResponseValue<types::PostOauthAuthorizeDecisionResponse>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/authorize/decision", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_authorize_decision",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Exchange a code, refresh, or device_code for an access token
+    ///
+    ///RFC 6749-shaped token endpoint. Accepts a form-urlencoded body. The
+    ///three supported grants are `authorization_code`, `refresh_token`,
+    ///and `urn:ietf:params:oauth:grant-type:device_code`.
+    ///
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/token`
+    pub async fn post_oauth_token<'a>(
+        &'a self,
+        body: &'a types::PostOauthTokenBody,
+    ) -> Result<ResponseValue<types::OAuthTokenResponse>, Error<types::OAuthError>> {
+        let url = format!("{}/api/v1/oauth/token", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .form_urlencoded(&body)?
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_token",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Start a Device Authorization Grant (RFC 8628)
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/device_authorization`
+    pub async fn post_oauth_device_authorization<'a>(
+        &'a self,
+        body: &'a types::PostOauthDeviceAuthorizationBody,
+    ) -> Result<ResponseValue<types::DeviceCodeResponse>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/device_authorization", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .form_urlencoded(&body)?
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_device_authorization",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Approve a device flow user_code on behalf of the logged-in user
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/device/approve`
+    pub async fn post_oauth_device_approve<'a>(
+        &'a self,
+        body: &'a types::PostOauthDeviceApproveBody,
+    ) -> Result<ResponseValue<types::PostOauthDeviceApproveResponse>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/device/approve", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_device_approve",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Deny a device flow user_code
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/device/deny`
+    pub async fn post_oauth_device_deny<'a>(
+        &'a self,
+        body: &'a types::PostOauthDeviceDenyBody,
+    ) -> Result<ResponseValue<()>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/device/deny", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_device_deny",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => Ok(ResponseValue::empty(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///RFC 7009 token revocation
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/revoke`
+    pub async fn post_oauth_revoke<'a>(
+        &'a self,
+        body: &'a types::PostOauthRevokeBody,
+    ) -> Result<ResponseValue<()>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/revoke", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .form_urlencoded(&body)?
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_revoke",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => Ok(ResponseValue::empty(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Public client metadata (name/logo/homepage)
+    ///
+    ///Sends a `GET` request to `/api/v1/oauth/clients/{client_id}`
+    pub async fn get_oauth_clients_by_client_id<'a>(
+        &'a self,
+        client_id: &'a str,
+    ) -> Result<ResponseValue<types::ClientPublicView>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/oauth/clients/{}",
+            self.baseurl,
+            encode_path(&client_id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_oauth_clients_by_client_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List the caller's granted (user, client) authorizations
+    ///
+    ///Sends a `GET` request to `/api/v1/oauth/authorizations`
+    pub async fn get_oauth_authorizations<'a>(
+        &'a self,
+    ) -> Result<ResponseValue<::std::vec::Vec<types::AuthorizationView>>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/authorizations", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_oauth_authorizations",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Revoke a granted authorization (also nukes live tokens)
+    ///
+    ///Sends a `DELETE` request to `/api/v1/oauth/authorizations/{id}`
+    pub async fn delete_oauth_authorizations_by_id<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<()>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/oauth/authorizations/{}",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self.client.delete(url).headers(header_map).build()?;
+        let info = OperationInfo {
+            operation_id: "delete_oauth_authorizations_by_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            204u16 => Ok(ResponseValue::empty(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List OAuth Apps owned by the caller
+    ///
+    ///Sends a `GET` request to `/api/v1/oauth/apps`
+    pub async fn get_oauth_apps<'a>(
+        &'a self,
+    ) -> Result<ResponseValue<::std::vec::Vec<types::OAuthAppView>>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/apps", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_oauth_apps",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Register a new OAuth App
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/apps`
+    pub async fn post_oauth_apps<'a>(
+        &'a self,
+        body: &'a types::CreateOAuthAppRequest,
+    ) -> Result<ResponseValue<types::CreateOAuthAppResponse>, Error<()>> {
+        let url = format!("{}/api/v1/oauth/apps", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_apps",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            201u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Delete an OAuth App (cascades to authorizations and tokens)
+    ///
+    ///Sends a `DELETE` request to `/api/v1/oauth/apps/{id}`
+    pub async fn delete_oauth_apps_by_id<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<()>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/oauth/apps/{}",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self.client.delete(url).headers(header_map).build()?;
+        let info = OperationInfo {
+            operation_id: "delete_oauth_apps_by_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            204u16 => Ok(ResponseValue::empty(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Update an OAuth App's metadata
+    ///
+    ///Sends a `PATCH` request to `/api/v1/oauth/apps/{id}`
+    pub async fn patch_oauth_apps_by_id<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+        body: &'a types::UpdateOAuthAppRequest,
+    ) -> Result<ResponseValue<types::OAuthAppView>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/oauth/apps/{}",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .patch(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "patch_oauth_apps_by_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Rotate a confidential client's secret (returns the new raw secret once)
+    ///
+    ///Sends a `POST` request to `/api/v1/oauth/apps/{id}/reset-secret`
+    pub async fn post_oauth_apps_by_id_reset_secret<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<types::PostOauthAppsByIdResetSecretResponse>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/oauth/apps/{}/reset-secret",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .post(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "post_oauth_apps_by_id_reset_secret",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List every registered OAuth App (admin only)
+    ///
+    ///Sends a `GET` request to `/api/v1/admin/oauth/apps`
+    pub async fn get_admin_oauth_apps<'a>(
+        &'a self,
+    ) -> Result<ResponseValue<::std::vec::Vec<types::OAuthAppView>>, Error<()>> {
+        let url = format!("{}/api/v1/admin/oauth/apps", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_admin_oauth_apps",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Admin delete
+    ///
+    ///Sends a `DELETE` request to `/api/v1/admin/oauth/apps/{id}`
+    pub async fn delete_admin_oauth_apps_by_id<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+    ) -> Result<ResponseValue<()>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/admin/oauth/apps/{}",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self.client.delete(url).headers(header_map).build()?;
+        let info = OperationInfo {
+            operation_id: "delete_admin_oauth_apps_by_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            204u16 => Ok(ResponseValue::empty(response)),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Admin update — toggle is_first_party etc
+    ///
+    ///Sends a `PATCH` request to `/api/v1/admin/oauth/apps/{id}`
+    pub async fn patch_admin_oauth_apps_by_id<'a>(
+        &'a self,
+        id: &'a ::uuid::Uuid,
+        body: &'a types::PatchAdminOauthAppsByIdBody,
+    ) -> Result<ResponseValue<types::OAuthAppView>, Error<()>> {
+        let url = format!(
+            "{}/api/v1/admin/oauth/apps/{}",
+            self.baseurl,
+            encode_path(&id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .patch(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "patch_admin_oauth_apps_by_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///List users (admin)
+    ///
+    ///Returns users, pending-first. Requires the caller to be an active
+    ///admin (`is_admin=true`, `approval_status=approved`). Filter by
+    ///`status=pending|approved|rejected` to scope to the approval queue.
+    ///
+    ///
+    ///Sends a `GET` request to `/api/v1/admin/users`
+    pub async fn get_admin_users<'a>(
+        &'a self,
+        status: Option<types::GetAdminUsersStatus>,
+    ) -> Result<ResponseValue<types::GetAdminUsersResponse>, Error<types::Error>> {
+        let url = format!("{}/api/v1/admin/users", self.baseurl,);
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .get(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .query(&progenitor_client::QueryParam::new("status", &status))
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "get_admin_users",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            _ => Err(Error::UnexpectedResponse(response)),
+        }
+    }
+
+    ///Patch a user (admin)
+    ///
+    ///Approve/reject pending accounts, promote/demote admins, and
+    ///enable/disable accounts. Any combination of fields may be omitted —
+    ///only the ones in the body are applied.
+    ///
+    ///
+    ///Sends a `PATCH` request to `/api/v1/admin/users/{user_id}`
+    pub async fn patch_admin_users_by_user_id<'a>(
+        &'a self,
+        user_id: &'a ::uuid::Uuid,
+        body: &'a types::PatchUserRequest,
+    ) -> Result<ResponseValue<types::User>, Error<types::Error>> {
+        let url = format!(
+            "{}/api/v1/admin/users/{}",
+            self.baseurl,
+            encode_path(&user_id.to_string()),
+        );
+        let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+        header_map.append(
+            ::reqwest::header::HeaderName::from_static("api-version"),
+            ::reqwest::header::HeaderValue::from_static(Self::api_version()),
+        );
+        #[allow(unused_mut)]
+        let mut request = self
+            .client
+            .patch(url)
+            .header(
+                ::reqwest::header::ACCEPT,
+                ::reqwest::header::HeaderValue::from_static("application/json"),
+            )
+            .json(&body)
+            .headers(header_map)
+            .build()?;
+        let info = OperationInfo {
+            operation_id: "patch_admin_users_by_user_id",
+        };
+        self.pre(&mut request, &info).await?;
+        let result = self.exec(request, &info).await;
+        self.post(&result, &info).await?;
+        let response = result?;
+        match response.status().as_u16() {
+            200u16 => ResponseValue::from_response(response).await,
+            400u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            401u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            403u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            404u16 => Err(Error::ErrorResponse(
+                ResponseValue::from_response(response).await?,
+            )),
+            409u16 => Err(Error::ErrorResponse(
                 ResponseValue::from_response(response).await?,
             )),
             _ => Err(Error::UnexpectedResponse(response)),
