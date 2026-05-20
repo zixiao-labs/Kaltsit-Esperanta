@@ -61,11 +61,19 @@ impl WulingConfig {
                 return Self::default();
             }
         };
-        let server = parsed
-            .server_url
-            .as_deref()
-            .and_then(|s| ServerUrl::parse(s).ok())
-            .unwrap_or_else(ServerUrl::default_saas);
+        let server = match parsed.server_url.as_deref() {
+            Some(s) => match ServerUrl::parse(s) {
+                Ok(url) => url,
+                Err(err) => {
+                    log::warn!(
+                        "ama10: invalid server_url {s:?} in {}: {err} — falling back to SaaS",
+                        path.display()
+                    );
+                    ServerUrl::default_saas()
+                }
+            },
+            None => ServerUrl::default_saas(),
+        };
         Self { server }
     }
 

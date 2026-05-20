@@ -11,9 +11,10 @@
 //! the user pressing Escape, clicking Cancel, or the flow reaching a terminal
 //! state and the user pressing Done.
 //!
-//! If sign-in succeeds, this modal does NOT itself update other UI like the
-//! title bar avatar — that observation happens via `CredentialsProvider`
-//! watchers elsewhere. The modal's single responsibility is the dialog.
+//! On successful sign-in the modal updates the global `WulingAccountState` so
+//! observers (title bar chip, etc.) redraw immediately. Persistent state still
+//! lives in the keychain via `CredentialsProvider`; the global is a cached
+//! view of it.
 
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

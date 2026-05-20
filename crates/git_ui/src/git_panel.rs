@@ -7466,12 +7466,10 @@ fn format_git_error_toast_message(error: &anyhow::Error) -> String {
 /// `None` for any prompt we don't recognise (yes/no, Username for, etc.) so
 /// the Wuling DevOps OAuth interceptor only fires on actual password requests.
 fn extract_password_prompt_url(prompt: &str) -> Option<String> {
-    if !prompt.contains("Password") {
-        return None;
-    }
-    let start = prompt.find('\'')? + 1;
-    let end = prompt[start..].find('\'')? + start;
-    Some(prompt[start..end].to_string())
+    let trimmed = prompt.trim();
+    let rest = trimmed.strip_prefix("Password for '")?;
+    let url = rest.strip_suffix("':")?;
+    Some(url.to_string())
 }
 
 #[cfg(test)]

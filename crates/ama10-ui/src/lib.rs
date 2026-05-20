@@ -63,7 +63,7 @@ actions!(
 /// actions here once we have a public action-naming convention worked out
 /// with the editor.
 pub fn init(_cx: &mut App) {
-    // Touch the config to ensure the directory exists and any malformed
-    // file is loudly logged on startup rather than on first use.
-    let _ = WulingConfig::load();
+    // Touch the config so any malformed file is logged (inside `load`) on
+    // startup rather than on first use.
+    WulingConfig::load();
 }

@@ -82,11 +82,17 @@ impl ServerUrl {
 
     /// Just the host (used as the cache key when matching git push URLs).
     pub fn host(&self) -> &str {
-        self.0
+        let rest = self
+            .0
             .strip_prefix("https://")
             .or_else(|| self.0.strip_prefix("http://"))
-            .map(|rest| rest.split(':').next().unwrap_or(rest))
-            .unwrap_or(&self.0)
+            .unwrap_or(&self.0);
+        if let Some(after_bracket) = rest.strip_prefix('[') {
+            if let Some(end) = after_bracket.find(']') {
+                return &rest[..end + 2];
+            }
+        }
+        rest.split(':').next().unwrap_or(rest)
     }
 }
 
@@ -135,5 +141,12 @@ mod tests {
     fn join_is_one_slash() {
         let s = ServerUrl::parse("https://host.example").unwrap();
         assert_eq!(s.join("/api/v1/me"), "https://host.example/api/v1/me");
+    }
+
+    #[test]
+    fn ipv6_host_keeps_brackets() {
+        let s = ServerUrl::parse("http://[::1]:8080").unwrap();
+        assert_eq!(s.as_str(), "http://[::1]:8080");
+        assert_eq!(s.host(), "[::1]");
     }
 }

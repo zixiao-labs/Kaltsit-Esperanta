@@ -48,7 +48,12 @@ impl WulingAccountState {
         cx.spawn(async move |cx| {
             if let Ok(Some(account)) = load_from_keychain(&creds, cx).await {
                 entity.update(cx, |this, cx| {
-                    this.set(Some(account), cx);
+                    // A concurrent sign-in / sign-out during the async
+                    // keychain load takes precedence — only backfill if the
+                    // slot is still empty.
+                    if this.account.is_none() {
+                        this.set(Some(account), cx);
+                    }
                 });
             }
         })
@@ -100,7 +105,7 @@ async fn load_from_keychain(
         .elapsed()
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
-    if stored.expires_at_unix > 0 && now > stored.expires_at_unix {
+    if stored.expires_at_unix > 0 && now >= stored.expires_at_unix {
         return Ok(None);
     }
     Ok(Some(WulingAccount {

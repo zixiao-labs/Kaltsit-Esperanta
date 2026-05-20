@@ -7853,8 +7853,18 @@ fn network_page() -> SettingsPage {
                     .into(),
                 ),
                 button_text: "Edit".into(),
-                on_click: Arc::new(|_settings_window, window, cx| {
-                    window.dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
+                on_click: Arc::new(|settings_window, window, cx| {
+                    let Some(original_window) = settings_window.original_window else {
+                        return;
+                    };
+                    original_window
+                        .update(cx, |_workspace, original_window, cx| {
+                            original_window
+                                .dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
+                            original_window.activate_window();
+                        })
+                        .ok();
+                    window.remove_window();
                 }),
                 files: USER,
             }),
