@@ -319,8 +319,7 @@ impl Render for TitleBar {
                 .children(self.render_connection_status(status, cx))
                 .child(self.update_version.clone())
                 .when(
-                    user.is_none()
-                        && is_signed_out_or_auth_error
+                    is_signed_out_or_auth_error
                         && TitleBarSettings::get_global(cx).show_sign_in,
                     |this| this.child(self.render_sign_in_button(cx)),
                 )
@@ -1161,9 +1160,25 @@ impl TitleBar {
         }
     }
 
-    pub fn render_wuling_chip(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
+    pub fn render_wuling_chip(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
+        if !TitleBarSettings::get_global(cx).show_sign_in {
+            return None;
+        }
         let state = ama10_ui::WulingAccountState::try_global(cx)?;
-        let account = state.read(cx).account()?.clone();
+        let Some(account) = state.read(cx).account().cloned() else {
+            // Signed out of Wuling — surface a dedicated entry point. Zed's
+            // own sign-in button only appears when the Zed account is
+            // signed-out, so without this the user has no way to start the
+            // Wuling device flow once they're signed into Zed.
+            return Some(
+                Button::new("wuling-sign-in", "Sign in to Wuling")
+                    .label_size(LabelSize::Small)
+                    .on_click(|_, window, cx| {
+                        window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
+                    })
+                    .into_any_element(),
+            );
+        };
         let username: SharedString = account.username.into();
         let username_for_label = username.clone();
         let trigger = ui::ButtonLike::new("wuling-chip").child(
@@ -1188,7 +1203,8 @@ impl TitleBar {
                             .action("Sign out", ama10_ui::SignOut.boxed_clone())
                     }))
                 })
-                .anchor(Anchor::TopRight),
+                .anchor(Anchor::TopRight)
+                .into_any_element(),
         )
     }
 
