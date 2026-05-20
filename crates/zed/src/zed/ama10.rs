@@ -7,52 +7,38 @@
 //!
 //! What lives here:
 //!
-//!   - Declaration of the `ama10::SignIn` / `ama10::SignOut` actions so the
-//!     command palette can surface them.
-//!   - A `cx.observe_new(Workspace …)` that hooks the action handlers up to
-//!     each workspace as it is created. The handler grabs the platform
-//!     `CredentialsProvider` from the global `Client` and hands it to
-//!     `ama10_ui::spawn_sign_in` / `spawn_sign_out`.
+//!   - A `cx.observe_new(Workspace …)` that hooks the `ama10_ui::SignIn` /
+//!     `ama10_ui::SignOut` action handlers up to each workspace as it is
+//!     created. The handler grabs the platform `CredentialsProvider` from the
+//!     global `Client` and hands it to `ama10_ui::open_sign_in_modal` /
+//!     `ama10_ui::spawn_sign_out`.
 //!
-//! What deliberately does *not* live here:
-//!
-//!   - AskPass interception. `ama10_ui::lookup_for_host` exists and is
-//!     ready, but Zed's git layer constructs `AskPassDelegate` instances
-//!     inline (see `crates/git/src/repository.rs:888-944,2318-2469,3460`)
-//!     and there's no extension point to register a fallback delegate
-//!     without modifying upstream. The intercept will land alongside the
-//!     account panel work — see C3 follow-up in the plan.
+//! The action types themselves live in `ama10-ui` so other crates (notably
+//! `title_bar`) can dispatch them without taking a dependency on the editor
+//! binary.
 
+use ama10_ui::{SetServerUrl, SignIn, SignOut, WulingAccountState};
 use client::Client;
-use gpui::{App, actions};
+use gpui::App;
 use workspace::Workspace;
-
-actions!(
-    ama10,
-    [
-        /// Begin the OAuth 2.1 Device Authorization Grant flow against the
-        /// configured Wuling DevOps server, prompting the user to visit the
-        /// verification URL and enter the displayed user_code.
-        SignIn,
-        /// Revoke the stored Wuling DevOps access token and clear the
-        /// platform keychain entry. Best-effort: a network failure during
-        /// revoke still clears the local credentials.
-        SignOut,
-    ]
-);
 
 pub fn init(cx: &mut App) {
     ama10_ui::init(cx);
+    let creds = Client::global(cx).credentials_provider();
+    WulingAccountState::register(cx, creds);
 
     cx.observe_new(|workspace: &mut Workspace, _, _| {
         workspace
-            .register_action(|_, _: &SignIn, _, cx| {
+            .register_action(|workspace, _: &SignIn, window, cx| {
                 let creds = Client::global(cx).credentials_provider();
-                ama10_ui::spawn_sign_in(cx, creds);
+                ama10_ui::open_sign_in_modal(workspace, creds, window, cx);
             })
             .register_action(|_, _: &SignOut, _, cx| {
                 let creds = Client::global(cx).credentials_provider();
                 ama10_ui::spawn_sign_out(cx, creds);
+            })
+            .register_action(|workspace, _: &SetServerUrl, window, cx| {
+                ama10_ui::open_server_url_modal(workspace, window, cx);
             });
     })
     .detach();

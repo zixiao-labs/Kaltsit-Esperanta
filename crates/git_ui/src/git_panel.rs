@@ -3284,16 +3284,40 @@ impl GitPanel {
         let workspace = self.workspace.clone();
         let operation = operation.into();
         let window = window.window_handle();
+        let creds = workspace
+            .upgrade()
+            .map(|workspace| workspace.read(cx).app_state().client.credentials_provider());
         AskPassDelegate::new(&mut cx.to_async(), move |prompt, tx, cx| {
-            window
-                .update(cx, |_, window, cx| {
-                    workspace.update(cx, |workspace, cx| {
-                        workspace.toggle_modal(window, cx, |window, cx| {
-                            AskPassModal::new(operation.clone(), prompt.into(), tx, window, cx)
-                        });
+            // Try the Wuling DevOps OAuth interceptor first: if the prompt is a
+            // password ask for the configured Wuling host and we have a valid
+            // stored token, we satisfy `tx` ourselves and never raise the UI.
+            // Otherwise the existing AskPassModal pops up as before.
+            let workspace = workspace.clone();
+            let operation = operation.clone();
+            let creds = creds.clone();
+            cx.spawn(async move |cx| {
+                if let Some(creds) = creds.clone()
+                    && let Some(prompt_url) = extract_password_prompt_url(&prompt)
+                    && let Ok(ama10_ui::LookupResult::UseToken(token)) =
+                        ama10_ui::lookup_for_host(&prompt_url, creds, cx).await
+                    && let Ok(pw) = askpass::EncryptedPassword::try_from(token.as_str())
+                {
+                    let _ = tx.send(pw);
+                    return;
+                }
+                window
+                    .update(cx, |_, window, cx| {
+                        workspace
+                            .update(cx, |workspace, cx| {
+                                workspace.toggle_modal(window, cx, |window, cx| {
+                                    AskPassModal::new(operation, prompt.into(), tx, window, cx)
+                                });
+                            })
+                            .ok();
                     })
-                })
-                .ok();
+                    .ok();
+            })
+            .detach();
         })
     }
 
@@ -7436,6 +7460,18 @@ fn format_git_error_toast_message(error: &anyhow::Error) -> String {
     } else {
         error.to_string().trim().to_string()
     }
+}
+
+/// Pull the URL out of a git askpass `Password for '<url>':` prompt. Returns
+/// `None` for any prompt we don't recognise (yes/no, Username for, etc.) so
+/// the Wuling DevOps OAuth interceptor only fires on actual password requests.
+fn extract_password_prompt_url(prompt: &str) -> Option<String> {
+    if !prompt.contains("Password") {
+        return None;
+    }
+    let start = prompt.find('\'')? + 1;
+    let end = prompt[start..].find('\'')? + start;
+    Some(prompt[start..end].to_string())
 }
 
 #[cfg(test)]

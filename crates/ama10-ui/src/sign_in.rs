@@ -132,9 +132,13 @@ pub async fn run_sign_out(cx: &AsyncApp, creds: Arc<dyn CredentialsProvider>) ->
 }
 
 pub fn spawn_sign_out(cx: &mut App, creds: Arc<dyn CredentialsProvider>) {
-    cx.spawn(async move |cx| match run_sign_out(cx, creds).await {
-        Ok(()) => log::info!("ama10: signed out"),
-        Err(err) => log::error!("ama10: sign-out failed: {err:#}"),
+    cx.spawn(async move |cx| {
+        let result = run_sign_out(cx, creds).await;
+        cx.update(|cx| crate::account_state::set_account(cx, None));
+        match result {
+            Ok(()) => log::info!("ama10: signed out"),
+            Err(err) => log::error!("ama10: sign-out failed: {err:#}"),
+        }
     })
     .detach();
 }

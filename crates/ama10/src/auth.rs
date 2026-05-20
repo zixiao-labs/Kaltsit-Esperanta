@@ -187,7 +187,7 @@ impl WulingClient {
                 String::from_utf8_lossy(&bytes)
             );
         }
-        Ok(serde_json::from_slice(&bytes).context("decode device_authorization response")?)
+        serde_json::from_slice(&bytes).context("decode device_authorization response")
     }
 
     /// One iteration of the polling loop. Callers should sleep at least
