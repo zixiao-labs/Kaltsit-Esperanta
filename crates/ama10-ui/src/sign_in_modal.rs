@@ -88,8 +88,9 @@ impl WulingSignInModal {
     fn new(creds: Arc<dyn CredentialsProvider>, cx: &mut Context<Self>) -> Self {
         let config = WulingConfig::load();
         let server = config.server;
+        let tokio_handle = gpui_tokio::Tokio::handle(cx);
         let task = cx.spawn(async move |this, cx| {
-            let outcome = run_flow(this.clone(), creds, cx).await;
+            let outcome = run_flow(this.clone(), creds, tokio_handle, cx).await;
             if let Err(err) = outcome {
                 this.update(cx, |this, cx| {
                     this.state = State::Error {
@@ -126,10 +127,11 @@ impl WulingSignInModal {
 async fn run_flow(
     this: gpui::WeakEntity<WulingSignInModal>,
     creds: Arc<dyn CredentialsProvider>,
+    tokio_handle: tokio::runtime::Handle,
     cx: &mut gpui::AsyncApp,
 ) -> Result<()> {
     let config = WulingConfig::load();
-    let client = WulingClient::new(config.server.clone(), creds);
+    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
 
     let well_known = client.discover().await?;
 

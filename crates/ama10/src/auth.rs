@@ -128,10 +128,20 @@ pub struct WulingClient {
     server: ServerUrl,
     http: reqwest::Client,
     creds: Arc<dyn CredentialsProvider>,
+    // `reqwest 0.13` schedules its request timeout via `tokio::time::sleep`,
+    // which panics when its future is polled outside a Tokio runtime. GPUI's
+    // executor is not a Tokio runtime, so we run each HTTP call through
+    // `handle.spawn(...)` to hand polling to the workspace `gpui_tokio`
+    // runtime. See `device_flow_request` / the per-method spawn calls below.
+    tokio_handle: tokio::runtime::Handle,
 }
 
 impl WulingClient {
-    pub fn new(server: ServerUrl, creds: Arc<dyn CredentialsProvider>) -> Self {
+    pub fn new(
+        server: ServerUrl,
+        creds: Arc<dyn CredentialsProvider>,
+        tokio_handle: tokio::runtime::Handle,
+    ) -> Self {
         let http = reqwest::Client::builder()
             .user_agent(user_agent())
             .timeout(Duration::from_secs(30))
@@ -141,6 +151,7 @@ impl WulingClient {
             server,
             http,
             creds,
+            tokio_handle,
         }
     }
 
@@ -152,8 +163,13 @@ impl WulingClient {
     /// sign-in attempt — the server caches via Cache-Control: max-age=300.
     pub async fn discover(&self) -> Result<WellKnown> {
         let url = self.server.join("/.well-known/wuling-clients");
-        let resp = self.http.get(url).send().await?.error_for_status()?;
-        Ok(resp.json().await?)
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http.get(url).send().await?.error_for_status()?;
+                anyhow::Ok(resp.json::<WellKnown>().await?)
+            })
+            .await?
     }
 
     /// POST `/api/v1/oauth/device_authorization` for a public client.
@@ -168,26 +184,32 @@ impl WulingClient {
             .append_pair("client_id", &well_known.desktop_official_client_id)
             .append_pair("scope", &scope_value)
             .finish();
-        let resp = self
-            .http
-            .post(&well_known.device_authorization_endpoint)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .body(body)
-            .send()
-            .await?;
-        let status = resp.status();
-        let bytes = resp.bytes().await?;
-        if !status.is_success() {
-            anyhow::bail!(
-                "device_authorization failed ({}): {}",
-                status,
-                String::from_utf8_lossy(&bytes)
-            );
-        }
-        serde_json::from_slice(&bytes).context("decode device_authorization response")
+        let endpoint = well_known.device_authorization_endpoint.clone();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .post(&endpoint)
+                    .header(
+                        reqwest::header::CONTENT_TYPE,
+                        "application/x-www-form-urlencoded",
+                    )
+                    .body(body)
+                    .send()
+                    .await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if !status.is_success() {
+                    anyhow::bail!(
+                        "device_authorization failed ({}): {}",
+                        status,
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                serde_json::from_slice::<DeviceCodeResp>(&bytes)
+                    .context("decode device_authorization response")
+            })
+            .await?
     }
 
     /// One iteration of the polling loop. Callers should sleep at least
@@ -203,37 +225,43 @@ impl WulingClient {
             .append_pair("device_code", device_code)
             .append_pair("client_id", &well_known.desktop_official_client_id)
             .finish();
-        let resp = self
-            .http
-            .post(&well_known.token_endpoint)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .body(body)
-            .send()
-            .await?;
-        let status = resp.status();
-        let bytes = resp.bytes().await?;
-        if status.is_success() {
-            let tokens: Tokens = serde_json::from_slice(&bytes).context("decode token response")?;
-            return Ok(PollResult::Issued(tokens));
-        }
-        let err: OAuthErr =
-            serde_json::from_slice(&bytes).context("decode OAuth error envelope")?;
-        Ok(match err.error.as_str() {
-            "authorization_pending" => PollResult::Pending,
-            "slow_down" => PollResult::SlowDown,
-            "access_denied" => PollResult::Denied,
-            "expired_token" => PollResult::Expired,
-            other => {
-                anyhow::bail!(
-                    "device flow failed: {} ({})",
-                    other,
-                    err.error_description.unwrap_or_default()
-                );
-            }
-        })
+        let endpoint = well_known.token_endpoint.clone();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .post(&endpoint)
+                    .header(
+                        reqwest::header::CONTENT_TYPE,
+                        "application/x-www-form-urlencoded",
+                    )
+                    .body(body)
+                    .send()
+                    .await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if status.is_success() {
+                    let tokens: Tokens =
+                        serde_json::from_slice(&bytes).context("decode token response")?;
+                    return anyhow::Ok(PollResult::Issued(tokens));
+                }
+                let err: OAuthErr =
+                    serde_json::from_slice(&bytes).context("decode OAuth error envelope")?;
+                Ok(match err.error.as_str() {
+                    "authorization_pending" => PollResult::Pending,
+                    "slow_down" => PollResult::SlowDown,
+                    "access_denied" => PollResult::Denied,
+                    "expired_token" => PollResult::Expired,
+                    other => {
+                        anyhow::bail!(
+                            "device flow failed: {} ({})",
+                            other,
+                            err.error_description.unwrap_or_default()
+                        );
+                    }
+                })
+            })
+            .await?
     }
 
     /// Exchange a refresh_token for a fresh access+refresh pair. RFC 6749
@@ -245,27 +273,32 @@ impl WulingClient {
             .append_pair("refresh_token", refresh_token)
             .append_pair("client_id", &well_known.desktop_official_client_id)
             .finish();
-        let resp = self
-            .http
-            .post(&well_known.token_endpoint)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .body(body)
-            .send()
-            .await?;
-        let status = resp.status();
-        let bytes = resp.bytes().await?;
-        if status.is_success() {
-            return Ok(serde_json::from_slice(&bytes)?);
-        }
-        let err: OAuthErr = serde_json::from_slice(&bytes)?;
-        anyhow::bail!(
-            "refresh failed: {} ({})",
-            err.error,
-            err.error_description.unwrap_or_default()
-        );
+        let endpoint = well_known.token_endpoint.clone();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .post(&endpoint)
+                    .header(
+                        reqwest::header::CONTENT_TYPE,
+                        "application/x-www-form-urlencoded",
+                    )
+                    .body(body)
+                    .send()
+                    .await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if status.is_success() {
+                    return anyhow::Ok(serde_json::from_slice::<Tokens>(&bytes)?);
+                }
+                let err: OAuthErr = serde_json::from_slice(&bytes)?;
+                anyhow::bail!(
+                    "refresh failed: {} ({})",
+                    err.error,
+                    err.error_description.unwrap_or_default()
+                );
+            })
+            .await?
     }
 
     /// POST `/api/v1/oauth/revoke` (RFC 7009). Fire-and-forget for our
@@ -274,30 +307,39 @@ impl WulingClient {
         let body = url::form_urlencoded::Serializer::new(String::new())
             .append_pair("token", token)
             .finish();
-        let _ = self
-            .http
-            .post(&well_known.revocation_endpoint)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .body(body)
-            .send()
-            .await?;
-        Ok(())
+        let endpoint = well_known.revocation_endpoint.clone();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                http.post(&endpoint)
+                    .header(
+                        reqwest::header::CONTENT_TYPE,
+                        "application/x-www-form-urlencoded",
+                    )
+                    .body(body)
+                    .send()
+                    .await?;
+                anyhow::Ok(())
+            })
+            .await?
     }
 
     /// GET `/api/v1/auth/me` with the given Bearer token.
     pub async fn current_user(&self, access_token: &str) -> Result<Me> {
         let url = self.server.join("/api/v1/auth/me");
-        let resp = self
-            .http
-            .get(&url)
-            .bearer_auth(access_token)
-            .send()
+        let http = self.http.clone();
+        let access_token = access_token.to_string();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .get(&url)
+                    .bearer_auth(access_token)
+                    .send()
+                    .await?
+                    .error_for_status()?;
+                anyhow::Ok(resp.json::<Me>().await?)
+            })
             .await?
-            .error_for_status()?;
-        Ok(resp.json().await?)
     }
 
     /// Persist tokens to the OS credentials store keyed by the server URL.

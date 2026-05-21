@@ -604,6 +604,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smol",
+ "tokio",
  "url",
  "uuid",
 ]
@@ -622,6 +623,7 @@ dependencies = [
  "editor",
  "futures 0.3.32",
  "gpui",
+ "gpui_tokio",
  "log",
  "menu",
  "paths",
@@ -629,6 +631,7 @@ dependencies = [
  "serde_json",
  "smol",
  "theme",
+ "tokio",
  "ui",
  "url",
  "workspace",

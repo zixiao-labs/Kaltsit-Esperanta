@@ -37,6 +37,11 @@ reqwest = { version = "0.13", features = ["json"] }
 serde.workspace = true
 serde_json.workspace = true
 smol.workspace = true
+# `reqwest 0.13`'s send path uses `tokio::time::sleep` for its request timeout,
+# which panics when polled outside a Tokio runtime. We hold a `runtime::Handle`
+# in `WulingClient` and route each HTTP request through `handle.spawn(...)` so
+# the work runs on the workspace `gpui_tokio` runtime.
+tokio = { workspace = true, features = ["rt"] }
 url.workspace = true
 uuid.workspace = true
 

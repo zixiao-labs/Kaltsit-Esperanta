@@ -34,7 +34,8 @@ use crate::settings::WulingConfig;
 /// implementation; production wiring in zed::ama10 hands us the real one.
 pub async fn run_device_flow(cx: &AsyncApp, creds: Arc<dyn CredentialsProvider>) -> Result<String> {
     let config = WulingConfig::load();
-    let client = WulingClient::new(config.server.clone(), creds);
+    let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
+    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
 
     let well_known = client.discover().await.context("discover well-known")?;
     log::info!(
@@ -120,7 +121,8 @@ pub fn spawn_sign_in(cx: &mut App, creds: Arc<dyn CredentialsProvider>) {
 /// the credentials from being wiped locally.
 pub async fn run_sign_out(cx: &AsyncApp, creds: Arc<dyn CredentialsProvider>) -> Result<()> {
     let config = WulingConfig::load();
-    let client = WulingClient::new(config.server.clone(), creds);
+    let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
+    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
     if let Some(stored) = client.load_credentials(cx).await? {
         if let Ok(well_known) = client.discover().await {
             if let Err(err) = client.revoke(&well_known, &stored.access_token).await {
