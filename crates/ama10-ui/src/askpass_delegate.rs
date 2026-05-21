@@ -22,12 +22,18 @@
 
 use std::sync::Arc;
 
-use ama10::auth::StoredCreds;
+use ama10::auth::{StoredCreds, WulingClient};
 use anyhow::Result;
 use credentials_provider::CredentialsProvider;
 use gpui::AsyncApp;
 
 use crate::settings::WulingConfig;
+
+/// Margin before `expires_at_unix` that we treat the access_token as already
+/// stale so a refresh round-trip happens before the token is actually rejected
+/// upstream. 60s comfortably covers a clock skew + the worst-case discover +
+/// /token RTT.
+const REFRESH_LEEWAY_SECS: i64 = 60;
 
 /// Result of trying to satisfy an askpass prompt with stored Wuling creds.
 pub enum LookupResult {
@@ -74,22 +80,61 @@ pub async fn lookup_for_host(
             return Ok(LookupResult::FallThrough);
         }
     };
-    // Token expiry: if the access_token is past its sell-by, fall through
-    // and let the user run sign-in again. (A refresh pass on every git
-    // operation is too aggressive; we'll add it once the account panel UI
-    // is in place to surface the prompt.)
     let now = std::time::UNIX_EPOCH
         .elapsed()
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
-    if stored.expires_at_unix > 0 && now >= stored.expires_at_unix {
+    let is_expiring =
+        stored.expires_at_unix > 0 && now + REFRESH_LEEWAY_SECS >= stored.expires_at_unix;
+    if !is_expiring {
+        return Ok(LookupResult::UseToken(stored.access_token));
+    }
+
+    // Token is expired (or close to it). Try to mint a fresh pair via the
+    // refresh_token. On success, persist the new pair and return the new
+    // access_token; on failure, clear the dead credentials and fall through
+    // so the user is prompted to sign in again.
+    let Some(refresh_token) = stored.refresh_token.as_deref() else {
         log::info!(
-            "ama10: stored token expired at {} (now {})",
+            "ama10: stored token expired at {} (now {}) and no refresh_token saved",
             stored.expires_at_unix,
             now
         );
         return Ok(LookupResult::FallThrough);
+    };
+    log::info!(
+        "ama10: stored token expired at {} (now {}); attempting refresh",
+        stored.expires_at_unix,
+        now
+    );
+    match refresh_stored(&config, &stored, refresh_token, creds, cx).await {
+        Ok(new_token) => Ok(LookupResult::UseToken(new_token)),
+        Err(err) => {
+            log::warn!("ama10: refresh failed: {err:#}");
+            Ok(LookupResult::FallThrough)
+        }
     }
+}
 
-    Ok(LookupResult::UseToken(stored.access_token))
+async fn refresh_stored(
+    config: &WulingConfig,
+    stored: &StoredCreds,
+    refresh_token: &str,
+    creds: Arc<dyn CredentialsProvider>,
+    cx: &AsyncApp,
+) -> Result<String> {
+    let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
+    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
+    let well_known = client.discover().await?;
+    let tokens = client.refresh(&well_known, refresh_token).await?;
+    let now = std::time::UNIX_EPOCH
+        .elapsed()
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let expires_at = now + tokens.expires_in as i64;
+    let access = tokens.access_token.clone();
+    client
+        .save_credentials(cx, &stored.username, &tokens, expires_at)
+        .await?;
+    Ok(access)
 }

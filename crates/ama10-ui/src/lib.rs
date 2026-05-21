@@ -22,6 +22,7 @@
 
 pub mod account_state;
 pub mod askpass_delegate;
+pub mod issues_panel;
 pub mod server_url_modal;
 pub mod settings;
 pub mod sign_in;
@@ -31,6 +32,9 @@ use gpui::{App, actions};
 
 pub use account_state::{WulingAccount, WulingAccountChanged, WulingAccountState};
 pub use askpass_delegate::{LookupResult, lookup_for_host};
+pub use issues_panel::{
+    RefreshWulingPanel, ToggleWulingPanel, WulingPanel, register_workspace_actions,
+};
 pub use server_url_modal::open_server_url_modal;
 pub use settings::WulingConfig;
 pub use sign_in::{spawn_sign_in, spawn_sign_out};

@@ -12,6 +12,7 @@
 
 use std::sync::Arc;
 
+use ama10::auth::WulingClient;
 use ama10::server_url::ServerUrl;
 use anyhow::Result;
 use credentials_provider::CredentialsProvider;
@@ -99,17 +100,56 @@ async fn load_from_keychain(
         return Ok(None);
     };
     let stored: ama10::auth::StoredCreds = serde_json::from_slice(&bytes)?;
-    // Expired tokens count as "not signed in" for UI purposes — the chip
-    // shouldn't lie. Refresh logic remains a follow-up (#21 TODO 4).
     let now = std::time::UNIX_EPOCH
         .elapsed()
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
+    // If the access_token is past its sell-by but a refresh_token is on hand,
+    // try to mint a fresh pair so the chip stays lit through a long idle
+    // (access_token defaults to 1h, refresh to 14d). On any refresh error we
+    // surface as signed-out — the askpass interceptor will retry on the next
+    // git op and the user can re-sign-in via the panel/modal.
     if stored.expires_at_unix > 0 && now >= stored.expires_at_unix {
-        return Ok(None);
+        let Some(refresh_token) = stored.refresh_token.as_deref() else {
+            return Ok(None);
+        };
+        let refreshed_username =
+            match refresh_in_background(&config.server, &stored, refresh_token, creds, cx).await {
+                Ok(name) => name,
+                Err(err) => {
+                    log::info!("ama10: startup token refresh failed: {err:#}");
+                    return Ok(None);
+                }
+            };
+        return Ok(Some(WulingAccount {
+            username: refreshed_username,
+            server: config.server,
+        }));
     }
     Ok(Some(WulingAccount {
         username: stored.username,
         server: config.server,
     }))
+}
+
+async fn refresh_in_background(
+    server: &ServerUrl,
+    stored: &ama10::auth::StoredCreds,
+    refresh_token: &str,
+    creds: &Arc<dyn CredentialsProvider>,
+    cx: &mut gpui::AsyncApp,
+) -> Result<String> {
+    let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
+    let client = WulingClient::new(server.clone(), creds.clone(), tokio_handle);
+    let well_known = client.discover().await?;
+    let tokens = client.refresh(&well_known, refresh_token).await?;
+    let now = std::time::UNIX_EPOCH
+        .elapsed()
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let expires_at = now + tokens.expires_in as i64;
+    client
+        .save_credentials(cx, &stored.username, &tokens, expires_at)
+        .await?;
+    Ok(stored.username.clone())
 }

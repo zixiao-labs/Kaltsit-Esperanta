@@ -5,12 +5,315 @@
 //! glue, retry/backoff, etc.) belong in this file alongside the `generated`
 //! sub-module so they aren't clobbered on the next regeneration.
 //!
-//! To regenerate after the upstream OpenAPI spec changes:
+//! To regenerate after the upstream spec changes:
 //!
 //! ```text
 //! script/regen-wuling-api.sh
 //! ```
+//!
+//! Hand-written DTOs in this file (`IssueSummary`, `MergeRequestSummary`) are
+//! a deliberate trim of the generated `types::Issue` / `types::MergeRequest`:
+//! the UI only needs number / title / state / author / timestamps for the
+//! list view, and keeping a narrow surface lets us avoid pulling
+//! `progenitor_client` into `ama10-ui`.
 
 mod generated;
 
+use std::sync::Arc;
+use std::time::Duration;
+
+use anyhow::{Context as _, Result};
+use credentials_provider::CredentialsProvider;
+use serde::Deserialize;
+
+use crate::server_url::ServerUrl;
+
 pub use generated::*;
+
+/// State of an issue in the lightweight list payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum IssueStateLite {
+    Open,
+    Closed,
+}
+
+/// State of a merge request in the lightweight list payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MrStateLite {
+    Open,
+    Merged,
+    Closed,
+}
+
+/// Author/assignee reference embedded in list payloads.
+#[derive(Debug, Clone, Deserialize)]
+pub struct UserRefLite {
+    #[serde(default)]
+    pub username: String,
+    #[serde(default)]
+    pub display_name: String,
+}
+
+/// The minimal issue projection used by the side panel. Mirrors the subset of
+/// `components.schemas.Issue` that the list endpoint guarantees.
+#[derive(Debug, Clone, Deserialize)]
+pub struct IssueSummary {
+    pub number: i64,
+    pub title: String,
+    pub state: IssueStateLite,
+    #[serde(default)]
+    pub author: Option<UserRefLite>,
+    #[serde(default)]
+    pub comment_count: i64,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+/// The minimal merge-request projection used by the side panel.
+#[derive(Debug, Clone, Deserialize)]
+pub struct MergeRequestSummary {
+    pub number: i64,
+    pub title: String,
+    pub state: MrStateLite,
+    #[serde(default)]
+    pub source_ref: String,
+    #[serde(default)]
+    pub target_ref: String,
+    #[serde(default)]
+    pub author: Option<UserRefLite>,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct IssuesEnvelope {
+    #[serde(default)]
+    issues: Vec<IssueSummary>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MergeRequestsEnvelope {
+    #[serde(default)]
+    merge_requests: Vec<MergeRequestSummary>,
+}
+
+/// Hand-written, narrowly-scoped HTTP wrapper for the list endpoints the
+/// side panel consumes. Constructed the same way as `auth::WulingClient`:
+/// each request hops through the provided `tokio::runtime::Handle` because
+/// `reqwest 0.13` requires a Tokio runtime for its timeout scheduling.
+#[derive(Clone)]
+pub struct WulingListClient {
+    server: ServerUrl,
+    http: reqwest::Client,
+    tokio_handle: tokio::runtime::Handle,
+    #[allow(dead_code)]
+    creds: Arc<dyn CredentialsProvider>,
+}
+
+impl WulingListClient {
+    pub fn new(
+        server: ServerUrl,
+        creds: Arc<dyn CredentialsProvider>,
+        tokio_handle: tokio::runtime::Handle,
+    ) -> Self {
+        let http = reqwest::Client::builder()
+            .user_agent(user_agent())
+            .timeout(Duration::from_secs(30))
+            .build()
+            .expect("reqwest builder with stock defaults cannot fail");
+        Self {
+            server,
+            http,
+            tokio_handle,
+            creds,
+        }
+    }
+
+    /// GET `/api/v1/orgs/{org}/projects/{project}/issues` with optional state
+    /// filter. Defaults to `open` issues when `state` is `None`.
+    pub async fn list_issues(
+        &self,
+        access_token: &str,
+        org_slug: &str,
+        project_slug: &str,
+        state: Option<IssueStateLite>,
+        limit: u32,
+    ) -> Result<Vec<IssueSummary>> {
+        let url = self.server.join(&format!(
+            "/api/v1/orgs/{}/projects/{}/issues",
+            percent_encode(org_slug),
+            percent_encode(project_slug),
+        ));
+        let state_param = match state {
+            Some(IssueStateLite::Open) => Some("open"),
+            Some(IssueStateLite::Closed) => Some("closed"),
+            None => None,
+        };
+        let access_token = access_token.to_string();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let mut req = http.get(&url).bearer_auth(access_token);
+                if let Some(s) = state_param {
+                    req = req.query(&[("state", s)]);
+                }
+                req = req.query(&[("limit", limit.to_string())]);
+                let resp = req.send().await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if !status.is_success() {
+                    anyhow::bail!(
+                        "list_issues failed ({}): {}",
+                        status,
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                let env: IssuesEnvelope =
+                    serde_json::from_slice(&bytes).context("decode issues envelope")?;
+                anyhow::Ok(env.issues)
+            })
+            .await?
+    }
+
+    /// GET `/api/v1/orgs/{org}/projects/{project}/repos/{repo}/merge-requests`.
+    /// Defaults to `open` MRs when `state` is `None`.
+    pub async fn list_merge_requests(
+        &self,
+        access_token: &str,
+        org_slug: &str,
+        project_slug: &str,
+        repo_slug: &str,
+        state: Option<MrStateLite>,
+        limit: u32,
+    ) -> Result<Vec<MergeRequestSummary>> {
+        let url = self.server.join(&format!(
+            "/api/v1/orgs/{}/projects/{}/repos/{}/merge-requests",
+            percent_encode(org_slug),
+            percent_encode(project_slug),
+            percent_encode(repo_slug),
+        ));
+        let state_param = match state {
+            Some(MrStateLite::Open) => Some("open"),
+            Some(MrStateLite::Merged) => Some("merged"),
+            Some(MrStateLite::Closed) => Some("closed"),
+            None => None,
+        };
+        let access_token = access_token.to_string();
+        let http = self.http.clone();
+        self.tokio_handle
+            .spawn(async move {
+                let mut req = http.get(&url).bearer_auth(access_token);
+                if let Some(s) = state_param {
+                    req = req.query(&[("state", s)]);
+                }
+                req = req.query(&[("limit", limit.to_string())]);
+                let resp = req.send().await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if !status.is_success() {
+                    anyhow::bail!(
+                        "list_merge_requests failed ({}): {}",
+                        status,
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                let env: MergeRequestsEnvelope =
+                    serde_json::from_slice(&bytes).context("decode merge_requests envelope")?;
+                anyhow::Ok(env.merge_requests)
+            })
+            .await?
+    }
+}
+
+fn percent_encode(s: &str) -> String {
+    url::form_urlencoded::byte_serialize(s.as_bytes()).collect()
+}
+
+fn user_agent() -> String {
+    format!(
+        "Kaltsit-Esperanta/{} (ama10-list; +https://github.com/zixiao-labs/Kaltsit-Esperanta)",
+        env!("CARGO_PKG_VERSION")
+    )
+}
+
+/// Parse a git remote URL of the form
+/// `https://{host}/{org}/{project}/{repo}(.git)?` into its slug triple, but
+/// only when `host` matches the configured Wuling server host. Returns
+/// `None` when the URL isn't Wuling-hosted, isn't HTTPS, or doesn't have the
+/// expected path shape.
+///
+/// The path shape mirrors Wuling DevOps' canonical URL form: an org slug, a
+/// project slug, and a repo slug. Trailing `.git` is stripped from the last
+/// segment to match git's clone-URL convention.
+pub fn parse_repo_coords(remote_url: &str, server_host: &str) -> Option<RepoCoords> {
+    let parsed = url::Url::parse(remote_url).ok()?;
+    let host = parsed.host_str()?;
+    if !host.eq_ignore_ascii_case(server_host) {
+        return None;
+    }
+    let segments: Vec<&str> = parsed
+        .path_segments()?
+        .filter(|s| !s.is_empty())
+        .collect();
+    if segments.len() < 3 {
+        return None;
+    }
+    let (org, project, repo_raw) = (segments[0], segments[1], segments[2]);
+    let repo = repo_raw.strip_suffix(".git").unwrap_or(repo_raw);
+    if org.is_empty() || project.is_empty() || repo.is_empty() {
+        return None;
+    }
+    Some(RepoCoords {
+        org_slug: org.to_string(),
+        project_slug: project.to_string(),
+        repo_slug: repo.to_string(),
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RepoCoords {
+    pub org_slug: String,
+    pub project_slug: String,
+    pub repo_slug: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_three_segment_https_url() {
+        let coords =
+            parse_repo_coords("https://wuling.example/acme/web/app.git", "wuling.example").unwrap();
+        assert_eq!(coords.org_slug, "acme");
+        assert_eq!(coords.project_slug, "web");
+        assert_eq!(coords.repo_slug, "app");
+    }
+
+    #[test]
+    fn strips_dot_git_only_when_present() {
+        let coords =
+            parse_repo_coords("https://wuling.example/acme/web/app", "wuling.example").unwrap();
+        assert_eq!(coords.repo_slug, "app");
+    }
+
+    #[test]
+    fn rejects_host_mismatch() {
+        assert!(parse_repo_coords("https://github.com/o/p/r", "wuling.example").is_none());
+    }
+
+    #[test]
+    fn rejects_short_path() {
+        assert!(parse_repo_coords("https://wuling.example/o/p", "wuling.example").is_none());
+        assert!(parse_repo_coords("https://wuling.example/o", "wuling.example").is_none());
+    }
+
+    #[test]
+    fn host_match_is_case_insensitive() {
+        let coords =
+            parse_repo_coords("https://WuLing.Example/a/b/c", "wuling.example").unwrap();
+        assert_eq!(coords.org_slug, "a");
+    }
+}

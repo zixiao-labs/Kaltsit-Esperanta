@@ -40,6 +40,7 @@ pub fn init(cx: &mut App) {
             .register_action(|workspace, _: &SetServerUrl, window, cx| {
                 ama10_ui::open_server_url_modal(workspace, window, cx);
             });
+        ama10_ui::register_workspace_actions(workspace);
     })
     .detach();
 }
