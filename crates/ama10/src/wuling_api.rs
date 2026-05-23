@@ -253,10 +253,7 @@ pub fn parse_repo_coords(remote_url: &str, server_host: &str) -> Option<RepoCoor
     if !host.eq_ignore_ascii_case(server_host) {
         return None;
     }
-    let segments: Vec<&str> = parsed
-        .path_segments()?
-        .filter(|s| !s.is_empty())
-        .collect();
+    let segments: Vec<&str> = parsed.path_segments()?.filter(|s| !s.is_empty()).collect();
     if segments.len() < 3 {
         return None;
     }
@@ -312,8 +309,7 @@ mod tests {
 
     #[test]
     fn host_match_is_case_insensitive() {
-        let coords =
-            parse_repo_coords("https://WuLing.Example/a/b/c", "wuling.example").unwrap();
+        let coords = parse_repo_coords("https://WuLing.Example/a/b/c", "wuling.example").unwrap();
         assert_eq!(coords.org_slug, "a");
     }
 }

@@ -311,7 +311,8 @@ impl WulingClient {
         let http = self.http.clone();
         self.tokio_handle
             .spawn(async move {
-                http.post(&endpoint)
+                let resp = http
+                    .post(&endpoint)
                     .header(
                         reqwest::header::CONTENT_TYPE,
                         "application/x-www-form-urlencoded",
@@ -319,6 +320,15 @@ impl WulingClient {
                     .body(body)
                     .send()
                     .await?;
+                let status = resp.status();
+                if !status.is_success() {
+                    let bytes = resp.bytes().await.unwrap_or_default();
+                    anyhow::bail!(
+                        "revoke failed ({}): {}",
+                        status,
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
                 anyhow::Ok(())
             })
             .await?

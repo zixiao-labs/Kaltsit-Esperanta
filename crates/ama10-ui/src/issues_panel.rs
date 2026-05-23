@@ -17,6 +17,19 @@
 //! `crates/zed::ama10::init` exactly like every other panel in the editor.
 //! `register_actions` wires `ama10::ToggleWulingPanel` to the workspace so
 //! the command palette / keybindings can toggle focus.
+//! TODO: add Comment and MR creation surfaces in the list state, but this is a solid MVP for now and we can iterate on it from here.
+//! TODO: pagination when we want to show more than 50 items in the lists.
+//! TODO: Add a "last updated" timestamp and/or auto-refresh so the user doesn't have to manually refresh to see new items after switching back to the editor from another window.
+//! TODO: When the user clicks an item we should open the corresponding issue/MR page in the browser. We can add an `OpenInBrowser` action to `ama10` that takes a URL and dispatch that from the row click handler, then handle it in `crates/zed::ama10::init` by calling `webbrowser::open` or equivalent platform API.
+//! TODO: When we add the above "open in browser" action, we can also add a "copy URL" action to the row context menu that copies the issue/MR URL to the clipboard.
+//! TODO: When we add the "open in browser" action, we can also add a "view details" action that opens a new panel with the full issue/MR details (description, comments, etc.) rendered inside the editor instead of the browser. This would be a more ambitious follow-up but would be a nice power-user feature for deep Wuling integration without context switching to the browser.
+//! TODO: Add a "sync with editor" button that scrolls the list to the issue/MR corresponding to the currently active file and line in the editor, if any. This would be a nice-to-have for users who want to quickly see if there's an open issue/MR related to the code they're working on without having to manually search for it in the list.
+//! TODO: Add filters for assignee, labels, etc. in addition to the state filter. This would likely require a more complex header UI to accommodate the additional filter controls, but would be a powerful way for users to narrow down the list of issues/MRs to those most relevant to them.
+//! TODO: Add support for showing draft merge requests and filtering them separately from open/merged/closed. This would be a nice enhancement for users who want to keep an eye on in-progress work that isn't ready for review yet.
+//! TODO: Add pagination controls to the bottom of the lists when there are more than 50 items, allowing users to load more issues/MRs without having to refresh the entire list. This would improve usability for larger projects with many issues/MRs.
+//! TODO: Add error handling for specific cases like authentication errors (e.g. token expired) with actionable messages and possibly a direct "Sign out and sign in again" button in the error state when we detect an auth issue. This would help users recover from common issues without having to guess at the cause of the error.
+//! TODO: Add loading spinners to the refresh button itself when a fetch is in progress, in addition to the placeholder in the body, so it's clearer that the refresh button triggered the loading state.
+//! TODO: Add Review/Resolve with AI (Zed Agent/ACP Registry External Agents) suggestions for merge requests, either in the list view as a quick action or in a detailed MR view. This would be a more advanced feature but could provide significant value for users looking to leverage AI to assist with code reviews and merge request management.
 
 use std::sync::Arc;
 
@@ -105,7 +118,9 @@ impl WulingPanel {
         workspace: WeakEntity<Workspace>,
         mut cx: AsyncWindowContext,
     ) -> Result<Entity<Self>> {
-        workspace.update_in(&mut cx, |workspace, window, cx| Self::new(workspace, window, cx))
+        workspace.update_in(&mut cx, |workspace, window, cx| {
+            Self::new(workspace, window, cx)
+        })
     }
 
     fn new(
@@ -114,9 +129,7 @@ impl WulingPanel {
         cx: &mut Context<Workspace>,
     ) -> Entity<Self> {
         let project = workspace.project().clone();
-        let creds = workspace
-            .client()
-            .credentials_provider();
+        let creds = workspace.client().credentials_provider();
 
         cx.new(|cx| {
             let focus_handle = cx.focus_handle();
@@ -302,9 +315,7 @@ impl WulingPanel {
                                 // Force a re-fetch regardless of cached state.
                                 match this.active_tab {
                                     Tab::Issues => this.issues = FetchState::Idle,
-                                    Tab::MergeRequests => {
-                                        this.merge_requests = FetchState::Idle
-                                    }
+                                    Tab::MergeRequests => this.merge_requests = FetchState::Idle,
                                 }
                                 this.refresh(cx);
                             })),
@@ -361,9 +372,7 @@ impl WulingPanel {
                         ButtonStyle::Subtle
                     })
                     .size(ButtonSize::Compact)
-                    .on_click(
-                        cx.listener(|this, _, _, cx| this.set_tab(Tab::MergeRequests, cx)),
-                    ),
+                    .on_click(cx.listener(|this, _, _, cx| this.set_tab(Tab::MergeRequests, cx))),
             )
     }
 
@@ -377,8 +386,12 @@ impl WulingPanel {
 
         match self.active_tab {
             Tab::Issues => match &self.issues {
-                FetchState::Idle | FetchState::Loading => loading_placeholder(cx).into_any_element(),
-                FetchState::Error(message) => error_placeholder(message.clone(), cx).into_any_element(),
+                FetchState::Idle | FetchState::Loading => {
+                    loading_placeholder(cx).into_any_element()
+                }
+                FetchState::Error(message) => {
+                    error_placeholder(message.clone(), cx).into_any_element()
+                }
                 FetchState::Loaded(items) if items.is_empty() => {
                     empty_list_placeholder("No issues match the current filter.", cx)
                         .into_any_element()
@@ -386,8 +399,12 @@ impl WulingPanel {
                 FetchState::Loaded(items) => render_issue_list(items, cx).into_any_element(),
             },
             Tab::MergeRequests => match &self.merge_requests {
-                FetchState::Idle | FetchState::Loading => loading_placeholder(cx).into_any_element(),
-                FetchState::Error(message) => error_placeholder(message.clone(), cx).into_any_element(),
+                FetchState::Idle | FetchState::Loading => {
+                    loading_placeholder(cx).into_any_element()
+                }
+                FetchState::Error(message) => {
+                    error_placeholder(message.clone(), cx).into_any_element()
+                }
                 FetchState::Loaded(items) if items.is_empty() => {
                     empty_list_placeholder("No merge requests match the current filter.", cx)
                         .into_any_element()
@@ -409,10 +426,7 @@ impl WulingPanel {
                     .size(IconSize::XLarge)
                     .color(Color::Muted),
             )
-            .child(
-                Label::new("Not signed in to Wuling DevOps")
-                    .size(LabelSize::Default),
-            )
+            .child(Label::new("Not signed in to Wuling DevOps").size(LabelSize::Default))
             .child(
                 Button::new("wuling-panel-sign-in", "Sign In")
                     .style(ButtonStyle::Filled)
@@ -436,11 +450,16 @@ impl WulingPanel {
                     .size(IconSize::XLarge)
                     .color(Color::Muted),
             )
-            .child(Label::new("No Wuling-hosted repository in this workspace").size(LabelSize::Default))
             .child(
-                Label::new(format!("Open a project with origin on {server_host} to see issues and merge requests."))
-                    .size(LabelSize::Small)
-                    .color(Color::Muted),
+                Label::new("No Wuling-hosted repository in this workspace")
+                    .size(LabelSize::Default),
+            )
+            .child(
+                Label::new(format!(
+                    "Open a project with origin on {server_host} to see issues and merge requests."
+                ))
+                .size(LabelSize::Small)
+                .color(Color::Muted),
             )
             .child(
                 Button::new("wuling-panel-sign-out", "Sign Out")
@@ -573,10 +592,7 @@ fn render_mr_row(mr: &MergeRequestSummary, cx: &App) -> impl IntoElement {
             v_flex()
                 .flex_1()
                 .gap_0p5()
-                .child(
-                    Label::new(format!("!{} {}", mr.number, mr.title))
-                        .size(LabelSize::Default),
-                )
+                .child(Label::new(format!("!{} {}", mr.number, mr.title)).size(LabelSize::Default))
                 .child(
                     h_flex()
                         .gap_2()
@@ -587,17 +603,20 @@ fn render_mr_row(mr: &MergeRequestSummary, cx: &App) -> impl IntoElement {
                                     .color(Color::Muted),
                             )
                         })
-                        .when(!mr.source_ref.is_empty() && !mr.target_ref.is_empty(), |this| {
-                            this.child(
-                                Label::new(format!(
-                                    "{} → {}",
-                                    short_ref(&mr.source_ref),
-                                    short_ref(&mr.target_ref)
-                                ))
-                                .size(LabelSize::Small)
-                                .color(Color::Muted),
-                            )
-                        }),
+                        .when(
+                            !mr.source_ref.is_empty() && !mr.target_ref.is_empty(),
+                            |this| {
+                                this.child(
+                                    Label::new(format!(
+                                        "{} → {}",
+                                        short_ref(&mr.source_ref),
+                                        short_ref(&mr.target_ref)
+                                    ))
+                                    .size(LabelSize::Small)
+                                    .color(Color::Muted),
+                                )
+                            },
+                        ),
                 ),
         )
 }
@@ -633,11 +652,7 @@ fn empty_list_placeholder(text: &'static str, _cx: &App) -> impl IntoElement {
         .size_full()
         .items_center()
         .justify_center()
-        .child(
-            Label::new(text)
-                .size(LabelSize::Small)
-                .color(Color::Muted),
-        )
+        .child(Label::new(text).size(LabelSize::Small).color(Color::Muted))
 }
 
 fn error_placeholder(message: SharedString, _cx: &App) -> impl IntoElement {
@@ -652,10 +667,7 @@ fn error_placeholder(message: SharedString, _cx: &App) -> impl IntoElement {
                 .size(IconSize::Medium)
                 .color(Color::Warning),
         )
-        .child(
-            Label::new("Failed to load")
-                .size(LabelSize::Default),
-        )
+        .child(Label::new("Failed to load").size(LabelSize::Default))
         .child(
             Label::new(message)
                 .size(LabelSize::Small)

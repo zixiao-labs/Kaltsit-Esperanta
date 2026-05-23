@@ -62,6 +62,7 @@ pub use onboarding_banner::restore_banner;
 const MAX_PROJECT_NAME_LENGTH: usize = 40;
 const MAX_BRANCH_NAME_LENGTH: usize = 40;
 const MAX_SHORT_SHA_LENGTH: usize = 8;
+const MAX_WULING_USERNAME_LENGTH: usize = 24;
 
 actions!(
     collab,
@@ -1165,10 +1166,13 @@ impl TitleBar {
         }
         let state = ama10_ui::WulingAccountState::try_global(cx)?;
         let Some(account) = state.read(cx).account().cloned() else {
-            // Signed out of Wuling — surface a dedicated entry point. Zed's
-            // own sign-in button only appears when the Zed account is
-            // signed-out, so without this the user has no way to start the
-            // Wuling device flow once they're signed into Zed.
+            // Surface a dedicated entry point only once the Zed account is
+            // signed in — otherwise the Zed sign-in popover (which already
+            // offers a "Sign in with Wuling DevOps" entry) is showing and
+            // this standalone button would just duplicate it.
+            if self.user_store.read(cx).current_user().is_none() {
+                return None;
+            }
             return Some(
                 Button::new("wuling-sign-in", "Sign in to Wuling")
                     .label_size(LabelSize::Small)
@@ -1179,7 +1183,8 @@ impl TitleBar {
             );
         };
         let username: SharedString = account.username.into();
-        let username_for_label = username.clone();
+        let username_for_label: SharedString =
+            util::truncate_and_trailoff(&username, MAX_WULING_USERNAME_LENGTH).into();
         let trigger = ui::ButtonLike::new("wuling-chip").child(
             h_flex()
                 .gap_1()
