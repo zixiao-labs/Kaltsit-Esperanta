@@ -7,9 +7,27 @@ edition.workspace = true
 license = "GPL-3.0-or-later"
 
 [dependencies]
-gpui.workspace = true
 ama10.workspace = true
+anyhow.workspace = true
+credentials_provider.workspace = true
+editor.workspace = true
+futures.workspace = true
+gpui.workspace = true
+gpui_tokio.workspace = true
+log.workspace = true
 menu.workspace = true
+paths.workspace = true
+project.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+smol.workspace = true
+theme.workspace = true
+# Used only for the `runtime::Handle` type so `WulingClient::new` can be
+# constructed with the workspace gpui_tokio runtime — see auth.rs.
+tokio = { workspace = true, features = ["rt"] }
+ui.workspace = true
+url.workspace = true
+workspace.workspace = true
 
 [lints]
 workspace = true

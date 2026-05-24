@@ -7808,7 +7808,7 @@ fn ai_page(cx: &App) -> SettingsPage {
 }
 
 fn network_page() -> SettingsPage {
-    fn network_section() -> [SettingsPageItem; 3] {
+    fn network_section() -> [SettingsPageItem; 4] {
         [
             SettingsPageItem::SectionHeader("Network"),
             SettingsPageItem::SettingItem(SettingItem {
@@ -7841,6 +7841,31 @@ fn network_page() -> SettingsPage {
                     placeholder: Some("https://zed.dev"),
                     ..Default::default()
                 })),
+                files: USER,
+            }),
+            SettingsPageItem::ActionLink(ActionLink {
+                title: "Wuling DevOps Server URL".into(),
+                description: Some(
+                    format!(
+                        "The Wuling DevOps server used for OAuth sign-in and git authentication. Default: {}",
+                        ama10_ui::DEFAULT_SERVER_URL
+                    )
+                    .into(),
+                ),
+                button_text: "Edit".into(),
+                on_click: Arc::new(|settings_window, window, cx| {
+                    let Some(original_window) = settings_window.original_window else {
+                        return;
+                    };
+                    original_window
+                        .update(cx, |_workspace, original_window, cx| {
+                            original_window
+                                .dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
+                            original_window.activate_window();
+                        })
+                        .ok();
+                    window.remove_window();
+                }),
                 files: USER,
             }),
         ]

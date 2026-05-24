@@ -62,6 +62,7 @@ pub use onboarding_banner::restore_banner;
 const MAX_PROJECT_NAME_LENGTH: usize = 40;
 const MAX_BRANCH_NAME_LENGTH: usize = 40;
 const MAX_SHORT_SHA_LENGTH: usize = 8;
+const MAX_WULING_USERNAME_LENGTH: usize = 24;
 
 actions!(
     collab,
@@ -319,9 +320,7 @@ impl Render for TitleBar {
                 .children(self.render_connection_status(status, cx))
                 .child(self.update_version.clone())
                 .when(
-                    user.is_none()
-                        && is_signed_out_or_auth_error
-                        && TitleBarSettings::get_global(cx).show_sign_in,
+                    is_signed_out_or_auth_error && TitleBarSettings::get_global(cx).show_sign_in,
                     |this| this.child(self.render_sign_in_button(cx)),
                 )
                 .when(is_signing_in, |this| {
@@ -338,6 +337,7 @@ impl Render for TitleBar {
                             ),
                     )
                 })
+                .children(self.render_wuling_chip(cx))
                 .when(TitleBarSettings::get_global(cx).show_user_menu, |this| {
                     this.child(self.render_user_menu_button(cx))
                 })
@@ -429,6 +429,9 @@ impl TitleBar {
             }),
         );
         subscriptions.push(cx.observe(&user_store, |_a, _, cx| cx.notify()));
+        if let Some(wuling) = ama10_ui::WulingAccountState::try_global(cx) {
+            subscriptions.push(cx.observe(&wuling, |_, _, cx| cx.notify()));
+        }
         if let Some(workspace_entity) = workspace.weak_handle().upgrade() {
             subscriptions.push(cx.subscribe(
                 &workspace_entity,
@@ -1157,22 +1160,92 @@ impl TitleBar {
         }
     }
 
-    pub fn render_sign_in_button(&mut self, _: &mut Context<Self>) -> Button {
+    pub fn render_wuling_chip(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
+        if !TitleBarSettings::get_global(cx).show_sign_in {
+            return None;
+        }
+        let state = ama10_ui::WulingAccountState::try_global(cx)?;
+        let Some(account) = state.read(cx).account().cloned() else {
+            // Surface a dedicated entry point only once the Zed account is
+            // signed in — otherwise the Zed sign-in popover (which already
+            // offers a "Sign in with Wuling DevOps" entry) is showing and
+            // this standalone button would just duplicate it.
+            if self.user_store.read(cx).current_user().is_none() {
+                return None;
+            }
+            return Some(
+                Button::new("wuling-sign-in", "Sign in to Wuling")
+                    .label_size(LabelSize::Small)
+                    .on_click(|_, window, cx| {
+                        window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
+                    })
+                    .into_any_element(),
+            );
+        };
+        let username: SharedString = account.username.into();
+        let username_for_label: SharedString =
+            util::truncate_and_trailoff(&username, MAX_WULING_USERNAME_LENGTH).into();
+        let trigger = ui::ButtonLike::new("wuling-chip").child(
+            h_flex()
+                .gap_1()
+                .child(
+                    Icon::new(IconName::Person)
+                        .size(IconSize::Small)
+                        .color(Color::Accent),
+                )
+                .child(Label::new(username_for_label).size(LabelSize::Small)),
+        );
+        Some(
+            PopoverMenu::new("wuling-account-menu")
+                .trigger(trigger)
+                .menu(move |window, cx| {
+                    let username = username.clone();
+                    Some(ContextMenu::build(window, cx, move |menu, _, _| {
+                        menu.header(format!("Wuling DevOps — {username}"))
+                            .action("Switch instance…", ama10_ui::SetServerUrl.boxed_clone())
+                            .separator()
+                            .action("Sign out", ama10_ui::SignOut.boxed_clone())
+                    }))
+                })
+                .anchor(Anchor::TopRight)
+                .into_any_element(),
+        )
+    }
+
+    pub fn render_sign_in_button(&mut self, _: &mut Context<Self>) -> impl IntoElement {
         let client = self.client.clone();
         let workspace = self.workspace.clone();
-        Button::new("sign_in", "Sign In")
-            .label_size(LabelSize::Small)
-            .on_click(move |_, window, cx| {
+
+        let trigger = Button::new("sign_in", "Sign In").label_size(LabelSize::Small);
+
+        PopoverMenu::new("sign-in-picker")
+            .trigger(trigger)
+            .menu(move |window, cx| {
                 let client = client.clone();
                 let workspace = workspace.clone();
-                window
-                    .spawn(cx, async move |mut cx| {
-                        client
-                            .sign_in_with_optional_connect(true, cx)
-                            .await
-                            .notify_workspace_async_err(workspace, &mut cx);
+                Some(ContextMenu::build(window, cx, move |menu, _, _| {
+                    let client_for_zed = client.clone();
+                    let workspace_for_zed = workspace;
+                    menu.entry("Sign in with Zed account", None, move |window, cx| {
+                        let client = client_for_zed.clone();
+                        let workspace = workspace_for_zed.clone();
+                        window
+                            .spawn(cx, async move |mut cx| {
+                                client
+                                    .sign_in_with_optional_connect(true, cx)
+                                    .await
+                                    .notify_workspace_async_err(workspace, &mut cx);
+                            })
+                            .detach();
                     })
-                    .detach();
+                    .entry(
+                        "Sign in with Wuling DevOps",
+                        None,
+                        |window, cx| {
+                            window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
+                        },
+                    )
+                }))
             })
     }
 

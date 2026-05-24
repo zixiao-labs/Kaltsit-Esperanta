@@ -593,11 +593,19 @@ dependencies = [
 name = "ama10"
 version = "0.2.2"
 dependencies = [
+ "anyhow",
  "chrono",
+ "credentials_provider",
+ "futures 0.3.32",
+ "gpui",
+ "log",
  "progenitor-client",
  "reqwest 0.13.3",
  "serde",
  "serde_json",
+ "smol",
+ "tokio",
+ "url",
  "uuid",
 ]
 
@@ -610,8 +618,24 @@ name = "ama10-ui"
 version = "0.1.0"
 dependencies = [
  "ama10",
+ "anyhow",
+ "credentials_provider",
+ "editor",
+ "futures 0.3.32",
  "gpui",
+ "gpui_tokio",
+ "log",
  "menu",
+ "paths",
+ "project",
+ "serde",
+ "serde_json",
+ "smol",
+ "theme",
+ "tokio",
+ "ui",
+ "url",
+ "workspace",
 ]
 
 [[package]]
@@ -7447,6 +7471,7 @@ version = "0.1.0"
 dependencies = [
  "agent_settings",
  "alacritty_terminal",
+ "ama10-ui",
  "anyhow",
  "askpass",
  "buffer_diff",
@@ -16394,6 +16419,7 @@ version = "0.1.0"
 dependencies = [
  "agent",
  "agent_settings",
+ "ama10-ui",
  "anyhow",
  "audio",
  "codestral",
@@ -18410,6 +18436,7 @@ name = "title_bar"
 version = "0.1.0"
 dependencies = [
  "agent_settings",
+ "ama10-ui",
  "anyhow",
  "arrayvec",
  "auto_update",

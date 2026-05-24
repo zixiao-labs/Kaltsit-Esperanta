@@ -84,6 +84,51 @@ dropped_paths = [p for p in list(paths.keys()) if ".git/" in p]
 for p in dropped_paths:
     del paths[p]
 
+# progenitor 0.14's `extract_responses` panics on
+#     assert!(response_types.len() <= 1)
+# when an operation declares more than one distinct *success* response schema
+# (e.g. 201 TokenResponse + 202 PendingAccountResponse on /auth/register).
+# Keep only the lowest-numbered 2xx response so the generated client gets a
+# typed happy-path; any other 2xx the server returns will surface as
+# Error::UnexpectedResponse and must be intercepted by hand-written wrappers
+# (see wuling_api.rs). The vendored spec is itself a transform target, so the
+# dropped responses are also absent from the file checked into the repo;
+# reviewers see the post-transform contract the Rust client targets.
+def _success_schema_keys(resp):
+    keys = set()
+    for body in ((resp or {}).get("content") or {}).values():
+        if not isinstance(body, dict):
+            continue
+        schema = body.get("schema") or {}
+        if "$ref" in schema:
+            keys.add(schema["$ref"])
+        else:
+            keys.add(("inline", yaml.safe_dump(schema, sort_keys=True)))
+    return keys
+
+dropped_responses = []
+for path, ops in paths.items():
+    if not isinstance(ops, dict):
+        continue
+    for method, op in ops.items():
+        if method.lower() not in METHODS or not isinstance(op, dict):
+            continue
+        responses = op.get("responses") or {}
+        success_codes = [c for c in responses.keys()
+                         if str(c).isdigit() and str(c).startswith("2")]
+        if len(success_codes) <= 1:
+            continue
+        union = set().union(*(_success_schema_keys(responses[c])
+                              for c in success_codes))
+        if len(union) <= 1:
+            continue
+        keep = min(success_codes, key=int)
+        for c in success_codes:
+            if c == keep:
+                continue
+            del responses[c]
+            dropped_responses.append((method.upper(), path, str(c), keep))
+
 injected = 0
 patched_bodies = 0
 for path, ops in paths.items():
@@ -114,6 +159,13 @@ print(
     f"    dropped {len(dropped_paths)} git-smart-HTTP paths, "
     f"injected {injected} operationIds, {patched_bodies} binary schemas"
 )
+if dropped_responses:
+    print(
+        f"    dropped {len(dropped_responses)} secondary 2xx responses "
+        f"(progenitor multi-success-type limitation):"
+    )
+    for m, p, code, kept in dropped_responses:
+        print(f"      - {m} {p}: removed {code}, kept {kept}")
 PY
 
 if ! command -v cargo-progenitor >/dev/null 2>&1; then

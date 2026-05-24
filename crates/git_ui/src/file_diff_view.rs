@@ -1,4 +1,6 @@
 //! FileDiffView provides a UI for displaying differences between two buffers.
+//! TODO: Add Wuling DevOps Merge Request Change Stack and AI Review Comment support to this view.
+//! Review With AI support will likely require some refactoring to allow multiple diffs to be open at once, and to allow diffs to be opened without an associated file on disk.
 
 use anyhow::Result;
 use buffer_diff::BufferDiff;
