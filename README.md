@@ -12,7 +12,7 @@ It is a sister project to [Logos Editor Workstation](https://github.com/zixiao-l
 
 - **Chinese-first localization** — UI, settings, and docs translated for native Chinese readers.
 - **Kal'tsit theme** — a dedicated dark/light theme pair, inspired by *Arknights*' Kal'tsit.
-- **Self-hosted auth** *(planned)* — swap Zed's hosted account for [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps) OAuth/SSO.
+- **Self-hosted auth** *(Production-Ready)* — swap Zed's hosted account for [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps) OAuth/SSO.
 - **Self-hosted collab** *(planned)* — keep Zed's CRDT, but route auth, presence, and WebRTC signaling through your own Wuling DevOps instance.
 
 See [dev-plan](./ROADMAP.md) for the full roadmap.
