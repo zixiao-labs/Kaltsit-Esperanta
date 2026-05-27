@@ -7483,7 +7483,6 @@ fn format_git_error_toast_message(error: &anyhow::Error) -> String {
     }
 }
 
-
 /// Pull the URL out of a git askpass `Password for '<url>':` prompt. Returns
 /// `None` for any prompt we don't recognise (yes/no, Username for, etc.) so
 /// the Wuling DevOps OAuth interceptor only fires on actual password requests.
