@@ -16422,11 +16422,8 @@ version = "0.1.0"
 dependencies = [
  "agent",
  "agent_settings",
-<<<<<<< HEAD
- "ama10-ui",
-=======
  "agent_skills",
->>>>>>> upstream/main
+ "ama10-ui",
  "anyhow",
  "audio",
  "codestral",

@@ -7483,7 +7483,7 @@ fn format_git_error_toast_message(error: &anyhow::Error) -> String {
     }
 }
 
-<<<<<<< HEAD
+
 /// Pull the URL out of a git askpass `Password for '<url>':` prompt. Returns
 /// `None` for any prompt we don't recognise (yes/no, Username for, etc.) so
 /// the Wuling DevOps OAuth interceptor only fires on actual password requests.
@@ -7492,10 +7492,10 @@ fn extract_password_prompt_url(prompt: &str) -> Option<String> {
     let rest = trimmed.strip_prefix("Password for '")?;
     let url = rest.strip_suffix("':")?;
     Some(url.to_string())
-=======
+}
+
 pub(crate) fn commit_title_exceeds_limit(title: &str, max_length: usize) -> bool {
     max_length > 0 && title.chars().count() > max_length
->>>>>>> upstream/main
 }
 
 #[cfg(test)]

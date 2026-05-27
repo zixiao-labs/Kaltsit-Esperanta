@@ -18,11 +18,8 @@ test-support = []
 [dependencies]
 agent.workspace = true
 agent_settings.workspace = true
-<<<<<<< HEAD
-ama10-ui.workspace = true
-=======
 agent_skills.workspace = true
->>>>>>> upstream/main
+ama10-ui.workspace = true
 anyhow.workspace = true
 audio.workspace = true
 component.workspace = true
