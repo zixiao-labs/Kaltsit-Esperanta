@@ -1,4 +1,4 @@
-mod worktree_settings;
+mod worktree_settings_tests;
 
 use anyhow::Result;
 use encoding_rs;
@@ -3017,6 +3017,69 @@ async fn test_repo_exclude(executor: BackgroundExecutor, cx: &mut TestAppContext
     });
 }
 
+#[gpui::test]
+async fn test_repo_exclude_anchored_pattern(executor: BackgroundExecutor, cx: &mut TestAppContext) {
+    init_test(cx);
+
+    let fs = FakeFs::new(executor);
+    let project_dir = Path::new(path!("/project"));
+    fs.insert_tree(
+        project_dir,
+        json!({
+            ".git": {
+                "info": {
+                    "exclude": "vendor/cache"
+                }
+            },
+            "vendor": {
+                "cache": {
+                    "blob.bin": "",
+                },
+                "keep.txt": "",
+            },
+            "elsewhere": {
+                "vendor": {
+                    "cache": {
+                        "blob.bin": "",
+                    },
+                },
+            },
+        }),
+    )
+    .await;
+
+    let worktree = Worktree::local(
+        project_dir,
+        true,
+        fs.clone(),
+        Default::default(),
+        true,
+        WorktreeId::from_proto(0),
+        &mut cx.to_async(),
+    )
+    .await
+    .unwrap();
+    worktree
+        .update(cx, |worktree, _| {
+            worktree.as_local().unwrap().scan_complete()
+        })
+        .await;
+    cx.run_until_parked();
+
+    // An anchored pattern (containing a `/`) is matched relative to the work
+    // tree root, so only the top-level `vendor/cache` is ignored.
+    worktree.update(cx, |worktree, _cx| {
+        check_worktree_entries(
+            worktree,
+            WorktreeExpectations {
+                ignored_paths: &["vendor/cache"],
+                tracked_paths: &["vendor/keep.txt", "elsewhere/vendor/cache"],
+                ..Default::default()
+            },
+        );
+    });
+}
+
 #[derive(Default)]
 struct WorktreeExpectations {
     excluded_paths: &'static [&'static str],
@@ -3328,7 +3391,7 @@ async fn test_invisible_worktree_does_not_track_ancestor_git_repository(
 }
 
 #[gpui::test]
-async fn test_linked_worktree_git_file_event_does_not_panic(
+async fn test_linked_worktree_gitfile_event_preserves_repo(
     executor: BackgroundExecutor,
     cx: &mut TestAppContext,
 ) {
@@ -3341,6 +3404,69 @@ async fn test_linked_worktree_git_file_event_does_not_panic(
     // identifies the gitfile as a git dir, adds it to `dot_git_abs_paths`,
     // and `update_git_repositories` panics because the path is outside the
     // worktree root.
+    init_test(cx);
+    use git::repository::Worktree as GitWorktree;
+
+    let fs = FakeFs::new(executor);
+    fs.insert_tree(path!("/main_repo"), json!({ ".git": {}, "file.txt": "" }))
+        .await;
+    fs.add_linked_worktree_for_repo(
+        Path::new(path!("/main_repo/.git")),
+        false,
+        GitWorktree {
+            path: PathBuf::from(path!("/linked_worktree")),
+            ref_name: Some("refs/heads/feature".into()),
+            sha: "abc123".into(),
+            is_main: false,
+            is_bare: false,
+        },
+    )
+    .await;
+    fs.write(path!("/linked_worktree/file.txt").as_ref(), b"content")
+        .await
+        .unwrap();
+
+    let tree = Worktree::local(
+        path!("/linked_worktree").as_ref(),
+        true,
+        fs.clone(),
+        Arc::default(),
+        true,
+        WorktreeId::from_proto(0),
+        &mut cx.to_async(),
+    )
+    .await
+    .unwrap();
+    tree.update(cx, |tree, _| tree.as_local().unwrap().scan_complete())
+        .await;
+    cx.run_until_parked();
+
+    // Overwrite the .git gitfile with garbage to trigger an event for the
+    // gitfile path itself, which only matches `dot_git_abs_path`.
+    fs.write(path!("/linked_worktree/.git").as_ref(), b"garbage")
+        .await
+        .unwrap();
+    tree.flush_fs_events(cx).await;
+
+    // The worktree should still be intact.
+    tree.read_with(cx, |tree, _| {
+        assert_eq!(
+            tree.snapshot().root_repo_common_dir().map(|p| p.as_ref()),
+            Some(Path::new(path!("/main_repo/.git"))),
+            "linked worktree repo should survive a gitfile change event"
+        );
+    });
+}
+
+#[gpui::test]
+async fn test_linked_worktree_index_lock_event_does_not_emit_git_repo_update(
+    executor: BackgroundExecutor,
+    cx: &mut TestAppContext,
+) {
+    // Regression test: in a linked worktree, git operations like `git status`
+    // can touch the worktree-specific `index.lock` under the main repo's
+    // `.git/worktrees/<name>/`. We intend to ignore those events so they do not
+    // spuriously emit `UpdatedGitRepositories`.
     init_test(cx);
 
     use git::repository::Worktree as GitWorktree;
@@ -3389,19 +3515,30 @@ async fn test_linked_worktree_git_file_event_does_not_panic(
         .await;
     cx.run_until_parked();
 
-    // Trigger a filesystem event inside the main repo's .git directory
-    // (which the linked worktree scanner watches via the commondir). This
-    // uses the sentinel-file helper to ensure the event goes through the
-    // real watcher path, exactly as it would in production.
-    tree.flush_fs_events_in_root_git_repository(cx).await;
-
-    // The worktree should still be intact.
-    tree.read_with(cx, |tree, _| {
-        assert_eq!(
-            tree.snapshot().root_repo_common_dir().map(|p| p.as_ref()),
-            Some(Path::new(path!("/main_repo/.git"))),
-        );
+    let repo_update_count: Rc<Cell<usize>> = Rc::new(Cell::new(0));
+    tree.update(cx, {
+        let repo_update_count = repo_update_count.clone();
+        |_, cx| {
+            cx.subscribe(&cx.entity(), move |_, _, event, _| {
+                if matches!(event, Event::UpdatedGitRepositories(_)) {
+                    repo_update_count.set(repo_update_count.get() + 1);
+                }
+            })
+            .detach();
+        }
     });
+
+    fs.emit_fs_event(
+        path!("/main_repo/.git/worktrees/feature/index.lock"),
+        Some(PathEventKind::Changed),
+    );
+    cx.run_until_parked();
+
+    assert_eq!(
+        repo_update_count.get(),
+        0,
+        "linked-worktree index.lock events should not emit UpdatedGitRepositories"
+    );
 }
 
 #[gpui::test]

@@ -17,7 +17,11 @@ It is a sister project to [Logos Editor Workstation](https://github.com/zixiao-l
 
 See [dev-plan](./ROADMAP.md) for the full roadmap.
 
+<<<<<<< HEAD
 ## Installation
+=======
+- Web ([tracking discussion](https://github.com/zed-industries/zed/discussions/26195))
+>>>>>>> upstream/main
 
 Esperanta does not yet ship pre-built binaries — please build from source:
 
@@ -38,6 +42,8 @@ The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution convention
 ## Licensing
 
 Esperanta inherits Zed's licensing — see [LICENSE-AGPL](./LICENSE-AGPL), [LICENSE-APACHE](./LICENSE-APACHE), and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+
+Zed source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0 components where marked.
 
 License information for third party dependencies must be correctly provided for CI to pass.
 
