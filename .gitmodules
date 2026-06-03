@@ -1,3 +1,0 @@
-[submodule "crates/mantra/proto"]
-	path = crates/mantra/proto
-	url = https://wuling.zixiaolabs.com/zixiao-labs/mantra-server-protocol/mantra.git
