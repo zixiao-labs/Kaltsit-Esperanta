@@ -14,16 +14,19 @@ It is a sister project to [Logos Editor Workstation](https://github.com/zixiao-l
 - **Kal'tsit theme** — a dedicated dark/light theme pair, inspired by *Arknights*' Kal'tsit.
 - **Self-hosted auth** *(Production-Ready)* — swap Zed's hosted account for [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps) OAuth/SSO.
 - **Self-hosted collab** *(planned)* — keep Zed's CRDT, but route auth, presence, and WebRTC signaling through your own Wuling DevOps instance.
+- **Stems** *(planned)* — The official DeltaDB promises have yet to materialize, so we plan to implement our own operational-level version control (shared with Logos, simply bound to NAPI-RS).Data roams with Wuling DevOps' Software-as-a-Service account/self-hosted instance
 
 See [dev-plan](./ROADMAP.md) for the full roadmap.
 
-<<<<<<< HEAD
+
 ## Installation
 =======
 - Web ([tracking discussion](https://github.com/zed-industries/zed/discussions/26195))
->>>>>>> upstream/main
 
-Esperanta does not yet ship pre-built binaries — please build from source:
+
+~~Esperanta does not yet ship pre-built binaries — please build from source~~
+
+We have released [pre-built binaries](https://github.com/zixiao-labs/Kaltsit-Esperanta/releases).
 
 - [Building for macOS](./docs/src/development/macos.md)
 - [Building for Linux](./docs/src/development/linux.md)
@@ -41,7 +44,8 @@ The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution convention
 
 ## Licensing
 
-Esperanta inherits Zed's licensing — see [LICENSE-AGPL](./LICENSE-AGPL), [LICENSE-APACHE](./LICENSE-APACHE), and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+Esperanta inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE), and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+
 
 Zed source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0 components where marked.
 
