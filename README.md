@@ -19,7 +19,11 @@ See [dev-plan](./ROADMAP.md) for the full roadmap.
 
 ## Installation
 
-Esperanta does not yet ship pre-built binaries — please build from source:
+The first release, [v1.4.0](https://github.com/zixiao-labs/Kaltsit-Esperanta/releases/tag/v1.4.0), is available from the [Releases](https://github.com/zixiao-labs/Kaltsit-Esperanta/releases) page. It currently ships a single pre-built binary:
+
+- **macOS (Apple Silicon)** — `Kaltsit-Esperanta-Mac-ARM64.dmg`
+
+For other platforms (Intel macOS, Linux, Windows), please build from source:
 
 - [Building for macOS](./docs/src/development/macos.md)
 - [Building for Linux](./docs/src/development/linux.md)
@@ -37,7 +41,9 @@ The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution convention
 
 ## Licensing
 
-Esperanta inherits Zed's licensing — see [LICENSE-AGPL](./LICENSE-AGPL), [LICENSE-APACHE](./LICENSE-APACHE), and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+Esperanta inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+
+Zed source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0 components where marked.
 
 License information for third party dependencies must be correctly provided for CI to pass.
 
