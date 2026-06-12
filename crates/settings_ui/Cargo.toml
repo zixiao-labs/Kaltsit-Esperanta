@@ -22,6 +22,7 @@ agent_skills.workspace = true
 ama10-ui.workspace = true
 anyhow.workspace = true
 audio.workspace = true
+cloud_api_types.workspace = true
 component.workspace = true
 codestral.workspace = true
 copilot.workspace = true

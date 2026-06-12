@@ -1,26 +1,38 @@
 ---
-title: LLM Providers - Use Your Own API Keys in Zed
-description: Bring your own API keys to Zed. Set up Anthropic, OpenAI, Google AI, Ollama, DeepSeek, Mistral, OpenRouter, Vercel AI Gateway, and more.
+title: LLM Providers - Zed
+description: Choose how Zed gets language models: Zed-hosted models, API access, subscriptions, gateways, or local models.
 ---
 
 # LLM Providers
 
-To use AI in Zed, you need to have at least one large language model provider set up. Once configured, providers are available in the [Agent Panel](./agent-panel.md) and [Inline Assistant](./inline-assistant.md).
+Use this page to choose which models power [the Zed Agent](./zed-agent.md) and
+other Zed-owned AI features, including [Inline Assistant](./inline-assistant.md),
+Git commit generation, thread summaries, and similar model-backed features.
 
-You can do that by either subscribing to [one of Zed's plans](./plans-and-usage.md), or by using API keys you already have for the supported providers. For general AI setup, see [Configuration](./configuration.md).
+Model access paths do not configure [External Agents](./external-agents.md) or
+[Terminal Threads](./terminal-threads.md). External Agents and Terminal Threads
+usually own their own model access, auth, and configuration.
 
-## Use Your Own Keys {#use-your-own-keys}
+## Choose a Model Access Path {#choose-a-model-access-path}
 
-If you already have an API key for a provider like Anthropic or OpenAI, you can add it to Zed. No Zed subscription required.
+| Model access path                                                 | Best when                                                             | Source of truth                       |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
+| [Use Zed-Hosted Models](../account/zed-hosted-models.md)          | You want models billed through Zed                                    | Account & Billing > Zed-Hosted Models |
+| [Use API Access](./use-api-access.md)                             | You have provider API access, credits, or usage billing               | Use API Access                        |
+| [Use an Existing Subscription](./use-an-existing-subscription.md) | You already pay for ChatGPT, Claude, Copilot, or another subscription | Use an Existing Subscription          |
+| [Use a Gateway](./use-a-gateway.md)                               | You route through OpenRouter, Bedrock, Vercel, or a similar platform  | Use a Gateway                         |
+| [Use a Local Model](./use-a-local-model.md)                       | You run models locally or self-hosted                                 | Use a Local Model                     |
 
-To add an existing API key to a given provider, go to the Agent Panel settings ({#action agent::OpenSettings}), look for the desired provider, paste the key into the input, and hit enter.
+Use the setup pages for provider-specific details. See [Agents](./agents.md) for
+the difference between the Zed Agent, External Agents, and Terminal Threads.
 
-> Note: API keys are _not_ stored as plain text in your settings file, but rather in your OS's secure credential storage.
+## Edit Prediction {#edit-prediction}
 
-## Supported Providers
+[Edit Prediction](./edit-prediction.md) has its own provider setup under `edit_predictions`. LLM providers on this page apply to model-backed Zed AI features such as Zed Agent, Inline Assistant, Git commit generation, and thread summaries.
 
-Zed supports these providers with your own API keys:
+## OpenAI-Compatible Providers {#openai-api-compatible}
 
+<<<<<<< HEAD
 - [Amazon Bedrock](#amazon-bedrock)
 - [Anthropic](#anthropic)
 - [ChatGPT Subscription](#chatgpt-subscription)
@@ -922,3 +934,6 @@ To do so, add the following to your settings file ([how to edit](../configuring-
 Currently, `some-provider` can be any of the following values: `anthropic`, `google`, `ollama`, `openai`.
 
 This is the same infrastructure that powers models that are, for example, [OpenAI-compatible](#openai-api-compatible).
+=======
+OpenAI-compatible provider setup has moved to [Use API Access](./use-api-access.md#openai-compatible).
+>>>>>>> upstream/main
