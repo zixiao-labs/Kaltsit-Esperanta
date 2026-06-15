@@ -1,8 +1,10 @@
-# Kal'tsit·Esperanta
+# ZetaCode
 
 [![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
 
-Kal'tsit·Esperanta is a high-performance, multiplayer code editor maintained by [Zixiao Labs](https://github.com/zixiao-labs) — **基于 [Zed](https://github.com/zed-industries/zed) 二次开发**.
+## Codename: Kal'tsit·Esperanta
+
+ZetaCode is a high-performance, multiplayer code editor maintained by [Zixiao Labs](https://github.com/zixiao-labs) — **基于 [Zed](https://github.com/zed-industries/zed) 二次开发**.
 
 It is a sister project to [Logos Editor Workstation](https://github.com/zixiao-labs/logos), Zixiao Labs' Electron-based editor; the two share design goals but target different stacks.
 
@@ -41,7 +43,7 @@ The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution convention
 
 ## Licensing
 
-Esperanta inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+ZetaCode inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
 
 Zed source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0 components where marked.
 
