@@ -27,10 +27,6 @@ macro_rules! var {
     };
 }
 
-secret!(ANTHROPIC_API_KEY);
-secret!(OPENAI_API_KEY);
-secret!(GOOGLE_AI_API_KEY);
-secret!(GOOGLE_CLOUD_PROJECT);
 secret!(APPLE_NOTARIZATION_ISSUER_ID);
 secret!(APPLE_NOTARIZATION_KEY);
 secret!(APPLE_NOTARIZATION_KEY_ID);
@@ -49,6 +45,7 @@ secret!(SENTRY_AUTH_TOKEN);
 secret!(ZED_CLIENT_CHECKSUM_SEED);
 secret!(ZED_CLOUD_PROVIDER_ADDITIONAL_MODELS_JSON);
 secret!(ZED_SENTRY_MINIDUMP_ENDPOINT);
+<<<<<<< HEAD
 secret!(SLACK_APP_ZED_UNIT_EVALS_BOT_TOKEN);
 secret!(SYNC_PAT);
 // In upstream Zed these point at a dedicated GitHub App ("zed-zippy"). The
@@ -58,6 +55,10 @@ secret!(SYNC_PAT);
 // publish_extension_cli, ...) continue to compile without edits.
 pub const ZED_ZIPPY_APP_ID: &str = SYNC_PAT;
 pub const ZED_ZIPPY_APP_PRIVATE_KEY: &str = SYNC_PAT;
+=======
+secret!(ZED_ZIPPY_APP_ID);
+secret!(ZED_ZIPPY_APP_PRIVATE_KEY);
+>>>>>>> upstream/main
 secret!(DISCORD_WEBHOOK_RELEASE_NOTES);
 secret!(WINGET_TOKEN);
 secret!(VERCEL_TOKEN);
@@ -104,12 +105,6 @@ pub fn one_workflow_per_non_main_branch_and_token<T: AsRef<str>>(token: T) -> Co
             ),
             token.as_ref()
         ))
-        .cancel_in_progress(true)
-}
-
-pub(crate) fn allow_concurrent_runs() -> Concurrency {
-    Concurrency::default()
-        .group("${{ github.workflow }}-${{ github.ref_name }}-${{ github.run_id }}")
         .cancel_in_progress(true)
 }
 
