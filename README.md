@@ -43,7 +43,7 @@ The original [CONTRIBUTING.md](./CONTRIBUTING.md) (Zed's contribution convention
 
 ## Licensing
 
-Esperanta inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
+ZetaCode inherits Zed's licensing — see [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-GPL](./LICENSE-GPL). Original copyright remains with Zed Industries, Inc.
 
 Zed source code is licensed primarily under GPL-3.0-or-later, with Apache-2.0 components where marked.
 
