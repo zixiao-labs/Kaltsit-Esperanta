@@ -18,11 +18,7 @@
 
 - [ ] I've reviewed my own diff for quality, security, and reliability
 - [ ] Unsafe blocks (if any) have justifying comments
-<<<<<<< HEAD
 - [ ] The content is consistent with the [UI/UX checklist](https://github.com/zixiao-labs/Kaltsit-Esperanta/blob/main/CONTRIBUTING.md#uiux-checklist)
-=======
-- [ ] The content adheres to Zed's UI standards ([UX/UI](https://github.com/zed-industries/zed/blob/main/CONTRIBUTING.md#uiux-checklist) and [icon](https://github.com/zed-industries/zed/blob/main/crates/icons/README.md) guidelines)
->>>>>>> upstream/main
 - [ ] Tests cover the new/changed behavior
 - [ ] Performance impact has been considered and is acceptable
 

@@ -45,7 +45,6 @@ secret!(SENTRY_AUTH_TOKEN);
 secret!(ZED_CLIENT_CHECKSUM_SEED);
 secret!(ZED_CLOUD_PROVIDER_ADDITIONAL_MODELS_JSON);
 secret!(ZED_SENTRY_MINIDUMP_ENDPOINT);
-<<<<<<< HEAD
 secret!(SLACK_APP_ZED_UNIT_EVALS_BOT_TOKEN);
 secret!(SYNC_PAT);
 // In upstream Zed these point at a dedicated GitHub App ("zed-zippy"). The
@@ -55,10 +54,6 @@ secret!(SYNC_PAT);
 // publish_extension_cli, ...) continue to compile without edits.
 pub const ZED_ZIPPY_APP_ID: &str = SYNC_PAT;
 pub const ZED_ZIPPY_APP_PRIVATE_KEY: &str = SYNC_PAT;
-=======
-secret!(ZED_ZIPPY_APP_ID);
-secret!(ZED_ZIPPY_APP_PRIVATE_KEY);
->>>>>>> upstream/main
 secret!(DISCORD_WEBHOOK_RELEASE_NOTES);
 secret!(WINGET_TOKEN);
 secret!(VERCEL_TOKEN);

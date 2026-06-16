@@ -81,7 +81,6 @@ collection and retention.
 
 ### File Exclusions {#file-exclusions}
 
-<<<<<<< HEAD
 ## Edit Predictions
 
 Edit predictions can be powered by **Zed's Zeta model** or by **third-party providers** like GitHub Copilot.
@@ -113,10 +112,6 @@ Zed does not collect training data for our edit prediction model unless the foll
 ### File Exclusions
 
 Certain files are always excluded from edit predictions—regardless of opt-in status:
-=======
-Certain files are always excluded from Edit Prediction training data collection,
-regardless of opt-in status:
->>>>>>> upstream/main
 
 ```json [settings]
 {

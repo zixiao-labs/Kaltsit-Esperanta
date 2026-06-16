@@ -36,7 +36,6 @@ Anthropic-compatible provider setup has moved to [Use API Access](./use-api-acce
 
 ## OpenAI-Compatible Providers {#openai-api-compatible}
 
-<<<<<<< HEAD
 - [Amazon Bedrock](#amazon-bedrock)
 - [Anthropic](#anthropic)
 - [ChatGPT Subscription](#chatgpt-subscription)
@@ -938,6 +937,3 @@ To do so, add the following to your settings file ([how to edit](../configuring-
 Currently, `some-provider` can be any of the following values: `anthropic`, `google`, `ollama`, `openai`.
 
 This is the same infrastructure that powers models that are, for example, [OpenAI-compatible](#openai-api-compatible).
-=======
-OpenAI-compatible provider setup has moved to [Use API Access](./use-api-access.md#openai-compatible).
->>>>>>> upstream/main

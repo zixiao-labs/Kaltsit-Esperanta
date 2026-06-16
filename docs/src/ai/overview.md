@@ -15,14 +15,12 @@ Zed's AI docs are organized around three areas:
 
 Start with [AI Quick Start](./quick-start.md) if you know what you want to do. Use [AI by Company](./by-company.md) if you know the company, subscription, model provider, agent, or CLI you want to use.
 
-<<<<<<< HEAD
 - **Open source.** The editor and all AI features are [open source](https://github.com/zixiao-labs/Kaltsit-Esperanta). You can read how AI is implemented, how data flows to providers, and how tool calls execute.
 - **Multi-model.** Use Zed's hosted models or [bring your own API keys](./llm-providers.md) from Anthropic, OpenAI, Google, Ollama, and 8+ other providers. Run local models, connect to cloud APIs, or mix both. Switch models per task.
 - **External agents.** Run Claude Agent, Gemini CLI, Codex, and other CLI-based agents directly in Zed through the [Agent Client Protocol](https://zed.dev/acp). See [External Agents](./external-agents.md).
 - **Privacy by default.** AI data sharing is opt-in. When you use your own API keys, Zed maintains zero-data retention agreements with providers. See [Privacy and Security](./privacy-and-security.md).
-=======
+
 ## Agent Paths {#agent-paths}
->>>>>>> upstream/main
 
 Agent paths decide how agentic work runs in Zed.
 
