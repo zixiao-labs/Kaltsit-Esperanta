@@ -351,7 +351,7 @@ impl Render for Onboarding {
                                                 v_flex()
                                                     .child(
                                                         Headline::new(
-                                                            "Welcome to Kal'tsit·Esperanta",
+                                                            "Welcome to ZetaCode",
                                                         )
                                                         .size(HeadlineSize::Small),
                                                     )

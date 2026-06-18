@@ -256,57 +256,57 @@ function BuildInstaller {
         "stable" {
             $appId = "{{2DB0DA96-CA55-49BB-AF4F-64AF36A86712}"
             $appIconName = "app-icon"
-            $appName = "Kaltsit-Esperanta"
-            $appDisplayName = "Kaltsit-Esperanta"
+            $appName = "ZetaCode"
+            $appDisplayName = "ZetaCode"
             $appSetupName = "$BinName-$Architecture"
             # The mutex name here should match the mutex name in crates\zed\src\zed\windows_only_instance.rs
             $appMutex = "Zed-Stable-Instance-Mutex"
             $appExeName = $BinName
             $regValueName = "Zed"
             $appUserId = "ZedIndustries.Zed"
-            $appShellNameShort = "K&altsit-Esperanta"
+            $appShellNameShort = "&ZetaCode"
             $appAppxFullName = "ZedIndustries.Zed_1.0.0.0_neutral__japxn1gcva8rg"
         }
         "preview" {
             $appId = "{{F70E4811-D0E2-4D88-AC99-D63752799F95}"
             $appIconName = "app-icon-preview"
-            $appName = "Kaltsit-Esperanta Preview"
-            $appDisplayName = "Kaltsit-Esperanta Preview"
+            $appName = "ZetaCode Preview"
+            $appDisplayName = "ZetaCode Preview"
             $appSetupName = "$BinName-$Architecture"
             # The mutex name here should match the mutex name in crates\zed\src\zed\windows_only_instance.rs
             $appMutex = "Zed-Preview-Instance-Mutex"
             $appExeName = $BinName
             $regValueName = "ZedPreview"
             $appUserId = "ZedIndustries.Zed.Preview"
-            $appShellNameShort = "K&altsit-Esperanta Preview"
+            $appShellNameShort = "&ZetaCode Preview"
             $appAppxFullName = "ZedIndustries.Zed.Preview_1.0.0.0_neutral__japxn1gcva8rg"
         }
         "nightly" {
             $appId = "{{1BDB21D3-14E7-433C-843C-9C97382B2FE0}"
             $appIconName = "app-icon-nightly"
-            $appName = "Kaltsit-Esperanta Nightly"
-            $appDisplayName = "Kaltsit-Esperanta Nightly"
+            $appName = "ZetaCode Nightly"
+            $appDisplayName = "ZetaCode Nightly"
             $appSetupName = "$BinName-$Architecture"
             # The mutex name here should match the mutex name in crates\zed\src\zed\windows_only_instance.rs
             $appMutex = "Zed-Nightly-Instance-Mutex"
             $appExeName = $BinName
             $regValueName = "ZedNightly"
             $appUserId = "ZedIndustries.Zed.Nightly"
-            $appShellNameShort = "K&altsit-Esperanta Nightly"
+            $appShellNameShort = "&ZetaCode Nightly"
             $appAppxFullName = "ZedIndustries.Zed.Nightly_1.0.0.0_neutral__japxn1gcva8rg"
         }
         "dev" {
             $appId = "{{8357632E-24A4-4F32-BA97-E575B4D1FE5D}"
             $appIconName = "app-icon-dev"
-            $appName = "Kaltsit-Esperanta Dev"
-            $appDisplayName = "Kaltsit-Esperanta Dev"
+            $appName = "ZetaCode Dev"
+            $appDisplayName = "ZetaCode Dev"
             $appSetupName = "$BinName-$Architecture"
             # The mutex name here should match the mutex name in crates\zed\src\zed\windows_only_instance.rs
             $appMutex = "Zed-Dev-Instance-Mutex"
             $appExeName = $BinName
             $regValueName = "ZedDev"
             $appUserId = "ZedIndustries.Zed.Dev"
-            $appShellNameShort = "K&altsit-Esperanta Dev"
+            $appShellNameShort = "&ZetaCode Dev"
             $appAppxFullName = "ZedIndustries.Zed.Dev_1.0.0.0_neutral__japxn1gcva8rg"
         }
         default {

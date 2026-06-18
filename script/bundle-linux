@@ -181,16 +181,16 @@ export APP_CLI="zed"
 export APP_ICON="${BIN_NAME}"
 export APP_ARGS="%U"
 if [[ "$channel" == "preview" ]]; then
-  export APP_NAME="Kaltsit-Esperanta Preview"
+  export APP_NAME="ZetaCode Preview"
   APP_ID="dev.zixiao-labs.Kaltsit-Esperanta-Preview"
 elif [[ "$channel" == "nightly" ]]; then
-  export APP_NAME="Kaltsit-Esperanta Nightly"
+  export APP_NAME="ZetaCode Nightly"
   APP_ID="dev.zixiao-labs.Kaltsit-Esperanta-Nightly"
 elif [[ "$channel" == "dev" ]]; then
-  export APP_NAME="Kaltsit-Esperanta Devel"
+  export APP_NAME="ZetaCode Devel"
   APP_ID="dev.zixiao-labs.Kaltsit-Esperanta-Dev"
 else
-  export APP_NAME="Kaltsit-Esperanta"
+  export APP_NAME="ZetaCode"
   APP_ID="dev.zixiao-labs.Kaltsit-Esperanta"
 fi
 

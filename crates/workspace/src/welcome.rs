@@ -444,9 +444,9 @@ impl Render for WelcomePage {
         };
 
         let welcome_label = if self.fallback_to_recent_projects {
-            "Welcome back to Kal'tsit·Esperanta"
+            "Welcome back to ZetaCode"
         } else {
-            "Welcome to Kal'tsit·Esperanta"
+            "Welcome to ZetaCode"
         };
 
         h_flex()

@@ -60,10 +60,10 @@ pub fn app_menus(cx: &mut App) -> Vec<Menu> {
 
     vec![
         Menu {
-            name: "Esperanta".into(),
+            name: "ZetaCode".into(),
             disabled: false,
             items: vec![
-                MenuItem::action("About Esperanta", zed_actions::About),
+                MenuItem::action("About ZetaCode", zed_actions::About),
                 MenuItem::action("Check for Updates", auto_update::Check),
                 MenuItem::separator(),
                 MenuItem::submenu(Menu::new("Settings").items([
@@ -95,13 +95,13 @@ pub fn app_menus(cx: &mut App) -> Vec<Menu> {
                 MenuItem::action("Install CLI", install_cli::InstallCliBinary),
                 MenuItem::separator(),
                 #[cfg(target_os = "macos")]
-                MenuItem::action("Hide Esperanta", super::Hide),
+                MenuItem::action("Hide ZetaCode", super::Hide),
                 #[cfg(target_os = "macos")]
                 MenuItem::action("Hide Others", super::HideOthers),
                 #[cfg(target_os = "macos")]
                 MenuItem::action("Show All", super::ShowAll),
                 MenuItem::separator(),
-                MenuItem::action("Quit Esperanta", Quit),
+                MenuItem::action("Quit ZetaCode", Quit),
             ],
         },
         Menu {
