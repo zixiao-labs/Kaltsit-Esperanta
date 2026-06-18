@@ -30,9 +30,12 @@ the difference between the Zed Agent, External Agents, and Terminal Threads.
 
 [Edit Prediction](./edit-prediction.md) has its own provider setup under `edit_predictions`. LLM providers on this page apply to model-backed Zed AI features such as Zed Agent, Inline Assistant, Git commit generation, and thread summaries.
 
+## Anthropic-Compatible Providers {#anthropic-api-compatible}
+
+Anthropic-compatible provider setup has moved to [Use API Access](./use-api-access.md#anthropic-compatible).
+
 ## OpenAI-Compatible Providers {#openai-api-compatible}
 
-<<<<<<< HEAD
 - [Amazon Bedrock](#amazon-bedrock)
 - [Anthropic](#anthropic)
 - [ChatGPT Subscription](#chatgpt-subscription)
@@ -934,6 +937,3 @@ To do so, add the following to your settings file ([how to edit](../configuring-
 Currently, `some-provider` can be any of the following values: `anthropic`, `google`, `ollama`, `openai`.
 
 This is the same infrastructure that powers models that are, for example, [OpenAI-compatible](#openai-api-compatible).
-=======
-OpenAI-compatible provider setup has moved to [Use API Access](./use-api-access.md#openai-compatible).
->>>>>>> upstream/main
