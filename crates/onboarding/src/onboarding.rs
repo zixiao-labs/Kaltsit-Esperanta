@@ -350,10 +350,8 @@ impl Render for Onboarding {
                                             .child(
                                                 v_flex()
                                                     .child(
-                                                        Headline::new(
-                                                            "Welcome to ZetaCode",
-                                                        )
-                                                        .size(HeadlineSize::Small),
+                                                        Headline::new("Welcome to ZetaCode")
+                                                            .size(HeadlineSize::Small),
                                                     )
                                                     .child(
                                                         Label::new("The editor for what's next")
