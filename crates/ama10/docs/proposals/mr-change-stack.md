@@ -8,7 +8,7 @@
 
 ## 1. 动机
 
-目前 Esperanta 端只有 `crates/ama10-ui/src/issues_panel.rs` 一个只读列表面板，无法在编辑器内对 Wuling-DevOps 上的 Merge Request 做评审。期望在编辑器侧达到 CodeRabbit Change Stack 那种"一站式 MR 评审"体验，同时复用 Zed 自身已经成熟的 `MultiBuffer` + `BufferDiff` + `BlockMap` + ACP/native agent 基础设施，避免另起炉灶。
+目前 ZetaCode 端只有 `crates/ama10-ui/src/issues_panel.rs` 一个只读列表面板，无法在编辑器内对 Wuling-DevOps 上的 Merge Request 做评审。期望在编辑器侧达到 CodeRabbit Change Stack 那种"一站式 MR 评审"体验，同时复用 Zed 自身已经成熟的 `MultiBuffer` + `BufferDiff` + `BlockMap` + ACP/native agent 基础设施，避免另起炉灶。
 
 核心交付：
 
@@ -340,7 +340,7 @@ r.Get("/change-stack", h.changeStack)
 
 ```go
 // changeStack composes the MR meta + commit list + per-file diff + MR-level
-// comments into one payload, so the Esperanta MR Change Stack panel can open a
+// comments into one payload, so the ZetaCode MR Change Stack panel can open a
 // review with a single round trip instead of four. Patch text is gated behind
 // ?include=patch, identical to the standalone /diff endpoint.
 func (h *Handler) changeStack(w http.ResponseWriter, r *http.Request) {
@@ -428,7 +428,7 @@ func commitLimit(r *http.Request) int {
     get:
       summary: Aggregated review payload (meta + commits + diff + comments) for one MR
       description: |
-        One-round-trip composition for the Esperanta MR Change Stack panel:
+        One-round-trip composition for the ZetaCode MR Change Stack panel:
         returns the MR meta, its commit list, the per-file diff, and MR-level
         comments together. Equivalent to GET {number} + /commits + /diff +
         /comments. Patch text is omitted by default; pass include=patch to

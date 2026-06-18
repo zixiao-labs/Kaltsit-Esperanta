@@ -14,7 +14,6 @@ build_flag="--release"
 # The Cargo binary name produced by `cargo build --package zed`. Must match
 # `[[bin]] name` in crates/zed/Cargo.toml.
 BIN_NAME="Kaltsit-Esperanta"
-APP_NAME="ZetaCode"
 
 echo "check rustup"
 rustup --version || { echo "rustup not installed. See https://www.rust-lang.org/tools/install"; exit 1; }
