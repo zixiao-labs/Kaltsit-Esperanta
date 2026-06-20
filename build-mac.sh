@@ -18,7 +18,6 @@ can_code_sign=false
 # The Cargo binary name produced by `cargo build --package zed`. Must match
 # `[[bin]] name` in crates/zed/Cargo.toml and CFBundleExecutable inside the .app.
 BIN_NAME="Kaltsit-Esperanta"
-APP_NAME="Kaltsit-Esperanta"
 
 echo "check xcode"
 xcode-select --version || { echo "xcode not installed"; exit 1; }

@@ -8,7 +8,7 @@
 
 ## 1. 动机
 
-目前 Esperanta 端只有 `crates/ama10-ui/src/issues_panel.rs` 一个只读列表面板，无法在编辑器内对 Wuling-DevOps 上的 Merge Request 做评审。期望在编辑器侧达到 CodeRabbit Change Stack 那种"一站式 MR 评审"体验，同时复用 Zed 自身已经成熟的 `MultiBuffer` + `BufferDiff` + `BlockMap` + ACP/native agent 基础设施，避免另起炉灶。
+目前 ZetaCode 端只有 `crates/ama10-ui/src/issues_panel.rs` 一个只读列表面板，无法在编辑器内对 Wuling-DevOps 上的 Merge Request 做评审。期望在编辑器侧达到 CodeRabbit Change Stack 那种"一站式 MR 评审"体验，同时复用 Zed 自身已经成熟的 `MultiBuffer` + `BufferDiff` + `BlockMap` + ACP/native agent 基础设施，避免另起炉灶。
 
 核心交付：
 
@@ -326,6 +326,165 @@ components:
 
 二阶段任何一项独立可拆。
 
+### 6.3 `change-stack` 聚合端点（本次新增，回应"复杂查询是否该上 GraphQL"）
+
+**动机**：面板打开一个 MR 要发 4 次 GET（`{number}` / `/commits` / `/diff` / `/comments`），每次都重跑 `resolveRepo` + JWT 校验 + repo 解析。给只读骨架（阶段 1）加一个 BFF 聚合端点，把这 4 样在服务端拼好一次返回，客户端一次 round trip 拿全。**这是 §11 传输层决策的落地产物** —— 用一个端点解决"开销过大"，不引入 GraphQL。
+
+**路由**（挂进现有 `/{number}` 子路由组，即 `handler.go:62` 那个 `r.Route("/{number}", ...)`）：
+
+```go
+r.Get("/change-stack", h.changeStack)
+```
+
+**Handler 草案**（纯组合现有调用，零新增 data-access / git 逻辑；错误处理沿用 `handler.go` 既有的 `if err != nil { httpapi.RenderError(w, r, err); return }` 模式，此处压行示意）：
+
+```go
+// changeStack composes the MR meta + commit list + per-file diff + MR-level
+// comments into one payload, so the ZetaCode MR Change Stack panel can open a
+// review with a single round trip instead of four. Patch text is gated behind
+// ?include=patch, identical to the standalone /diff endpoint.
+func (h *Handler) changeStack(w http.ResponseWriter, r *http.Request) {
+    rc, err := h.resolveRepo(r)
+    if err != nil { httpapi.RenderError(w, r, err); return }
+    if err := requireRead(rc); err != nil { httpapi.RenderError(w, r, err); return }
+    number, err := parseNumber(r)
+    if err != nil { httpapi.RenderError(w, r, err); return }
+
+    mr, err := h.MRs.GetMRByNumber(r.Context(), rc.ProjectID, number)
+    if err != nil { httpapi.RenderError(w, r, err); return }
+    if mr.RepoID != rc.Repo.ID {
+        httpapi.RenderError(w, r, apperr.NotFound("merge request")); return
+    }
+
+    // Identical OID selection + git plumbing as diff()/commits().
+    targetOID, sourceOID, err := h.pickDiffOIDs(rc, mr)
+    if err != nil { httpapi.RenderError(w, r, err); return }
+    baseOID, gerr := git.MergeBase(rc.RepoPath, targetOID, sourceOID)
+    if gerr != nil {
+        httpapi.RenderError(w, r, apperr.Wrap(apperr.CodeBadRequest,
+            "no common ancestor between source and target", gerr)); return
+    }
+
+    includePatch := wantPatch(r.URL.Query().Get("include")) // reuse diff()'s gate
+    entries, gerr := git.DiffOIDs(rc.RepoPath, baseOID, sourceOID, includePatch)
+    if gerr != nil { httpapi.RenderError(w, r, apperr.Wrap(apperr.CodeInternal, "diff", gerr)); return }
+    files := make([]model.MRDiffEntry, len(entries))
+    for i, e := range entries {
+        files[i] = model.MRDiffEntry{
+            Path: e.Path, OldPath: e.OldPath, Status: e.Status,
+            Additions: e.Additions, Deletions: e.Deletions, Patch: e.Patch,
+        }
+    }
+
+    commits, gerr := git.LogRange(rc.RepoPath, sourceOID, targetOID, commitLimit(r))
+    if gerr != nil { httpapi.RenderError(w, r, apperr.Wrap(apperr.CodeInternal, "log_range", gerr)); return }
+
+    comments, err := h.MRs.ListMRComments(r.Context(), rc.ProjectID, number)
+    if err != nil { httpapi.RenderError(w, r, err); return }
+
+    httpapi.WriteJSON(w, http.StatusOK, changeStackResponse{
+        MR:      *mr,
+        Commits: commits,
+        Diff:    diffPayload{BaseOID: baseOID, SourceOID: sourceOID, TargetOID: targetOID, Files: files},
+        Comments: comments,
+    })
+}
+
+type changeStackResponse struct {
+    MR       model.MergeRequest  `json:"mr"`
+    Commits  []git.Commit        `json:"commits"`
+    Diff     diffPayload         `json:"diff"`
+    Comments []model.MRComment   `json:"comments"`
+}
+
+type diffPayload struct {
+    BaseOID   string              `json:"base_oid"`
+    SourceOID string              `json:"source_oid"`
+    TargetOID string              `json:"target_oid"`
+    Files     []model.MRDiffEntry `json:"files"`
+}
+
+// commitLimit mirrors the clamp inlined in commits() (default 50, max 200).
+func commitLimit(r *http.Request) int {
+    limit := 50
+    if l := r.URL.Query().Get("commit_limit"); l != "" {
+        if n, perr := strconv.Atoi(l); perr == nil && n > 0 && n <= 200 { limit = n }
+    }
+    return limit
+}
+```
+
+> 响应放在 `mrhttp` 包内的 `changeStackResponse`（而非 `model`），是为了让它直接引用 `git.Commit`，避免 `model` 反向依赖 `internal/git`（`model.go` 顶部注释明确要保持 model 无领域依赖）。`git.Commit` 本来就已经被 `/commits` 端点直接序列化，OpenAPI 也已有对应的 `Commit` schema。
+
+**OpenAPI 片段**（新增 path + 一个 schema，全程 `$ref` 现有组件 —— `MergeRequest:2406` / `Commit:2301` / `MRDiffEntry:2501` / `MRComment:2470`）：
+
+```yaml
+  /api/v1/orgs/{org_slug}/projects/{project_slug}/repos/{repo_slug}/merge-requests/{number}/change-stack:
+    parameters:
+      - $ref: "#/components/parameters/OrgSlug"
+      - $ref: "#/components/parameters/ProjectSlug"
+      - $ref: "#/components/parameters/RepoSlug"
+      - $ref: "#/components/parameters/MRNumber"
+    get:
+      summary: Aggregated review payload (meta + commits + diff + comments) for one MR
+      description: |
+        One-round-trip composition for the ZetaCode MR Change Stack panel:
+        returns the MR meta, its commit list, the per-file diff, and MR-level
+        comments together. Equivalent to GET {number} + /commits + /diff +
+        /comments. Patch text is omitted by default; pass include=patch to
+        populate MRDiffEntry.patch (same semantics as /diff).
+      parameters:
+        - in: query
+          name: include
+          schema: { type: string }
+          description: "Comma-separated optional fields; `patch` adds unified diff text per file."
+        - in: query
+          name: commit_limit
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MRChangeStack" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/UnauthorizedError" }
+        "404": { $ref: "#/components/responses/NotFoundError" }
+```
+
+```yaml
+    MRChangeStack:
+      type: object
+      required: [mr, commits, diff, comments]
+      properties:
+        mr: { $ref: "#/components/schemas/MergeRequest" }
+        commits:
+          type: array
+          items: { $ref: "#/components/schemas/Commit" }
+        diff:
+          type: object
+          required: [base_oid, source_oid, target_oid, files]
+          properties:
+            base_oid:   { type: string }
+            source_oid: { type: string }
+            target_oid: { type: string }
+            files:
+              type: array
+              items: { $ref: "#/components/schemas/MRDiffEntry" }
+        comments:
+          type: array
+          items: { $ref: "#/components/schemas/MRComment" }
+```
+
+**为什么这样切**：
+
+- **零新逻辑**：`pickDiffOIDs` / `git.MergeBase` / `git.DiffOIDs` / `git.LogRange` / `ListMRComments` 全是 `get`/`diff`/`commits`/`listComments` 已有调用的原样组合。后端工作量 < 半天。
+- **开销**：git 那部分（diff / log）的开销和拆成 4 个端点完全一样 —— 重活在 git，换不换传输层都省不掉（见 §11）。省下来的是 3 次多余的 round trip + 鉴权 + repo 解析。
+- **不过度返回**：`patch` 沿用 `/diff` 的 `?include=patch` 开关，默认不带；`commit_limit` 默认 50、上限 200。直接缓解 §8 风险表里"MultiBuffer 装 50+ 文件大 diff"那条 —— 客户端可先不带 patch 拉文件清单，确认规模后再决定是否拉全文。
+- **契约单一**：`MRChangeStack` 全部 `$ref` 现有 schema，客户端无论走 codegen 还是手写（见 §12）都只多认一个组合 schema，多一个**一个**薄 client 方法。
+
+**上线时机**：属于后端改动，但很小且能直接支撑阶段 1 的只读骨架（一次拿全，省去客户端编排 4 个请求的状态机）。它不依赖 `mr_diff_comments`，可随阶段 2 的 schema 一起上，或更早单独先行。
+
 ## 7. 实施阶段（建议）
 
 > 所有阶段在 2026-06-15 对齐会议拿到 GO 之前不动代码。
@@ -381,6 +540,7 @@ components:
 6. **i18n 是只翻这个 panel 还是顺带把 `issues_panel.rs` 也翻了**？前者最小化变更，后者一致性更好。
 7. **本 panel 是否要单独 feature flag**（`wuling.json` 加 `mr_change_stack.enabled`）？还是直接默认启用？
 8. **agent picker 弹出时是否记忆上次选择**？还是每次都让用户选？后者用户感觉受控，前者更顺手。
+9. **传输层：REST 聚合端点 vs. GraphQL**？详见新增 §11 —— 结论建议走 REST 聚合（`change-stack`，§6.3），不上 GraphQL、更不自造。此项牵出 §12 客户端 codegen（progenitor）的去留，建议借这次一并拍板。
 
 ## 10. 引用
 
@@ -408,6 +568,76 @@ components:
   - [[ama10-+-wuling-openapi-client-conventions]]
   - [[cicd-rewrite-decisions-for-esperanta-fork]]
   - [[internal-discussions-stay-on-fork]]
+
+## 11. 传输层决策：REST 聚合 vs. GraphQL（2026-06-15 待拍板）
+
+> 起因：有人提出"Change Stack 需要很复杂的查询，继续用 REST 开销过大、难维护，考虑上一套 GraphQL（必要时服务器/客户端自造）"。本节给会议一个有依据的判断。
+
+### 11.1 这个需求到底"复杂"在哪
+
+面板要的数据就是**一个 MR 聚合几样关联资源**（§4.2）：MR meta（SQL 1 行）+ commits（**git**）+ diff/patch（**git**）+ 评论（SQL）。这是典型的 under-fetching（多次 round trip），不是深层关系图遍历。两个决定性事实：
+
+1. **重活在 git，不在可 join 的关系图。** `commits` 是 `git.LogRange`、`diff` 是 `git.DiffOIDs`（`handler.go:506` / `:445`），都是 shell 出去跑 git。GraphQL 的核心卖点（字段级选择、按外键折叠 N+1）对 SQL 关系图有用，对 `git diff` 的开销**完全无效**；而且 GraphQL 的 per-field resolver 模型容易诱导出"每个字段各跑一次 git"的反模式。
+2. **唯一真实的 over-fetch（大 patch 文本）REST 已经能控。** `/diff?include=patch`（`handler.go:444` 的 `wantPatch`）已经是字段级开关。GraphQL 在这里能做的，现状已经做了。
+
+### 11.2 三个选项
+
+- **A. REST 聚合端点（BFF）** —— `GET .../change-stack`（§6.3）。一个 handler 组合现有 store/git 调用，裁剪成面板恰好要的 DTO。
+- **B. 上 GraphQL（成熟库）** —— Go 端引 `gqlgen`，Rust 端引 `cynic` / `graphql-client`，作为只读侧补充。
+- **C. 自造 GraphQL server / client** —— 提案原话"必要时自造"的那条。
+
+### 11.3 对比
+
+| 维度 | A. REST 聚合 | B. GraphQL（成熟库） | C. 自造 |
+|---|---|---|---|
+| 解决多 round trip | ✅ 一次拿全 | ✅ 一次拿全 | ✅ |
+| 对 git 重活的帮助 | 无（也无害） | 无（resolver 易踩坑） | 无 |
+| 后端工作量 | < 半天（纯组合） | 引库 + schema + resolver + 重做鉴权 | 巨大，且自背 parser / 执行 / dataloader / introspection 全部 bug |
+| 客户端工作量 | 1 个手写方法 | 引 GraphQL client + 又一套 codegen（Rust 端生态弱） | 巨大 |
+| 鉴权 | 沿用现有 per-route `requireRead` / `requireWrite` | 塌成单 POST，需在 resolver 层重建字段级 authz（安全敏感） | 同 B + 自己实现 |
+| HTTP 缓存 / 按端点 metrics | 直接可用 | 需 persisted query / APQ + 自建埋点 | 自己造 |
+| 与现有契约的关系 | 复用 OpenAPI（两个客户端共享） | 新增并行 schema，与 OpenAPI 并存 | 同 B |
+| 可回退性 | 就是现有风格 | 引入后难退 | —— |
+
+### 11.4 结论
+
+**推荐 A，否决 C，B 留作未来选项。**
+
+- **A**：用 §6.3 的 `change-stack` 端点解决"开销过大" —— 一次 round trip、零新逻辑、不动鉴权架构、不引新基建。
+- **C 直接否掉**：自造等于重写一个 `gqlgen` / `async-graphql` 已彻底解决的问题，然后独自维护 parser、校验、执行、N+1 batching、introspection 的所有边界。单个面板撑不起这个投资，投入产出比离谱。
+- **B 什么时候才值得重审**：当 roadmap 显示**两个客户端（web + 编辑器）都要大量、各异的视图**，且出现真正的深层关系遍历需求时。即便那天到了，也是 `gqlgen` + 成熟 Rust client，作为**只读侧**补充（mutation + git-smart-HTTP 留 REST），绝不自造。
+
+> 旁注：提案 §6.1 的 `reviews:submit` 批量写端点（Google AIP 子动作风格）已经证明复杂**写**操作用 REST 也能干净表达。读侧用 §6.3 聚合，同理。也就是说本提案目前并没有真的撞上 REST 的墙。
+
+### 11.5 但"难维护"是真的 —— 只是根因在客户端 codegen
+
+"难维护"的真身不是 REST，是 Rust 端的 progenitor 生成链。这点单独成节，见 §12。
+
+## 12. 客户端 API codegen：progenitor 去留评估
+
+### 12.1 现状（已核查）
+
+- `crates/ama10/src/wuling_api/generated.rs` = **13,661 行**，由 `script/regen-wuling-api.sh` 经 `progenitor` 从 OpenAPI 生成。
+- **这个生成的 client 在全代码库里从未被构造使用。** 唯一 `use ama10::wuling_api` 的地方是 `issues_panel.rs`，它只用手写的 `WulingListClient` + `IssueSummary` / `MergeRequestSummary` / `*Lite`（`wuling_api.rs:107` 起）；`auth.rs` 用自己手写的 `WulingClient`（`auth.rs:127`）。`generated.rs` 仅靠 `pub use generated::*;`（`wuling_api.rs:31`）挂着，无人 import，`Client::new` 一次都没被调用过。
+- 维护成本集中在 regen 脚本的一堆 workaround：openapi 3.1→3.0.3 降版、注入 `operationId`、丢弃多余的 2xx 响应（progenitor 的 `extract_responses` 会 panic）、强依赖某个 nightly rustfmt、后处理粘连的 doc 注释。每次后端 schema 一动就得重跑，且大概率要再修脚本。
+- 对照：**web 前端用 `openapi-typescript` —— 只生成类型，client 手写**（`frontend/src/api/client.ts`）。团队事实上已经收敛到"生成类型 + 薄手写 client"，只有 Rust 端被 progenitor 拖着没跟上。
+
+### 12.2 判断
+
+progenitor 目前是**纯负重**：13.6k 行编译进来没人用、拖一个 `progenitor-client` 依赖、养一套易碎的 regen 脚本 —— 换来的那个 client 一次都没被调用。这才是"难维护"的真正来源，且它与 REST/GraphQL 之争**无关**：换 GraphQL 只会把它替换成 Rust 端更不成熟的 GraphQL codegen，痛点平移而非消除。
+
+### 12.3 建议：弃用 progenitor，改"手写薄 client"（必要时只生成类型）
+
+1. 删 `generated.rs`；从 `wuling_api.rs` 去掉 `mod generated;` 和 `pub use generated::*;`；从 `crates/ama10/Cargo.toml` 去掉 `progenitor-client`。`auth.rs` / `WulingListClient` 仍用 stock `reqwest 0.13`，不受影响。
+2. `script/regen-wuling-api.sh` 砍掉 progenitor 部分。若想和 web 一样保留"类型同步"，可换成"从 OpenAPI 只生成 Rust 类型"；或继续像现在这样手写窄 DTO —— fork 实际只碰几个端点，手写完全 hold 得住。
+3. 新端点按需在 `WulingListClient` 加薄方法：本次的 `change-stack`（§6.3）就是**一个**手写方法，不用重生成 13k 行；后续 `diff-comments` / `reviews:submit` 同理。
+4. CI 里原计划的 `check_wuling_api_up_to_date`（§8 风险表）改为校验"手写 DTO 与 OpenAPI 不漂"（或在保留类型生成时，校验生成产物已提交）。
+
+**风险极低**：因为没有任何代码使用 generated client，删除它不影响编译 / 行为；改动面是删一个文件 + 减一个依赖 + 砍脚本。
+
+**收益**：消除整类"schema 变 → progenitor panic → 修脚本"的维护负担 —— 比上 GraphQL 省事一个量级，且正面回应了最初那句"难维护"。
+
+> 这条与本面板可解耦，但既然由它牵出，建议在 2026-06-15 一并拍板（见 §9 第 9 项）。
 
 ---
 

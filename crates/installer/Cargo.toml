@@ -1,6 +1,6 @@
 [package]
 name = "installer"
-description = "Kal'tsit installer"
+description = "ZetaCode installer"
 version = "0.1.0"
 publish.workspace = true
 edition.workspace = true
