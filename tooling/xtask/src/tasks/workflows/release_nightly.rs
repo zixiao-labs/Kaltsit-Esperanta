@@ -1,17 +1,8 @@
 use crate::tasks::workflows::{
     nix_build::build_nix,
-<<<<<<< HEAD
     release::{ReleaseBundleJobs, download_workflow_artifacts, prep_release_artifacts},
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests::{clippy, run_platform_tests_no_filter},
-=======
-    release::{
-        ReleaseBundleJobs, create_sentry_release, download_workflow_artifacts, notify_on_failure,
-        prep_release_artifacts,
-    },
-    run_bundling::{build_static_bwrap, bundle_linux, bundle_mac, bundle_windows},
-    run_tests::run_platform_tests_no_filter,
->>>>>>> upstream/main
     runners::{Arch, Platform, ReleaseChannel},
     steps::{CommonJobConditions, FluentBuilder, NamedJob},
 };
@@ -24,27 +15,16 @@ pub fn release_nightly() -> Workflow {
     let style = check_style();
     // run only on windows as that's our fastest platform right now.
     let tests = run_platform_tests_no_filter(Platform::Windows);
-    let clippy_job = clippy(Platform::Windows, None);
+    let clippy_job = clippy(Platform::Windows, None, false);
     let nightly = Some(ReleaseChannel::Nightly);
 
     let bundle = ReleaseBundleJobs {
-<<<<<<< HEAD
         linux_aarch64: bundle_linux(Arch::AARCH64, nightly, &[&style, &tests, &clippy_job]),
         linux_x86_64: bundle_linux(Arch::X86_64, nightly, &[&style, &tests, &clippy_job]),
         mac_aarch64: bundle_mac(Arch::AARCH64, nightly, &[&style, &tests, &clippy_job]),
         mac_x86_64: bundle_mac(Arch::X86_64, nightly, &[&style, &tests, &clippy_job]),
         windows_aarch64: bundle_windows(Arch::AARCH64, nightly, &[&style, &tests, &clippy_job]),
         windows_x86_64: bundle_windows(Arch::X86_64, nightly, &[&style, &tests, &clippy_job]),
-=======
-        linux_aarch64: bundle_linux(Arch::AARCH64, NIGHTLY, &[&tests]),
-        linux_x86_64: bundle_linux(Arch::X86_64, NIGHTLY, &[&tests]),
-        bwrap_linux_aarch64: build_static_bwrap(Arch::AARCH64, &[&tests]),
-        bwrap_linux_x86_64: build_static_bwrap(Arch::X86_64, &[&tests]),
-        mac_aarch64: bundle_mac(Arch::AARCH64, NIGHTLY, &[&tests]),
-        mac_x86_64: bundle_mac(Arch::X86_64, NIGHTLY, &[&tests]),
-        windows_aarch64: bundle_windows(Arch::AARCH64, NIGHTLY, &[&tests]),
-        windows_x86_64: bundle_windows(Arch::X86_64, NIGHTLY, &[&tests]),
->>>>>>> upstream/main
     };
 
     let nix_linux_x86 = build_nix(
