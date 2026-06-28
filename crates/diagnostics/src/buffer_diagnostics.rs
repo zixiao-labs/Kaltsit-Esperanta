@@ -3,6 +3,7 @@ use crate::{
     diagnostic_renderer::{DiagnosticBlock, DiagnosticRenderer},
     toolbar_controls::DiagnosticsToolbarEditor,
 };
+use ama10_i18n::{tr, tr_f};
 use anyhow::Result;
 use collections::HashMap;
 use editor::{
@@ -10,7 +11,6 @@ use editor::{
     display_map::{BlockPlacement, BlockProperties, BlockStyle, CustomBlockId},
     multibuffer_context_lines,
 };
-use ama10_i18n::{tr, tr_f};
 use gpui::{
     AnyElement, App, AppContext, Context, Entity, EntityId, EventEmitter, FocusHandle, Focusable,
     InteractiveElement, IntoElement, ParentElement, Render, SharedString, Styled, Subscription,

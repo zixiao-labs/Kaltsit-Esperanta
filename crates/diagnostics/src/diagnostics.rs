@@ -7,6 +7,7 @@ mod diagnostic_renderer;
 #[cfg(test)]
 mod diagnostics_tests;
 
+use ama10_i18n::{tr, tr_f};
 use anyhow::Result;
 use buffer_diagnostics::BufferDiagnosticsEditor;
 use collections::{BTreeSet, HashMap, HashSet};
@@ -44,7 +45,6 @@ use toolbar_controls::DiagnosticsToolbarEditor;
 pub use toolbar_controls::ToolbarControls;
 use ui::{Icon, IconName, Label, h_flex, prelude::*};
 use util::ResultExt;
-use ama10_i18n::{tr, tr_f};
 use workspace::{
     ItemNavHistory, Workspace,
     item::{Item, ItemEvent, ItemHandle, SaveOptions, TabContentParams},
@@ -120,14 +120,15 @@ impl Render for ProjectDiagnosticsEditor {
                     .child(Label::new(label).color(Color::Muted))
                     .when(self.summary.warning_count > 0, |this| {
                         let plural_suffix = if self.summary.warning_count > 1 {
-                                "s"
-                            } else {
-                                ""
-                            };
-                            let label = tr_f!(
-                                "Show {} warning{}",
-                                self.summary.warning_count, plural_suffix
-                            );
+                            "s"
+                        } else {
+                            ""
+                        };
+                        let label = tr_f!(
+                            "Show {} warning{}",
+                            self.summary.warning_count,
+                            plural_suffix
+                        );
                         this.child(
                             Button::new("diagnostics-show-warning-label", label).on_click(
                                 cx.listener(|this, _, window, cx| {

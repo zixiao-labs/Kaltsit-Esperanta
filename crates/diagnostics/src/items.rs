@@ -12,8 +12,8 @@ use ui::{Button, ButtonLike, Color, Icon, IconName, Label, Tooltip, h_flex, prel
 use util::ResultExt;
 use workspace::{HideStatusItem, StatusItemView, ToolbarItemEvent, Workspace, item::ItemHandle};
 
-use ama10_i18n::tr;
 use crate::{Deploy, IncludeWarnings, ProjectDiagnosticsEditor};
+use ama10_i18n::tr;
 
 /// The status bar item that displays diagnostic counts.
 pub struct DiagnosticIndicator {

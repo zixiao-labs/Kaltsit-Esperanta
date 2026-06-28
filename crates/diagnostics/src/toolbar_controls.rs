@@ -1,6 +1,6 @@
-use ama10_i18n::{tr};
 use crate::{BufferDiagnosticsEditor, ProjectDiagnosticsEditor, ToggleDiagnosticsRefresh};
 use agent_settings::AgentSettings;
+use ama10_i18n::tr;
 use gpui::{Context, EventEmitter, ParentElement, Render, Window};
 use language::DiagnosticEntry;
 use settings::Settings;

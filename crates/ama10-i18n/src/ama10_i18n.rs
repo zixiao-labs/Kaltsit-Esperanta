@@ -49,7 +49,10 @@ pub fn init(language: Language) {
         Language::English => HashMap::new(),
         Language::Chinese => load_translations(include_str!("../assets/zh_CN.toml")),
     };
-    let _ = I18N.set(I18nInner { language, translations });
+    let _ = I18N.set(I18nInner {
+        language,
+        translations,
+    });
 }
 
 /// 从嵌入式 TOML 字符串加载翻译。
@@ -60,8 +63,8 @@ fn load_translations(toml_str: &'static str) -> HashMap<&'static str, &'static s
         map: HashMap<String, String>,
     }
 
-    let raw: RawTranslations = toml_edit::de::from_str(toml_str)
-        .expect("failed to parse embedded translations TOML");
+    let raw: RawTranslations =
+        toml_edit::de::from_str(toml_str).expect("failed to parse embedded translations TOML");
 
     raw.map
         .into_iter()
@@ -113,7 +116,9 @@ pub fn translate_fmt(key: &str, args: &[&dyn std::fmt::Display]) -> SharedString
 
 /// 返回当前语言设置。
 pub fn current_language() -> Language {
-    I18N.get().map(|i18n| i18n.language).unwrap_or(Language::English)
+    I18N.get()
+        .map(|i18n| i18n.language)
+        .unwrap_or(Language::English)
 }
 
 /// 检查 i18n 系统是否已初始化。
@@ -210,10 +215,7 @@ mod tests {
         ensure_init();
         let count = 3;
         let count = 3;
-        assert_eq!(
-            tr_f!("Show {} warnings", count),
-            "显示 3 个警告"
-        );
+        assert_eq!(tr_f!("Show {} warnings", count), "显示 3 个警告");
     }
 
     #[test]
