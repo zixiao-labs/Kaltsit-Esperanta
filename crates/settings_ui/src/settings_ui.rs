@@ -3478,7 +3478,7 @@ impl SettingsWindow {
                 .find(|entry| entry.is_root && entry.page_index == self.current_page_index())
                 .map(|entry| entry.title.clone());
 
-                            let list_content = list(
+            let list_content = list(
                 self.list_state.clone(),
                 cx.processor(move |this, index, window, cx| {
                     if index == 0 {
