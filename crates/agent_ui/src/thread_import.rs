@@ -118,10 +118,10 @@ impl AgentImportStatus {
 
     fn tooltip_text(&self) -> Option<SharedString> {
         match self {
-            Self::Loading => Some("Fetching Sessions…".into()),
+            Self::Loading => Some(ama10_i18n::tr!("Fetching Sessions…").into()),
             Self::Ready { .. } => None,
-            Self::Unsupported => Some("Importing threads from this agent is not possible as it doesn't support ACP's session/list capability.".into()),
-            Self::Error(error) => Some(format!("Failed to fetch sessions: {error}").into()),
+            Self::Unsupported => Some(ama10_i18n::tr!("Importing threads from this agent is not possible as it doesn't support ACP's session/list capability.")),
+            Self::Error(error) => Some(ama10_i18n::tr_f!("Failed to fetch sessions: {}", error.clone())),
         }
     }
 }
@@ -501,10 +501,10 @@ impl Render for ThreadImportModal {
                             importable_count: count,
                         } => {
                             let label: SharedString = if count == 0 {
-                                "No threads".into()
-                            } else {
-                                format!("{} threads", count).into()
-                            };
+                                                            ama10_i18n::tr!("No threads")
+                                                        } else {
+                                                            ama10_i18n::tr_f!("{} threads", count)
+                                                        };
                             this.child(Label::new(label).size(LabelSize::Small).color(Color::Muted))
                         }
                         AgentImportStatus::Unsupported => this.child(
@@ -570,10 +570,9 @@ impl Render for ThreadImportModal {
                 Modal::new("import-threads", None)
                     .header(
                         ModalHeader::new()
-                            .headline("Import External Agent Threads")
-                            .description(
-                                "Import threads from agents like Claude Agent, Codex, and more, whether started in Zed or another client. \
-                                Choose which agents to include, and their threads will appear in your thread history."
+                            .headline(ama10_i18n::tr!("Import External Agent Threads"))
+                                                        .description(
+                                                            ama10_i18n::tr!("Import threads from agents like Claude Agent, Codex, and more, whether started in Zed or another client. Choose which agents to include, and their threads will appear in your thread history.")
                             )
                             .show_dismiss_button(true),
 
@@ -588,7 +587,7 @@ impl Render for ThreadImportModal {
                                 .when(has_agents, |this| this.children(agent_rows))
                                 .when(!has_agents, |this| {
                                     this.child(
-                                        Label::new("No external agents available.")
+                                        Label::new(ama10_i18n::tr!("No external agents available."))
                                             .color(Color::Muted)
                                             .size(LabelSize::Small),
                                     )
@@ -607,7 +606,7 @@ impl Render for ThreadImportModal {
                                                 .color(Color::Muted)
                                                 .with_rotate_animation(3),
                                         )
-                                        .child(Label::new("Fetching Agent Threads…")
+                                        .child(Label::new(ama10_i18n::tr!("Fetching Agent Threads…"))
                                             .size(LabelSize::Small)
                                             .color(Color::Muted))
 
@@ -622,7 +621,7 @@ impl Render for ThreadImportModal {
                                 )
                             })
                             .end_slot(
-                                Button::new("import-threads", "Import Threads")
+                                Button::new("import-threads", ama10_i18n::tr!("Import Threads"))
                                     .loading(self.is_importing)
                                     .disabled(disabled_import_thread)
                                     .key_binding(

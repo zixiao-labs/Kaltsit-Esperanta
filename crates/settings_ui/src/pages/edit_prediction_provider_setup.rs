@@ -1,4 +1,3 @@
-use ama10_i18n::tr;
 use codestral::{CODESTRAL_API_URL, codestral_api_key_state, codestral_api_url};
 use edit_prediction::{
     ApiKeyState,

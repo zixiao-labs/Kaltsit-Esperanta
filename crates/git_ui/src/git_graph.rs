@@ -2995,13 +2995,16 @@ impl GitGraph {
                                         .label_size(LabelSize::Small)
                                         .truncate(true)
                                         .color(Color::Muted)
-                                        .tooltip(move |_, cx| {
-                                            Tooltip::with_meta(
-                                                tooltip_label,
-                                                None,
-                                                author_email_for_tooltip.clone(),
-                                                cx,
-                                            )
+                                        .tooltip({
+                                            let ttl = tooltip_label.clone();
+                                            move |_, cx| {
+                                                Tooltip::with_meta(
+                                                    ttl.clone(),
+                                                    None,
+                                                    author_email_for_tooltip.clone(),
+                                                    cx,
+                                                )
+                                            }
                                         })
                                         .on_click(move |_, _, cx| {
                                             copied_state.update(cx, |state, _cx| {
@@ -3051,10 +3054,11 @@ impl GitGraph {
                                     .truncate(true)
                                     .color(Color::Muted)
                                     .tooltip({
+                                        let ttl = tooltip_label.clone();
                                         let full_sha = full_sha.clone();
                                         move |_, cx| {
                                             Tooltip::with_meta(
-                                                tooltip_label,
+                                                ttl.clone(),
                                                 None,
                                                 full_sha.clone(),
                                                 cx,
@@ -3770,9 +3774,9 @@ impl Render for GitGraph {
             let message = if let Some(error) = &error {
                 ama10_i18n::tr_f!("Error loading: {}", error)
             } else if is_loading {
-                ama10_i18n::tr!("Loading").to_string()
+                ama10_i18n::tr!("Loading")
             } else {
-                ama10_i18n::tr!("No commits found").to_string()
+                ama10_i18n::tr!("No commits found")
             };
             let label = Label::new(message)
                 .color(Color::Muted)

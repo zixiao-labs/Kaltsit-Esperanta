@@ -5436,7 +5436,7 @@ impl AgentPanel {
                                     IconButton::new("retry-thread-title", IconName::XCircle)
                                         .icon_color(Color::Error)
                                         .icon_size(IconSize::Small)
-                                        .tooltip(Tooltip::text("Title generation failed. Retry"))
+                                        .tooltip(Tooltip::text(ama10_i18n::tr!("Title generation failed. Retry")))
                                         .on_click({
                                             let conversation_view = conversation_view.clone();
                                             let workspace = self.workspace.clone();
@@ -5499,13 +5499,13 @@ impl AgentPanel {
                             .into_any_element()
                     }
                 } else {
-                    Label::new("Terminal").into_any_element()
+                    Label::new(ama10_i18n::tr!("Terminal")).into_any_element()
                 }
             }
             VisibleSurface::Configuration(_) => {
-                Label::new("Settings").truncate().into_any_element()
+                Label::new(ama10_i18n::tr!("Settings")).truncate().into_any_element()
             }
-            VisibleSurface::Uninitialized => Label::new("Agent").truncate().into_any_element(),
+            VisibleSurface::Uninitialized => Label::new(ama10_i18n::tr!("Agent")).truncate().into_any_element(),
         };
 
         let toolbar_bg = cx.theme().colors().tab_bar_background;
@@ -5539,7 +5539,7 @@ impl AgentPanel {
                             .child(
                                 IconButton::new("edit_tile", IconName::Pencil)
                                     .icon_size(IconSize::Small)
-                                    .tooltip(Tooltip::text("Edit Thread Title")),
+                                    .tooltip(Tooltip::text(ama10_i18n::tr!("Edit Thread Title")))
                             ),
                     )
             })
@@ -5549,7 +5549,7 @@ impl AgentPanel {
     fn show_no_thread_summary_model_toast(workspace: Entity<Workspace>, cx: &mut App) {
         workspace.update(cx, |workspace, cx| {
             let toast = StatusToast::new(
-                "No model is configured for summarizing thread titles.",
+                            ama10_i18n::tr!("No model is configured for summarizing thread titles."),
                 cx,
                 |this, _cx| {
                     this.icon(
@@ -5637,8 +5637,8 @@ impl AgentPanel {
                     .icon_size(IconSize::Small),
                 move |_window, cx| {
                     Tooltip::for_action_in(
-                        "Toggle Agent Menu",
-                        &ToggleOptionsMenu,
+                                            ama10_i18n::tr!("Toggle Agent Menu"),
+                                            &ToggleOptionsMenu,
                         &focus_handle,
                         cx,
                     )
@@ -5652,11 +5652,11 @@ impl AgentPanel {
                         menu = menu.context(menu_action_context.clone());
 
                         if can_regenerate_thread_title {
-                            menu = menu.header("Current Thread");
+                            menu = menu.header(ama10_i18n::tr!("Current Thread"));
 
                             if let Some(conversation_view) = conversation_view.as_ref() {
                                 menu = menu
-                                    .entry("Regenerate Thread Title", None, {
+                                    .entry(ama10_i18n::tr!("Regenerate Thread Title"), None, {
                                         let conversation_view = conversation_view.clone();
                                         let workspace = workspace.clone();
                                         move |_, cx| {
@@ -5673,10 +5673,10 @@ impl AgentPanel {
 
                         if !showing_terminal {
                             menu = menu
-                                .header("MCP Servers")
-                                .action("Add Custom Server…", Box::new(AddContextServer))
-                                .action(
-                                    "Install New Servers…",
+                                .header(ama10_i18n::tr!("MCP Servers"))
+                                                                .action(ama10_i18n::tr!("Add Custom Server…"), Box::new(AddContextServer))
+                                                                .action(
+                                                                    ama10_i18n::tr!("Install New Servers…"),
                                     Box::new(zed_actions::Extensions {
                                         category_filter: Some(
                                             zed_actions::ExtensionCategoryFilter::ContextServers,
@@ -5685,8 +5685,8 @@ impl AgentPanel {
                                     }),
                                 )
                                 .separator()
-                                .header("Context")
-                                .action("Skills", Box::new(ManageSkills));
+                                .header(ama10_i18n::tr!("Context"))
+                                                                .action(ama10_i18n::tr!("Skills"), Box::new(ManageSkills));
 
                             if project_agents_md_path.is_some() || global_agents_md_loaded {
                                 if global_agents_md_loaded {
@@ -5697,7 +5697,7 @@ impl AgentPanel {
                                             h_flex()
                                                 .w_full()
                                                 .gap_1()
-                                                .child(Label::new("Open Global Rules"))
+                                                .child(Label::new(ama10_i18n::tr!("Open Global Rules")))
                                                 .child(
                                                     Label::new("(AGENTS.md)")
                                                         .color(Color::Muted)
@@ -5722,7 +5722,7 @@ impl AgentPanel {
                                             h_flex()
                                                 .w_full()
                                                 .gap_1()
-                                                .child(Label::new("Open Project Rules"))
+                                                .child(Label::new(ama10_i18n::tr!("Open Project Rules")))
                                                 .child(
                                                     Label::new("(AGENTS.md)")
                                                         .color(Color::Muted)
@@ -5743,22 +5743,22 @@ impl AgentPanel {
                                 menu = menu.separator();
                             }
 
-                            menu = menu.action("Profiles", Box::new(ManageProfiles::default()));
+                            menu = menu.action(ama10_i18n::tr!("Profiles"), Box::new(ManageProfiles::default()));
                         }
 
                         menu = menu
-                            .action("Settings", Box::new(OpenSettings))
+                            .action(ama10_i18n::tr!("Settings"), Box::new(OpenSettings))
                             .separator()
-                            .action("Toggle Threads Sidebar", Box::new(ToggleWorkspaceSidebar));
+                            .action(ama10_i18n::tr!("Toggle Threads Sidebar"), Box::new(ToggleWorkspaceSidebar));
 
                         if has_auth_methods || supports_logout {
                             menu = menu.separator()
                         }
                         if has_auth_methods {
-                            menu = menu.action("Reauthenticate", Box::new(ReauthenticateAgent))
+                            menu = menu.action(ama10_i18n::tr!("Reauthenticate"), Box::new(ReauthenticateAgent))
                         }
                         if supports_logout {
-                            menu = menu.action("Log Out", Box::new(LogoutAgent))
+                            menu = menu.action(ama10_i18n::tr!("Log Out"), Box::new(LogoutAgent))
                         }
 
                         menu
@@ -5777,7 +5777,7 @@ impl AgentPanel {
             }))
             .tooltip({
                 move |_window, cx| {
-                    Tooltip::for_action_in("Go Back", &workspace::GoBack, &focus_handle, cx)
+                    Tooltip::for_action_in(ama10_i18n::tr!("Go Back"), &workspace::GoBack, &focus_handle, cx)
                 }
             })
     }
@@ -5810,7 +5810,7 @@ impl AgentPanel {
         let showing_terminal = matches!(self.visible_surface(), VisibleSurface::Terminal(_));
 
         let (selected_agent_custom_icon, selected_agent_label) = if showing_terminal {
-            (None, SharedString::from("Terminal"))
+            (None, ama10_i18n::tr!("Terminal"))
         } else if let Agent::Custom { id, .. } = &self.selected_agent {
             let store = agent_server_store.read(cx);
             let icon = store.agent_icon(&id);
@@ -5856,7 +5856,7 @@ impl AgentPanel {
                             if !thread.is_empty() {
                                 let session_id = thread.id().clone();
                                 this.item(
-                                    ContextMenuEntry::new("New From Summary")
+                                    ContextMenuEntry::new(ama10_i18n::tr!("New From Summary"))
                                         .icon(IconName::ThreadFromSummary)
                                         .icon_color(Color::Muted)
                                         .handler(move |window, cx| {
@@ -5905,7 +5905,7 @@ impl AgentPanel {
                         )
                         .when(supports_terminal, |menu| {
                             menu.item(
-                                ContextMenuEntry::new("Terminal")
+                                ContextMenuEntry::new(ama10_i18n::tr!("Terminal"))
                                     .when(showing_terminal, |this| this.action(Box::new(NewThread)))
                                     .when(!showing_terminal, |this| {
                                         this.action(Box::new(NewTerminalThread))
@@ -5966,7 +5966,7 @@ impl AgentPanel {
                                 .collect::<Vec<_>>();
 
                             if !agent_items.is_empty() {
-                                menu = menu.separator().header("External Agents");
+                                menu = menu.separator().header(ama10_i18n::tr!("External Agents"));
                             }
                             for item in &agent_items {
                                 let mut entry = ContextMenuEntry::new(item.display_name.clone());
@@ -6026,7 +6026,7 @@ impl AgentPanel {
                         })
                         .separator()
                         .item(
-                            ContextMenuEntry::new("Add More Agents")
+                            ContextMenuEntry::new(ama10_i18n::tr!("Add More Agents"))
                                 .icon(IconName::Plus)
                                 .icon_color(Color::Muted)
                                 .handler({
@@ -6068,14 +6068,12 @@ impl AgentPanel {
                     this.child(Icon::new(icon).color(Color::Muted))
                 })
             })
-            .tooltip(move |_, cx| {
-                Tooltip::with_meta(
-                    selected_agent_label_for_tooltip.clone(),
-                    None,
-                    "Selected Agent",
-                    cx,
-                )
-            });
+            .tooltip(move |_, cx| Tooltip::with_meta(
+                                selected_agent_label_for_tooltip.clone(),
+                                None,
+                                ama10_i18n::tr!("Selected Agent"),
+                                cx,
+                            ));
 
         let selected_agent = if is_thread_loading {
             selected_agent
@@ -6109,19 +6107,19 @@ impl AgentPanel {
         };
 
         let is_full_screen = self.is_zoomed(window, cx);
-        let (icon_id, icon_name, tooltip_text) = if is_full_screen {
-            (
-                "disable-full-screen",
-                IconName::Minimize,
-                "Disable Full Screen",
-            )
-        } else {
-            (
-                "enable-full-screen",
-                IconName::Maximize,
-                "Enable Full Screen",
-            )
-        };
+                let (icon_id, icon_name, tooltip_text) = if is_full_screen {
+                    (
+                        "disable-full-screen",
+                        IconName::Minimize,
+                        ama10_i18n::tr!("Disable Full Screen"),
+                    )
+                } else {
+                    (
+                        "enable-full-screen",
+                        IconName::Maximize,
+                        ama10_i18n::tr!("Enable Full Screen"),
+                    )
+                };
         let full_screen_button = IconButton::new(icon_id, icon_name)
             .icon_size(IconSize::Small)
             .tooltip(move |_, cx| Tooltip::for_action(tooltip_text, &ToggleZoom, cx))
@@ -6141,7 +6139,7 @@ impl AgentPanel {
             .justify_between();
 
         let empty_thread_title = matches!(mode, ToolbarMode::EmptyThread).then(|| {
-            Label::new(format!("New {} Thread", selected_agent_label))
+            Label::new(ama10_i18n::tr_f!("New {} Thread", selected_agent_label))
                 .color(Color::Muted)
                 .truncate()
                 .into_any_element()
@@ -6155,8 +6153,8 @@ impl AgentPanel {
                     {
                         move |_window, cx| {
                             Tooltip::for_action_in(
-                                "New Thread\u{2026}",
-                                &ToggleNewThreadMenu,
+                                                            ama10_i18n::tr!("New Thread…"),
+                                                            &ToggleNewThreadMenu,
                                 &focus_handle,
                                 cx,
                             )

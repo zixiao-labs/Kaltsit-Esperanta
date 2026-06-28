@@ -2024,7 +2024,7 @@ impl Render for BranchDiffToolbar {
             return div();
         };
         let selected_base_ref = base_ref.clone();
-        let base_ref_label = ama10_i18n::tr_f!("Base: {base_ref}", base_ref = base_ref).to_string();
+        let base_ref_label = ama10_i18n::tr_f!("Base: {}", base_ref).to_string();
         let repository = project_diff.read(cx).branch_diff.read(cx).repo().cloned();
         let workspace = project_diff.read(cx).workspace.clone();
         let project_diff_for_picker = project_diff.downgrade();

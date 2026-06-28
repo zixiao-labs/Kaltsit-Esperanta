@@ -755,7 +755,7 @@ impl CommitView {
     fn apply_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            ama10_i18n::tr!("Apply"),
+            ama10_i18n::tr!("Apply").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {
@@ -782,7 +782,7 @@ impl CommitView {
     fn pop_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            ama10_i18n::tr!("Pop"),
+            ama10_i18n::tr!("Pop").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {
@@ -809,7 +809,7 @@ impl CommitView {
     fn remove_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            ama10_i18n::tr!("Drop"),
+            ama10_i18n::tr!("Drop").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {

@@ -6454,6 +6454,7 @@ dependencies = [
 name = "extensions_ui"
 version = "0.1.0"
 dependencies = [
+ "ama10-i18n",
  "anyhow",
  "cloud_api_types",
  "collections",

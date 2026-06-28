@@ -1700,10 +1700,10 @@ impl GitPanel {
                     Ok(())
                 })
                 .detach_and_prompt_err(
-                    ama10_i18n::tr!("Failed to trash file"),
+                    ama10_i18n::tr!("Failed to trash file").as_ref(),
                     window,
                     cx,
-                    |e, _, _| Some(format!("{e}")),
+                    |e, _, _| Some(e.to_string()),
                 );
             }
             Some(())
@@ -1820,8 +1820,8 @@ impl GitPanel {
             Cancel,
         }
         let prompt = prompt(
-            ama10_i18n::tr!("Discard changes to these files?"),
-            Some(&details),
+            ama10_i18n::tr!("Discard changes to these files?").as_ref(),
+            None,
             window,
             cx,
         );
@@ -2468,7 +2468,8 @@ impl GitPanel {
             error_spawn(
                 ama10_i18n::tr!(
                     "There are still conflicts. You must stage these before committing"
-                ),
+                )
+                .as_ref(),
                 window,
                 cx,
             );
@@ -2506,7 +2507,7 @@ impl GitPanel {
                 .collect::<Vec<_>>();
 
             if changed_files.is_empty() && !options.amend {
-                error_spawn(ama10_i18n::tr!("No changes to commit"), window, cx);
+                error_spawn(ama10_i18n::tr!("No changes to commit").as_ref(), window, cx);
                 return;
             }
 
@@ -2619,7 +2620,12 @@ impl GitPanel {
                 .to_string();
                 let result = cx
                     .update(|window, cx| {
-                        prompt(ama10_i18n::tr!("Are you sure?"), Some(&detail), window, cx)
+                        prompt(
+                            ama10_i18n::tr!("Are you sure?").as_ref(),
+                            Some(&detail),
+                            window,
+                            cx,
+                        )
                     })?
                     .await?;
 
@@ -2931,7 +2937,7 @@ impl GitPanel {
                         .and_then(|user_agents_md| user_agents_md.content().cloned())
                 });
 
-                let prompt = include_sama10_i18n::tr!("../src/commit_message_prompt.txt");
+                let prompt = include_str!("../src/commit_message_prompt.txt");
 
                 let subject = this.update(cx, |this, cx| {
                     this.commit_editor

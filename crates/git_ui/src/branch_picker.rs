@@ -904,7 +904,7 @@ impl BranchListDelegate {
             Ok(())
         })
         .detach_and_prompt_err(
-            ama10_i18n::tr!("Failed to create branch"),
+            ama10_i18n::tr!("Failed to create branch").as_ref(),
             window,
             cx,
             |e, _, _| Some(e.to_string()),
@@ -927,7 +927,7 @@ impl BranchListDelegate {
 
         cx.background_spawn(async move { receiver.await? })
             .detach_and_prompt_err(
-                ama10_i18n::tr!("Failed to create remote"),
+                ama10_i18n::tr!("Failed to create remote").as_ref(),
                 window,
                 cx,
                 |e, _, _cx| Some(e.to_string()),
@@ -1099,8 +1099,7 @@ impl PickerDelegate for BranchListDelegate {
                 |this| this.child(Divider::horizontal()),
             )
             .when_some(self.branch_list_error.clone(), |this, error| {
-                let message =
-                    ama10_i18n::tr_f!("Some branches could not be loaded: {error}", error = error);
+                let message = ama10_i18n::tr_f!("Some branches could not be loaded: {}", error);
                 this.child(
                     div()
                         .id("branch-list-error")
@@ -1133,13 +1132,16 @@ impl PickerDelegate for BranchListDelegate {
                             IconButton::new("filter-remotes", IconName::Filter)
                                 .toggle_state(self.branch_filter == BranchFilter::Remote)
                                 .icon_size(IconSize::Small)
-                                .tooltip(move |_, cx| {
-                                    Tooltip::for_action_in(
-                                        tooltip_label,
-                                        &branch_picker::FilterRemotes,
-                                        &focus_handle,
-                                        cx,
-                                    )
+                                .tooltip({
+                                    let ttl = tooltip_label.clone();
+                                    move |_, cx| {
+                                        Tooltip::for_action_in(
+                                            ttl.clone(),
+                                            &branch_picker::FilterRemotes,
+                                            &focus_handle,
+                                            cx,
+                                        )
+                                    }
                                 })
                                 .on_click(|_click, window, cx| {
                                     window.dispatch_action(
@@ -1360,7 +1362,7 @@ impl PickerDelegate for BranchListDelegate {
                     anyhow::Ok(())
                 })
                 .detach_and_prompt_err(
-                    ama10_i18n::tr!("Failed to change branch"),
+                    ama10_i18n::tr!("Failed to change branch").as_ref(),
                     window,
                     cx,
                     |_, _, _| None,
@@ -1543,10 +1545,8 @@ impl PickerDelegate for BranchListDelegate {
         };
 
         let create_from_default_button = self.default_branch.as_ref().map(|default_branch| {
-            let tooltip_label: SharedString = ama10_i18n::tr_f!(
-                "Create New From: {default_branch}",
-                default_branch = default_branch
-            );
+            let tooltip_label: SharedString =
+                ama10_i18n::tr_f!("Create New From: {}", default_branch);
             let focus_handle = self.focus_handle.clone();
 
             IconButton::new("create_from_default", IconName::GitBranchPlus)
@@ -1592,12 +1592,10 @@ impl PickerDelegate for BranchListDelegate {
                                 .child({
                                     let message = match entry {
                                         Entry::NewUrl { url } => {
-                                            ama10_i18n::tr_f!("Based off {url}", url = url)
-                                                .to_string()
+                                            ama10_i18n::tr_f!("Based off {}", url).to_string()
                                         }
                                         Entry::NewRemoteName { url, .. } => {
-                                            ama10_i18n::tr_f!("Based off {url}", url = url)
-                                                .to_string()
+                                            ama10_i18n::tr_f!("Based off {}", url).to_string()
                                         }
                                         Entry::NewBranch { .. } => {
                                             if let Some(current_branch) =
@@ -1770,10 +1768,7 @@ impl PickerDelegate for BranchListDelegate {
                     .as_ref()
                     .filter(|_| matches!(selected_entry, Some(Entry::NewBranch { .. })))
                     .map(|default_branch| {
-                        let button_label = ama10_i18n::tr_f!(
-                            "Create New From: {default_branch}",
-                            default_branch = default_branch
-                        );
+                        let button_label = ama10_i18n::tr_f!("Create New From: {}", default_branch);
 
                         Button::new("branch-from-default", button_label)
                             .key_binding(
@@ -1857,25 +1852,30 @@ impl PickerDelegate for BranchListDelegate {
                                             BranchFilter::All => ama10_i18n::tr!("Filter Remote"),
                                             BranchFilter::Remote => ama10_i18n::tr!("Show All"),
                                         };
-                                        Button::new("filter-remotes", translate(filter_label))
-                                            .toggle_state(matches!(
-                                                self.branch_filter,
-                                                BranchFilter::Remote
-                                            ))
-                                            .key_binding(
-                                                KeyBinding::for_action_in(
-                                                    &branch_picker::FilterRemotes,
-                                                    &focus_handle,
-                                                    cx,
-                                                )
-                                                .map(|kb| kb.size(rems_from_px(12.))),
+                                        Button::new(
+                                            "filter-remotes",
+                                            translate(filter_label.as_ref()),
+                                        )
+                                        .toggle_state(matches!(
+                                            self.branch_filter,
+                                            BranchFilter::Remote
+                                        ))
+                                        .key_binding(
+                                            KeyBinding::for_action_in(
+                                                &branch_picker::FilterRemotes,
+                                                &focus_handle,
+                                                cx,
                                             )
-                                            .on_click(|_click, window, cx| {
+                                            .map(|kb| kb.size(rems_from_px(12.))),
+                                        )
+                                        .on_click(
+                                            |_click, window, cx| {
                                                 window.dispatch_action(
                                                     branch_picker::FilterRemotes.boxed_clone(),
                                                     cx,
                                                 );
-                                            })
+                                            },
+                                        )
                                     })
                                     .child(delete_and_select_btns)
                             }
@@ -1886,10 +1886,7 @@ impl PickerDelegate for BranchListDelegate {
             PickerState::NewBranch => {
                 let branch_from_default_button =
                     self.default_branch.as_ref().map(|default_branch| {
-                        let button_label = ama10_i18n::tr_f!(
-                            "Create New From: {default_branch}",
-                            default_branch = default_branch
-                        );
+                        let button_label = ama10_i18n::tr_f!("Create New From: {}", default_branch);
 
                         Button::new("branch-from-default", button_label)
                             .key_binding(

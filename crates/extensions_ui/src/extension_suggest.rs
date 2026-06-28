@@ -12,8 +12,6 @@ use util::rel_path::RelPath;
 use workspace::notifications::simple_message_notification::MessageNotification;
 use workspace::{Workspace, notifications::NotificationId};
 
-use ama10_i18n::{tr, tr_f, translate};
-
 const SUGGESTIONS_BY_EXTENSION_ID: &[(&str, &[&str])] = &[
     ("astro", &["astro"]),
     ("beancount", &["beancount"]),
@@ -173,7 +171,7 @@ pub(crate) fn suggest(buffer: Entity<Buffer>, window: &mut Window, cx: &mut Cont
         workspace.show_notification(notification_id, cx, |cx| {
             cx.new(move |cx| {
                 MessageNotification::new(
-                    tr_f!(
+                    ama10_i18n::tr_f!(
                         "Do you want to install the recommended '{}' extension for '{}' files?",
                         extension_id,
                         file_name_or_extension
@@ -181,7 +179,7 @@ pub(crate) fn suggest(buffer: Entity<Buffer>, window: &mut Window, cx: &mut Cont
                     .to_string(),
                     cx,
                 )
-                .primary_message(tr!("Yes, install extension").to_string())
+                .primary_message(ama10_i18n::tr!("Yes, install extension").to_string())
                 .primary_icon(IconName::Check)
                 .primary_icon_color(Color::Success)
                 .primary_on_click({
@@ -194,7 +192,7 @@ pub(crate) fn suggest(buffer: Entity<Buffer>, window: &mut Window, cx: &mut Cont
                         });
                     }
                 })
-                .secondary_message(tr!("No, don't install it").to_string())
+                .secondary_message(ama10_i18n::tr!("No, don't install it").to_string())
                 .secondary_icon(IconName::Close)
                 .secondary_icon_color(Color::Error)
                 .secondary_on_click(move |_window, cx| {

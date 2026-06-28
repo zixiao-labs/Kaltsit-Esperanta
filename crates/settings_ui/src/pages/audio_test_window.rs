@@ -284,7 +284,7 @@ pub fn open_audio_test_window(_window: &mut Window, cx: &mut App) {
     cx.open_window(
         WindowOptions {
             titlebar: Some(gpui::TitlebarOptions {
-                title: Some(tr!("Audio Test").into()),
+                title: Some(tr!("Audio Test")),
                 appears_transparent: true,
                 traffic_light_position: Some(gpui::point(px(12.0), px(12.0))),
             }),

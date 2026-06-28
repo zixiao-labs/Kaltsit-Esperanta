@@ -312,7 +312,7 @@ impl StashListDelegate {
             Ok(())
         })
         .detach_and_prompt_err(
-            ama10_i18n::tr!("Failed to drop stash"),
+            ama10_i18n::tr!("Failed to drop stash").as_ref(),
             window,
             cx,
             |e, _, _| Some(e.to_string()),
@@ -350,7 +350,7 @@ impl StashListDelegate {
             Ok(())
         })
         .detach_and_prompt_err(
-            ama10_i18n::tr!("Failed to pop stash"),
+            ama10_i18n::tr!("Failed to pop stash").as_ref(),
             window,
             cx,
             |e, _, _| Some(e.to_string()),
@@ -369,7 +369,7 @@ impl StashListDelegate {
             Ok(())
         })
         .detach_and_prompt_err(
-            ama10_i18n::tr!("Failed to apply stash"),
+            ama10_i18n::tr!("Failed to apply stash").as_ref(),
             window,
             cx,
             |e, _, _| Some(e.to_string()),

@@ -808,7 +808,7 @@ fn open_settings_editor_with(
         cx.open_window(
             WindowOptions {
                 titlebar: Some(TitlebarOptions {
-                    title: Some(tr!("Zed — Settings").into()),
+                    title: Some(tr!("Zed — Settings")),
                     appears_transparent: true,
                     traffic_light_position: Some(point(px(12.0), px(12.0))),
                 }),
@@ -3414,7 +3414,7 @@ impl SettingsWindow {
             .child(Label::new("/").color(Color::Muted))
             .children(
                 itertools::intersperse(
-                    std::iter::once(self.current_page().title.clone().into()).chain(
+                    std::iter::once(self.current_page().title.clone()).chain(
                         self.sub_page_stack
                             .iter()
                             .enumerate()
@@ -3477,9 +3477,8 @@ impl SettingsWindow {
                 .iter()
                 .find(|entry| entry.is_root && entry.page_index == self.current_page_index())
                 .map(|entry| entry.title.clone());
-            let root_nav_label = root_nav_label.clone();
 
-            let list_content = list(
+                            let list_content = list(
                 self.list_state.clone(),
                 cx.processor(move |this, index, window, cx| {
                     if index == 0 {
