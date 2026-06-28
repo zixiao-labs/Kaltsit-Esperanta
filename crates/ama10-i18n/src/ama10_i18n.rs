@@ -214,7 +214,6 @@ mod tests {
     fn test_tr_f_macro() {
         ensure_init();
         let count = 3;
-        let count = 3;
         assert_eq!(tr_f!("Show {} warnings", count), "显示 3 个警告");
     }
 

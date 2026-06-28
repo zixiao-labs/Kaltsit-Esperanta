@@ -75,15 +75,12 @@ impl Render for DiagnosticIndicator {
                 Button::new("diagnostic_message", SharedString::new(message))
                     .label_size(LabelSize::Small)
                     .truncate(true)
-                    .tooltip({
-                        let tooltip = tooltip.clone();
-                        move |_window, cx| {
-                            Tooltip::for_action(
-                                tooltip.clone(),
-                                &editor::actions::GoToDiagnostic::default(),
-                                cx,
-                            )
-                        }
+                    .tooltip(move |_window, cx| {
+                        Tooltip::for_action(
+                            tooltip.clone(),
+                            &editor::actions::GoToDiagnostic::default(),
+                            cx,
+                        )
                     })
                     .on_click(
                         cx.listener(|this, _, window, cx| this.go_to_next_diagnostic(window, cx)),

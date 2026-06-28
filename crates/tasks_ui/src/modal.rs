@@ -6,8 +6,8 @@ use editor::Editor;
 use fuzzy::{StringMatch, StringMatchCandidate};
 use gpui::{
     Action, AnyElement, App, AppContext as _, Context, DismissEvent, Entity, EventEmitter,
-    Focusable, InteractiveElement, ParentElement, Render, SharedString, Styled, Subscription, Task, WeakEntity,
-    Window, rems,
+    Focusable, InteractiveElement, ParentElement, Render, SharedString, Styled, Subscription, Task,
+    WeakEntity, Window, rems,
 };
 use itertools::Itertools;
 use picker::{Picker, PickerDelegate, highlighted_match_with_paths::HighlightedMatch};
@@ -571,7 +571,9 @@ impl PickerDelegate for TasksModalDelegate {
                                         .checked_sub(1);
                                     picker.refresh(window, cx);
                                 }))
-                                .tooltip(|_, cx| Tooltip::simple(tr!("Delete from Recent Tasks"), cx)),
+                                .tooltip(|_, cx| {
+                                    Tooltip::simple(tr!("Delete from Recent Tasks"), cx)
+                                }),
                         );
                         item.end_slot_on_hover(delete_button)
                     } else {
@@ -681,11 +683,12 @@ impl PickerDelegate for TasksModalDelegate {
                         }
                         .boxed_clone();
                         this.child({
-                            let spawn_oneshot_label: SharedString = if current_modifiers.secondary() {
-                                    tr!("Spawn Oneshot Without History")
-                                } else {
-                                    tr!("Spawn Oneshot")
-                                };
+                            let spawn_oneshot_label: SharedString = if current_modifiers.secondary()
+                            {
+                                tr!("Spawn Oneshot Without History")
+                            } else {
+                                tr!("Spawn Oneshot")
+                            };
 
                             Button::new("spawn-onehshot", spawn_oneshot_label)
                                 .key_binding(KeyBinding::for_action(&*action, cx))
@@ -708,8 +711,11 @@ impl PickerDelegate for TasksModalDelegate {
                         })
                     } else {
                         this.child({
-                            let run_entry_label: SharedString =
-                                if is_recent_selected { tr!("Rerun") } else { tr!("Spawn") };
+                            let run_entry_label: SharedString = if is_recent_selected {
+                                tr!("Rerun")
+                            } else {
+                                tr!("Spawn")
+                            };
 
                             Button::new("spawn", run_entry_label)
                                 .key_binding(KeyBinding::for_action(&menu::Confirm, cx))
