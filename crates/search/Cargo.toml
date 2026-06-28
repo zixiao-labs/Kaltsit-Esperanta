@@ -22,6 +22,7 @@ doctest = false
 
 [dependencies]
 anyhow.workspace = true
+ama10-i18n.workspace = true
 any_vec.workspace = true
 bitflags.workspace = true
 collections.workspace = true

@@ -43,6 +43,7 @@ pub use remote::{
 };
 pub use toast_layer::{ToastAction, ToastLayer, ToastView};
 
+use ama10_i18n::tr;
 use anyhow::{Context as _, Result, anyhow};
 use client::{
     ChannelId, Client, ErrorExt, ParticipantIndex, Status, TypedEnvelope, User, UserStore,
@@ -63,9 +64,10 @@ use gpui::{
     Action, AnyEntity, AnyView, AnyWeakView, App, AsyncApp, AsyncWindowContext, Axis, Bounds,
     Context, CursorStyle, Decorations, DragMoveEvent, Entity, EntityId, EventEmitter, FocusHandle,
     Focusable, Global, HitboxBehavior, Hsla, KeyContext, Keystroke, ManagedView, MouseButton,
-    PathPromptOptions, Point, PromptLevel, Render, ResizeEdge, Size, Stateful, Subscription,
-    SystemWindowTabController, Task, TaskExt, Tiling, WeakEntity, WindowBounds, WindowHandle,
-    WindowId, WindowOptions, actions, canvas, point, relative, size, transparent_black,
+    PathPromptOptions, Point, PromptButton, PromptLevel, Render, ResizeEdge, Size, Stateful,
+    Subscription, SystemWindowTabController, Task, TaskExt, Tiling, WeakEntity, WindowBounds,
+    WindowHandle, WindowId, WindowOptions, actions, canvas, point, relative, size,
+    transparent_black,
 };
 pub use history_manager::*;
 pub use item::{
@@ -3304,9 +3306,12 @@ impl Workspace {
                     let answer = cx.update(|window, cx| {
                         window.prompt(
                             PromptLevel::Warning,
-                            "Do you want to leave the current call?",
+                            tr!("Do you want to leave the current call?").as_ref(),
                             None,
-                            &["Close window and hang up", "Cancel"],
+                            &[
+                                PromptButton::new(tr!("Close window and hang up")),
+                                PromptButton::new(tr!("Cancel")),
+                            ],
                             cx,
                         )
                     })?;
@@ -3552,9 +3557,13 @@ impl Workspace {
                         );
                         window.prompt(
                             PromptLevel::Warning,
-                            "Do you want to save all changes in the following files?",
+                            tr!("Do you want to save all changes in the following files?").as_ref(),
                             Some(&detail),
-                            &["Save all", "Discard all", "Cancel"],
+                            &[
+                                PromptButton::new(tr!("Save all")),
+                                PromptButton::new(tr!("Discard all")),
+                                PromptButton::new(tr!("Cancel")),
+                            ],
                             cx,
                         )
                     })?;
@@ -3856,7 +3865,10 @@ impl Workspace {
     ) {
         let project = self.project.read(cx);
         if project.is_via_collab() {
-            self.show_error("You cannot add folders to someone else's project", cx);
+            self.show_error(
+                tr!("You cannot add folders to someone else's project").to_string(),
+                cx,
+            );
             return;
         }
         let paths = self.prompt_for_open_path(
@@ -8515,12 +8527,15 @@ fn notify_if_database_failed(window: WindowHandle<MultiWorkspace>, cx: &mut Asyn
                         cx,
                         |cx| {
                             cx.new(|cx| {
-                                MessageNotification::new("Failed to load the database file.", cx)
-                                    .primary_message("File an Issue")
-                                    .primary_icon(IconName::Plus)
-                                    .primary_on_click(|window, cx| {
-                                        window.dispatch_action(Box::new(FileBugReport), cx)
-                                    })
+                                MessageNotification::new(
+                                    tr!("Failed to load the database file."),
+                                    cx,
+                                )
+                                .primary_message(tr!("File an Issue"))
+                                .primary_icon(IconName::Plus)
+                                .primary_on_click(|window, cx| {
+                                    window.dispatch_action(Box::new(FileBugReport), cx)
+                                })
                             })
                         },
                     );
@@ -9456,9 +9471,12 @@ async fn join_channel_internal(
                 .update(cx, |_, window, cx| {
                     window.prompt(
                         PromptLevel::Warning,
-                        "Do you want to switch channels?",
-                        Some("Leaving this call will unshare your current project."),
-                        &["Yes, Join Channel", "Cancel"],
+                        tr!("Do you want to switch channels?").as_ref(),
+                        Some(tr!("Leaving this call will unshare your current project.").as_ref()),
+                        &[
+                            PromptButton::new(tr!("Yes, Join Channel")),
+                            PromptButton::new(tr!("Cancel")),
+                        ],
                         cx,
                     )
                 })?
@@ -9646,9 +9664,9 @@ pub fn join_channel(
                         };
                         window.prompt(
                             PromptLevel::Critical,
-                            "Failed to join channel",
+                            tr!("Failed to join channel").as_ref(),
                             Some(&detail),
-                            &["OK"],
+                            &[PromptButton::new(tr!("OK"))],
                             cx,
                         )
                     })?
@@ -10623,9 +10641,12 @@ pub fn reload(cx: &mut App) {
             .update(cx, |_, window, cx| {
                 window.prompt(
                     PromptLevel::Info,
-                    "Are you sure you want to restart?",
+                    tr!("Are you sure you want to restart?").as_ref(),
                     None,
-                    &["Restart", "Cancel"],
+                    &[
+                        PromptButton::new(tr!("Restart")),
+                        PromptButton::new(tr!("Cancel")),
+                    ],
                     cx,
                 )
             })

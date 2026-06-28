@@ -36,13 +36,15 @@ pub fn format_output(action: &RemoteAction, output: RemoteCommandOutput) -> Succ
         RemoteAction::Fetch(remote) => {
             if output.stderr.is_empty() {
                 SuccessMessage {
-                    message: "Fetch: Already up to date".into(),
+                    message: ama10_i18n::tr!("Fetch: Already up to date").to_string(),
                     style: SuccessStyle::Toast,
                 }
             } else {
                 let message = match remote {
-                    Some(remote) => format!("Synchronized with {}", remote.name),
-                    None => "Synchronized with remotes".into(),
+                    Some(remote) => {
+                        ama10_i18n::tr_f!("Synchronized with {}", remote.name).to_string()
+                    }
+                    None => ama10_i18n::tr!("Synchronized with remotes").to_string(),
                 };
                 SuccessMessage {
                     message,
@@ -69,20 +71,21 @@ pub fn format_output(action: &RemoteAction, output: RemoteCommandOutput) -> Succ
             };
             if output.stdout.ends_with("Already up to date.\n") {
                 SuccessMessage {
-                    message: "Pull: Already up to date".into(),
+                    message: ama10_i18n::tr!("Pull: Already up to date").to_string(),
                     style: SuccessStyle::Toast,
                 }
             } else if output.stdout.starts_with("Updating") {
                 let files_changed = get_changes(&output).log_err();
                 let message = if let Some(files_changed) = files_changed {
-                    format!(
+                    ama10_i18n::tr_f!(
                         "Received {} file change{} from {}",
                         files_changed,
                         if files_changed == 1 { "" } else { "s" },
                         remote_ref.name
                     )
+                    .to_string()
                 } else {
-                    format!("Fast forwarded from {}", remote_ref.name)
+                    ama10_i18n::tr_f!("Fast forwarded from {}", remote_ref.name).to_string()
                 };
                 SuccessMessage {
                     message,
@@ -91,14 +94,15 @@ pub fn format_output(action: &RemoteAction, output: RemoteCommandOutput) -> Succ
             } else if output.stdout.starts_with("Merge") {
                 let files_changed = get_changes(&output).log_err();
                 let message = if let Some(files_changed) = files_changed {
-                    format!(
+                    ama10_i18n::tr_f!(
                         "Merged {} file change{} from {}",
                         files_changed,
                         if files_changed == 1 { "" } else { "s" },
                         remote_ref.name
                     )
+                    .to_string()
                 } else {
-                    format!("Merged from {}", remote_ref.name)
+                    ama10_i18n::tr_f!("Merged from {}", remote_ref.name).to_string()
                 };
                 SuccessMessage {
                     message,
@@ -106,12 +110,14 @@ pub fn format_output(action: &RemoteAction, output: RemoteCommandOutput) -> Succ
                 }
             } else if output.stdout.contains("Successfully rebased") {
                 SuccessMessage {
-                    message: format!("Successfully rebased from {}", remote_ref.name),
+                    message: ama10_i18n::tr_f!("Successfully rebased from {}", remote_ref.name)
+                        .to_string(),
                     style: SuccessStyle::ToastWithLog { output },
                 }
             } else {
                 SuccessMessage {
-                    message: format!("Successfully pulled from {}", remote_ref.name),
+                    message: ama10_i18n::tr_f!("Successfully pulled from {}", remote_ref.name)
+                        .to_string(),
                     style: SuccessStyle::ToastWithLog { output },
                 }
             }
@@ -119,12 +125,13 @@ pub fn format_output(action: &RemoteAction, output: RemoteCommandOutput) -> Succ
         RemoteAction::Push(branch_name, remote_ref) => {
             if output.stderr.ends_with("Everything up-to-date\n") {
                 SuccessMessage {
-                    message: "Push: Everything is up-to-date".to_string(),
+                    message: ama10_i18n::tr!("Push: Everything is up-to-date").to_string(),
                     style: SuccessStyle::Toast,
                 }
             } else {
                 SuccessMessage {
-                    message: format!("Pushed {} to {}", branch_name, remote_ref.name),
+                    message: ama10_i18n::tr_f!("Pushed {} to {}", branch_name, remote_ref.name)
+                        .to_string(),
                     style: SuccessStyle::ToastWithLog { output },
                 }
             }

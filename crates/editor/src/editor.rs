@@ -130,6 +130,7 @@ pub use text::Bias;
 
 use ::git::{Blame, status::FileStatus};
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder, BuildError};
+use ama10_i18n::{tr, tr_f};
 use anyhow::{Context as _, Result, anyhow, bail};
 use blink_manager::BlinkManager;
 use client::{Collaborator, ParticipantIndex, parse_zed_link};
@@ -2010,7 +2011,7 @@ impl Editor {
                             Self::open_transaction_for_hidden_buffers(
                                 workspace,
                                 transaction.clone(),
-                                "Rename".to_string(),
+                                tr!("Rename").to_string(),
                                 window,
                                 cx,
                             );
@@ -2745,14 +2746,14 @@ impl Editor {
         cx: &mut Context<Workspace>,
     ) {
         Self::new_in_workspace(workspace, window, cx).detach_and_prompt_err(
-            "Failed to create buffer",
+            tr!("Failed to create buffer").as_ref(),
             window,
             cx,
             |e, _, _| match e.error_code() {
-                ErrorCode::RemoteUpgradeRequired => Some(format!(
-                "The remote instance of Zed does not support this yet. It must be upgraded to {}",
+                ErrorCode::RemoteUpgradeRequired => Some(
+                tr_f!("The remote instance of Zed does not support this yet. It must be upgraded to {}",
                 e.error_tag("required").unwrap_or("the latest version")
-            )),
+            ).to_string()),
                 _ => None,
             },
         );
@@ -3969,9 +3970,9 @@ impl Editor {
             }))
             .tooltip(move |_window, cx| {
                 Tooltip::with_meta_in(
-                    "Remove Bookmark",
+                    tr!("Remove Bookmark"),
                     Some(&ToggleBookmark),
-                    SharedString::from("Right-click for more options"),
+                    tr!("Right-click for more options"),
                     &focus_handle,
                     cx,
                 )
@@ -4058,33 +4059,33 @@ impl Editor {
             .map(|(anchor, bp)| (anchor, Arc::from(bp)));
 
         let log_breakpoint_msg = if breakpoint.as_ref().is_some_and(|bp| bp.1.message.is_some()) {
-            "Edit Log Breakpoint"
+            tr!("Edit Log Breakpoint")
         } else {
-            "Set Log Breakpoint"
+            tr!("Set Log Breakpoint")
         };
 
         let condition_breakpoint_msg = if breakpoint
             .as_ref()
             .is_some_and(|bp| bp.1.condition.is_some())
         {
-            "Edit Condition Breakpoint"
+            tr!("Edit Condition Breakpoint")
         } else {
-            "Set Condition Breakpoint"
+            tr!("Set Condition Breakpoint")
         };
 
         let hit_condition_breakpoint_msg = if breakpoint
             .as_ref()
             .is_some_and(|bp| bp.1.hit_condition.is_some())
         {
-            "Edit Hit Condition Breakpoint"
+            tr!("Edit Hit Condition Breakpoint")
         } else {
-            "Set Hit Condition Breakpoint"
+            tr!("Set Hit Condition Breakpoint")
         };
 
         let set_breakpoint_msg = if breakpoint.as_ref().is_some() {
-            "Unset Breakpoint"
+            tr!("Unset Breakpoint")
         } else {
-            "Set Breakpoint"
+            tr!("Set Breakpoint")
         };
 
         let git_blame_msg = if self.show_git_blame_gutter {
@@ -4096,21 +4097,23 @@ impl Editor {
         let bookmark = self.bookmark_at_row(row, window, cx);
 
         let set_bookmark_msg = if bookmark.as_ref().is_some() {
-            "Remove Bookmark"
+            tr!("Remove Bookmark")
         } else {
-            "Add Bookmark"
+            tr!("Add Bookmark")
         };
 
         let run_to_cursor = window.is_action_available(&RunToCursor, cx);
 
-        let toggle_state_entry: Option<(&str, Box<dyn Action>)> =
+        let toggle_state_entry: Option<(SharedString, Box<dyn Action>)> =
             breakpoint.as_ref().map(|bp| match bp.1.state {
-                BreakpointState::Enabled => {
-                    ("Disable", crate::actions::DisableBreakpoint.boxed_clone())
-                }
-                BreakpointState::Disabled => {
-                    ("Enable", crate::actions::EnableBreakpoint.boxed_clone())
-                }
+                BreakpointState::Enabled => (
+                    tr!("Disable"),
+                    crate::actions::DisableBreakpoint.boxed_clone(),
+                ),
+                BreakpointState::Disabled => (
+                    tr!("Enable"),
+                    crate::actions::EnableBreakpoint.boxed_clone(),
+                ),
             });
 
         let (anchor, breakpoint) =
@@ -4122,7 +4125,7 @@ impl Editor {
                 .when(run_to_cursor, |this| {
                     let weak_editor = weak_editor.clone();
                     this.entry(
-                        "Run to Cursor",
+                        tr!("Run to Cursor"),
                         Some(RunToCursor.boxed_clone()),
                         move |window, cx| {
                             weak_editor
@@ -4293,18 +4296,19 @@ impl Editor {
             modifiers: Modifiers::secondary_key(),
             ..Default::default()
         };
-        let primary_action_text = "Unset breakpoint";
+        let primary_action_text = tr!("Unset breakpoint");
         let focus_handle = self.focus_handle.clone();
         let has_context_menu = self.has_mouse_context_menu();
 
         let meta = if is_rejected {
-            SharedString::from("No executable code is associated with this line.")
+            tr!("No executable code is associated with this line.")
         } else if !breakpoint.is_disabled() {
-            SharedString::from(format!(
-                "{alt_as_text}-click to disable\nright-click for more options"
-            ))
+            tr_f!(
+                "{}-click to disable\nright-click for more options",
+                alt_as_text
+            )
         } else {
-            SharedString::from("Right-click for more options")
+            tr!("Right-click for more options")
         };
         IconButton::new(("breakpoint_indicator", row.0 as usize), icon)
             .icon_size(IconSize::XSmall)
@@ -4335,9 +4339,10 @@ impl Editor {
                 editor.set_gutter_context_menu(row, Some(position), event.position(), window, cx);
             }))
             .when(!has_context_menu, |button| {
+                let primary_action_text = primary_action_text.clone();
                 button.tooltip(move |_window, cx| {
                     Tooltip::with_meta_in(
-                        primary_action_text,
+                        primary_action_text.clone(),
                         Some(&ToggleBreakpoint),
                         meta.clone(),
                         &focus_handle,
@@ -4361,10 +4366,10 @@ impl Editor {
         }
 
         impl Intent {
-            fn as_str(&self) -> &'static str {
+            fn as_str(&self) -> SharedString {
                 match self {
-                    Intent::SetBookmark => "Set bookmark",
-                    Intent::SetBreakpoint => "Set breakpoint",
+                    Intent::SetBookmark => tr!("Set bookmark"),
+                    Intent::SetBreakpoint => tr!("Set breakpoint"),
                 }
             }
 
@@ -4382,17 +4387,19 @@ impl Editor {
                 }
             }
 
-            fn secondary_and_options(&self) -> String {
+            fn secondary_and_options(&self) -> SharedString {
                 let alt_as_text = gpui::Keystroke {
                     modifiers: Modifiers::secondary_key(),
                     ..Default::default()
                 };
                 match self {
-                    Intent::SetBookmark => format!(
-                        "{alt_as_text}-click to add a breakpoint\nright-click for more options"
+                    Intent::SetBookmark => tr_f!(
+                        "{}-click to add a breakpoint\nright-click for more options",
+                        alt_as_text
                     ),
-                    Intent::SetBreakpoint => format!(
-                        "{alt_as_text}-click to add a bookmark\nright-click for more options"
+                    Intent::SetBreakpoint => tr_f!(
+                        "{}-click to add a bookmark\nright-click for more options",
+                        alt_as_text
                     ),
                 }
             }
@@ -12100,12 +12107,13 @@ impl BreakpointPromptEditor {
             );
             prompt.set_soft_wrap_mode(language::language_settings::SoftWrap::EditorWidth, cx);
             prompt.set_show_cursor_when_unfocused(false, cx);
+            let placeholder = match edit_action {
+                BreakpointPromptEditAction::Log => tr!("Message to log when a breakpoint is hit. Expressions within {} are interpolated."),
+                BreakpointPromptEditAction::Condition => tr!("Condition when a breakpoint is hit. Expressions within {} are interpolated."),
+                BreakpointPromptEditAction::HitCondition => tr!("How many breakpoint hits to ignore"),
+            };
             prompt.set_placeholder_text(
-                match edit_action {
-                    BreakpointPromptEditAction::Log => "Message to log when a breakpoint is hit. Expressions within {} are interpolated.",
-                    BreakpointPromptEditAction::Condition => "Condition when a breakpoint is hit. Expressions within {} are interpolated.",
-                    BreakpointPromptEditAction::HitCondition => "How many breakpoint hits to ignore",
-                },
+                placeholder.as_ref(),
                 window,
                 cx,
             );
@@ -12207,7 +12215,7 @@ impl BreakpointPromptEditor {
             .icon_color(Color::Muted)
             .shape(IconButtonShape::Square)
             .tooltip(move |_window, cx| {
-                Tooltip::for_action_in("Cancel", &menu::Cancel, &focus_handle, cx)
+                Tooltip::for_action_in(tr!("Cancel"), &menu::Cancel, &focus_handle, cx)
             })
             .on_click(cx.listener(|this, _, window, cx| {
                 this.cancel(&menu::Cancel, window, cx);
@@ -12220,7 +12228,7 @@ impl BreakpointPromptEditor {
             .icon_color(Color::Muted)
             .shape(IconButtonShape::Square)
             .tooltip(move |_window, cx| {
-                Tooltip::for_action_in("Confirm", &menu::Confirm, &focus_handle, cx)
+                Tooltip::for_action_in(tr!("Confirm"), &menu::Confirm, &focus_handle, cx)
             })
             .on_click(cx.listener(|this, _, window, cx| {
                 this.confirm(&menu::Confirm, window, cx);

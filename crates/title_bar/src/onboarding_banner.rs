@@ -3,6 +3,7 @@
 // (Claude Agent, ACP) lived here previously and were removed.
 #![allow(dead_code)]
 
+use ama10_i18n::tr;
 use gpui::{Action, Entity, Global, Render, SharedString, TaskExt};
 use ui::{ButtonLike, Tooltip, prelude::*};
 use util::ResultExt;
@@ -46,7 +47,7 @@ impl OnboardingBanner {
                 action,
                 icon_name,
                 label: label.into(),
-                subtitle: subtitle.or(Some(SharedString::from("Introducing:"))),
+                subtitle: subtitle.or(Some(tr!("Introducing:"))),
             },
             visible_when: None,
             dismissed: get_dismissed(source, cx),
@@ -164,9 +165,9 @@ impl Render for OnboardingBanner {
                         }))
                         .tooltip(|_window, cx| {
                             Tooltip::with_meta(
-                                "Close Announcement Banner",
+                                tr!("Close Announcement Banner"),
                                 None,
-                                "It won't show again for this feature",
+                                tr!("It won't show again for this feature"),
                                 cx,
                             )
                         }),

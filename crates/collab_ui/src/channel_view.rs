@@ -1,3 +1,4 @@
+use ama10_i18n::{tr, tr_f, translate};
 use anyhow::Result;
 use call::ActiveCall;
 use channel::{Channel, ChannelBuffer, ChannelBufferEvent, ChannelStore};
@@ -208,7 +209,7 @@ impl ChannelView {
             editor.set_custom_context_menu(move |_, position, window, cx| {
                 let this = this.clone();
                 Some(ui::ContextMenu::build(window, cx, move |menu, _, _| {
-                    menu.entry("Copy Link to Section", None, move |window, cx| {
+                    menu.entry(tr!("Copy Link to Section"), None, move |window, cx| {
                         this.update(cx, |this, cx| {
                             this.copy_link_for_position(position, window, cx)
                         })
@@ -333,7 +334,7 @@ impl ChannelView {
                 workspace.show_toast(
                     Toast::new(
                         NotificationId::unique::<CopyLinkForPositionToast>(),
-                        "Link copied to clipboard",
+                        tr!("Link copied to clipboard").to_string(),
                     ),
                     cx,
                 );
@@ -408,13 +409,13 @@ impl ChannelView {
                 self.channel_buffer.read(cx).is_connected(),
             ) {
                 (false, true) => None,
-                (true, true) => Some("read-only"),
-                (_, false) => Some("disconnected"),
+                (true, true) => Some(tr!("read-only")),
+                (_, false) => Some(tr!("disconnected")),
             };
 
             (channel.name.clone(), status.map(Into::into))
         } else {
-            ("<unknown>".into(), Some("disconnected".into()))
+            (tr!("<unknown>"), Some(tr!("disconnected")))
         }
     }
 }

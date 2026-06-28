@@ -32,6 +32,7 @@ test-support = [
 
 [dependencies]
 aho-corasick.workspace = true
+ama10-i18n.workspace = true
 anyhow.workspace = true
 assets.workspace = true
 base64.workspace = true

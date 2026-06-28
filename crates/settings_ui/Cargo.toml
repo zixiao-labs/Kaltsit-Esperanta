@@ -19,6 +19,7 @@ test-support = []
 agent.workspace = true
 agent_settings.workspace = true
 agent_skills.workspace = true
+ama10-i18n.workspace = true
 ama10-ui.workspace = true
 anyhow.workspace = true
 audio.workspace = true

@@ -4,6 +4,7 @@ use crate::{
     git_panel_settings::GitPanelSettings,
 };
 use agent_settings::AgentSettings;
+
 use anyhow::{Context as _, Result, anyhow};
 use buffer_diff::{BufferDiff, DiffHunkSecondaryStatus};
 use collections::HashMap;
@@ -1515,19 +1516,19 @@ impl Render for ProjectDiff {
                         .child(
                             h_flex()
                                 .justify_around()
-                                .child(Label::new("No uncommitted changes")),
+                                .child(Label::new(ama10_i18n::tr!("No uncommitted changes"))),
                         )
                         .map(|el| match remote_button {
                             Some(button) => el.child(h_flex().justify_around().child(button)),
                             None => el.child(
                                 h_flex()
                                     .justify_around()
-                                    .child(Label::new("Remote up to date")),
+                                    .child(Label::new(ama10_i18n::tr!("Remote up to date"))),
                             ),
                         })
                         .child(
                             h_flex().justify_around().mt_1().child(
-                                Button::new("project-diff-close-button", "Close")
+                                Button::new("project-diff-close-button", ama10_i18n::tr!("Close"))
                                     // .style(ButtonStyle::Transparent)
                                     .key_binding(KeyBinding::for_action_in(
                                         &CloseActiveItem::default(),
@@ -1797,9 +1798,9 @@ impl Render for ProjectDiffToolbar {
                 h_group_sm()
                     .when(button_states.selection, |el| {
                         el.child(
-                            Button::new("stage", "Toggle Staged")
+                            Button::new("stage", ama10_i18n::tr!("Toggle Staged"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Toggle Staged",
+                                    ama10_i18n::tr!("Toggle Staged"),
                                     &ToggleStaged,
                                     &focus_handle,
                                 ))
@@ -1811,9 +1812,9 @@ impl Render for ProjectDiffToolbar {
                     })
                     .when(!button_states.selection, |el| {
                         el.child(
-                            Button::new("stage", "Stage")
+                            Button::new("stage", ama10_i18n::tr!("Stage"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Stage and go to next hunk",
+                                    ama10_i18n::tr!("Stage and go to next hunk"),
                                     &StageAndNext,
                                     &focus_handle,
                                 ))
@@ -1827,9 +1828,9 @@ impl Render for ProjectDiffToolbar {
                                 })),
                         )
                         .child(
-                            Button::new("unstage", "Unstage")
+                            Button::new("unstage", ama10_i18n::tr!("Unstage"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Unstage and go to next hunk",
+                                    ama10_i18n::tr!("Unstage and go to next hunk"),
                                     &UnstageAndNext,
                                     &focus_handle,
                                 ))
@@ -1852,7 +1853,7 @@ impl Render for ProjectDiffToolbar {
                         IconButton::new("up", IconName::ArrowUp)
                             .shape(ui::IconButtonShape::Square)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to previous hunk",
+                                ama10_i18n::tr!("Go to previous hunk"),
                                 &GoToPreviousHunk,
                                 &focus_handle,
                             ))
@@ -1865,7 +1866,7 @@ impl Render for ProjectDiffToolbar {
                         IconButton::new("down", IconName::ArrowDown)
                             .shape(ui::IconButtonShape::Square)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to next hunk",
+                                ama10_i18n::tr!("Go to next hunk"),
                                 &GoToHunk,
                                 &focus_handle,
                             ))
@@ -1882,9 +1883,9 @@ impl Render for ProjectDiffToolbar {
                         button_states.unstage_all && !button_states.stage_all,
                         |el| {
                             el.child(
-                                Button::new("unstage-all", "Unstage All")
+                                Button::new("unstage-all", ama10_i18n::tr!("Unstage All"))
                                     .tooltip(Tooltip::for_action_title_in(
-                                        "Unstage all changes",
+                                        ama10_i18n::tr!("Unstage all changes"),
                                         &UnstageAll,
                                         &focus_handle,
                                     ))
@@ -1901,10 +1902,10 @@ impl Render for ProjectDiffToolbar {
                                 // todo make it so that changing to say "Unstaged"
                                 // doesn't change the position.
                                 div().child(
-                                    Button::new("stage-all", "Stage All")
+                                    Button::new("stage-all", ama10_i18n::tr!("Stage All"))
                                         .disabled(!button_states.stage_all)
                                         .tooltip(Tooltip::for_action_title_in(
-                                            "Stage all changes",
+                                            ama10_i18n::tr!("Stage all changes"),
                                             &StageAll,
                                             &focus_handle,
                                         ))
@@ -1916,9 +1917,9 @@ impl Render for ProjectDiffToolbar {
                         },
                     )
                     .child(
-                        Button::new("commit", "Commit")
+                        Button::new("commit", ama10_i18n::tr!("Commit"))
                             .tooltip(Tooltip::for_action_title_in(
-                                "Commit",
+                                ama10_i18n::tr!("Commit"),
                                 &Commit,
                                 &focus_handle,
                             ))
@@ -1943,7 +1944,7 @@ impl Render for ProjectDiffToolbar {
 fn render_send_review_to_agent_button(review_count: usize, focus_handle: &FocusHandle) -> Button {
     Button::new(
         "send-review",
-        format!("Send Review to Agent ({})", review_count),
+        ama10_i18n::tr_f!("Send Review to Agent ({})", review_count).to_string(),
     )
     .start_icon(
         Icon::new(IconName::ZedAssistant)
@@ -1951,7 +1952,7 @@ fn render_send_review_to_agent_button(review_count: usize, focus_handle: &FocusH
             .color(Color::Muted),
     )
     .tooltip(Tooltip::for_action_title_in(
-        "Send all review comments to the Agent panel",
+        ama10_i18n::tr!("Send all review comments to the Agent panel"),
         &SendReviewToAgent,
         focus_handle,
     ))
@@ -2023,7 +2024,7 @@ impl Render for BranchDiffToolbar {
             return div();
         };
         let selected_base_ref = base_ref.clone();
-        let base_ref_label = format!("Base: {base_ref}");
+        let base_ref_label = ama10_i18n::tr_f!("Base: {base_ref}", base_ref = base_ref).to_string();
         let repository = project_diff.read(cx).branch_diff.read(cx).repo().cloned();
         let workspace = project_diff.read(cx).workspace.clone();
         let project_diff_for_picker = project_diff.downgrade();
@@ -2078,7 +2079,7 @@ impl Render for BranchDiffToolbar {
                                     .size(IconSize::XSmall)
                                     .color(Color::Muted),
                             ),
-                        Tooltip::text("Select base branch"),
+                        Tooltip::text(ama10_i18n::tr!("Select base branch")),
                     ),
             )
             .when(!is_multibuffer_empty, |this| {
@@ -2091,7 +2092,7 @@ impl Render for BranchDiffToolbar {
             .when(show_review_button, |this| {
                 let focus_handle = focus_handle.clone();
                 this.child(Divider::vertical()).child(
-                    Button::new("review-diff", "Review Diff")
+                    Button::new("review-diff", ama10_i18n::tr!("Review Diff"))
                         .start_icon(
                             Icon::new(IconName::ZedAssistant)
                                 .size(IconSize::Small)
@@ -2100,9 +2101,9 @@ impl Render for BranchDiffToolbar {
                         .key_binding(KeyBinding::for_action_in(&ReviewDiff, &focus_handle, cx))
                         .tooltip(move |_, cx| {
                             Tooltip::with_meta_in(
-                                "Review Diff",
+                                ama10_i18n::tr!("Review Diff"),
                                 Some(&ReviewDiff),
-                                "Send this diff for your last agent to review.",
+                                ama10_i18n::tr!("Send this diff for your last agent to review."),
                                 &focus_handle,
                                 cx,
                             )

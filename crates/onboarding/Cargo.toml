@@ -16,6 +16,7 @@ default = []
 
 [dependencies]
 anyhow.workspace = true
+ama10-i18n.workspace = true
 client.workspace = true
 cloud_api_types.workspace = true
 collections.workspace = true

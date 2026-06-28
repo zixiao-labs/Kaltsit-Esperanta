@@ -138,11 +138,9 @@ impl Render for ModeSelector {
             .iter()
             .find(|mode| mode.id == current_mode_id)
             .map(|mode| mode.name.clone())
-            .unwrap_or_else(|| "Unknown".into());
+            .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
 
-        let this = cx.weak_entity();
-
-        let icon = if self.menu_handle.is_deployed() {
+        let this = if self.menu_handle.is_deployed() {
             IconName::ChevronUp
         } else {
             IconName::ChevronDown
@@ -165,7 +163,7 @@ impl Render for ModeSelector {
                                 h_flex()
                                     .gap_2()
                                     .justify_between()
-                                    .child(Label::new("Change Mode"))
+                                    .child(Label::new(ama10_i18n::tr!("Change Mode")))
                                     .child(KeyBinding::for_action(&ToggleProfileSelector, cx)),
                             )
                             .child(
@@ -175,7 +173,7 @@ impl Render for ModeSelector {
                                     .border_t_1()
                                     .border_color(cx.theme().colors().border_variant)
                                     .justify_between()
-                                    .child(Label::new("Cycle Through Modes"))
+                                    .child(Label::new(ama10_i18n::tr!("Cycle Through Modes")))
                                     .child(KeyBinding::for_action(&CycleModeSelector, cx)),
                             )
                             .into_any()

@@ -1,4 +1,5 @@
 use crate::notification_window_options;
+use ama10_i18n::{tr, tr_f, translate};
 use call::{ActiveCall, room};
 use client::User;
 use collections::HashMap;
@@ -124,8 +125,8 @@ impl Render for ProjectSharedNotification {
         let no_worktree_root_names = self.worktree_root_names.is_empty();
 
         let punctuation = if no_worktree_root_names { "" } else { ":" };
-        let main_label = format!(
-            "{} is sharing a project with you{}",
+        let main_label = tr_f!(
+            "{0} is sharing a project with you{1}",
             self.owner.github_login.clone(),
             punctuation
         );
@@ -133,10 +134,12 @@ impl Render for ProjectSharedNotification {
         div().size_full().font(ui_font).child(
             CollabNotification::new(
                 self.owner.avatar_uri.clone(),
-                Button::new("open", "Open").on_click(cx.listener(move |this, _event, _, cx| {
-                    this.join(cx);
-                })),
-                Button::new("dismiss", "Dismiss").on_click(cx.listener(
+                Button::new("open", tr!("Open")).on_click(cx.listener(
+                    move |this, _event, _, cx| {
+                        this.join(cx);
+                    },
+                )),
+                Button::new("dismiss", tr!("Dismiss")).on_click(cx.listener(
                     move |this, _event, _, cx| {
                         this.dismiss(cx);
                     },

@@ -26,8 +26,9 @@ test-support = [
 ]
 
 [dependencies]
-any_vec.workspace = true
 agent_settings.workspace = true
+ama10-i18n.workspace = true
+any_vec.workspace = true
 anyhow.workspace = true
 async-recursion.workspace = true
 client.workspace = true

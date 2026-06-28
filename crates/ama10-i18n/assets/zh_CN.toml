@@ -217,3 +217,231 @@
 "Select Icon Theme..." = "选择图标主题..."
 "View Icon Theme Docs" = "查看图标主题文档"
 "Install Icon Themes" = "安装图标主题"
+
+# ═══════════════════════════════════════════
+# onboarding crate
+# ═══════════════════════════════════════════
+
+# --- onboarding.rs ---
+"Finish Setup" = "完成设置"
+
+# --- basics_page.rs ---
+"Theme" = "主题"
+"Base Keymap" = "基础键位"
+"Vim Mode" = "Vim 模式"
+"Coming from Neovim? Use our first-class implementation of Vim Mode" = "使用 Neovim？体验我们一流的 Vim 模式实现"
+"Zed can only allow services like language servers, project settings, and MCP servers to run after you mark a new project as trusted." = "Zed 仅在您将新项目标记为受信任后，才允许语言服务器、项目设置和 MCP 服务器等服务运行。"
+"Trust All Projects By Default" = "默认信任所有项目"
+"Automatically mark all new projects as trusted to unlock all Zed's features" = "自动将所有新项目标记为受信任，以解锁 Zed 的全部功能"
+"Import Settings" = "导入设置"
+"Automatically pull your settings from other editors" = "自动从其他编辑器拉取您的设置"
+"Install" = "安装"
+"Sign In" = "登录"
+"Signing In…" = "登录中…"
+"Start Free Trial" = "开始免费试用"
+"Agent Setup" = "代理设置"
+"Install your favorite agents and start your first thread." = "安装您喜欢的代理并开始您的第一个线程。"
+
+# --- multibuffer_hint.rs ---
+"Edit and save files directly in the results multibuffer!" = "直接在结果多缓冲区中编辑和保存文件！"
+"Learn More" = "了解更多"
+"Dismiss Hint" = "关闭提示"
+
+# ═══════════════════════════════════════════
+# auto_update_ui crate
+# ═══════════════════════════════════════════
+
+"Couldn't load release notes" = "无法加载发布说明"
+"View in Browser" = "在浏览器中查看"
+"Type / to manually invoke a skill" = "输入 / 手动调用技能"
+"The Rules Library is making way for skills: your default rules are now in a global AGENTS.md, and your other rules have been converted to skills" = "规则库正在让位给技能：您的默认规则现在位于全局 AGENTS.md 中，其他规则已转换为技能"
+"Introducing Skills Support" = "技能支持介绍"
+"Extend the agent with focused instructions and domain knowledge." = "通过专注的指令和领域知识扩展代理。"
+"Try Now" = "立即尝试"
+"Read Documentation" = "阅读文档"
+"View Release Notes" = "查看发布说明"
+
+# ═══════════════════════════════════════════
+# recent_projects crate
+# ═══════════════════════════════════════════
+
+# --- sidebar_recent_projects.rs ---
+"Recently opened projects will show up here" = "最近打开的项目将显示在此处"
+"No matches" = "无匹配"
+"Open Project in This Window" = "在当前窗口中打开项目"
+"Open Local Folders" = "打开本地文件夹"
+"Open Remote Folder" = "打开远程文件夹"
+
+# --- disconnected_overlay.rs ---
+"Your connection to the remote project has been lost." = "与远程项目的连接已断开。"
+"\nUnsaved changes are stored locally." = "\n未保存的更改存储在本地。"
+"process exiting unexpectedly" = "进程意外退出"
+"not responding" = "无响应"
+"Your connection to {} has been lost due to the server {}.{}" = "与 {} 的连接因服务器 {} 已断开。{}"
+"Disconnected" = "已断开连接"
+"Close Window" = "关闭窗口"
+"Reconnect" = "重新连接"
+
+# --- remote_connections.rs ---
+"Failed to connect over SSH" = "SSH 连接失败"
+"Failed to connect to WSL" = "WSL 连接失败"
+"Failed to connect to Dev Container" = "Dev Container 连接失败"
+"Failed to connect to mock server" = "模拟服务器连接失败"
+"Retry" = "重试"
+
+# ═══════════════════════════════════════════
+# tab_switcher crate
+# ═══════════════════════════════════════════
+
+"Search all tabs…" = "搜索所有标签页…"
+"No tabs" = "无标签页"
+
+# ═══════════════════════════════════════════
+# command_palette crate
+# ═══════════════════════════════════════════
+
+"Execute a command..." = "执行命令..."
+"Change Keybinding…" = "更改键绑定…"
+"Add Keybinding…" = "添加键绑定…"
+"Run" = "运行"
+
+# ═══════════════════════════════════════════
+# file_finder crate
+# ═══════════════════════════════════════════
+
+"Search project files..." = "搜索项目文件..."
+"Project Scan in Progress…" = "项目扫描中…"
+"Filter Options" = "筛选选项"
+"Include Ignored Files" = "包含忽略的文件"
+"Split…" = "拆分…"
+"Keep Open" = "保持打开"
+"Open" = "打开"
+
+# ═══════════════════════════════════════════
+# feedback crate
+# ═══════════════════════════════════════════
+
+"Copied into clipboard" = "已复制到剪贴板"
+"No extensions installed." = "未安装扩展。"
+
+# ═══════════════════════════════════════════
+# settings_profile_selector crate
+# ═══════════════════════════════════════════
+
+"Select a settings profile..." = "选择设置配置文件..."
+"Disabled" = "已禁用"
+
+# ═══════════════════════════════════════════
+# search crate
+# ═══════════════════════════════════════════
+
+# --- search.rs ---
+"No more matches" = "没有更多匹配"
+
+# --- buffer_search.rs ---
+"Unified" = "统一视图"
+"Split" = "拆分视图"
+"click to change min width" = "点击更改最小宽度"
+"Expand All Files" = "展开所有文件"
+"Collapse All Files" = "折叠所有文件"
+"Search…" = "搜索…"
+"Replace with…" = "替换为…"
+"Toggle Replace" = "切换替换"
+"Toggle Search Selection" = "切换搜索选区"
+"Select Previous Match" = "选择上一个匹配"
+"Select Next Match" = "选择下一个匹配"
+"Select All Matches" = "选择所有匹配"
+"Close Search Bar" = "关闭搜索栏"
+"Replace Next Match" = "替换下一个匹配"
+"Replace All Matches" = "替换所有匹配"
+
+# --- project_search.rs ---
+"Loading project…" = "正在加载项目…"
+"Searching…" = "正在搜索…"
+"No Results" = "无结果"
+"Search All Files" = "搜索所有文件"
+"No results found in this project for the provided query" = "项目中未找到与所提供查询匹配的结果"
+"Project Search" = "项目搜索"
+"Search all files…" = "搜索所有文件…"
+"Replace in project…" = "在项目中替换…"
+"Hit enter to search. For more options:" = "按回车搜索。更多选项："
+"Include/exclude specific paths" = "包含/排除特定路径"
+"Find and replace" = "查找并替换"
+"Match with regex" = "使用正则表达式匹配"
+"Match case" = "区分大小写"
+"Match whole words" = "全词匹配"
+"Search Limits Reached\nTry narrowing your search" = "已到达搜索限制\n请尝试缩小搜索范围"
+"Toggle Filters" = "切换筛选器"
+"Only Search Open Files" = "仅搜索打开的文件"
+"Expand All Search Results" = "展开所有搜索结果"
+"Collapse All Search Results" = "折叠所有搜索结果"
+"Project search buffer contains unsaved edits..." = "项目搜索缓冲区包含未保存的编辑..."
+
+# ═══════════════════════════════════════════
+# terminal_view crate
+# ═══════════════════════════════════════════
+
+"terminal not yet supported for remote projects" = "终端尚不支持远程项目"
+"terminal not yet supported for collaborative projects" = "终端尚不支持协作项目"
+"Edit settings.json" = "编辑 settings.json"
+"Failed to spawn terminal" = "无法生成终端"
+"Edit Settings" = "编辑设置"
+"Copy" = "复制"
+"Paste" = "粘贴"
+"Select All" = "全选"
+"Clear" = "清除"
+"Add to Agent Thread" = "添加到代理线程"
+"Close Terminal Tab" = "关闭终端标签页"
+"Rerun task" = "重新运行任务"
+"Process ID (PID): {}" = "进程 ID（PID）：{}"
+"Rename" = "重命名"
+
+# ═══════════════════════════════════════════
+# title_bar crate
+# ═══════════════════════════════════════════
+
+# --- title_bar.rs ---
+"Signing in…" = "登录中…"
+"Connecting to: {}" = "正在连接到：{}"
+"Connected to: {}" = "已连接到：{}"
+"Connection attempt to {} missed. Retrying..." = "对 {} 的连接尝试失败。正在重试..."
+"Lost connection to {}. Reconnecting..." = "与 {} 的连接丢失。正在重新连接..."
+"Disconnected from {}" = "已断开与 {} 的连接"
+"{} is sharing this project. Click to follow." = "{} 正在共享此项目。点击以跟随。"
+"Click to Follow" = "点击跟随"
+"Loading {}…" = "正在加载 {}…"
+"Creating {}…" = "正在创建 {}…"
+"Worktree" = "工作树"
+"Currently In Use: {}" = "当前使用中：{}"
+"Create Branch" = "创建分支"
+"Sign in to Wuling" = "登录 Wuling"
+"Restart to update Zed" = "重新启动以更新 Zed"
+"You're in Restricted Mode" = "您处于受限模式"
+"Mark this project as trusted and unlock all features" = "将此项目标记为受信任并解锁所有功能"
+
+# --- collab.rs ---
+"Follow {}" = "跟随 {}"
+"{} is muted" = "{} 已静音"
+"Leave Call" = "离开通话"
+"Unmute Microphone" = "取消麦克风静音"
+"Mute Microphone" = "麦克风静音"
+"Unmute Audio" = "取消音频静音"
+"Mute Audio" = "音频静音"
+"Stop sharing project with call participants" = "停止与通话参与者共享项目"
+"Stop sharing {}..." = "停止共享 {}..."
+"Share active project with call participants" = "与通话参与者共享当前项目"
+"Share {}..." = "共享 {}..."
+"Unshare Project" = "取消共享项目"
+"Share Project" = "共享项目"
+"This project may not be shared in a public channel." = "此项目不能在公共频道中共享。"
+"Stop Sharing Screen" = "停止共享屏幕"
+"Share Screen" = "共享屏幕"
+"Sharing Screen Failed" = "屏幕共享失败"
+
+# --- application_menu.rs ---
+"Open Application Menu" = "打开应用菜单"
+
+# --- onboarding_banner.rs ---
+"Introducing:" = "介绍："
+"Close Announcement Banner" = "关闭公告横幅"
+"It won't show again for this feature" = "此功能不会再次显示"

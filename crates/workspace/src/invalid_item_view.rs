@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use std::{path::Path, sync::Arc};
 
 use gpui::{EventEmitter, FocusHandle, Focusable};
@@ -90,7 +91,7 @@ impl Render for InvalidItemView {
                     v_flex()
                         .justify_center()
                         .gap_2()
-                        .child(h_flex().justify_center().child("Could not open file"))
+                        .child(h_flex().justify_center().child(tr!("Could not open file")))
                         .child(
                             h_flex()
                                 .justify_center()
@@ -99,7 +100,7 @@ impl Render for InvalidItemView {
                         .when(self.is_local, |contents| {
                             contents.child(
                                 h_flex().justify_center().child(
-                                    Button::new("open-with-system", "Open in Default App")
+                                    Button::new("open-with-system", tr!("Open in Default App"))
                                         .on_click(move |_, _, cx| {
                                             cx.open_with_system(&abs_path);
                                         })

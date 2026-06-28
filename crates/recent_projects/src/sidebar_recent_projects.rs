@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ama10_i18n::tr;
 use fuzzy_nucleo::{StringMatch, StringMatchCandidate, match_strings};
 use gpui::{
     Action, AnyElement, App, Context, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable,
@@ -297,12 +298,12 @@ impl PickerDelegate for SidebarRecentProjectsDelegate {
     fn dismissed(&mut self, _window: &mut Window, _cx: &mut Context<Picker<Self>>) {}
 
     fn no_matches_text(&self, _window: &mut Window, _cx: &mut App) -> Option<SharedString> {
-        let text = if self.workspaces.is_empty() {
-            "Recently opened projects will show up here"
+        let text: SharedString = if self.workspaces.is_empty() {
+            tr!("Recently opened projects will show up here")
         } else {
-            "No matches"
+            tr!("No matches")
         };
-        Some(text.into())
+        Some(text)
     }
 
     fn render_match(
@@ -383,7 +384,7 @@ impl PickerDelegate for SidebarRecentProjectsDelegate {
                 )
                 .tooltip(move |_, cx| {
                     Tooltip::with_meta(
-                        "Open Project in This Window",
+                        tr!("Open Project in This Window"),
                         None,
                         tooltip_path.clone(),
                         cx,
@@ -414,7 +415,7 @@ impl PickerDelegate for SidebarRecentProjectsDelegate {
                                 .w_full()
                                 .gap_1()
                                 .justify_between()
-                                .child(Label::new("Open Local Folders"))
+                                .child(Label::new(tr!("Open Local Folders")))
                                 .child(KeyBinding::for_action_in(&open_action, &focus_handle, cx)),
                         )
                         .on_click(cx.listener(move |_, _, window, cx| {
@@ -429,7 +430,7 @@ impl PickerDelegate for SidebarRecentProjectsDelegate {
                                 .w_full()
                                 .gap_1()
                                 .justify_between()
-                                .child(Label::new("Open Remote Folder"))
+                                .child(Label::new(tr!("Open Remote Folder")))
                                 .child(KeyBinding::for_action(
                                     &OpenRemote {
                                         from_existing_connection: false,

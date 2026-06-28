@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use client::telemetry;
 use extension_host::ExtensionStore;
 use gpui::{App, ClipboardItem, PromptLevel, actions};
@@ -62,9 +63,9 @@ pub fn init(cx: &mut App) {
 
                     cx.prompt(
                         PromptLevel::Info,
-                        "Copied into clipboard",
+                        tr!("Copied into clipboard").as_ref(),
                         Some(&specs),
-                        &["OK"],
+                        &[tr!("OK").as_ref()],
                     )
                     .await
                 })
@@ -75,9 +76,9 @@ pub fn init(cx: &mut App) {
                 cx.write_to_clipboard(ClipboardItem::new_string(clipboard_text.clone()));
                 drop(window.prompt(
                     PromptLevel::Info,
-                    "Copied into clipboard",
+                    tr!("Copied into clipboard").as_ref(),
                     Some(&clipboard_text),
-                    &["OK"],
+                    &[tr!("OK").as_ref()],
                     cx,
                 ));
             })
@@ -134,7 +135,7 @@ fn format_installed_extensions_for_clipboard(cx: &mut App) -> String {
     lines.sort();
 
     if lines.is_empty() {
-        return "No extensions installed.".to_string();
+        return tr!("No extensions installed.").to_string();
     }
 
     format!(

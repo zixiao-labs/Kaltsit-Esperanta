@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use chrono::{Datelike, Local, NaiveTime, Timelike};
 use editor::scroll::Autoscroll;
 use editor::{Editor, SelectionEffects};
@@ -198,7 +199,7 @@ fn heading_entry(now: NaiveTime, hour_format: &HourFormat) -> String {
         }
         HourFormat::Hour12 => {
             let (pm, hour) = now.hour12();
-            let am_or_pm = if pm { "PM" } else { "AM" };
+            let am_or_pm = if pm { tr!("PM") } else { tr!("AM") };
             format!("# {}:{:02} {}", hour, now.minute(), am_or_pm)
         }
     }
