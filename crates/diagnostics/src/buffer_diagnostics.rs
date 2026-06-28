@@ -10,6 +10,7 @@ use editor::{
     display_map::{BlockPlacement, BlockProperties, BlockStyle, CustomBlockId},
     multibuffer_context_lines,
 };
+use ama10_i18n::{tr, tr_f};
 use gpui::{
     AnyElement, App, AppContext, Context, Entity, EntityId, EventEmitter, FocusHandle, Focusable,
     InteractiveElement, IntoElement, ParentElement, Render, SharedString, Styled, Subscription,
@@ -897,8 +898,8 @@ impl Render for BufferDiagnosticsEditor {
 
         let child = if error_count + warning_count == 0 {
             let label = match warning_count {
-                0 => "No problems in",
-                _ => "No errors in",
+                0 => tr!("No problems in"),
+                _ => tr!("No errors in"),
             };
 
             v_flex()
@@ -916,7 +917,7 @@ impl Render for BufferDiagnosticsEditor {
                         .child(
                             Button::new("open-file", filename)
                                 .style(ButtonStyle::Transparent)
-                                .tooltip(Tooltip::text("Open File"))
+                                .tooltip(Tooltip::text(tr!("Open File")))
                                 .on_click(cx.listener(|buffer_diagnostics, _, window, cx| {
                                     if let Some(workspace) = Workspace::for_window(window, cx) {
                                         workspace.update(cx, |workspace, cx| {
@@ -935,9 +936,9 @@ impl Render for BufferDiagnosticsEditor {
                         ),
                 )
                 .when(self.summary.warning_count > 0, |div| {
-                    let label = match self.summary.warning_count {
-                        1 => "Show 1 warning".into(),
-                        warning_count => format!("Show {} warnings", warning_count),
+                    let label: SharedString = match self.summary.warning_count {
+                        1 => tr!("Show 1 warning"),
+                        warning_count => tr_f!("Show {} warnings", warning_count),
                     };
 
                     div.child(

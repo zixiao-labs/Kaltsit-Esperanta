@@ -12,6 +12,7 @@ use ui::{Button, ButtonLike, Color, Icon, IconName, Label, Tooltip, h_flex, prel
 use util::ResultExt;
 use workspace::{HideStatusItem, StatusItemView, ToolbarItemEvent, Workspace, item::ItemHandle};
 
+use ama10_i18n::tr;
 use crate::{Deploy, IncludeWarnings, ProjectDiagnosticsEditor};
 
 /// The status bar item that displays diagnostic counts.
@@ -66,20 +67,23 @@ impl Render for DiagnosticIndicator {
                 .map_or(&*diagnostic.message, |(first, _)| first);
             let diagnostics_already_active = self.any_active_diagnostics(cx);
             let tooltip = if !diagnostics_already_active {
-                "Expand Diagnostics"
+                tr!("Expand Diagnostics")
             } else {
-                "Next Diagnostic"
+                tr!("Next Diagnostic")
             };
             Some(
                 Button::new("diagnostic_message", SharedString::new(message))
                     .label_size(LabelSize::Small)
                     .truncate(true)
-                    .tooltip(move |_window, cx| {
-                        Tooltip::for_action(
-                            tooltip,
-                            &editor::actions::GoToDiagnostic::default(),
-                            cx,
-                        )
+                    .tooltip({
+                        let tooltip = tooltip.clone();
+                        move |_window, cx| {
+                            Tooltip::for_action(
+                                tooltip.clone(),
+                                &editor::actions::GoToDiagnostic::default(),
+                                cx,
+                            )
+                        }
                     })
                     .on_click(
                         cx.listener(|this, _, window, cx| this.go_to_next_diagnostic(window, cx)),
@@ -94,7 +98,7 @@ impl Render for DiagnosticIndicator {
                 ButtonLike::new("diagnostic-indicator")
                     .child(diagnostic_indicator)
                     .tooltip(move |_window, cx| {
-                        Tooltip::for_action("Project Diagnostics", &Deploy, cx)
+                        Tooltip::for_action(tr!("Project Diagnostics"), &Deploy, cx)
                     })
                     .on_click(cx.listener(|this, _, window, cx| {
                         if let Some(workspace) = this.workspace.upgrade() {

@@ -703,6 +703,11 @@ dependencies = [
 [[package]]
 name = "ama10-i18n"
 version = "0.1.0"
+dependencies = [
+ "gpui_shared_string",
+ "serde",
+ "toml_edit 0.22.27",
+]
 
 [[package]]
 name = "ama10-ui"
@@ -5239,6 +5244,7 @@ name = "diagnostics"
 version = "0.1.0"
 dependencies = [
  "agent_settings",
+ "ama10-i18n",
  "anyhow",
  "collections",
  "component",
@@ -23133,6 +23139,7 @@ dependencies = [
  "agent_skills",
  "agent_ui",
  "ama10",
+ "ama10-i18n",
  "ama10-ui",
  "anyhow",
  "ashpd",
