@@ -190,6 +190,7 @@
 "Spawn Without History" = "不保留历史生成"
 "Rerun" = "重新运行"
 "Spawn" = "生成"
+"Spawn Oneshot Without History" = "不保留历史生成一次性任务"
 
 # ═══════════════════════════════════════════
 # outline_panel crate
@@ -205,3 +206,14 @@
 "Pin Active Outline" = "固定当前大纲"
 "Clear Filter" = "清除筛选"
 "Outline Panel" = "大纲面板"
+
+# ═══════════════════════════════════════════
+# theme_selector crate
+# ═══════════════════════════════════════════
+
+"Select Theme..." = "选择主题..."
+"View Theme Docs" = "查看主题文档"
+"Install Themes" = "安装主题"
+"Select Icon Theme..." = "选择图标主题..."
+"View Icon Theme Docs" = "查看图标主题文档"
+"Install Icon Themes" = "安装图标主题"

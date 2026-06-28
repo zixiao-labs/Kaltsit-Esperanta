@@ -1,5 +1,6 @@
 mod outline_panel_settings;
 
+use ama10_i18n::tr;
 use anyhow::Context as _;
 use collections::{BTreeSet, HashMap, HashSet};
 use db::kvp::KeyValueStore;
@@ -1455,17 +1456,17 @@ impl OutlinePanel {
                     ui::utils::reveal_in_file_manager_label(false),
                     Box::new(RevealInFileManager),
                 )
-                .action("Open in Terminal", Box::new(OpenInTerminal))
+                .action(tr!("Open in Terminal"), Box::new(OpenInTerminal))
                 .when(is_unfoldable, |menu| {
-                    menu.action("Unfold Directory", Box::new(UnfoldDirectory))
+                    menu.action(tr!("Unfold Directory"), Box::new(UnfoldDirectory))
                 })
                 .when(is_foldable, |menu| {
-                    menu.action("Fold Directory", Box::new(FoldDirectory))
+                    menu.action(tr!("Fold Directory"), Box::new(FoldDirectory))
                 })
                 .separator()
-                .action("Copy Path", Box::new(zed_actions::workspace::CopyPath))
+                .action(tr!("Copy Path"), Box::new(zed_actions::workspace::CopyPath))
                 .action(
-                    "Copy Relative Path",
+                    tr!("Copy Relative Path"),
                     Box::new(zed_actions::workspace::CopyRelativePath),
                 )
         });
@@ -2422,9 +2423,9 @@ impl OutlinePanel {
                             .map(|icon| icon.color(color).into_any_element());
                             (icon, file_name(path.as_std_path()))
                         }
-                        None => (None, "Untitled".to_string()),
+                        None => (None, tr!("Untitled").to_string()),
                     },
-                    None => (None, "Unknown buffer".to_string()),
+                    None => (None, tr!("Unknown buffer").to_string()),
                 };
                 (
                     ElementId::from(external_file.buffer_id.to_proto() as usize),
@@ -4621,10 +4622,10 @@ impl OutlinePanel {
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
         let contents = if self.cached_entries.is_empty() {
-            let header = if query.is_some() {
-                "No matches for query"
+            let header: SharedString = if query.is_some() {
+                tr!("No matches for query")
             } else {
-                "No outlines available"
+                tr!("No outlines available")
             };
 
             v_flex()
@@ -4647,7 +4648,7 @@ impl OutlinePanel {
                     h_flex()
                         .gap_1()
                         .justify_center()
-                        .child(Label::new("Toggle Panel With").color(Color::Muted))
+                        .child(Label::new(tr!("Toggle Panel With")).color(Color::Muted))
                         .child({
                             let key_binding = match self.position(window, cx) {
                                 DockPosition::Left => {
@@ -4817,9 +4818,9 @@ impl OutlinePanel {
 
     fn render_filter_footer(&mut self, pinned: bool, cx: &mut Context<Self>) -> Div {
         let (pin_button_id, icon, icon_tooltip) = if pinned {
-            ("unpin_button", IconName::Unpin, "Unpin Outline")
+            ("unpin_button", IconName::Unpin, tr!("Unpin Outline"))
         } else {
-            ("pin_button", IconName::Pin, "Pin Active Outline")
+            ("pin_button", IconName::Pin, tr!("Pin Active Outline"))
         };
 
         let has_query = self.query(cx).is_some();
@@ -4847,7 +4848,7 @@ impl OutlinePanel {
                         this.child(
                             IconButton::new("clear_filter", IconName::Close)
                                 .shape(IconButtonShape::Square)
-                                .tooltip(Tooltip::text("Clear Filter"))
+                                .tooltip(Tooltip::text(tr!("Clear Filter")))
                                 .on_click(cx.listener(|outline_panel, _, window, cx| {
                                     outline_panel.filter_editor.update(cx, |editor, cx| {
                                         editor.set_text("", window, cx);
