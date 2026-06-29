@@ -96,6 +96,53 @@ pub fn upload_artifact(path: &str) -> UploadArtifactStep {
     steps::upload_artifact(name, path).if_no_files_found(IfNoFilesFound::Error)
 }
 
+<<<<<<< HEAD
+=======
+pub(crate) fn build_static_bwrap(arch: Arch, deps: &[&NamedJob]) -> NamedJob {
+    let artifact_name = match arch {
+        Arch::X86_64 => assets::BWRAP_LINUX_X86_64,
+        Arch::AARCH64 => assets::BWRAP_LINUX_AARCH64,
+    };
+    let binary_name = artifact_name
+        .strip_suffix(".gz")
+        .expect("static bwrap artifact name should end in .gz");
+    let copy_artifact = indoc::formatdoc! {r#"
+        cp result/bin/bwrap {binary_name}
+        chmod 755 {binary_name}
+        gzip -f --stdout --best {binary_name} > {artifact_name}
+    "#};
+
+    NamedJob {
+        name: format!("build_static_bwrap_linux_{arch}"),
+        job: bundle_job(deps)
+            .runs_on(arch.linux_bundler())
+            .timeout_minutes(60u32)
+            .add_step(steps::cache_nix_dependencies_namespace())
+            .add_step(
+                named::uses(
+                    "cachix",
+                    "install-nix-action",
+                    "02a151ada4993995686f9ed4f1be7cfbb229e56f", // v31
+                )
+                .add_with(("github_access_token", vars::GITHUB_TOKEN)),
+            )
+            .add_step(
+                named::uses(
+                    "cachix",
+                    "cachix-action",
+                    "0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad", // v16
+                )
+                .add_with(("name", "zed"))
+                .add_with(("authToken", vars::CACHIX_AUTH_TOKEN))
+                .add_with(("cachixArgs", "-v")),
+            )
+            .add_step(named::bash("nix build nixpkgs#pkgsStatic.bubblewrap -L"))
+            .add_step(named::bash(&copy_artifact))
+            .add_step(upload_artifact(artifact_name)),
+    }
+}
+
+>>>>>>> upstream/main
 pub(crate) fn bundle_linux(
     arch: Arch,
     release_channel: Option<ReleaseChannel>,
