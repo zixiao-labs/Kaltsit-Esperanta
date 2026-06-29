@@ -139,7 +139,7 @@ pub fn is_initialized() -> bool {
 /// ```
 #[macro_export]
 macro_rules! tr {
-    ($key:literal) => {
+    ($key:literal $(,)?) => {
         $crate::translate($key)
     };
 }

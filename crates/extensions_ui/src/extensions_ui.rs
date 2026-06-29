@@ -464,7 +464,11 @@ impl ExtensionsPage {
 
             let query_editor = cx.new(|cx| {
                 let mut input = Editor::single_line(window, cx);
-                input.set_placeholder_text(ama10_i18n::tr!("Search extensions...").as_ref(), window, cx);
+                input.set_placeholder_text(
+                    ama10_i18n::tr!("Search extensions...").as_ref(),
+                    window,
+                    cx,
+                );
                 if let Some(id) = focus_extension_id {
                     input.set_text(format!("id:{id}"), window, cx);
                 }
@@ -902,13 +906,19 @@ impl ExtensionsPage {
                                 Headline::new(extension.manifest.name.clone())
                                     .size(HeadlineSize::Small),
                             )
-                            .child(Headline::new(ama10_i18n::tr_f!("v{}", version)).size(HeadlineSize::XSmall))
+                            .child(
+                                Headline::new(ama10_i18n::tr_f!("v{}", version))
+                                    .size(HeadlineSize::XSmall),
+                            )
                             .children(
                                 installed_version
                                     .filter(|installed_version| *installed_version != version)
                                     .map(|installed_version| {
-                                        Headline::new(ama10_i18n::tr_f!("(v{} installed)", installed_version))
-                                            .size(HeadlineSize::XSmall)
+                                        Headline::new(ama10_i18n::tr_f!(
+                                            "(v{} installed)",
+                                            installed_version
+                                        ))
+                                        .size(HeadlineSize::XSmall)
                                     }),
                             )
                             .map(|parent| {
@@ -1456,7 +1466,9 @@ impl ExtensionsPage {
         let message: SharedString = if self.is_fetching_extensions {
             ama10_i18n::tr!("Loading extensions…")
         } else if self.fetch_failed {
-            ama10_i18n::tr!("Failed to load extensions. Please check your connection and try again.")
+            ama10_i18n::tr!(
+                "Failed to load extensions. Please check your connection and try again."
+            )
         } else {
             match self.filter {
                 ExtensionFilter::All => {
@@ -1657,7 +1669,9 @@ impl ExtensionsPage {
                     cx,
                 ),
                 Feature::ExtensionBasedpyright => self.render_feature_upsell_banner(
-                    ama10_i18n::tr!("Basedpyright (Python language server) support is built-in to Zed!"),
+                    ama10_i18n::tr!(
+                        "Basedpyright (Python language server) support is built-in to Zed!"
+                    ),
                     "https://zed.dev/docs/languages/python#basedpyright".into(),
                     false,
                     cx,
@@ -1681,7 +1695,9 @@ impl ExtensionsPage {
                     cx,
                 ),
                 Feature::Git => self.render_feature_upsell_banner(
-                    ama10_i18n::tr!("Zed comes with basic Git support—more features are coming in the future."),
+                    ama10_i18n::tr!(
+                        "Zed comes with basic Git support—more features are coming in the future."
+                    ),
                     "https://zed.dev/docs/git".into(),
                     false,
                     cx,
@@ -1935,14 +1951,20 @@ impl Render for ExtensionsPage {
                             .w_full()
                             .gap_1p5()
                             .justify_between()
-                            .child(Headline::new(ama10_i18n::tr!("Extensions")).size(HeadlineSize::Large))
                             .child(
-                                Button::new("install-dev-extension", ama10_i18n::tr!("Install Dev Extension"))
-                                    .style(ButtonStyle::Outlined)
-                                    .size(ButtonSize::Medium)
-                                    .on_click(|_event, window, cx| {
-                                        window.dispatch_action(Box::new(InstallDevExtension), cx)
-                                    }),
+                                Headline::new(ama10_i18n::tr!("Extensions"))
+                                    .size(HeadlineSize::Large),
+                            )
+                            .child(
+                                Button::new(
+                                    "install-dev-extension",
+                                    ama10_i18n::tr!("Install Dev Extension"),
+                                )
+                                .style(ButtonStyle::Outlined)
+                                .size(ButtonSize::Medium)
+                                .on_click(|_event, window, cx| {
+                                    window.dispatch_action(Box::new(InstallDevExtension), cx)
+                                }),
                             ),
                     )
                     .child(

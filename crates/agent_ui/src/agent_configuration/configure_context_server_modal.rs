@@ -871,20 +871,22 @@ impl ConfigureContextServerModal {
             _ => return None,
         };
 
-        let tab = |id: &'static str, label: &str, active: bool| {
+        let border_focused = cx.theme().colors().border_focused;
+        let text_muted = cx.theme().colors().text_muted;
+        let text = cx.theme().colors().text;
+
+        let tab = |id: &'static str, label: SharedString, active: bool| {
             div()
                 .id(id)
                 .cursor_pointer()
                 .p_1()
                 .text_sm()
                 .border_b_1()
-                .when(active, |this| {
-                    this.border_color(cx.theme().colors().border_focused)
-                })
+                .when(active, |this| this.border_color(border_focused))
                 .when(!active, |this| {
                     this.border_color(gpui::transparent_black())
-                        .text_color(cx.theme().colors().text_muted)
-                        .hover(|s| s.text_color(cx.theme().colors().text))
+                        .text_color(text_muted)
+                        .hover(|s| s.text_color(text))
                 })
                 .child(label)
         };
@@ -899,7 +901,7 @@ impl ConfigureContextServerModal {
                 .gap_1()
                 .border_b_1()
                 .border_color(cx.theme().colors().border.opacity(0.5))
-                .child(tab("Local", &local_label, !is_http).on_click(cx.listener(
+                .child(tab("Local", local_label, !is_http).on_click(cx.listener(
                     |this, _, window, cx| {
                         if let ConfigurationSource::New { editor, is_http } = &mut this.source {
                             if *is_http {
@@ -912,7 +914,7 @@ impl ConfigureContextServerModal {
                         }
                     },
                 )))
-                .child(tab("Remote", &remote_label, is_http).on_click(cx.listener(
+                .child(tab("Remote", remote_label, is_http).on_click(cx.listener(
                     |this, _, window, cx| {
                         if let ConfigurationSource::New { editor, is_http } = &mut this.source {
                             if !*is_http {

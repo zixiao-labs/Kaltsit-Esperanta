@@ -31,7 +31,8 @@ fn single_line_input(
     cx: &mut App,
 ) -> Entity<InputField> {
     cx.new(|cx| {
-        let input = InputField::new(window, cx, placeholder)
+        let placeholder = placeholder.into();
+        let input = InputField::new(window, cx, placeholder.as_ref())
             .label(label)
             .tab_index(tab_index)
             .tab_stop(true);

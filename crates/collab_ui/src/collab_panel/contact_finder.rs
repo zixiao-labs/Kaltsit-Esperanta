@@ -1,4 +1,4 @@
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::tr;
 use client::{ContactRequestStatus, User, UserStore};
 use gpui::{
     App, Context, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, ParentElement as _,

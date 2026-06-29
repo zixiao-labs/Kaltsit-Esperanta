@@ -861,7 +861,7 @@ impl CommitView {
             PromptLevel::Info,
             &ama10_i18n::tr_f!("{} stash@{}?", str_action, stash),
             None,
-            &[str_action.as_ref(), ama10_i18n::tr!("Cancel").as_ref()],
+            &[str_action, ama10_i18n::tr!("Cancel").as_ref()],
             cx,
         );
 

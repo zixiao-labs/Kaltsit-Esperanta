@@ -118,10 +118,15 @@ impl AgentImportStatus {
 
     fn tooltip_text(&self) -> Option<SharedString> {
         match self {
-            Self::Loading => Some(ama10_i18n::tr!("Fetching Sessions…").into()),
+            Self::Loading => Some(ama10_i18n::tr!("Fetching Sessions…")),
             Self::Ready { .. } => None,
-            Self::Unsupported => Some(ama10_i18n::tr!("Importing threads from this agent is not possible as it doesn't support ACP's session/list capability.")),
-            Self::Error(error) => Some(ama10_i18n::tr_f!("Failed to fetch sessions: {}", error.clone())),
+            Self::Unsupported => Some(ama10_i18n::tr!(
+                "Importing threads from this agent is not possible as it doesn't support ACP's session/list capability."
+            )),
+            Self::Error(error) => Some(ama10_i18n::tr_f!(
+                "Failed to fetch sessions: {}",
+                error.clone()
+            )),
         }
     }
 }
@@ -501,10 +506,10 @@ impl Render for ThreadImportModal {
                             importable_count: count,
                         } => {
                             let label: SharedString = if count == 0 {
-                                                            ama10_i18n::tr!("No threads")
-                                                        } else {
-                                                            ama10_i18n::tr_f!("{} threads", count)
-                                                        };
+                                ama10_i18n::tr!("No threads")
+                            } else {
+                                ama10_i18n::tr_f!("{} threads", count)
+                            };
                             this.child(Label::new(label).size(LabelSize::Small).color(Color::Muted))
                         }
                         AgentImportStatus::Unsupported => this.child(

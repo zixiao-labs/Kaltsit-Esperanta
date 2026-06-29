@@ -1,4 +1,4 @@
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::tr;
 use anyhow::Result;
 use call::ActiveCall;
 use channel::{Channel, ChannelBuffer, ChannelBufferEvent, ChannelStore};
@@ -413,7 +413,7 @@ impl ChannelView {
                 (_, false) => Some(tr!("disconnected")),
             };
 
-            (channel.name.clone(), status.map(Into::into))
+            (channel.name.clone(), status)
         } else {
             (tr!("<unknown>"), Some(tr!("disconnected")))
         }

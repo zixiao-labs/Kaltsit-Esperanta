@@ -806,7 +806,7 @@ fn render_diff_hunk_controls(
                     }
                 }),
             Button::new(("keep", row as u64), ama10_i18n::tr!("Keep"))
-                            .key_binding(
+                .key_binding(
                     KeyBinding::for_action_in(&Keep, &editor.read(cx).focus_handle(cx), cx)
                         .map(|kb| kb.size(rems_from_px(12.))),
                 )
@@ -839,7 +839,12 @@ fn render_diff_hunk_controls(
                         .tooltip({
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
-                                Tooltip::for_action_in(ama10_i18n::tr!("Next Hunk"), &GoToHunk, &focus_handle, cx)
+                                Tooltip::for_action_in(
+                                    ama10_i18n::tr!("Next Hunk"),
+                                    &GoToHunk,
+                                    &focus_handle,
+                                    cx,
+                                )
                             }
                         })
                         .on_click({
@@ -871,8 +876,8 @@ fn render_diff_hunk_controls(
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
                                 Tooltip::for_action_in(
-                                                                    ama10_i18n::tr!("Previous Hunk"),
-                                                                    &GoToPreviousHunk,
+                                    ama10_i18n::tr!("Previous Hunk"),
+                                    &GoToPreviousHunk,
                                     &focus_handle,
                                     cx,
                                 )
@@ -1070,10 +1075,10 @@ impl Render for AgentDiffToolbar {
                                 IconButton::new("hunk-up", IconName::ArrowUp)
                                     .icon_size(IconSize::Small)
                                     .tooltip(Tooltip::for_action_title_in(
-                                                                            ama10_i18n::tr!("Previous Hunk"),
-                                                                            &GoToPreviousHunk,
-                                                                            &editor_focus_handle,
-                                                                        ))
+                                        ama10_i18n::tr!("Previous Hunk"),
+                                        &GoToPreviousHunk,
+                                        &editor_focus_handle,
+                                    ))
                                     .on_click({
                                         let editor_focus_handle = editor_focus_handle.clone();
                                         move |_, window, cx| {
@@ -1089,10 +1094,10 @@ impl Render for AgentDiffToolbar {
                                 IconButton::new("hunk-down", IconName::ArrowDown)
                                     .icon_size(IconSize::Small)
                                     .tooltip(Tooltip::for_action_title_in(
-                                                                            ama10_i18n::tr!("Next Hunk"),
-                                                                            &GoToHunk,
-                                                                            &editor_focus_handle,
-                                                                        ))
+                                        ama10_i18n::tr!("Next Hunk"),
+                                        &GoToHunk,
+                                        &editor_focus_handle,
+                                    ))
                                     .on_click({
                                         let editor_focus_handle = editor_focus_handle.clone();
                                         move |_, window, cx| {
@@ -1106,11 +1111,11 @@ impl Render for AgentDiffToolbar {
                         h_flex()
                             .gap_0p5()
                             .child(
-                                                            Button::new("reject-all", ama10_i18n::tr!("Reject All"))
-                                                                .key_binding({
-                                                                    KeyBinding::for_action_in(
-                                                                        &RejectAll,
-                                                                        &editor_focus_handle,
+                                Button::new("reject-all", ama10_i18n::tr!("Reject All"))
+                                    .key_binding({
+                                        KeyBinding::for_action_in(
+                                            &RejectAll,
+                                            &editor_focus_handle,
                                             cx,
                                         )
                                         .map(|kb| kb.size(rems_from_px(12.)))
@@ -1120,11 +1125,11 @@ impl Render for AgentDiffToolbar {
                                     })),
                             )
                             .child(
-                                                            Button::new("keep-all", ama10_i18n::tr!("Keep All"))
-                                                                .key_binding({
-                                                                    KeyBinding::for_action_in(
-                                                                        &KeepAll,
-                                                                        &editor_focus_handle,
+                                Button::new("keep-all", ama10_i18n::tr!("Keep All"))
+                                    .key_binding({
+                                        KeyBinding::for_action_in(
+                                            &KeepAll,
+                                            &editor_focus_handle,
                                             cx,
                                         )
                                         .map(|kb| kb.size(rems_from_px(12.)))
@@ -1150,8 +1155,8 @@ impl Render for AgentDiffToolbar {
                             IconButton::new("review", IconName::ListTodo)
                                 .icon_size(IconSize::Small)
                                 .tooltip(Tooltip::for_action_title_in(
-                                                                    ama10_i18n::tr!("Review All Files"),
-                                                                    &OpenAgentDiff,
+                                    ama10_i18n::tr!("Review All Files"),
+                                    &OpenAgentDiff,
                                     &editor_focus_handle,
                                 ))
                                 .on_click({
@@ -1202,9 +1207,9 @@ impl Render for AgentDiffToolbar {
                     .child(
                         h_group_sm()
                             .child(
-                                                            Button::new("reject-all", ama10_i18n::tr!("Reject All"))
-                                                                .key_binding({
-                                                                    KeyBinding::for_action_in(&RejectAll, &focus_handle, cx)
+                                Button::new("reject-all", ama10_i18n::tr!("Reject All"))
+                                    .key_binding({
+                                        KeyBinding::for_action_in(&RejectAll, &focus_handle, cx)
                                             .map(|kb| kb.size(rems_from_px(12.)))
                                     })
                                     .on_click(cx.listener(|this, _, window, cx| {
@@ -1212,9 +1217,9 @@ impl Render for AgentDiffToolbar {
                                     })),
                             )
                             .child(
-                                                            Button::new("keep-all", ama10_i18n::tr!("Keep All"))
-                                                                .key_binding({
-                                                                    KeyBinding::for_action_in(&KeepAll, &focus_handle, cx)
+                                Button::new("keep-all", ama10_i18n::tr!("Keep All"))
+                                    .key_binding({
+                                        KeyBinding::for_action_in(&KeepAll, &focus_handle, cx)
                                             .map(|kb| kb.size(rems_from_px(12.)))
                                     })
                                     .on_click(cx.listener(|this, _, window, cx| {

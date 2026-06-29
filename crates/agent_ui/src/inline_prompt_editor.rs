@@ -128,9 +128,14 @@ impl<T: 'static> Render for PromptEditor<T> {
             .icon_size(IconSize::Small)
             .icon_color(Color::Muted)
             .when(!menu_visible, |this| {
-                .tooltip(move |_window, cx| {
-                                    Tooltip::with_meta(ama10_i18n::tr!("Add Context"), None, ama10_i18n::tr!("Or type @ to include context"), cx)
-                                })
+                this.tooltip(move |_window, cx| {
+                    Tooltip::with_meta(
+                        ama10_i18n::tr!("Add Context"),
+                        None,
+                        ama10_i18n::tr!("Or type @ to include context"),
+                        cx,
+                    )
+                })
             })
             .on_click(cx.listener(move |this, _, window, cx| {
                 this.trigger_completion_menu(window, cx);
@@ -386,25 +391,33 @@ impl<T: 'static> PromptEditor<T> {
         self.subscribe_to_editor(window, cx);
     }
 
-    pub fn placeholder_text(mode: &PromptEditorMode, window: &mut Window, cx: &mut App) -> SharedString {
-            let action = match mode {
-                PromptEditorMode::Buffer { codegen, .. } => {
-                    if codegen.read(cx).is_insertion {
-                        ama10_i18n::tr!("Generate")
-                    } else {
-                        ama10_i18n::tr!("Transform")
-                    }
+    pub fn placeholder_text(
+        mode: &PromptEditorMode,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> SharedString {
+        let action = match mode {
+            PromptEditorMode::Buffer { codegen, .. } => {
+                if codegen.read(cx).is_insertion {
+                    ama10_i18n::tr!("Generate")
+                } else {
+                    ama10_i18n::tr!("Transform")
                 }
-                PromptEditorMode::Terminal { .. } => ama10_i18n::tr!("Generate"),
-            };
+            }
+            PromptEditorMode::Terminal { .. } => ama10_i18n::tr!("Generate"),
+        };
 
-            let agent_panel_keybinding =
-                ui::text_for_action(&zed_actions::assistant::ToggleFocus, window, cx)
-                    .map(|keybinding| ama10_i18n::tr_f!("{} to chat", keybinding))
-                    .unwrap_or_default();
+        let agent_panel_keybinding =
+            ui::text_for_action(&zed_actions::assistant::ToggleFocus, window, cx)
+                .map(|keybinding| ama10_i18n::tr_f!("{} to chat", keybinding))
+                .unwrap_or_default();
 
-            ama10_i18n::tr_f!("{}… ({} ― ↓↑ for history — @ to include context)", action, agent_panel_keybinding)
-        }
+        ama10_i18n::tr_f!(
+            "{}… ({} ― ↓↑ for history — @ to include context)",
+            action,
+            agent_panel_keybinding
+        )
+    }
 
     pub fn prompt(&self, cx: &App) -> String {
         self.editor.read(cx).text(cx)
@@ -822,11 +835,11 @@ impl<T: 'static> PromptEditor<T> {
                     .shape(IconButtonShape::Square)
                     .tooltip(move |_window, cx| {
                         Tooltip::with_meta(
-                                                    mode.tooltip_interrupt(),
-                                                    Some(&menu::Cancel),
-                                                    ama10_i18n::tr!("Changes won't be discarded"),
-                                                    cx,
-                                                )
+                            mode.tooltip_interrupt(),
+                            Some(&menu::Cancel),
+                            ama10_i18n::tr!("Changes won't be discarded"),
+                            cx,
+                        )
                     })
                     .on_click(cx.listener(|_, _, _, cx| cx.emit(PromptEditorEvent::StopRequested)))
                     .into_any_element(),
@@ -840,11 +853,11 @@ impl<T: 'static> PromptEditor<T> {
                             .shape(IconButtonShape::Square)
                             .tooltip(move |_window, cx| {
                                 Tooltip::with_meta(
-                                                                    mode.tooltip_restart(),
-                                                                    Some(&menu::Confirm),
-                                                                    ama10_i18n::tr!("Changes will be discarded"),
-                                                                    cx,
-                                                                )
+                                    mode.tooltip_restart(),
+                                    Some(&menu::Confirm),
+                                    ama10_i18n::tr!("Changes will be discarded"),
+                                    cx,
+                                )
                             })
                             .on_click(cx.listener(|_, _, _, cx| {
                                 cx.emit(PromptEditorEvent::StartRequested);
@@ -883,18 +896,20 @@ impl<T: 'static> PromptEditor<T> {
                                                     .icon_color(Color::Disabled)
                                                     .tooltip(move |_, cx| {
                                                         Tooltip::with_meta(
-                                                                                                                    ama10_i18n::tr!("Good Result"),
-                                                                                                                    None,
-                                                                                                                    ama10_i18n::tr!("You already rated this result"),
-                                                                                                                    cx,
-                                                                                                                )
+                                                            ama10_i18n::tr!("Good Result"),
+                                                            None,
+                                                            ama10_i18n::tr!(
+                                                                "You already rated this result"
+                                                            ),
+                                                            cx,
+                                                        )
                                                     })
                                             } else {
                                                 this.icon_color(Color::Muted).tooltip(
                                                     move |_, cx| {
                                                         Tooltip::for_action(
-                                                                                                                    ama10_i18n::tr!("Good Result"),
-                                                                                                                    &ThumbsUpResult,
+                                                            ama10_i18n::tr!("Good Result"),
+                                                            &ThumbsUpResult,
                                                             cx,
                                                         )
                                                     },
@@ -914,18 +929,20 @@ impl<T: 'static> PromptEditor<T> {
                                                     .icon_color(Color::Disabled)
                                                     .tooltip(move |_, cx| {
                                                         Tooltip::with_meta(
-                                                                                                                    ama10_i18n::tr!("Bad Result"),
-                                                                                                                    None,
-                                                                                                                    ama10_i18n::tr!("You already rated this result"),
-                                                                                                                    cx,
-                                                                                                                )
+                                                            ama10_i18n::tr!("Bad Result"),
+                                                            None,
+                                                            ama10_i18n::tr!(
+                                                                "You already rated this result"
+                                                            ),
+                                                            cx,
+                                                        )
                                                     })
                                             } else {
                                                 this.icon_color(Color::Muted).tooltip(
                                                     move |_, cx| {
                                                         Tooltip::for_action(
-                                                                                                                    ama10_i18n::tr!("Bad Result"),
-                                                                                                                    &ThumbsDownResult,
+                                                            ama10_i18n::tr!("Bad Result"),
+                                                            &ThumbsDownResult,
                                                             cx,
                                                         )
                                                     },
@@ -949,9 +966,9 @@ impl<T: 'static> PromptEditor<T> {
                                     .icon_color(Color::Info)
                                     .shape(IconButtonShape::Square)
                                     .tooltip(|_window, cx| {
-                                                                            Tooltip::for_action(
-                                                                                ama10_i18n::tr!("Execute Generated Command"),
-                                                                                &menu::SecondaryConfirm,
+                                        Tooltip::for_action(
+                                            ama10_i18n::tr!("Execute Generated Command"),
+                                            &menu::SecondaryConfirm,
                                             cx,
                                         )
                                     })
@@ -1007,8 +1024,8 @@ impl<T: 'static> PromptEditor<T> {
             .tooltip({
                 move |_window, cx| {
                     Tooltip::for_action_in(
-                                            ama10_i18n::tr!("Close Assistant"),
-                                            &editor::actions::Cancel,
+                        ama10_i18n::tr!("Close Assistant"),
+                        &editor::actions::Cancel,
                         &focus_handle,
                         cx,
                     )
@@ -1060,13 +1077,13 @@ impl<T: 'static> PromptEditor<T> {
                         let focus_handle = self.editor.focus_handle(cx);
                         move |_window, cx| {
                             cx.new(|cx| {
-                                let mut tooltip = Tooltip::new(ama10_i18n::tr!("Previous Alternative")).key_binding(
-                                    KeyBinding::for_action_in(
-                                        &CyclePreviousInlineAssist,
-                                        &focus_handle,
-                                        cx,
-                                    ),
-                                );
+                                let mut tooltip =
+                                    Tooltip::new(ama10_i18n::tr!("Previous Alternative"))
+                                        .key_binding(KeyBinding::for_action_in(
+                                            &CyclePreviousInlineAssist,
+                                            &focus_handle,
+                                            cx,
+                                        ));
                                 if !disabled && current_index != 0 {
                                     tooltip = tooltip.meta(prev_model_name.clone());
                                 }
@@ -1081,10 +1098,10 @@ impl<T: 'static> PromptEditor<T> {
             )
             .child(
                 Label::new(ama10_i18n::tr_f!(
-                                    "{}/{}",
-                                    codegen.active_alternative + 1,
-                                    codegen.alternative_count(cx)
-                                ))
+                    "{}/{}",
+                    codegen.active_alternative + 1,
+                    codegen.alternative_count(cx)
+                ))
                 .size(LabelSize::Small)
                 .color(if disabled {
                     Color::Disabled
@@ -1101,13 +1118,12 @@ impl<T: 'static> PromptEditor<T> {
                         let focus_handle = self.editor.focus_handle(cx);
                         move |_window, cx| {
                             cx.new(|cx| {
-                                let mut tooltip = Tooltip::new(ama10_i18n::tr!("Next Alternative")).key_binding(
-                                    KeyBinding::for_action_in(
+                                let mut tooltip = Tooltip::new(ama10_i18n::tr!("Next Alternative"))
+                                    .key_binding(KeyBinding::for_action_in(
                                         &CycleNextInlineAssist,
                                         &focus_handle,
                                         cx,
-                                    ),
-                                );
+                                    ));
                                 if !disabled && current_index != total_models - 1 {
                                     tooltip = tooltip.meta(next_model_name.clone());
                                 }

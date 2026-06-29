@@ -1,5 +1,5 @@
 use crate::notification_window_options;
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::{tr, tr_f};
 use call::{ActiveCall, IncomingCall};
 use futures::StreamExt;
 use gpui::{App, TaskExt, WindowHandle, prelude::*};

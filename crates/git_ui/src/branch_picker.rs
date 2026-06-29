@@ -1,7 +1,7 @@
 use ama10_i18n::translate;
 use anyhow::Context as _;
 use editor::Editor;
-use fuzzy::StringMatchCandidate;
+use fuzzy_nucleo::StringMatchCandidate;
 
 use collections::HashSet;
 use git::repository::{Branch, delete_branch_flag};
@@ -1132,16 +1132,13 @@ impl PickerDelegate for BranchListDelegate {
                             IconButton::new("filter-remotes", IconName::Filter)
                                 .toggle_state(self.branch_filter == BranchFilter::Remote)
                                 .icon_size(IconSize::Small)
-                                .tooltip({
-                                    let ttl = tooltip_label.clone();
-                                    move |_, cx| {
-                                        Tooltip::for_action_in(
-                                            ttl.clone(),
-                                            &branch_picker::FilterRemotes,
-                                            &focus_handle,
-                                            cx,
-                                        )
-                                    }
+                                .tooltip(move |_, cx| {
+                                    Tooltip::for_action_in(
+                                        tooltip_label.clone(),
+                                        &branch_picker::FilterRemotes,
+                                        &focus_handle,
+                                        cx,
+                                    )
                                 })
                                 .on_click(|_click, window, cx| {
                                     window.dispatch_action(

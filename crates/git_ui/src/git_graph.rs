@@ -2995,16 +2995,13 @@ impl GitGraph {
                                         .label_size(LabelSize::Small)
                                         .truncate(true)
                                         .color(Color::Muted)
-                                        .tooltip({
-                                            let ttl = tooltip_label.clone();
-                                            move |_, cx| {
-                                                Tooltip::with_meta(
-                                                    ttl.clone(),
-                                                    None,
-                                                    author_email_for_tooltip.clone(),
-                                                    cx,
-                                                )
-                                            }
+                                        .tooltip(move |_, cx| {
+                                            Tooltip::with_meta(
+                                                tooltip_label.clone(),
+                                                None,
+                                                author_email_for_tooltip.clone(),
+                                                cx,
+                                            )
                                         })
                                         .on_click(move |_, _, cx| {
                                             copied_state.update(cx, |state, _cx| {
@@ -3054,11 +3051,10 @@ impl GitGraph {
                                     .truncate(true)
                                     .color(Color::Muted)
                                     .tooltip({
-                                        let ttl = tooltip_label.clone();
                                         let full_sha = full_sha.clone();
                                         move |_, cx| {
                                             Tooltip::with_meta(
-                                                ttl.clone(),
+                                                tooltip_label.clone(),
                                                 None,
                                                 full_sha.clone(),
                                                 cx,

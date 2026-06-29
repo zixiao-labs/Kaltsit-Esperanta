@@ -1103,7 +1103,7 @@ impl PickerDelegate for WorktreePickerDelegate {
 
                 let item = create_new_list_item(
                     "create-from-current".to_string().into(),
-                    label.into(),
+                    label,
                     self.creation_blocked_reason(cx),
                     selected,
                 );
@@ -1358,7 +1358,7 @@ impl PickerDelegate for WorktreePickerDelegate {
 
                 let item = create_new_list_item(
                     element_id.into(),
-                    label.into(),
+                    label,
                     disabled_reason.clone().map(SharedString::from),
                     selected,
                 );

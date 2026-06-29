@@ -1,4 +1,4 @@
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::tr;
 use call::{ActiveCall, Room, room};
 use gpui::{
     DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, FontWeight, Render, SharedString,
@@ -258,9 +258,9 @@ impl CallStatsModal {
             .justify_between()
             .child(
                 v_flex()
-                    .child(Label::new(title.clone()).size(LabelSize::Default))
+                    .child(Label::new(title).size(LabelSize::Default))
                     .child(
-                        Label::new(description.clone())
+                        Label::new(description)
                             .size(LabelSize::Small)
                             .color(Color::Muted),
                     ),

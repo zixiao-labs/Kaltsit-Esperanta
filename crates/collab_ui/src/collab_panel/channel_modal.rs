@@ -1,4 +1,4 @@
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::tr;
 use channel::{ChannelMembership, ChannelStore};
 use client::{
     ChannelId, LegacyUserId, User, UserStore,

@@ -3832,7 +3832,6 @@ impl ThreadView {
         pending_edits: bool,
         cx: &Context<Self>,
     ) -> Div {
-        const EDIT_NOT_READY_TOOLTIP_LABEL: &str = "Wait until file edits are complete.";
         let edit_not_ready_tooltip = ama10_i18n::tr!("Wait until file edits are complete.");
 
         let focus_handle = self.focus_handle(cx);
@@ -4153,15 +4152,13 @@ impl ThreadView {
                                             IconButton::new("toggle-height", expand_icon)
                                                 .icon_size(IconSize::Small)
                                                 .icon_color(Color::Muted)
-                                                .tooltip({
-                                                    move |_window, cx| {
-                                                        Tooltip::for_action_in(
-                                                            expand_tooltip,
-                                                            &ExpandMessageEditor,
-                                                            &focus_handle,
-                                                            cx,
-                                                        )
-                                                    }
+                                                .tooltip(move |_window, cx| {
+                                                    Tooltip::for_action_in(
+                                                        expand_tooltip.clone(),
+                                                        &ExpandMessageEditor,
+                                                        &focus_handle,
+                                                        cx,
+                                                    )
                                                 })
                                                 .on_click(cx.listener(|this, _, window, cx| {
                                                     this.expand_message_editor(
@@ -4646,7 +4643,12 @@ impl ThreadView {
                 PopoverMenu::new("fast-mode-warning")
                     .with_handle(self.fast_mode_menu_handle.clone())
                     .trigger_with_tooltip(icon_button, move |_, cx| {
-                        Tooltip::for_action_in(tooltip_label, &ToggleFastMode, &tooltip_focus, cx)
+                        Tooltip::for_action_in(
+                            tooltip_label.clone(),
+                            &ToggleFastMode,
+                            &tooltip_focus,
+                            cx,
+                        )
                     })
                     .menu(move |window, cx| {
                         let weak_self = weak_self.clone();
@@ -4709,7 +4711,12 @@ impl ThreadView {
         Some(
             icon_button
                 .tooltip(move |_, cx| {
-                    Tooltip::for_action_in(tooltip_label, &ToggleFastMode, &focus_handle, cx)
+                    Tooltip::for_action_in(
+                        tooltip_label.clone(),
+                        &ToggleFastMode,
+                        &focus_handle,
+                        cx,
+                    )
                 })
                 .on_click(cx.listener(move |this, _, _window, cx| {
                     this.apply_fast_mode_speed(new_speed, cx);
@@ -4788,7 +4795,12 @@ impl ThreadView {
             .icon_size(IconSize::Small)
             .icon_color(color)
             .tooltip(move |_, cx| {
-                Tooltip::for_action_in(tooltip_label, &ToggleThinkingMode, &focus_handle, cx)
+                Tooltip::for_action_in(
+                    tooltip_label.clone(),
+                    &ToggleThinkingMode,
+                    &focus_handle,
+                    cx,
+                )
             })
             .on_click(cx.listener(move |this, _, _window, cx| {
                 if let Some(thread) = this.as_native_thread(cx) {
@@ -5602,10 +5614,10 @@ impl ThreadView {
                 let is_subagent = self.is_subagent();
                 let can_rewind = self.thread.read(cx).supports_truncate(cx);
                 let is_editable = can_rewind && message.id.is_some() && !is_subagent;
-                let agent_name = if is_subagent {
+                let agent_name: SharedString = if is_subagent {
                     ama10_i18n::tr!("subagents")
                 } else {
-                    self.agent_id.clone()
+                    self.agent_id.clone().into()
                 };
 
                 v_flex()

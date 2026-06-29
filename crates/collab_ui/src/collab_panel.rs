@@ -3,7 +3,7 @@ mod contact_finder;
 
 use self::channel_modal::ChannelModal;
 use crate::{CollaborationPanelSettings, channel_view::ChannelView};
-use ama10_i18n::{tr, tr_f, translate};
+use ama10_i18n::{tr, tr_f};
 use anyhow::Context as _;
 use call::ActiveCall;
 use channel::{Channel, ChannelEvent, ChannelStore};
@@ -167,7 +167,10 @@ pub fn init(cx: &mut App) {
                 })
                 .detach_and_notify_err(workspace_handle, window, cx);
             } else {
-                workspace.show_error(tr!("There is no active call; join one first.").as_ref(), cx);
+                workspace.show_error(
+                    tr!("There is no active call; join one first.").to_string(),
+                    cx,
+                );
             }
         });
         workspace.register_action(|workspace, _: &ShareProject, window, cx| {
@@ -1237,7 +1240,7 @@ impl CollabPanel {
                     ),
             )
             .child(Label::new(project_name.clone()))
-            .tooltip(Tooltip::text(tr_f!("Open {0}", project_name.clone())))
+            .tooltip(Tooltip::text(tr_f!("Open {0}", project_name)))
     }
 
     fn render_participant_screen(
@@ -1404,7 +1407,7 @@ impl CollabPanel {
                             })
                             .detach_and_prompt_err(tr!("Failed to grant write access").as_ref(), window, cx, |e, _, _| {
                                                             match e.error_code() {
-                                                                ErrorCode::NeedsCla => Some(tr!("This user has not yet signed the CLA at https://zed.dev/cla.").to_string().into()),
+                                                                ErrorCode::NeedsCla => Some(tr!("This user has not yet signed the CLA at https://zed.dev/cla.").to_string()),
                                     _ => None,
                                 }
                             })
@@ -1554,7 +1557,7 @@ impl CollabPanel {
 
                 if let Some(channel_name) = clipboard_channel_name {
                     context_menu = context_menu.separator().entry(
-                        tr_f!("Move #'{0}' here", channel_name.clone()),
+                        tr_f!("Move #'{0}' here", channel_name),
                         None,
                         window.handler_for(&this, move |this, window, cx| {
                             this.move_channel_on_clipboard(channel_id, window, cx)
@@ -2304,13 +2307,15 @@ impl CollabPanel {
                 return;
             }
 
+            let msg_up = tr!("Failed to move channel up");
+            let msg_down = tr!("Failed to move channel down");
             self.channel_store.update(cx, |store, cx| {
                 store
                     .reorder_channel(channel.id, direction, cx)
                     .detach_and_prompt_err(
                         match direction {
-                            Direction::Up => tr!("Failed to move channel up").as_ref(),
-                            Direction::Down => tr!("Failed to move channel down").as_ref(),
+                            Direction::Up => msg_up.as_ref(),
+                            Direction::Down => msg_down.as_ref(),
                         },
                         window,
                         cx,
@@ -3485,7 +3490,7 @@ impl CollabPanel {
                             }))
                             .tooltip(move |_window, cx| {
                                 Tooltip::for_action_in(
-                                    favorite_tooltip,
+                                    favorite_tooltip.clone(),
                                     &ToggleSelectedChannelFavorite,
                                     &focus_handle,
                                     cx,

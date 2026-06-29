@@ -138,9 +138,9 @@ impl Render for ModeSelector {
             .iter()
             .find(|mode| mode.id == current_mode_id)
             .map(|mode| mode.name.clone())
-            .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
+            .unwrap_or_else(|| ama10_i18n::tr!("Unknown").to_string());
 
-        let this = if self.menu_handle.is_deployed() {
+        let chevron_icon = if self.menu_handle.is_deployed() {
             IconName::ChevronUp
         } else {
             IconName::ChevronDown
@@ -149,8 +149,14 @@ impl Render for ModeSelector {
         let trigger_button = Button::new("mode-selector-trigger", current_mode_name)
             .label_size(LabelSize::Small)
             .color(Color::Muted)
-            .end_icon(Icon::new(icon).size(IconSize::XSmall).color(Color::Muted))
+            .end_icon(
+                Icon::new(chevron_icon)
+                    .size(IconSize::XSmall)
+                    .color(Color::Muted),
+            )
             .disabled(self.setting_mode);
+
+        let this = cx.weak_entity();
 
         PopoverMenu::new("mode-selector")
             .trigger_with_tooltip(
