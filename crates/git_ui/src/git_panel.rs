@@ -4559,7 +4559,7 @@ impl GitPanel {
                 })
                 .tooltip(move |_window, cx| {
                     if !can_commit {
-                        Tooltip::simple(ama10_i18n::tr!("No Changes to Commit"), cx)
+                        Tooltip::simple(ama10_i18n::tr!("No changes to commit"), cx)
                     } else if has_commit_model_configuration_error {
                         Tooltip::simple(
                             ama10_i18n::tr!(
@@ -6559,12 +6559,13 @@ impl GitPanel {
                             })
                             .tooltip(move |_window, cx| {
                                 let action = match stage_status {
-                                    StageStatus::Staged => "Unstage",
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => "Stage",
+                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
+                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
+                                        ama10_i18n::tr!("Stage")
+                                    }
                                 };
-                                let tooltip_name = action.to_string();
 
-                                Tooltip::for_action(tooltip_name, &ToggleStaged, cx)
+                                Tooltip::for_action(action, &ToggleStaged, cx)
                             }),
                     ),
             )
@@ -6736,8 +6737,10 @@ impl GitPanel {
                             })
                             .tooltip(move |_window, cx| {
                                 let action = match stage_status {
-                                    StageStatus::Staged => "Unstage",
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => "Stage",
+                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
+                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
+                                        ama10_i18n::tr!("Stage")
+                                    }
                                 };
                                 Tooltip::simple(ama10_i18n::tr_f!("{} folder", action), cx)
                             }),

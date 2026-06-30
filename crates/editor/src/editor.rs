@@ -2828,15 +2828,18 @@ impl Editor {
             })?;
             anyhow::Ok(())
         })
-        .detach_and_prompt_err("Failed to create buffer", window, cx, |e, _, _| {
-            match e.error_code() {
-                ErrorCode::RemoteUpgradeRequired => Some(format!(
-                "The remote instance of Zed does not support this yet. It must be upgraded to {}",
-                e.error_tag("required").unwrap_or("the latest version")
-            )),
+        .detach_and_prompt_err(
+            tr!("Failed to create buffer").as_ref(),
+            window,
+            cx,
+            |e, _, _| match e.error_code() {
+                ErrorCode::RemoteUpgradeRequired => Some(
+                    tr_f!("The remote instance of Zed does not support this yet. It must be upgraded to {}",
+                    e.error_tag("required").unwrap_or("the latest version")
+                ).to_string()),
                 _ => None,
-            }
-        });
+            },
+        );
     }
 
     pub fn leader_id(&self) -> Option<CollaboratorId> {
@@ -4394,11 +4397,11 @@ impl Editor {
                 };
                 match self {
                     Intent::SetBookmark => tr_f!(
-                        "{}-click to add a breakpoint\nright-click for more options",
+                        "{}-click to add a bookmark\nright-click for more options",
                         alt_as_text
                     ),
                     Intent::SetBreakpoint => tr_f!(
-                        "{}-click to add a bookmark\nright-click for more options",
+                        "{}-click to add a breakpoint\nright-click for more options",
                         alt_as_text
                     ),
                 }
@@ -4457,9 +4460,13 @@ impl Editor {
             }))
             .when(!has_context_menu, |button| {
                 button.tooltip(move |_window, cx| {
+                    let action: &dyn Action = match intent {
+                        Intent::SetBookmark => &ToggleBookmark,
+                        Intent::SetBreakpoint => &ToggleBreakpoint,
+                    };
                     Tooltip::with_meta_in(
                         intent.as_str(),
-                        Some(&ToggleBreakpoint),
+                        Some(action),
                         intent.secondary_and_options(),
                         &focus_handle,
                         cx,

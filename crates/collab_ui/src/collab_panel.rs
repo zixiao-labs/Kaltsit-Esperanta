@@ -1135,7 +1135,7 @@ impl CollabPanel {
             .current_user()
             .map(|user| user.legacy_id)
             == Some(user_id);
-        let tooltip = tr_f!("Follow {0}", user.github_login);
+        let tooltip = tr_f!("Follow {}", user.github_login);
 
         let is_call_admin = ActiveCall::global(cx).read(cx).room().is_some_and(|room| {
             room.read(cx).local_participant().role == proto::ChannelRole::Admin
@@ -1168,7 +1168,6 @@ impl CollabPanel {
             .child(render_participant_name_and_handle(user))
             .toggle_state(is_selected)
             .end_slot(end_slot)
-            .tooltip(Tooltip::text(tr!("Click to Follow")))
             .when_some(peer_id, |el, peer_id| {
                 if role == proto::ChannelRole::Guest {
                     return el;
@@ -1240,7 +1239,7 @@ impl CollabPanel {
                     ),
             )
             .child(Label::new(project_name.clone()))
-            .tooltip(Tooltip::text(tr_f!("Open {0}", project_name)))
+            .tooltip(Tooltip::text(tr_f!("Open {}", project_name)))
     }
 
     fn render_participant_screen(
@@ -1557,7 +1556,7 @@ impl CollabPanel {
 
                 if let Some(channel_name) = clipboard_channel_name {
                     context_menu = context_menu.separator().entry(
-                        tr_f!("Move #'{0}' here", channel_name),
+                        tr_f!("Move #'{}' here", channel_name),
                         None,
                         window.handler_for(&this, move |this, window, cx| {
                             this.move_channel_on_clipboard(channel_id, window, cx)
@@ -1669,9 +1668,9 @@ impl CollabPanel {
 
             if contact.online && !contact.busy {
                 let label: SharedString = if in_room {
-                    tr_f!("Invite {0} to join", contact.user.github_login.clone())
+                    tr_f!("Invite {} to join", contact.user.github_login.clone())
                 } else {
-                    tr_f!("Call {0}", contact.user.github_login.clone())
+                    tr_f!("Call {}", contact.user.github_login.clone())
                 };
                 context_menu = context_menu.entry(label, None, {
                     let this = this.clone();
@@ -2479,7 +2478,7 @@ impl CollabPanel {
             return;
         };
         let prompt_message = tr_f!(
-            "Are you sure you want to leave \"#{0}\"?",
+            "Are you sure you want to leave \"#{}\"?",
             channel.name.clone()
         );
         let answer = window.prompt(
@@ -2517,7 +2516,7 @@ impl CollabPanel {
         let channel_store = self.channel_store.clone();
         if let Some(channel) = channel_store.read(cx).channel_for_id(channel_id) {
             let prompt_message = tr_f!(
-                "Are you sure you want to remove the channel \"{0}\"?",
+                "Are you sure you want to remove the channel \"{}\"?",
                 channel.name.clone()
             );
             let answer = window.prompt(
@@ -2552,7 +2551,7 @@ impl CollabPanel {
     ) {
         let user_store = self.user_store.clone();
         let prompt_message = tr_f!(
-            "Are you sure you want to remove \"{0}\" from your contacts?",
+            "Are you sure you want to remove \"{}\" from your contacts?",
             github_login
         );
         let answer = window.prompt(
@@ -3147,15 +3146,15 @@ impl CollabPanel {
             .child(item)
             .tooltip(move |_, cx| {
                 let text: SharedString = if !online {
-                    tr_f!("{0} is offline", github_login.clone())
+                    tr_f!("{} is offline", github_login.clone())
                 } else if busy {
-                    tr_f!("{0} is on a call", github_login.clone())
+                    tr_f!("{} is on a call", github_login.clone())
                 } else {
                     let room = ActiveCall::global(cx).read(cx).room();
                     if room.is_some() {
-                        tr_f!("Invite {0} to join call", github_login.clone())
+                        tr_f!("Invite {} to join call", github_login.clone())
                     } else {
-                        tr_f!("Call {0}", github_login.clone())
+                        tr_f!("Call {}", github_login.clone())
                     }
                 };
                 Tooltip::simple(text, cx)
@@ -3579,7 +3578,7 @@ impl CollabPanel {
                 Some((
                     Some(requester.clone()),
                     tr_f!(
-                        "{0} wants to add you as a contact",
+                        "{} wants to add you as a contact",
                         requester.github_login.clone()
                     )
                     .to_string(),
@@ -3590,7 +3589,7 @@ impl CollabPanel {
                 Some((
                     Some(responder.clone()),
                     tr_f!(
-                        "{0} accepted your contact request",
+                        "{} accepted your contact request",
                         responder.github_login.clone()
                     )
                     .to_string(),
@@ -3605,7 +3604,7 @@ impl CollabPanel {
                 Some((
                     Some(inviter.clone()),
                     tr_f!(
-                        "{0} invited you to join the #{1} channel",
+                        "{} invited you to join the #{} channel",
                         inviter.github_login.clone(),
                         channel_name.clone()
                     )
