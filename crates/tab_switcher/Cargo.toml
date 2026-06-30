@@ -13,6 +13,7 @@ path = "src/tab_switcher.rs"
 doctest = false
 
 [dependencies]
+ama10-i18n.workspace = true
 collections.workspace = true
 editor.workspace = true
 fuzzy_nucleo.workspace = true

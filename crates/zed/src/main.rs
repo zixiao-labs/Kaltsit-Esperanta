@@ -501,6 +501,11 @@ fn main() {
         zed::watch_settings_files(fs.clone(), cx);
         handle_keymap_file_changes(user_keymap_file_rx, user_keymap_watcher, cx);
 
+        // Initialize i18n with the user's preferred language.
+        // TODO: Read language preference from settings/CLI args.
+        // Defaults to English (pass-through) when not called.
+        ama10_i18n::init(ama10_i18n::Language::English);
+
         let user_agent = format!(
             "ZetaCode/{} ({}; {})",
             AppVersion::global(cx),

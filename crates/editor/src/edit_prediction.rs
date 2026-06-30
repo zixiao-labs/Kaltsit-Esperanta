@@ -1,4 +1,5 @@
 use super::*;
+use ama10_i18n::{tr, tr_f};
 
 pub fn make_suggestion_styles(cx: &App) -> EditPredictionStyles {
     EditPredictionStyles {
@@ -1151,7 +1152,7 @@ impl Editor {
                 let target_display_point = range.end.to_display_point(editor_snapshot);
 
                 self.render_edit_prediction_end_of_line_popover(
-                    "Accept",
+                    tr!("Accept"),
                     editor_snapshot,
                     visible_row_range,
                     target_display_point,
@@ -1275,7 +1276,7 @@ impl Editor {
                                     .bg(Self::edit_prediction_line_popover_bg_color(cx))
                                     .when(keybind_display.show_hold_label, |el| {
                                         el.child(
-                                            Label::new("Hold")
+                                            Label::new(tr!("Hold"))
                                                 .size(LabelSize::Small)
                                                 .when(
                                                     keybind_display.missing_accept_keystroke,
@@ -1329,11 +1330,11 @@ impl Editor {
                 )?,
 
                 None => pending_completion_container(icons.base)
-                    .child(Label::new("...").size(LabelSize::Small)),
+                    .child(Label::new(tr!("...")).size(LabelSize::Small)),
             },
 
             None => pending_completion_container(icons.base)
-                .child(Label::new("...").size(LabelSize::Small)),
+                .child(Label::new(tr!("...")).size(LabelSize::Small)),
         };
 
         let completion = if is_refreshing || self.active_edit_prediction.is_none() {
@@ -1395,7 +1396,7 @@ impl Editor {
                                     .child(self.render_edit_prediction_popover_keystroke(
                                         keystroke, key_color, cx,
                                     ))
-                                    .child(Label::new("Preview").into_any_element())
+                                    .child(Label::new(tr!("Preview")).into_any_element())
                                     .opacity(if has_completion { 1.0 } else { 0.4 }),
                             )
                         } else {
@@ -1828,7 +1829,7 @@ impl Editor {
         if target_display_point.row().as_f64() < scroll_top {
             let mut element = self
                 .render_edit_prediction_line_popover(
-                    "Jump to Edit",
+                    tr!("Jump to Edit"),
                     Some(IconName::ArrowUp),
                     window,
                     cx,
@@ -1847,7 +1848,7 @@ impl Editor {
         } else if (target_display_point.row().as_f64() + 1.) > scroll_bottom {
             let mut element = self
                 .render_edit_prediction_line_popover(
-                    "Jump to Edit",
+                    tr!("Jump to Edit"),
                     Some(IconName::ArrowDown),
                     window,
                     cx,
@@ -1865,7 +1866,7 @@ impl Editor {
             Some((element, origin))
         } else {
             self.render_edit_prediction_end_of_line_popover(
-                "Jump to Edit",
+                tr!("Jump to Edit"),
                 editor_snapshot,
                 visible_row_range,
                 target_display_point,
@@ -1881,7 +1882,7 @@ impl Editor {
 
     fn render_edit_prediction_end_of_line_popover(
         self: &mut Editor,
-        label: &'static str,
+        label: impl Into<SharedString>,
         editor_snapshot: &EditorSnapshot,
         visible_row_range: Range<DisplayRow>,
         target_display_point: DisplayPoint,
@@ -1892,13 +1893,14 @@ impl Editor {
         window: &mut Window,
         cx: &mut App,
     ) -> Option<(AnyElement, gpui::Point<Pixels>)> {
+        let label: SharedString = label.into();
         let target_line_end = DisplayPoint::new(
             target_display_point.row(),
             editor_snapshot.line_len(target_display_point.row()),
         );
 
         let mut element = self
-            .render_edit_prediction_line_popover(label, None, window, cx)
+            .render_edit_prediction_line_popover(label.clone(), None, window, cx)
             .into_any();
 
         let size = element.layout_as_root(AvailableSpace::min_size(), window, cx);
@@ -2422,21 +2424,21 @@ impl Editor {
                         } else {
                             Icon::new(icons.up)
                         })
-                        .child(Label::new("Jump to Edit")),
+                        .child(Label::new(tr!("Jump to Edit"))),
                 )
             }
             EditPrediction::MoveOutside { snapshot, .. } => {
                 let file_name = snapshot
                     .file()
-                    .map(|file| file.file_name(cx))
-                    .unwrap_or("untitled");
+                    .map(|file| file.file_name(cx).to_string())
+                    .unwrap_or_else(|| tr!("untitled").to_string());
                 Some(
                     h_flex()
                         .px_2()
                         .gap_2()
                         .flex_1()
                         .child(Icon::new(icons.base))
-                        .child(Label::new(format!("Jump to {file_name}"))),
+                        .child(Label::new(tr_f!("Jump to {}", file_name))),
                 )
             }
             EditPrediction::Edit {
@@ -2474,7 +2476,7 @@ impl Editor {
                     .gap_1()
                     .min_w_16()
                     .child(styled_text)
-                    .when(has_more_lines, |parent| parent.child("…"));
+                    .when(has_more_lines, |parent| parent.child(tr!("…")));
 
                 let left = if supports_jump && first_edit_row != cursor_point.row {
                     render_relative_row_jump("", cursor_point.row, first_edit_row)
@@ -2524,8 +2526,8 @@ impl Render for MissingEditPredictionKeybindingTooltip {
                     v_flex()
                         .flex_1()
                         .text_ui_sm(cx)
-                        .child(Label::new("Conflict with Accept Keybinding"))
-                        .child("Your keymap currently overrides the default accept keybinding. To continue, assign one keybinding for the `editor::AcceptEditPrediction` action.")
+                        .child(Label::new(tr!("Conflict with Accept Keybinding")))
+                        .child(tr!("Your keymap currently overrides the default accept keybinding. To continue, assign one keybinding for the `editor::AcceptEditPrediction` action."))
                 )
                 .child(
                     h_flex()
@@ -2533,10 +2535,10 @@ impl Render for MissingEditPredictionKeybindingTooltip {
                         .gap_1()
                         .items_end()
                         .w_full()
-                        .child(Button::new("open-keymap", "Assign Keybinding").size(ButtonSize::Compact).on_click(|_ev, window, cx| {
+                        .child(Button::new("open-keymap", tr!("Assign Keybinding")).size(ButtonSize::Compact).on_click(|_ev, window, cx| {
                             window.dispatch_action(zed_actions::OpenKeymapFile.boxed_clone(), cx)
                         }))
-                        .child(Button::new("see-docs", "See Docs").size(ButtonSize::Compact).on_click(|_ev, _window, cx| {
+                        .child(Button::new("see-docs", tr!("See Docs")).size(ButtonSize::Compact).on_click(|_ev, _window, cx| {
                             cx.open_url("https://zed.dev/docs/completions#edit-predictions-missing-keybinding");
                         })),
                 )

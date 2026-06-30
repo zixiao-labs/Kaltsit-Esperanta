@@ -1,5 +1,7 @@
 pub(super) mod blame;
 
+use ama10_i18n::{tr, tr_f};
+
 use super::*;
 use ::git::{Restore, blame::BlameEntry, commit::ParsedCommitMessage, status::FileStatus};
 use buffer_diff::DiffHunkStatus;
@@ -471,7 +473,7 @@ impl Editor {
         // Create the prompt editor for the review input
         let prompt_editor = cx.new(|cx| {
             let mut editor = Editor::single_line(window, cx);
-            editor.set_placeholder_text("Add a review comment...", window, cx);
+            editor.set_placeholder_text(tr!("Add a review comment...").as_ref(), window, cx);
             editor
         });
 
@@ -858,7 +860,9 @@ impl Editor {
                     .border_color(icon_color.opacity(0.5))
             })
             .child(Icon::new(IconName::Plus).size(IconSize::Small))
-            .tooltip(Tooltip::text("Add Review (drag to select multiple lines)"))
+            .tooltip(Tooltip::text(tr!(
+                "Add Review (drag to select multiple lines)"
+            )))
             .on_mouse_down(
                 gpui::MouseButton::Left,
                 cx.listener(move |editor, _event: &gpui::MouseDownEvent, window, cx| {
@@ -2273,7 +2277,7 @@ impl Editor {
                                 IconButton::new("diff-review-close", IconName::Close)
                                     .icon_color(ui::Color::Muted)
                                     .icon_size(action_icon_size)
-                                    .tooltip(Tooltip::text("Close"))
+                                    .tooltip(Tooltip::text(tr!("Close")))
                                     .on_click(|_, window, cx| {
                                         window
                                             .dispatch_action(Box::new(crate::actions::Cancel), cx);
@@ -2283,7 +2287,7 @@ impl Editor {
                                 IconButton::new("diff-review-add", IconName::Return)
                                     .icon_color(ui::Color::Muted)
                                     .icon_size(action_icon_size)
-                                    .tooltip(Tooltip::text("Add comment"))
+                                    .tooltip(Tooltip::text(tr!("Add comment")))
                                     .on_click(|_, window, cx| {
                                         window.dispatch_action(
                                             Box::new(crate::actions::SubmitDiffReviewComment),
@@ -2350,7 +2354,7 @@ impl Editor {
                         .color(ui::Color::Muted),
                     )
                     .child(
-                        Label::new(format!(
+                        Label::new(tr_f!(
                             "{} Comment{}",
                             comment_count,
                             if comment_count == 1 { "" } else { "s" }
@@ -2779,7 +2783,12 @@ pub(super) fn render_diff_hunk_controls(
                         .tooltip({
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
-                                Tooltip::for_action_in("Next Hunk", &GoToHunk, &focus_handle, cx)
+                                Tooltip::for_action_in(
+                                    tr!("Next Hunk"),
+                                    &GoToHunk,
+                                    &focus_handle,
+                                    cx,
+                                )
                             }
                         })
                         .on_click({
@@ -2811,7 +2820,7 @@ pub(super) fn render_diff_hunk_controls(
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
                                 Tooltip::for_action_in(
-                                    "Previous Hunk",
+                                    tr!("Previous Hunk"),
                                     &GoToPreviousHunk,
                                     &focus_handle,
                                     cx,

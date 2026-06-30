@@ -1,7 +1,8 @@
+use ama10_i18n::tr;
 use call::{ActiveCall, Room, room};
 use gpui::{
-    DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, FontWeight, Render, Subscription,
-    Window,
+    DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, FontWeight, Render, SharedString,
+    Subscription, Window,
 };
 use livekit_client::ConnectionQuality;
 use ui::prelude::*;
@@ -144,12 +145,24 @@ impl Render for CallStatsModal {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let room = active_room(cx);
         let is_connected = room.is_some();
-        let stats = room
-            .and_then(|room| {
-                let diagnostics = room.read(cx).diagnostics()?;
-                Some(diagnostics.read(cx).stats().clone())
-            })
-            .unwrap_or_default();
+        let Some(stats) = room.and_then(|room| {
+            let diagnostics = room.read(cx).diagnostics()?;
+            Some(diagnostics.read(cx).stats().clone())
+        }) else {
+            return v_flex()
+                .key_context("CallStatsModal")
+                .on_action(cx.listener(Self::dismiss))
+                .track_focus(&self.focus_handle)
+                .elevation_3(cx)
+                .w(rems(24.))
+                .p_4()
+                .gap_3()
+                .child(
+                    Label::new(tr!("Unable to fetch call statistics"))
+                        .size(LabelSize::Large)
+                        .color(Color::Error),
+                );
+        };
 
         let (quality_text, quality_color) = quality_label(stats.connection_quality);
 
@@ -164,7 +177,7 @@ impl Render for CallStatsModal {
             .child(
                 h_flex()
                     .justify_between()
-                    .child(Label::new("Call Diagnostics").size(LabelSize::Large))
+                    .child(Label::new(tr!("Call Diagnostics")).size(LabelSize::Large))
                     .child(
                         Label::new(quality_text)
                             .size(LabelSize::Large)
@@ -176,7 +189,7 @@ impl Render for CallStatsModal {
                     h_flex()
                         .justify_center()
                         .py_4()
-                        .child(Label::new("Not in a call").color(Color::Muted)),
+                        .child(Label::new(tr!("Not in a call")).color(Color::Muted)),
                 )
             })
             .when(is_connected, |this| {
@@ -186,32 +199,32 @@ impl Render for CallStatsModal {
                         .child(
                             h_flex()
                                 .gap_2()
-                                .child(Label::new("Network").weight(FontWeight::SEMIBOLD)),
+                                .child(Label::new(tr!("Network")).weight(FontWeight::SEMIBOLD)),
                         )
                         .child(self.render_metric_row(
-                            "Latency",
-                            "Time for data to travel to the server",
+                            tr!("Latency"),
+                            tr!("Time for data to travel to the server"),
                             stats.latency_ms,
                             |v| format!("{:.0}ms", v),
                             |v| metric_rating("Latency", v),
                         ))
                         .child(self.render_metric_row(
-                            "Jitter",
-                            "Variance or fluctuation in latency",
+                            tr!("Jitter"),
+                            tr!("Variance or fluctuation in latency"),
                             stats.jitter_ms,
                             |v| format!("{:.0}ms", v),
                             |v| metric_rating("Jitter", v),
                         ))
                         .child(self.render_metric_row(
-                            "Packet loss",
-                            "Amount of data lost during transfer",
+                            tr!("Packet loss"),
+                            tr!("Amount of data lost during transfer"),
                             stats.packet_loss_pct,
                             |v| format!("{:.1}%", v),
                             |v| packet_loss_rating(v),
                         ))
                         .child(self.render_metric_row(
-                            "Input lag",
-                            "Delay from audio capture to WebRTC",
+                            tr!("Input lag"),
+                            tr!("Delay from audio capture to WebRTC"),
                             stats.input_lag.map(|d| d.as_secs_f64() * 1000.0),
                             |v| format!("{:.1}ms", v),
                             |v| input_lag_rating(v),
@@ -224,8 +237,8 @@ impl Render for CallStatsModal {
 impl CallStatsModal {
     fn render_metric_row(
         &self,
-        title: &str,
-        description: &str,
+        title: SharedString,
+        description: SharedString,
         value: Option<f64>,
         format_value: impl Fn(f64) -> String,
         rate: impl Fn(f64) -> (&'static str, Color),
@@ -245,9 +258,9 @@ impl CallStatsModal {
             .justify_between()
             .child(
                 v_flex()
-                    .child(Label::new(title.to_string()).size(LabelSize::Default))
+                    .child(Label::new(title).size(LabelSize::Default))
                     .child(
-                        Label::new(description.to_string())
+                        Label::new(description)
                             .size(LabelSize::Small)
                             .color(Color::Muted),
                     ),

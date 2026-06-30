@@ -13,6 +13,7 @@ use util::ResultExt;
 use workspace::{HideStatusItem, StatusItemView, ToolbarItemEvent, Workspace, item::ItemHandle};
 
 use crate::{Deploy, IncludeWarnings, ProjectDiagnosticsEditor};
+use ama10_i18n::tr;
 
 /// The status bar item that displays diagnostic counts.
 pub struct DiagnosticIndicator {
@@ -66,9 +67,9 @@ impl Render for DiagnosticIndicator {
                 .map_or(&*diagnostic.message, |(first, _)| first);
             let diagnostics_already_active = self.any_active_diagnostics(cx);
             let tooltip = if !diagnostics_already_active {
-                "Expand Diagnostics"
+                tr!("Expand Diagnostics")
             } else {
-                "Next Diagnostic"
+                tr!("Next Diagnostic")
             };
             Some(
                 Button::new("diagnostic_message", SharedString::new(message))
@@ -76,7 +77,7 @@ impl Render for DiagnosticIndicator {
                     .truncate(true)
                     .tooltip(move |_window, cx| {
                         Tooltip::for_action(
-                            tooltip,
+                            tooltip.clone(),
                             &editor::actions::GoToDiagnostic::default(),
                             cx,
                         )
@@ -94,7 +95,7 @@ impl Render for DiagnosticIndicator {
                 ButtonLike::new("diagnostic-indicator")
                     .child(diagnostic_indicator)
                     .tooltip(move |_window, cx| {
-                        Tooltip::for_action("Project Diagnostics", &Deploy, cx)
+                        Tooltip::for_action(tr!("Project Diagnostics"), &Deploy, cx)
                     })
                     .on_click(cx.listener(|this, _, window, cx| {
                         if let Some(workspace) = this.workspace.upgrade() {

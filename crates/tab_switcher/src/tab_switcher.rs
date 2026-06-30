@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tab_switcher_tests;
 
+use ama10_i18n::tr;
 use collections::{HashMap, HashSet};
 use editor::items::{
     entry_diagnostic_aware_icon_decoration_and_color, entry_git_aware_label_color,
@@ -723,11 +724,11 @@ impl PickerDelegate for TabSwitcherDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Search all tabs…".into()
+        tr!("Search all tabs…").into()
     }
 
     fn no_matches_text(&self, _window: &mut Window, _cx: &mut App) -> Option<SharedString> {
-        Some("No tabs".into())
+        Some(tr!("No tabs"))
     }
 
     fn match_count(&self) -> usize {
@@ -868,7 +869,7 @@ impl PickerDelegate for TabSwitcherDelegate {
                 IconButton::new("close_tab", IconName::Close)
                     .icon_size(IconSize::Small)
                     .icon_color(indicator_color)
-                    .tooltip(Tooltip::for_action_title("Close", &CloseSelectedItem))
+                    .tooltip(Tooltip::for_action_title(tr!("Close"), &CloseSelectedItem))
                     .on_click(cx.listener(move |picker, _, window, cx| {
                         cx.stop_propagation();
                         picker.delegate.close_item_at(ix, window, cx);

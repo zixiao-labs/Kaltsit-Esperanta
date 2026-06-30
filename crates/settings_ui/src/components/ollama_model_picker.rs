@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ama10_i18n::tr;
 use fuzzy::StringMatch;
 use gpui::{AnyElement, App, Context, DismissEvent, ReadGlobal, SharedString, Task, Window, px};
 use picker::{Picker, PickerDelegate};
@@ -85,7 +86,7 @@ impl PickerDelegate for OllamaModelPickerDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Search models…".into()
+        tr!("Search models…").into()
     }
 
     fn update_matches(
@@ -172,7 +173,7 @@ pub fn render_ollama_model_picker(
         .trigger(render_picker_trigger_button(
             "ollama_model_picker_trigger".into(),
             if current_value.is_empty() {
-                "Select a model…".into()
+                tr!("Select a model…")
             } else {
                 current_value.clone()
             },

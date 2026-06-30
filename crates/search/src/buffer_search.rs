@@ -11,6 +11,7 @@ use crate::{
         should_navigate_history,
     },
 };
+use ama10_i18n::tr;
 use any_vec::AnyVec;
 use collections::HashMap;
 use editor::{
@@ -134,7 +135,7 @@ impl Render for BufferSearchBar {
                             IconButton::new("diff-unified", IconName::DiffUnified)
                                 .icon_size(IconSize::Small)
                                 .toggle_state(diff_view_style == DiffViewStyle::Unified)
-                                .tooltip(Tooltip::text("Unified"))
+                                .tooltip(Tooltip::text(tr!("Unified")))
                                 .on_click({
                                     let splittable_editor = splittable_editor.downgrade();
                                     move |_, window, cx| {
@@ -169,7 +170,7 @@ impl Render for BufferSearchBar {
                                         format!("Split when wider than {} columns", min_columns)
                                             .into()
                                     } else {
-                                        SharedString::from("Split")
+                                        tr!("Split")
                                     };
 
                                     v_flex()
@@ -186,7 +187,7 @@ impl Render for BufferSearchBar {
                                                     Some(TextSize::Small.rems(cx).into()),
                                                     false,
                                                 ))
-                                                .child("click to change min width"),
+                                                .child(tr!("click to change min width")),
                                         )
                                         .into_any()
                                 }))
@@ -242,17 +243,18 @@ impl Render for BufferSearchBar {
                 .map(|editor: Entity<Editor>| editor.read(cx).has_any_buffer_folded(cx))
                 .unwrap_or_default();
             let (icon, tooltip_label) = if is_collapsed {
-                (IconName::ChevronUpDown, "Expand All Files")
+                (IconName::ChevronUpDown, tr!("Expand All Files"))
             } else {
-                (IconName::ChevronDownUp, "Collapse All Files")
+                (IconName::ChevronDownUp, tr!("Collapse All Files"))
             };
 
             let collapse_expand_icon_button = |id| {
+                let label = tooltip_label.clone();
                 IconButton::new(id, icon)
                     .icon_size(IconSize::Small)
                     .tooltip(move |_, cx| {
                         Tooltip::for_action_in(
-                            tooltip_label,
+                            label.clone(),
                             &ToggleFoldAll,
                             &query_editor_focus,
                             cx,
@@ -300,12 +302,12 @@ impl Render for BufferSearchBar {
 
         self.query_editor.update(cx, |query_editor, cx| {
             if query_editor.placeholder_text(cx).is_none() {
-                query_editor.set_placeholder_text("Search…", window, cx);
+                query_editor.set_placeholder_text(tr!("Search…").as_ref(), window, cx);
             }
         });
 
         self.replacement_editor.update(cx, |editor, cx| {
-            editor.set_placeholder_text("Replace with…", window, cx);
+            editor.set_placeholder_text(tr!("Replace with…").as_ref(), window, cx);
         });
 
         let mut color_override = None;
@@ -393,7 +395,7 @@ impl Render for BufferSearchBar {
                     "buffer-search-bar-toggle",
                     IconName::Replace,
                     self.replace_enabled.then_some(ActionButtonState::Toggled),
-                    "Toggle Replace",
+                    tr!("Toggle Replace"),
                     &ToggleReplace,
                     focus_handle.clone(),
                 ))
@@ -417,7 +419,7 @@ impl Render for BufferSearchBar {
                         let focus_handle = focus_handle.clone();
                         move |_window, cx| {
                             Tooltip::for_action_in(
-                                "Toggle Search Selection",
+                                tr!("Toggle Search Selection"),
                                 &ToggleSelection,
                                 &focus_handle,
                                 cx,
@@ -439,7 +441,7 @@ impl Render for BufferSearchBar {
                         self.active_match_index
                             .is_none()
                             .then_some(ActionButtonState::Disabled),
-                        "Select Previous Match",
+                        tr!("Select Previous Match"),
                         &SelectPreviousMatch,
                         query_focus.clone(),
                     ))
@@ -449,7 +451,7 @@ impl Render for BufferSearchBar {
                         self.active_match_index
                             .is_none()
                             .then_some(ActionButtonState::Disabled),
-                        "Select Next Match",
+                        tr!("Select Next Match"),
                         &SelectNextMatch,
                         query_focus.clone(),
                     ))
@@ -470,7 +472,7 @@ impl Render for BufferSearchBar {
                         "buffer-search-nav-button",
                         IconName::SelectAll,
                         Default::default(),
-                        "Select All Matches",
+                        tr!("Select All Matches"),
                         &SelectAllMatches,
                         query_focus.clone(),
                     ))
@@ -482,7 +484,7 @@ impl Render for BufferSearchBar {
                     "buffer-search",
                     IconName::Close,
                     Default::default(),
-                    "Close Search Bar",
+                    tr!("Close Search Bar"),
                     &Dismiss,
                     focus_handle.clone(),
                 ))
@@ -516,7 +518,7 @@ impl Render for BufferSearchBar {
                     "buffer-search-replace-button",
                     IconName::ReplaceNext,
                     Default::default(),
-                    "Replace Next Match",
+                    tr!("Replace Next Match"),
                     &ReplaceNext,
                     focus_handle.clone(),
                 ))
@@ -524,7 +526,7 @@ impl Render for BufferSearchBar {
                     "buffer-search-replace-button",
                     IconName::ReplaceAll,
                     Default::default(),
-                    "Replace All Matches",
+                    tr!("Replace All Matches"),
                     &ReplaceAll,
                     focus_handle,
                 ));
@@ -569,7 +571,7 @@ impl Render for BufferSearchBar {
                                 "buffer-search",
                                 IconName::Close,
                                 Default::default(),
-                                "Close Search Bar",
+                                tr!("Close Search Bar"),
                                 &Dismiss,
                                 focus_handle.clone(),
                             )),

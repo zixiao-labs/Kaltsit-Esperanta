@@ -5,6 +5,7 @@ use crate::{
     persistence::WorkspaceDb,
 };
 use agent_settings::AgentSettings;
+use ama10_i18n::{tr, translate};
 use git::Clone as GitClone;
 use gpui::{
     Action, App, Context, Entity, EventEmitter, FocusHandle, Focusable, InteractiveElement,
@@ -150,7 +151,7 @@ impl SectionEntry {
     fn render(&self, button_index: usize, focus: &FocusHandle) -> Option<impl IntoElement> {
         self.visibility_guard.is_visible().then(|| {
             SectionButton::new(
-                self.title,
+                translate(self.title),
                 self.icon,
                 self.action,
                 button_index,
@@ -227,7 +228,7 @@ impl<const COLS: usize> Section<COLS> {
     fn render(self, index_offset: usize, focus: &FocusHandle) -> impl IntoElement {
         v_flex()
             .min_w_full()
-            .child(SectionHeader::new(self.title))
+            .child(SectionHeader::new(translate(self.title)))
             .children(
                 self.entries
                     .iter()
@@ -330,7 +331,9 @@ impl WelcomePage {
         let focus = self.focus_handle.clone();
         let color = cx.theme().colors();
 
-        let description = "Run multiple threads at once, mix and match any ACP-compatible agent, and keep work conflict-free with worktrees.";
+        let description = tr!(
+            "Run multiple threads at once, mix and match any ACP-compatible agent, and keep work conflict-free with worktrees."
+        );
 
         v_flex()
             .w_full()
@@ -351,7 +354,7 @@ impl WelcomePage {
                             .color(Color::Muted)
                             .size(IconSize::Small),
                     )
-                    .child(Label::new("Collaborate with Agents")),
+                    .child(Label::new(tr!("Collaborate with Agents"))),
             )
             .child(
                 Label::new(description)
@@ -360,7 +363,7 @@ impl WelcomePage {
                     .mb_2(),
             )
             .child(
-                Button::new("open-agent", "Open Agent Panel")
+                Button::new("open-agent", tr!("Open Agent Panel"))
                     .full_width()
                     .tab_index(tab_index as isize)
                     .style(ButtonStyle::Outlined)
@@ -381,7 +384,7 @@ impl WelcomePage {
     ) -> impl IntoElement {
         v_flex()
             .w_full()
-            .child(SectionHeader::new("Recent Projects"))
+            .child(SectionHeader::new(tr!("Recent Projects")))
             .children(recent_projects)
     }
 
@@ -448,9 +451,9 @@ impl Render for WelcomePage {
         };
 
         let welcome_label = if self.fallback_to_recent_projects {
-            "Welcome back to ZetaCode"
+            tr!("Welcome back to ZetaCode")
         } else {
-            "Welcome to ZetaCode"
+            tr!("Welcome to ZetaCode")
         };
 
         h_flex()
@@ -480,7 +483,7 @@ impl Render for WelcomePage {
                             .child(Vector::square(VectorName::ZedLogo, rems_from_px(45.)))
                             .child(
                                 v_flex().child(Headline::new(welcome_label)).child(
-                                    Label::new("The editor for what's next")
+                                    Label::new(tr!("The editor for what's next"))
                                         .size(LabelSize::Small)
                                         .color(Color::Muted)
                                         .italic(),
@@ -497,7 +500,7 @@ impl Render for WelcomePage {
                     .when(!self.fallback_to_recent_projects, |this| {
                         this.child(
                             v_flex().gap_4().child(Divider::horizontal()).child(
-                                Button::new("welcome-exit", "Return to Onboarding")
+                                Button::new("welcome-exit", tr!("Return to Onboarding"))
                                     .tab_index(next_tab_index as isize)
                                     .full_width()
                                     .label_size(LabelSize::XSmall)

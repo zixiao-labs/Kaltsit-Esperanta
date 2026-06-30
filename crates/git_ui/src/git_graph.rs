@@ -3,6 +3,7 @@ use crate::{
     commit_view::CommitView,
     git_status_icon,
 };
+
 use collections::{BTreeMap, HashMap, IndexSet};
 use editor::Editor;
 use file_icons::FileIcons;
@@ -145,7 +146,7 @@ impl PickerDelegate for CommitTagPickerDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Copy Tag".into()
+        ama10_i18n::tr!("Copy Tag").to_string().into()
     }
 
     fn match_count(&self) -> usize {
@@ -636,7 +637,7 @@ fn timestamp_format() -> &'static [BorrowedFormatItem<'static>] {
 
 fn format_timestamp(timestamp: i64) -> String {
     let Ok(datetime) = OffsetDateTime::from_unix_timestamp(timestamp) else {
-        return "Unknown".to_string();
+        return ama10_i18n::tr!("Unknown").to_string();
     };
 
     let local_offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
@@ -1472,7 +1473,7 @@ impl GitGraph {
 
         let search_editor = cx.new(|cx| {
             let mut editor = Editor::single_line(window, cx);
-            editor.set_placeholder_text("Search commits…", window, cx);
+            editor.set_placeholder_text(ama10_i18n::tr!("Search commits…").as_ref(), window, cx);
             editor
         });
 
@@ -1825,7 +1826,7 @@ impl GitGraph {
                     author_name = data.author_name.clone();
                     formatted_time = format_timestamp(data.commit_timestamp);
                 } else {
-                    subject = "Loading…".into();
+                    subject = ama10_i18n::tr!("Loading…");
                     author_name = "".into();
                 }
 
@@ -2480,8 +2481,8 @@ impl GitGraph {
             .unwrap_or_default();
 
         let header = match &ref_name {
-            Some(ref_name) => format!("Ref {ref_name}"),
-            None => format!("Commit {sha_short}"),
+            Some(ref_name) => ama10_i18n::tr_f!("Ref {}", ref_name).to_string(),
+            None => ama10_i18n::tr_f!("Commit {}", sha_short).to_string(),
         };
 
         let focus_handle = self.focus_handle.clone();
@@ -2491,23 +2492,27 @@ impl GitGraph {
                 .context(focus_handle)
                 .header(header)
                 .entry(
-                    "View Commit",
+                    ama10_i18n::tr!("View Commit"),
                     Some(OpenCommitView.boxed_clone()),
                     window.handler_for(&git_graph, move |this, window, cx| {
                         this.open_commit_view(index, window, cx);
                     }),
                 )
                 .entry(
-                    "Copy SHA",
+                    ama10_i18n::tr!("Copy SHA"),
                     Some(CopyCommitSha.boxed_clone()),
                     window.handler_for(&git_graph, move |this, _window, cx| {
                         this.copy_commit_sha(index, cx);
                     }),
                 )
                 .when_some(ref_name.clone(), |menu, ref_name| {
-                    menu.entry("Copy Ref Name", None, move |_window, cx| {
-                        cx.write_to_clipboard(ClipboardItem::new_string(ref_name.to_string()));
-                    })
+                    menu.entry(
+                        ama10_i18n::tr!("Copy Ref Name"),
+                        None,
+                        move |_window, cx| {
+                            cx.write_to_clipboard(ClipboardItem::new_string(ref_name.to_string()));
+                        },
+                    )
                 })
                 .when(ref_name.is_none(), |menu| {
                     menu.map(|menu| {
@@ -2517,7 +2522,7 @@ impl GitGraph {
                             .into_iter()
                             .map(|tag_name| SharedString::from(tag_name.to_string()))
                             .collect::<Vec<_>>();
-                        let copy_tag_label = "Copy Tag";
+                        let copy_tag_label = ama10_i18n::tr!("Copy Tag");
 
                         match tag_names.as_slice() {
                             [] => menu.item(
@@ -2557,11 +2562,11 @@ impl GitGraph {
                     })
                 })
                 .map(|mut menu| {
-                    menu = menu.separator().header("Custom Commands");
+                    menu = menu.separator().header(ama10_i18n::tr!("Custom Commands"));
 
                     if git_tasks.is_empty() {
                         return menu.item(
-                            ContextMenuEntry::new("Learn More")
+                            ContextMenuEntry::new(ama10_i18n::tr!("Learn More"))
                                 .icon(IconName::ArrowUpRight)
                                 .icon_color(Color::Muted)
                                 .icon_position(IconPosition::End)
@@ -2691,7 +2696,7 @@ impl GitGraph {
                             .icon_size(IconSize::Small)
                             .tooltip(move |_, cx| {
                                 Tooltip::for_action_in(
-                                    "Select Previous Match",
+                                    ama10_i18n::tr!("Select Previous Match"),
                                     &SelectPreviousMatch,
                                     &focus_handle,
                                     cx,
@@ -2714,7 +2719,7 @@ impl GitGraph {
                             .icon_size(IconSize::Small)
                             .tooltip(move |_, cx| {
                                 Tooltip::for_action_in(
-                                    "Select Next Match",
+                                    ama10_i18n::tr!("Select Next Match"),
                                     &SelectNextMatch,
                                     &focus_handle,
                                     cx,
@@ -2823,7 +2828,12 @@ impl GitGraph {
                 Some(data.commit_timestamp),
                 data.subject.clone(),
             ),
-            CommitDataState::Loading(_) => ("Loading…".into(), "".into(), None, "Loading…".into()),
+            CommitDataState::Loading(_) => (
+                ama10_i18n::tr!("Loading…"),
+                "".into(),
+                None,
+                ama10_i18n::tr!("Loading…"),
+            ),
         };
 
         let date_string = commit_timestamp
@@ -2962,9 +2972,17 @@ impl GitGraph {
                                 let is_copied = copied_state.read(cx).is_copied();
 
                                 let (icon, icon_color, tooltip_label) = if is_copied {
-                                    (IconName::Check, Color::Success, "Email Copied!")
+                                    (
+                                        IconName::Check,
+                                        Color::Success,
+                                        ama10_i18n::tr!("Email Copied!"),
+                                    )
                                 } else {
-                                    (IconName::Envelope, Color::Muted, "Copy Email")
+                                    (
+                                        IconName::Envelope,
+                                        Color::Muted,
+                                        ama10_i18n::tr!("Copy Email"),
+                                    )
                                 };
 
                                 let copy_email = author_email.clone();
@@ -2980,7 +2998,7 @@ impl GitGraph {
                                         .color(Color::Muted)
                                         .tooltip(move |_, cx| {
                                             Tooltip::with_meta(
-                                                tooltip_label,
+                                                tooltip_label.clone(),
                                                 None,
                                                 author_email_for_tooltip.clone(),
                                                 cx,
@@ -3013,9 +3031,17 @@ impl GitGraph {
                                 let is_copied = copied_state.read(cx).is_copied();
 
                                 let (icon, icon_color, tooltip_label) = if is_copied {
-                                    (IconName::Check, Color::Success, "Commit SHA Copied!")
+                                    (
+                                        IconName::Check,
+                                        Color::Success,
+                                        ama10_i18n::tr!("Commit SHA Copied!"),
+                                    )
                                 } else {
-                                    (IconName::Hash, Color::Muted, "Copy Commit SHA")
+                                    (
+                                        IconName::Hash,
+                                        Color::Muted,
+                                        ama10_i18n::tr!("Copy Commit SHA"),
+                                    )
                                 };
 
                                 Button::new("sha-button", &full_sha)
@@ -3029,7 +3055,7 @@ impl GitGraph {
                                         let full_sha = full_sha.clone();
                                         move |_, cx| {
                                             Tooltip::with_meta(
-                                                tooltip_label,
+                                                tooltip_label.clone(),
                                                 None,
                                                 full_sha.clone(),
                                                 cx,
@@ -3073,7 +3099,7 @@ impl GitGraph {
                                 this.child(
                                     Button::new(
                                         "view-on-provider",
-                                        format!("View on {}", provider_name),
+                                        ama10_i18n::tr_f!("View on {}", provider_name),
                                     )
                                     .start_icon(
                                         Icon::new(icon).size(IconSize::Small).color(Color::Muted),
@@ -3743,11 +3769,11 @@ impl Render for GitGraph {
 
         let content = if commit_count == 0 {
             let message = if let Some(error) = &error {
-                format!("Error loading: {}", error)
+                ama10_i18n::tr_f!("Error loading: {}", error)
             } else if is_loading {
-                "Loading".to_string()
+                ama10_i18n::tr!("Loading")
             } else {
-                "No commits found".to_string()
+                ama10_i18n::tr!("No commits found")
             };
             let label = Label::new(message)
                 .color(Color::Muted)
@@ -3794,28 +3820,40 @@ impl Render for GitGraph {
                             if !is_path_history {
                                 TableRow::from_vec(
                                     vec![
-                                        Label::new("Graph")
+                                        Label::new(ama10_i18n::tr!("Graph"))
                                             .color(Color::Muted)
                                             .truncate()
                                             .into_any_element(),
-                                        Label::new("Description")
+                                        Label::new(ama10_i18n::tr!("Description"))
                                             .color(Color::Muted)
                                             .into_any_element(),
-                                        Label::new("Date").color(Color::Muted).into_any_element(),
-                                        Label::new("Author").color(Color::Muted).into_any_element(),
-                                        Label::new("Commit").color(Color::Muted).into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Date"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Author"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Commit"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
                                     ],
                                     5,
                                 )
                             } else {
                                 TableRow::from_vec(
                                     vec![
-                                        Label::new("Description")
+                                        Label::new(ama10_i18n::tr!("Description"))
                                             .color(Color::Muted)
                                             .into_any_element(),
-                                        Label::new("Date").color(Color::Muted).into_any_element(),
-                                        Label::new("Author").color(Color::Muted).into_any_element(),
-                                        Label::new("Commit").color(Color::Muted).into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Date"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Author"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
+                                        Label::new(ama10_i18n::tr!("Commit"))
+                                            .color(Color::Muted)
+                                            .into_any_element(),
                                     ],
                                     4,
                                 )
@@ -4089,9 +4127,9 @@ impl Item for GitGraph {
             move |_, _| {
                 v_flex()
                     .child(Label::new(if path_history_path.is_some() {
-                        "Path History"
+                        ama10_i18n::tr!("Path History")
                     } else {
-                        "Git Graph"
+                        ama10_i18n::tr!("Git Graph")
                     }))
                     .when_some(path_history_path.clone(), |this, path| {
                         this.child(Label::new(path).color(Color::Muted).size(LabelSize::Small))
@@ -4120,7 +4158,10 @@ impl Item for GitGraph {
                     .file_name()
                     .map(|name| name.to_string_lossy().to_string())
             })
-            .map_or_else(|| "Git Graph".into(), |name| SharedString::from(name))
+            .map_or_else(
+                || ama10_i18n::tr!("Git Graph"),
+                |name| SharedString::from(name),
+            )
     }
 
     fn show_toolbar(&self) -> bool {

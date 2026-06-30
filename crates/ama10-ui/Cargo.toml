@@ -7,6 +7,7 @@ edition.workspace = true
 license = "GPL-3.0-or-later"
 
 [dependencies]
+ama10-i18n.workspace = true
 ama10.workspace = true
 anyhow.workspace = true
 credentials_provider.workspace = true

@@ -481,7 +481,7 @@ impl Render for RenameBranchModal {
                     .gap_1p5()
                     .child(Icon::new(IconName::GitBranch).size(IconSize::XSmall))
                     .child(
-                        Headline::new(format!("Rename Branch ({})", self.current_branch))
+                        Headline::new(ama10_i18n::tr_f!("Rename Branch ({})", self.current_branch))
                             .size(HeadlineSize::XSmall),
                     ),
             )
@@ -734,7 +734,9 @@ impl Render for RefPickerModal {
                     .w_full()
                     .gap_1p5()
                     .child(Icon::new(IconName::Hash).size(IconSize::XSmall))
-                    .child(Headline::new("View Commit").size(HeadlineSize::XSmall)),
+                    .child(
+                        Headline::new(ama10_i18n::tr!("View Commit")).size(HeadlineSize::XSmall),
+                    ),
             )
             .child(div().px_3().w_full().child(self.editor.clone()))
             .when_some(commit_preview, |el, preview| {
@@ -822,7 +824,7 @@ mod remote_button {
     ) -> SplitButton {
         split_button(
             id,
-            "Fetch",
+            ama10_i18n::tr!("Fetch"),
             0,
             0,
             Some(IconName::ArrowCircle),
@@ -833,9 +835,9 @@ mod remote_button {
             },
             move |_window, cx| {
                 git_action_tooltip(
-                    "Fetch updates from remote",
+                    ama10_i18n::tr!("Fetch updates from remote"),
                     &git::Fetch,
-                    "git fetch",
+                    ama10_i18n::tr!("git fetch"),
                     keybinding_target.clone(),
                     cx,
                 )
@@ -851,7 +853,7 @@ mod remote_button {
     ) -> SplitButton {
         split_button(
             id,
-            "Push",
+            ama10_i18n::tr!("Push"),
             ahead as usize,
             0,
             None,
@@ -862,9 +864,9 @@ mod remote_button {
             },
             move |_window, cx| {
                 git_action_tooltip(
-                    "Push committed changes to remote",
+                    ama10_i18n::tr!("Push committed changes to remote"),
                     &git::Push,
-                    "git push",
+                    ama10_i18n::tr!("git push"),
                     keybinding_target.clone(),
                     cx,
                 )
@@ -881,7 +883,7 @@ mod remote_button {
     ) -> SplitButton {
         split_button(
             id,
-            "Pull",
+            ama10_i18n::tr!("Pull"),
             ahead as usize,
             behind as usize,
             None,
@@ -892,9 +894,9 @@ mod remote_button {
             },
             move |_window, cx| {
                 git_action_tooltip(
-                    "Pull",
+                    ama10_i18n::tr!("Pull"),
                     &git::Pull,
-                    "git pull",
+                    ama10_i18n::tr!("git pull"),
                     keybinding_target.clone(),
                     cx,
                 )
@@ -909,7 +911,7 @@ mod remote_button {
     ) -> SplitButton {
         split_button(
             id,
-            "Publish",
+            ama10_i18n::tr!("Publish"),
             0,
             0,
             Some(IconName::ExpandUp),
@@ -920,9 +922,9 @@ mod remote_button {
             },
             move |_window, cx| {
                 git_action_tooltip(
-                    "Publish branch to remote",
+                    ama10_i18n::tr!("Publish branch to remote"),
                     &git::Push,
-                    "git push --set-upstream",
+                    ama10_i18n::tr!("git push --set-upstream"),
                     keybinding_target.clone(),
                     cx,
                 )
@@ -937,7 +939,7 @@ mod remote_button {
     ) -> SplitButton {
         split_button(
             id,
-            "Republish",
+            ama10_i18n::tr!("Republish"),
             0,
             0,
             Some(IconName::ExpandUp),
@@ -948,9 +950,9 @@ mod remote_button {
             },
             move |_window, cx| {
                 git_action_tooltip(
-                    "Re-publish branch to remote",
+                    ama10_i18n::tr!("Re-publish branch to remote"),
                     &git::Push,
-                    "git push --set-upstream",
+                    ama10_i18n::tr!("git push --set-upstream"),
                     keybinding_target.clone(),
                     cx,
                 )
@@ -1004,14 +1006,17 @@ mod remote_button {
                         .when_some(keybinding_target.clone(), |el, keybinding_target| {
                             el.context(keybinding_target)
                         })
-                        .action("Fetch", git::Fetch.boxed_clone())
-                        .action("Fetch From", git::FetchFrom.boxed_clone())
-                        .action("Pull", git::Pull.boxed_clone())
-                        .action("Pull (Rebase)", git::PullRebase.boxed_clone())
+                        .action(ama10_i18n::tr!("Fetch"), git::Fetch.boxed_clone())
+                        .action(ama10_i18n::tr!("Fetch From"), git::FetchFrom.boxed_clone())
+                        .action(ama10_i18n::tr!("Pull"), git::Pull.boxed_clone())
+                        .action(
+                            ama10_i18n::tr!("Pull (Rebase)"),
+                            git::PullRebase.boxed_clone(),
+                        )
                         .separator()
-                        .action("Push", git::Push.boxed_clone())
-                        .action("Push To", git::PushTo.boxed_clone())
-                        .action("Force Push", git::ForcePush.boxed_clone())
+                        .action(ama10_i18n::tr!("Push"), git::Push.boxed_clone())
+                        .action(ama10_i18n::tr!("Push To"), git::PushTo.boxed_clone())
+                        .action(ama10_i18n::tr!("Force Push"), git::ForcePush.boxed_clone())
                 }))
             })
             .anchor(Anchor::TopRight)
@@ -1200,7 +1205,11 @@ impl GitCloneModal {
     pub fn show(panel: Entity<GitPanel>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let repo_input = cx.new(|cx| {
             let mut editor = Editor::single_line(window, cx);
-            editor.set_placeholder_text("Enter repository URL…", window, cx);
+            editor.set_placeholder_text(
+                ama10_i18n::tr!("Enter repository URL…").as_ref(),
+                window,
+                cx,
+            );
             editor
         });
         let focus_handle = repo_input.focus_handle(cx);
@@ -1244,12 +1253,14 @@ impl Render for GitCloneModal {
                     .rounded_b_sm()
                     .bg(cx.theme().colors().editor_background)
                     .child(
-                        Label::new("Clone a repository from GitHub or other sources.")
-                            .color(Color::Muted)
-                            .size(LabelSize::Small),
+                        Label::new(ama10_i18n::tr!(
+                            "Clone a repository from GitHub or other sources."
+                        ))
+                        .color(Color::Muted)
+                        .size(LabelSize::Small),
                     )
                     .child(
-                        Button::new("learn-more", "Learn More")
+                        Button::new("learn-more", ama10_i18n::tr!("Learn More"))
                             .label_size(LabelSize::Small)
                             .end_icon(Icon::new(IconName::ArrowUpRight).size(IconSize::XSmall))
                             .on_click(|_, _, cx| {

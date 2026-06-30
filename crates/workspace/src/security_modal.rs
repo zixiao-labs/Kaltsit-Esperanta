@@ -6,6 +6,8 @@ use std::{
     sync::Arc,
 };
 
+use ama10_i18n::{tr, tr_f};
+
 use collections::{HashMap, HashSet};
 use gpui::{DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, ScrollHandle, WeakEntity};
 
@@ -83,9 +85,9 @@ impl Render for SecurityModal {
 
         let restricted_count = self.restricted_paths.len();
         let header_label: SharedString = if restricted_count == 1 {
-            "Unrecognized Project".into()
+            tr!("Unrecognized Project")
         } else {
-            format!("Unrecognized Projects ({})", restricted_count).into()
+            tr_f!("Unrecognized Projects ({})", restricted_count)
         };
 
         let trust_label = self.build_trust_label();
@@ -185,23 +187,23 @@ impl Render for SecurityModal {
                         v_flex()
                             .child(
                                 Label::new(
-                                    "Untrusted projects are opened in Restricted Mode to protect your system.",
+                                    tr!("Untrusted projects are opened in Restricted Mode to protect your system."),
                                 )
                                 .color(Color::Muted),
                             )
                             .child(
                                 Label::new(
-                                    "Review .zed/settings.json for any extensions or commands configured by this project.",
+                                    tr!("Review .zed/settings.json for any extensions or commands configured by this project."),
                                 )
                                 .color(Color::Muted),
                             ),
                     )
                     .child(
                         v_flex()
-                            .child(Label::new("Restricted Mode prevents:").color(Color::Muted))
-                            .child(ListBulletItem::new("Project settings from being applied"))
-                            .child(ListBulletItem::new("Language servers from running"))
-                            .child(ListBulletItem::new("MCP Server integrations from installing")),
+                            .child(Label::new(tr!("Restricted Mode prevents:")).color(Color::Muted))
+                            .child(ListBulletItem::new(tr!("Project settings from being applied")))
+                            .child(ListBulletItem::new(tr!("Language servers from running")))
+                            .child(ListBulletItem::new(tr!("MCP Server integrations from installing"))),
                     )
                     .map(|this| {
                         let Some(trust_label) = trust_label else {
@@ -271,7 +273,7 @@ impl Render for SecurityModal {
                     .gap_1()
                     .justify_end()
                     .child(
-                        Button::new("rm", "Stay in Restricted Mode")
+                        Button::new("rm", tr!("Stay in Restricted Mode"))
                             .key_binding(
                                 KeyBinding::for_action(
                                     &ToggleWorktreeSecurity,
@@ -286,7 +288,7 @@ impl Render for SecurityModal {
                             })),
                     )
                     .child(
-                        Button::new("tc", "Trust and Continue")
+                        Button::new("tc", tr!("Trust and Continue"))
                             .style(ButtonStyle::Filled)
                             .layer(ui::ElevationIndex::ModalSurface)
                             .key_binding(
@@ -352,16 +354,20 @@ impl SecurityModal {
         match available_parents.len() {
             0 => {
                 if has_restricted_files {
-                    Some(Cow::Borrowed("Trust all single files"))
+                    Some(Cow::Owned(tr!("Trust all single files").to_string()))
                 } else {
                     None
                 }
             }
-            1 => Some(Cow::Owned(format!(
-                "Trust all projects in the {:} folder",
-                self.shorten_path(available_parents[0]).display()
-            ))),
-            _ => Some(Cow::Borrowed("Trust all projects in the parent folders")),
+            1 => {
+                let path = self.shorten_path(available_parents[0]);
+                Some(Cow::Owned(
+                    tr_f!("Trust all projects in the {:} folder", path.display()).to_string(),
+                ))
+            }
+            _ => Some(Cow::Owned(
+                tr!("Trust all projects in the parent folders").to_string(),
+            )),
         }
     }
 

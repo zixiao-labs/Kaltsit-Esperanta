@@ -3,6 +3,7 @@ use crate::persistence::model::DockData;
 use crate::status_bar::HideStatusItem;
 use crate::{DraggedDock, Event, FocusFollowsMouse, ModalLayer, Pane, WorkspaceSettings};
 use crate::{Workspace, status_bar::StatusItemView};
+use ama10_i18n::{tr, tr_f};
 use anyhow::Context as _;
 use client::proto;
 use db::kvp::KeyValueStore;
@@ -324,11 +325,11 @@ impl From<TerminalDockPosition> for DockPosition {
 }
 
 impl DockPosition {
-    fn label(&self) -> &'static str {
+    fn label(&self) -> SharedString {
         match self {
-            Self::Left => "Left",
-            Self::Bottom => "Bottom",
-            Self::Right => "Right",
+            Self::Left => tr!("Left"),
+            Self::Bottom => tr!("Bottom"),
+            Self::Right => tr!("Right"),
         }
     }
 
@@ -1246,8 +1247,7 @@ impl Render for PanelButtons {
                 let (action, tooltip) = if is_active_button {
                     let action = dock.toggle_action();
 
-                    let tooltip: SharedString =
-                        format!("Close {} Dock", dock.position.label()).into();
+                    let tooltip: SharedString = tr_f!("Close {} Dock", dock.position.label());
 
                     (action, tooltip)
                 } else {
@@ -1276,7 +1276,7 @@ impl Render for PanelButtons {
                                         let is_current = position == dock_position;
                                         let panel = panel.clone();
                                         menu = menu.toggleable_entry(
-                                            format!("Dock {}", position.label()),
+                                            tr_f!("Dock {}", position.label()),
                                             is_current,
                                             IconPosition::Start,
                                             None,
@@ -1297,7 +1297,7 @@ impl Render for PanelButtons {
                                     let dock_for_flex = dock_for_menu.clone();
                                     let workspace_for_flex = workspace_for_menu.clone();
                                     menu = menu.toggleable_entry(
-                                        "Flex Width",
+                                        tr!("Flex Width"),
                                         currently_flexible,
                                         IconPosition::Start,
                                         None,
@@ -1320,7 +1320,7 @@ impl Render for PanelButtons {
                                     let dock_for_fixed = dock_for_menu.clone();
                                     let workspace_for_fixed = workspace_for_menu.clone();
                                     menu = menu.toggleable_entry(
-                                        "Fixed Width",
+                                        tr!("Fixed Width"),
                                         !currently_flexible,
                                         IconPosition::Start,
                                         None,

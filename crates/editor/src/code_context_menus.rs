@@ -1,4 +1,5 @@
 use crate::scroll::ScrollAmount;
+use ama10_i18n::tr;
 use fuzzy::{StringMatch, StringMatchCandidate};
 use gpui::{
     AnyElement, Entity, Focusable, FontWeight, ListSizingBehavior, ScrollHandle, ScrollStrategy,
@@ -1606,34 +1607,34 @@ fn render_completion_kind_letter(
         .into_any_element()
 }
 
-fn completion_kind_name(kind: CompletionItemKind) -> &'static str {
+fn completion_kind_name(kind: CompletionItemKind) -> SharedString {
     match kind {
-        CompletionItemKind::TEXT => "Text",
-        CompletionItemKind::METHOD => "Method",
-        CompletionItemKind::FUNCTION => "Function",
-        CompletionItemKind::CONSTRUCTOR => "Constructor",
-        CompletionItemKind::FIELD => "Field",
-        CompletionItemKind::VARIABLE => "Variable",
-        CompletionItemKind::CLASS => "Class",
-        CompletionItemKind::INTERFACE => "Interface",
-        CompletionItemKind::MODULE => "Module",
-        CompletionItemKind::PROPERTY => "Property",
-        CompletionItemKind::UNIT => "Unit",
-        CompletionItemKind::VALUE => "Value",
-        CompletionItemKind::ENUM => "Enum",
-        CompletionItemKind::KEYWORD => "Keyword",
-        CompletionItemKind::SNIPPET => "Snippet",
-        CompletionItemKind::COLOR => "Color",
-        CompletionItemKind::FILE => "File",
-        CompletionItemKind::REFERENCE => "Reference",
-        CompletionItemKind::FOLDER => "Folder",
-        CompletionItemKind::ENUM_MEMBER => "Enum Member",
-        CompletionItemKind::CONSTANT => "Constant",
-        CompletionItemKind::STRUCT => "Struct",
-        CompletionItemKind::EVENT => "Event",
-        CompletionItemKind::OPERATOR => "Operator",
-        CompletionItemKind::TYPE_PARAMETER => "Type Parameter",
-        _ => "Unknown",
+        CompletionItemKind::TEXT => tr!("Text"),
+        CompletionItemKind::METHOD => tr!("Method"),
+        CompletionItemKind::FUNCTION => tr!("Function"),
+        CompletionItemKind::CONSTRUCTOR => tr!("Constructor"),
+        CompletionItemKind::FIELD => tr!("Field"),
+        CompletionItemKind::VARIABLE => tr!("Variable"),
+        CompletionItemKind::CLASS => tr!("Class"),
+        CompletionItemKind::INTERFACE => tr!("Interface"),
+        CompletionItemKind::MODULE => tr!("Module"),
+        CompletionItemKind::PROPERTY => tr!("Property"),
+        CompletionItemKind::UNIT => tr!("Unit"),
+        CompletionItemKind::VALUE => tr!("Value"),
+        CompletionItemKind::ENUM => tr!("Enum"),
+        CompletionItemKind::KEYWORD => tr!("Keyword"),
+        CompletionItemKind::SNIPPET => tr!("Snippet"),
+        CompletionItemKind::COLOR => tr!("Color"),
+        CompletionItemKind::FILE => tr!("File"),
+        CompletionItemKind::REFERENCE => tr!("Reference"),
+        CompletionItemKind::FOLDER => tr!("Folder"),
+        CompletionItemKind::ENUM_MEMBER => tr!("Enum Member"),
+        CompletionItemKind::CONSTANT => tr!("Constant"),
+        CompletionItemKind::STRUCT => tr!("Struct"),
+        CompletionItemKind::EVENT => tr!("Event"),
+        CompletionItemKind::OPERATOR => tr!("Operator"),
+        CompletionItemKind::TYPE_PARAMETER => tr!("Type Parameter"),
+        _ => tr!("Unknown"),
     }
 }
 

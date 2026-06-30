@@ -7,6 +7,7 @@
 //! always re-reads the file so the next sign-in attempt picks up the change.
 
 use ama10::server_url::ServerUrl;
+use ama10_i18n::{tr, tr_f};
 use editor::Editor;
 use gpui::{
     AppContext as _, Context, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable,
@@ -104,14 +105,11 @@ impl Render for WulingServerUrlModal {
             .w(gpui::px(420.0))
             .p_4()
             .gap_3()
-            .child(Headline::new("Wuling DevOps server URL").size(HeadlineSize::Small))
+            .child(Headline::new(tr!("Wuling DevOps server URL")).size(HeadlineSize::Small))
             .child(
-                Label::new(format!(
-                    "Default: {}",
-                    ama10::server_url::DEFAULT_SERVER_URL
-                ))
-                .size(LabelSize::Small)
-                .color(Color::Muted),
+                Label::new(tr_f!("Default: {}", ama10::server_url::DEFAULT_SERVER_URL))
+                    .size(LabelSize::Small)
+                    .color(Color::Muted),
             )
             .child(
                 div()
@@ -132,7 +130,7 @@ impl Render for WulingServerUrlModal {
                 h_flex()
                     .gap_2()
                     .child(
-                        Button::new("save", "Save")
+                        Button::new("save", tr!("Save"))
                             .style(ButtonStyle::Filled)
                             .full_width()
                             .on_click(cx.listener(|this, _, window, cx| {
@@ -140,7 +138,7 @@ impl Render for WulingServerUrlModal {
                             })),
                     )
                     .child(
-                        Button::new("cancel", "Cancel")
+                        Button::new("cancel", tr!("Cancel"))
                             .style(ButtonStyle::Subtle)
                             .on_click(cx.listener(|_, _, _, cx| cx.emit(DismissEvent))),
                     ),

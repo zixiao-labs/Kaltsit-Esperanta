@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ama10_i18n::tr;
 use fuzzy::{StringMatch, StringMatchCandidate};
 use gpui::{AnyElement, App, Context, DismissEvent, SharedString, Task, Window};
 use picker::{Picker, PickerDelegate};
@@ -72,7 +73,7 @@ impl PickerDelegate for ThemePickerDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Search theme…".into()
+        tr!("Search theme…").into()
     }
 
     fn update_matches(

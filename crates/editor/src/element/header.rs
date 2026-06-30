@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use ama10_i18n::tr;
 use collections::HashMap;
 use file_icons::FileIcons;
 use git::status::FileStatus;
@@ -800,7 +801,7 @@ pub(crate) fn render_buffer_header(
                             |path_header| {
                                 let filename = filename
                                     .map(SharedString::from)
-                                    .unwrap_or_else(|| "untitled".into());
+                                    .unwrap_or_else(|| tr!("untitled"));
 
                                 let full_path = match parent_path.as_deref() {
                                     Some(parent) if !parent.is_empty() => {
@@ -833,7 +834,7 @@ pub(crate) fn render_buffer_header(
                                             )
                                             .tooltip(move |_, cx| {
                                                 Tooltip::with_meta(
-                                                    "Open File",
+                                                    tr!("Open File"),
                                                     None,
                                                     full_path.clone(),
                                                     cx,
@@ -893,7 +894,7 @@ pub(crate) fn render_buffer_header(
                                         this.visible_on_hover("buffer-header-group")
                                     })
                                     .child(
-                                        Button::new("open-file-button", "Open File")
+                                        Button::new("open-file-button", tr!("Open File"))
                                             .style(ButtonStyle::OutlinedGhost)
                                             .when(is_selected, |this| {
                                                 this.key_binding(KeyBinding::for_action_in(
@@ -982,7 +983,7 @@ pub(crate) fn render_buffer_header(
                     menu = menu
                         .when_some(abs_path, |menu, abs_path| {
                             menu.entry(
-                                "Copy Path",
+                                tr!("Copy Path"),
                                 Some(Box::new(zed_actions::workspace::CopyPath)),
                                 window.handler_for(&editor, move |_, _, cx| {
                                     cx.write_to_clipboard(ClipboardItem::new_string(
@@ -993,7 +994,7 @@ pub(crate) fn render_buffer_header(
                         })
                         .when_some(relative_path, |menu, relative_path| {
                             menu.entry(
-                                "Copy Relative Path",
+                                tr!("Copy Relative Path"),
                                 Some(Box::new(zed_actions::workspace::CopyRelativePath)),
                                 window.handler_for(&editor, move |_, _, cx| {
                                     cx.write_to_clipboard(ClipboardItem::new_string(
@@ -1008,7 +1009,7 @@ pub(crate) fn render_buffer_header(
                         )
                         .when_some(reveal_in_project_panel, |menu, entry_id| {
                             menu.entry(
-                                "Reveal In Project Panel",
+                                tr!("Reveal In Project Panel"),
                                 Some(Box::new(RevealInProjectPanel::default())),
                                 window.handler_for(&editor, move |editor, _, cx| {
                                     if let Some(project) = &mut editor.project {
@@ -1021,7 +1022,7 @@ pub(crate) fn render_buffer_header(
                         })
                         .when_some(parent_abs_path, |menu, parent_abs_path| {
                             menu.entry(
-                                "Open in Terminal",
+                                tr!("Open in Terminal"),
                                 Some(Box::new(OpenInTerminal)),
                                 window.handler_for(&editor, move |_, window, cx| {
                                     window.dispatch_action(

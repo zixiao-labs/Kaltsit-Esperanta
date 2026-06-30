@@ -131,6 +131,7 @@
 //! List of "tainted files" that the user may not operate on
 
 use crate::ProjectPanel;
+use ama10_i18n::tr;
 use anyhow::{Context, Result, anyhow};
 use fs::TrashedEntry;
 use futures::channel::mpsc;
@@ -291,13 +292,13 @@ enum UndoMessage {
 }
 
 impl UndoMessage {
-    fn error_title(&self) -> &'static str {
+    fn error_title(&self) -> SharedString {
         match self {
             UndoMessage::Changed(_) => {
-                "this is a bug in the manage_undo_and_redo task please report"
+                tr!("this is a bug in the manage_undo_and_redo task please report")
             }
-            UndoMessage::Undo => "Undo failed",
-            UndoMessage::Redo => "Redo failed",
+            UndoMessage::Undo => tr!("Undo failed"),
+            UndoMessage::Redo => tr!("Redo failed"),
         }
     }
 }

@@ -11,6 +11,8 @@ use ui::{
     utils::calculate_contrast_ratio,
 };
 
+use ama10_i18n::tr;
+
 use crate::{Item, Workspace};
 
 actions!(
@@ -38,10 +40,10 @@ enum ThemePreviewPage {
 }
 
 impl ThemePreviewPage {
-    pub fn name(&self) -> &'static str {
+    pub fn name(&self) -> SharedString {
         match self {
-            Self::Overview => "Overview",
-            Self::Typography => "Typography",
+            Self::Overview => tr!("Overview"),
+            Self::Typography => tr!("Typography"),
         }
     }
 }
@@ -136,7 +138,7 @@ impl ThemePreview {
 
         v_flex()
             .gap_1()
-            .child(Headline::new("Text").size(HeadlineSize::Small).color(Color::Muted))
+            .child(Headline::new(tr!("Text")).size(HeadlineSize::Small).color(Color::Muted))
             .child(
                 h_flex()
                     .items_start()
@@ -144,8 +146,8 @@ impl ThemePreview {
                     .child(
                         v_flex()
                             .gap_1()
-                            .child(Headline::new("Headline Sizes").size(HeadlineSize::Small).color(Color::Muted))
-                            .child(Headline::new("XLarge Headline").size(HeadlineSize::XLarge))
+                            .child(Headline::new(tr!("Headline Sizes")).size(HeadlineSize::Small).color(Color::Muted))
+                            .child(Headline::new(tr!("XLarge Headline")).size(HeadlineSize::XLarge))
                             .child(Headline::new("Large Headline").size(HeadlineSize::Large))
                             .child(Headline::new("Medium Headline").size(HeadlineSize::Medium))
                             .child(Headline::new("Small Headline").size(HeadlineSize::Small))
@@ -154,7 +156,7 @@ impl ThemePreview {
                     .child(
                         v_flex()
                             .gap_1()
-                            .child(Headline::new("Text Colors").size(HeadlineSize::Small).color(Color::Muted))
+                            .child(Headline::new(tr!("Text Colors")).size(HeadlineSize::Small).color(Color::Muted))
                             .child(
                                 Label::new(label_with_contrast(
                                     "Default Text",
@@ -278,7 +280,7 @@ impl ThemePreview {
                     .child(
                         v_flex()
                             .gap_1()
-                            .child(Headline::new("Wrapping Text").size(HeadlineSize::Small).color(Color::Muted))
+                            .child(Headline::new(tr!("Wrapping Text")).size(HeadlineSize::Small).color(Color::Muted))
                             .child(
                                 div().max_w(px(200.)).child(
                                 "This is a longer piece of text that should wrap to multiple lines. It demonstrates how text behaves when it exceeds the width of its container."
@@ -299,7 +301,7 @@ impl ThemePreview {
         v_flex()
             .gap_1()
             .child(
-                Headline::new("Colors")
+                Headline::new(tr!("Colors"))
                     .size(HeadlineSize::Small)
                     .color(Color::Muted),
             )
@@ -357,9 +359,16 @@ impl ThemePreview {
             .size_full()
             .child(
                 v_flex()
-                    .child(Headline::new("Theme Preview").size(HeadlineSize::Large))
-                    .child(div().w_full().text_color(cx.theme().colors().text_muted).child("This view lets you preview a range of UI elements across a theme. Use it for testing out changes to the theme."))
-                    )
+                    .child(Headline::new(tr!("Theme Preview")).size(HeadlineSize::Large))
+                    .child(
+                        div()
+                            .w_full()
+                            .text_color(cx.theme().colors().text_muted)
+                            .child(tr!(
+                                "This view lets you preview a range of UI elements across a theme."
+                            )),
+                    ),
+            )
             .child(self.render_theme_layer(ElevationIndex::Background, window, cx))
             .child(self.render_theme_layer(ElevationIndex::Surface, window, cx))
             .child(self.render_theme_layer(ElevationIndex::EditorSurface, window, cx))
@@ -400,7 +409,7 @@ impl ThemePreview {
             .py_2()
             .bg(Self::preview_bg(window, cx))
             .children(ThemePreviewPage::iter().map(|p| {
-                Button::new(ElementId::Name(p.name().into()), p.name())
+                Button::new(ElementId::Name(p.name()), p.name())
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.current_page = p;
                         cx.notify();

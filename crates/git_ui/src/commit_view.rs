@@ -141,7 +141,7 @@ impl Addon for CommitDiffAddon {
         menu.when_some(file_to_open, |menu, file| {
             let commit_view = self.commit_view.clone();
             menu.entry(
-                "Open File in Project",
+                ama10_i18n::tr!("Open File in Project"),
                 Some(Box::new(OpenFileAtHead)),
                 move |window, cx| {
                     commit_view
@@ -312,7 +312,7 @@ impl CommitView {
                         .is_some_and(|text| is_binary_content(text.as_bytes()));
 
                 let new_text = if is_binary {
-                    "(binary file not shown)".to_string()
+                    ama10_i18n::tr!("(binary file not shown)").to_string()
                 } else {
                     raw_new_text
                 };
@@ -600,9 +600,9 @@ impl CommitView {
         let has_more = self.commit.message.trim().contains('\n');
         let is_expanded = self.message_expanded;
         let expand_tooltip = if is_expanded {
-            "Fold Commit Description"
+            ama10_i18n::tr!("Fold Commit Description")
         } else {
-            "Expand Commit Description"
+            ama10_i18n::tr!("Expand Commit Description")
         };
 
         v_flex()
@@ -675,7 +675,7 @@ impl CommitView {
                     )
                     .when(self.stash.is_none(), |this| {
                         this.child(
-                            Button::new("sha", "Commit SHA")
+                            Button::new("sha", ama10_i18n::tr!("Commit SHA"))
                                 .start_icon(
                                     Icon::new(copy_icon)
                                         .size(IconSize::Small)
@@ -685,7 +685,7 @@ impl CommitView {
                                     let commit_sha = commit_sha.clone();
                                     move |_, cx| {
                                         Tooltip::with_meta(
-                                            "Copy Commit SHA",
+                                            ama10_i18n::tr!("Copy Commit SHA"),
                                             None,
                                             commit_sha.clone(),
                                             cx,
@@ -755,7 +755,7 @@ impl CommitView {
     fn apply_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            "Apply",
+            ama10_i18n::tr!("Apply").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {
@@ -782,7 +782,7 @@ impl CommitView {
     fn pop_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            "Pop",
+            ama10_i18n::tr!("Pop").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {
@@ -809,7 +809,7 @@ impl CommitView {
     fn remove_stash(workspace: &mut Workspace, window: &mut Window, cx: &mut App) {
         Self::stash_action(
             workspace,
-            "Drop",
+            ama10_i18n::tr!("Drop").as_ref(),
             window,
             cx,
             async move |repository, sha, stash, commit_view, workspace, cx| {
@@ -859,9 +859,9 @@ impl CommitView {
         let sha = commit_view.read(cx).commit.sha.clone();
         let answer = window.prompt(
             PromptLevel::Info,
-            &format!("{} stash@{{{}}}?", str_action, stash),
+            &ama10_i18n::tr_f!("{} stash@{}?", str_action, stash),
             None,
-            &[str_action, "Cancel"],
+            &[str_action, ama10_i18n::tr!("Cancel").as_ref()],
             cx,
         );
 
@@ -1309,7 +1309,7 @@ impl Render for CommitViewToolbar {
                     .icon_size(IconSize::Small)
                     .tooltip(move |_, cx| {
                         Tooltip::for_action(
-                            "Buffer Search",
+                            ama10_i18n::tr!("Buffer Search"),
                             &zed_actions::buffer_search::Deploy::find(),
                             cx,
                         )
@@ -1325,7 +1325,7 @@ impl Render for CommitViewToolbar {
                 this.child(
                     IconButton::new("show-in-git-graph", IconName::GitGraph)
                         .icon_size(IconSize::Small)
-                        .tooltip(Tooltip::text("Show in Git Graph"))
+                        .tooltip(Tooltip::text(ama10_i18n::tr!("Show in Git Graph")))
                         .on_click(move |_, window, cx| {
                             window.dispatch_action(
                                 Box::new(crate::git_graph::OpenAtCommit {
@@ -1340,7 +1340,10 @@ impl Render for CommitViewToolbar {
 
                     IconButton::new("view_on_provider", icon)
                         .icon_size(IconSize::Small)
-                        .tooltip(Tooltip::text(format!("View on {}", provider_name)))
+                        .tooltip(Tooltip::text(ama10_i18n::tr_f!(
+                            "View on {}",
+                            provider_name
+                        )))
                         .on_click(move |_, _, cx| cx.open_url(&url))
                 }))
             })

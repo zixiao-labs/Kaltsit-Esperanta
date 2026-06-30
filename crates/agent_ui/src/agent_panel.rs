@@ -75,7 +75,6 @@ use feature_flags::{
 };
 
 use fs::Fs;
-use futures::FutureExt as _;
 use gpui::{
     Action, Anchor, Animation, AnimationExt, AnyElement, App, AsyncWindowContext, ClipboardItem,
     Entity, EventEmitter, ExternalPaths, FocusHandle, Focusable, KeyContext, Pixels,
@@ -110,7 +109,6 @@ const MIN_PANEL_WIDTH: Pixels = px(300.);
 const LAST_USED_AGENT_KEY: &str = "agent_panel__last_used_external_agent";
 const LAST_CREATED_ENTRY_KIND_KEY: &str = "agent_panel__last_created_entry_kind";
 const TERMINAL_AGENT_TELEMETRY_ID: &str = "terminal";
-const TERMINAL_INIT_COMMAND_STARTUP_TIMEOUT: Duration = Duration::from_secs(5);
 const KNOWN_TERMINAL_AGENT_COMMANDS: &[&str] = &[
     "agent", // Unfortunately, both Cursor cli + grok
     "agy",
@@ -739,17 +737,7 @@ pub fn init(cx: &mut App) {
                             });
                         });
                     },
-                )
-                .register_action(|workspace, _: &menu::Cancel, _window, cx| {
-                    if let Some(panel) = workspace.panel::<AgentPanel>(cx) {
-                        let dismissed =
-                            panel.update(cx, |panel, cx| panel.dismiss_all_notifications(cx));
-                        if dismissed {
-                            return;
-                        }
-                    }
-                    cx.propagate();
-                });
+                );
         },
     )
     .detach();
@@ -2070,63 +2058,25 @@ impl AgentPanel {
         run_init_command
             .then(|| AgentSettings::get_global(cx).terminal_init_command.clone())
             .flatten()
-            .filter(|command| !command.trim().is_empty())
     }
 
     fn write_terminal_init_command(
         terminal: &Entity<terminal::Terminal>,
         init_command: Option<String>,
-        cx: &mut Context<Self>,
+        cx: &mut App,
     ) {
         let Some(command) = init_command else {
             return;
         };
-
-        if !terminal.read(cx).is_pty() {
-            terminal.update(cx, |terminal, _| {
-                terminal.write_init_command(Self::terminal_init_command_input(command))
-            });
-            return;
-        }
-
-        let startup = terminal.update(cx, |terminal, _| {
-            terminal.start_init_command_startup_handshake()
-        });
-
-        let terminal = terminal.downgrade();
-        cx.spawn(async move |_this, cx| {
-            // Fall back to the timeout so the init command is still delivered if
-            // the shell never echoes the marker.
-            let timeout = cx
-                .background_executor()
-                .timer(TERMINAL_INIT_COMMAND_STARTUP_TIMEOUT);
-            futures::select_biased! {
-                _ = startup.fuse() => {}
-                _ = timeout.fuse() => {}
-            }
-
-            let input = Self::terminal_init_command_input(command);
-            if let Err(error) = terminal.update(cx, move |terminal, cx| {
-                if !terminal.write_init_command_after_startup(input, cx) {
-                    log::debug!(
-                        "skipping terminal init command because the terminal is no longer eligible"
-                    );
-                }
-            }) {
-                log::debug!("skipping terminal init command because the terminal closed: {error}");
-            }
-            anyhow::Ok(())
-        })
-        .detach_and_log_err(cx);
-    }
-
-    fn terminal_init_command_input(command: String) -> Vec<u8> {
         let mut input = command.into_bytes();
         // CR, not "\r\n": "\r\n" puts PowerShell into continuation
         // mode (same convention as the activation-script writes in
         // `TerminalBuilder::new`).
         input.push(b'\x0d');
-        input
+        // `write_init_command`, not `input`: the latter sets `keyboard_input_sent`,
+        // which would auto-close the terminal (hiding the error) if the shell
+        // fails to spawn after we've written the command.
+        terminal.update(cx, |terminal, _| terminal.write_init_command(input));
     }
 
     fn insert_terminal(
@@ -2782,22 +2732,6 @@ impl AgentPanel {
         for terminal_id in terminal_ids {
             self.dismiss_terminal_notifications(terminal_id, cx);
         }
-    }
-
-    pub fn dismiss_all_notifications(&mut self, cx: &mut Context<Self>) -> bool {
-        let mut dismissed = false;
-        for conversation_view in self.conversation_views() {
-            dismissed |= conversation_view.update(cx, |view, cx| view.dismiss_notifications(cx));
-        }
-        let had_terminal_notifications = self
-            .terminals
-            .values()
-            .any(|t| !t.notification_windows.is_empty());
-        if had_terminal_notifications {
-            self.dismiss_all_terminal_notifications(cx);
-            dismissed = true;
-        }
-        dismissed
     }
 
     fn active_terminal_visible(&self, terminal_id: TerminalId, window: &Window, cx: &App) -> bool {
@@ -5502,7 +5436,9 @@ impl AgentPanel {
                                     IconButton::new("retry-thread-title", IconName::XCircle)
                                         .icon_color(Color::Error)
                                         .icon_size(IconSize::Small)
-                                        .tooltip(Tooltip::text("Title generation failed. Retry"))
+                                        .tooltip(Tooltip::text(ama10_i18n::tr!(
+                                            "Title generation failed. Retry"
+                                        )))
                                         .on_click({
                                             let conversation_view = conversation_view.clone();
                                             let workspace = self.workspace.clone();
@@ -5565,13 +5501,15 @@ impl AgentPanel {
                             .into_any_element()
                     }
                 } else {
-                    Label::new("Terminal").into_any_element()
+                    Label::new(ama10_i18n::tr!("Terminal")).into_any_element()
                 }
             }
-            VisibleSurface::Configuration(_) => {
-                Label::new("Settings").truncate().into_any_element()
-            }
-            VisibleSurface::Uninitialized => Label::new("Agent").truncate().into_any_element(),
+            VisibleSurface::Configuration(_) => Label::new(ama10_i18n::tr!("Settings"))
+                .truncate()
+                .into_any_element(),
+            VisibleSurface::Uninitialized => Label::new(ama10_i18n::tr!("Agent"))
+                .truncate()
+                .into_any_element(),
         };
 
         let toolbar_bg = cx.theme().colors().tab_bar_background;
@@ -5605,7 +5543,7 @@ impl AgentPanel {
                             .child(
                                 IconButton::new("edit_tile", IconName::Pencil)
                                     .icon_size(IconSize::Small)
-                                    .tooltip(Tooltip::text("Edit Thread Title")),
+                                    .tooltip(Tooltip::text(ama10_i18n::tr!("Edit Thread Title"))),
                             ),
                     )
             })
@@ -5615,7 +5553,7 @@ impl AgentPanel {
     fn show_no_thread_summary_model_toast(workspace: Entity<Workspace>, cx: &mut App) {
         workspace.update(cx, |workspace, cx| {
             let toast = StatusToast::new(
-                "No model is configured for summarizing thread titles.",
+                ama10_i18n::tr!("No model is configured for summarizing thread titles."),
                 cx,
                 |this, _cx| {
                     this.icon(
@@ -5703,7 +5641,7 @@ impl AgentPanel {
                     .icon_size(IconSize::Small),
                 move |_window, cx| {
                     Tooltip::for_action_in(
-                        "Toggle Agent Menu",
+                        ama10_i18n::tr!("Toggle Agent Menu"),
                         &ToggleOptionsMenu,
                         &focus_handle,
                         cx,
@@ -5718,11 +5656,11 @@ impl AgentPanel {
                         menu = menu.context(menu_action_context.clone());
 
                         if can_regenerate_thread_title {
-                            menu = menu.header("Current Thread");
+                            menu = menu.header(ama10_i18n::tr!("Current Thread"));
 
                             if let Some(conversation_view) = conversation_view.as_ref() {
                                 menu = menu
-                                    .entry("Regenerate Thread Title", None, {
+                                    .entry(ama10_i18n::tr!("Regenerate Thread Title"), None, {
                                         let conversation_view = conversation_view.clone();
                                         let workspace = workspace.clone();
                                         move |_, cx| {
@@ -5739,11 +5677,13 @@ impl AgentPanel {
 
                         if !showing_terminal {
                             menu = menu
-                                .header("MCP Servers")
-                                .action("Add Custom Server…", Box::new(AddContextServer::local()))
-                                .action("Add Remote Server…", Box::new(AddContextServer::remote()))
+                                .header(ama10_i18n::tr!("MCP Servers"))
                                 .action(
-                                    "Install New Servers…",
+                                    ama10_i18n::tr!("Add Custom Server…"),
+                                    Box::new(AddContextServer),
+                                )
+                                .action(
+                                    ama10_i18n::tr!("Install New Servers…"),
                                     Box::new(zed_actions::Extensions {
                                         category_filter: Some(
                                             zed_actions::ExtensionCategoryFilter::ContextServers,
@@ -5752,8 +5692,8 @@ impl AgentPanel {
                                     }),
                                 )
                                 .separator()
-                                .header("Context")
-                                .action("Skills", Box::new(ManageSkills));
+                                .header(ama10_i18n::tr!("Context"))
+                                .action(ama10_i18n::tr!("Skills"), Box::new(ManageSkills));
 
                             if project_agents_md_path.is_some() || global_agents_md_loaded {
                                 if global_agents_md_loaded {
@@ -5764,7 +5704,9 @@ impl AgentPanel {
                                             h_flex()
                                                 .w_full()
                                                 .gap_1()
-                                                .child(Label::new("Open Global Rules"))
+                                                .child(Label::new(ama10_i18n::tr!(
+                                                    "Open Global Rules"
+                                                )))
                                                 .child(
                                                     Label::new("(AGENTS.md)")
                                                         .color(Color::Muted)
@@ -5789,7 +5731,9 @@ impl AgentPanel {
                                             h_flex()
                                                 .w_full()
                                                 .gap_1()
-                                                .child(Label::new("Open Project Rules"))
+                                                .child(Label::new(ama10_i18n::tr!(
+                                                    "Open Project Rules"
+                                                )))
                                                 .child(
                                                     Label::new("(AGENTS.md)")
                                                         .color(Color::Muted)
@@ -5810,22 +5754,31 @@ impl AgentPanel {
                                 menu = menu.separator();
                             }
 
-                            menu = menu.action("Profiles", Box::new(ManageProfiles::default()));
+                            menu = menu.action(
+                                ama10_i18n::tr!("Profiles"),
+                                Box::new(ManageProfiles::default()),
+                            );
                         }
 
                         menu = menu
-                            .action("Settings", Box::new(OpenSettings))
+                            .action(ama10_i18n::tr!("Settings"), Box::new(OpenSettings))
                             .separator()
-                            .action("Toggle Threads Sidebar", Box::new(ToggleWorkspaceSidebar));
+                            .action(
+                                ama10_i18n::tr!("Toggle Threads Sidebar"),
+                                Box::new(ToggleWorkspaceSidebar),
+                            );
 
                         if has_auth_methods || supports_logout {
                             menu = menu.separator()
                         }
                         if has_auth_methods {
-                            menu = menu.action("Reauthenticate", Box::new(ReauthenticateAgent))
+                            menu = menu.action(
+                                ama10_i18n::tr!("Reauthenticate"),
+                                Box::new(ReauthenticateAgent),
+                            )
                         }
                         if supports_logout {
-                            menu = menu.action("Log Out", Box::new(LogoutAgent))
+                            menu = menu.action(ama10_i18n::tr!("Log Out"), Box::new(LogoutAgent))
                         }
 
                         menu
@@ -5844,7 +5797,12 @@ impl AgentPanel {
             }))
             .tooltip({
                 move |_window, cx| {
-                    Tooltip::for_action_in("Go Back", &workspace::GoBack, &focus_handle, cx)
+                    Tooltip::for_action_in(
+                        ama10_i18n::tr!("Go Back"),
+                        &workspace::GoBack,
+                        &focus_handle,
+                        cx,
+                    )
                 }
             })
     }
@@ -5877,7 +5835,7 @@ impl AgentPanel {
         let showing_terminal = matches!(self.visible_surface(), VisibleSurface::Terminal(_));
 
         let (selected_agent_custom_icon, selected_agent_label) = if showing_terminal {
-            (None, SharedString::from("Terminal"))
+            (None, ama10_i18n::tr!("Terminal"))
         } else if let Agent::Custom { id, .. } = &self.selected_agent {
             let store = agent_server_store.read(cx);
             let icon = store.agent_icon(&id);
@@ -5923,7 +5881,7 @@ impl AgentPanel {
                             if !thread.is_empty() {
                                 let session_id = thread.id().clone();
                                 this.item(
-                                    ContextMenuEntry::new("New From Summary")
+                                    ContextMenuEntry::new(ama10_i18n::tr!("New From Summary"))
                                         .icon(IconName::ThreadFromSummary)
                                         .icon_color(Color::Muted)
                                         .handler(move |window, cx| {
@@ -5972,7 +5930,7 @@ impl AgentPanel {
                         )
                         .when(supports_terminal, |menu| {
                             menu.item(
-                                ContextMenuEntry::new("Terminal")
+                                ContextMenuEntry::new(ama10_i18n::tr!("Terminal"))
                                     .when(showing_terminal, |this| this.action(Box::new(NewThread)))
                                     .when(!showing_terminal, |this| {
                                         this.action(Box::new(NewTerminalThread))
@@ -6033,7 +5991,7 @@ impl AgentPanel {
                                 .collect::<Vec<_>>();
 
                             if !agent_items.is_empty() {
-                                menu = menu.separator().header("External Agents");
+                                menu = menu.separator().header(ama10_i18n::tr!("External Agents"));
                             }
                             for item in &agent_items {
                                 let mut entry = ContextMenuEntry::new(item.display_name.clone());
@@ -6093,7 +6051,7 @@ impl AgentPanel {
                         })
                         .separator()
                         .item(
-                            ContextMenuEntry::new("Add More Agents")
+                            ContextMenuEntry::new(ama10_i18n::tr!("Add More Agents"))
                                 .icon(IconName::Plus)
                                 .icon_color(Color::Muted)
                                 .handler({
@@ -6139,7 +6097,7 @@ impl AgentPanel {
                 Tooltip::with_meta(
                     selected_agent_label_for_tooltip.clone(),
                     None,
-                    "Selected Agent",
+                    ama10_i18n::tr!("Selected Agent"),
                     cx,
                 )
             });
@@ -6180,18 +6138,18 @@ impl AgentPanel {
             (
                 "disable-full-screen",
                 IconName::Minimize,
-                "Disable Full Screen",
+                ama10_i18n::tr!("Disable Full Screen"),
             )
         } else {
             (
                 "enable-full-screen",
                 IconName::Maximize,
-                "Enable Full Screen",
+                ama10_i18n::tr!("Enable Full Screen"),
             )
         };
         let full_screen_button = IconButton::new(icon_id, icon_name)
             .icon_size(IconSize::Small)
-            .tooltip(move |_, cx| Tooltip::for_action(tooltip_text, &ToggleZoom, cx))
+            .tooltip(move |_, cx| Tooltip::for_action(tooltip_text.clone(), &ToggleZoom, cx))
             .on_click(cx.listener(move |this, _, window, cx| {
                 this.toggle_zoom(&ToggleZoom, window, cx);
             }));
@@ -6208,7 +6166,7 @@ impl AgentPanel {
             .justify_between();
 
         let empty_thread_title = matches!(mode, ToolbarMode::EmptyThread).then(|| {
-            Label::new(format!("New {} Thread", selected_agent_label))
+            Label::new(ama10_i18n::tr_f!("New {} Thread", selected_agent_label))
                 .color(Color::Muted)
                 .truncate()
                 .into_any_element()
@@ -6222,7 +6180,7 @@ impl AgentPanel {
                     {
                         move |_window, cx| {
                             Tooltip::for_action_in(
-                                "New Thread\u{2026}",
+                                ama10_i18n::tr!("New Thread…"),
                                 &ToggleNewThreadMenu,
                                 &focus_handle,
                                 cx,
@@ -6923,7 +6881,7 @@ mod tests {
         active_session_id, active_thread_id, open_thread_with_connection,
         open_thread_with_custom_connection, register_test_sidebar, send_message,
     };
-    use acp_thread::{AgentConnection, StubAgentConnection, ThreadStatus};
+    use acp_thread::{AgentConnection, StubAgentConnection, ThreadStatus, UserMessageId};
     use action_log::ActionLog;
     use anyhow::{Result, anyhow};
     use feature_flags::FeatureFlagAppExt;
@@ -7112,6 +7070,7 @@ mod tests {
 
         fn prompt(
             &self,
+            _id: UserMessageId,
             params: acp::PromptRequest,
             _cx: &mut App,
         ) -> Task<Result<acp::PromptResponse>> {
@@ -7563,12 +7522,15 @@ mod tests {
         cx.executor().allow_parking();
         cx.update(|_, cx| {
             let mut settings = AgentSettings::get_global(cx).clone();
-            // `init_ran_42` is the command's output, not its echoed text, so finding
-            // it proves the shell executed the command rather than just echoing it.
-            settings.terminal_init_command = Some("printf 'init_ran_%s\\n' 42".to_string());
+            // The output (`init_ran_42`) is distinct from the command text
+            // (`init_ran_$((6*7))`), which the PTY also echoes back. Finding the
+            // output therefore proves the shell actually executed the command
+            // rather than merely echoing the keystrokes.
+            settings.terminal_init_command = Some("echo init_ran_$((6*7))".to_string());
             AgentSettings::override_global(settings, cx);
 
-            // Force a known POSIX shell so the test doesn't depend on the developer's login shell.
+            // Force a POSIX shell rather than relying on the developer's login
+            // shell, which may not support `$((...))` arithmetic (e.g. fish).
             let mut terminal_settings = TerminalSettings::get_global(cx).clone();
             terminal_settings.shell = task::Shell::Program("/bin/sh".to_string());
             TerminalSettings::override_global(terminal_settings, cx);
@@ -7598,7 +7560,6 @@ mod tests {
         // sleep, matching the real-PTY test in `acp_thread`.
         let deadline = Instant::now() + Duration::from_secs(10);
         let terminal = loop {
-            cx.run_until_parked();
             let terminal = panel.read_with(&cx, |panel, cx| {
                 panel
                     .terminals
@@ -7612,29 +7573,13 @@ mod tests {
             {
                 break terminal.clone();
             }
-            if Instant::now() >= deadline {
-                let terminal_created = terminal.is_some();
-                let (content, input_log) = if let Some(terminal) = terminal {
-                    let content = terminal.read_with(&cx, |terminal, _| terminal.get_content());
-                    let input_log =
-                        terminal.update(&mut cx, |terminal, _| terminal.take_input_log());
-                    (content, input_log)
-                } else {
-                    (String::new(), Vec::new())
-                };
-                panic!(
-                    "init command output never appeared in the terminal; terminal_created={terminal_created}, content={content:?}, input_log={input_log:?}"
-                );
-            }
+            assert!(
+                Instant::now() < deadline,
+                "init command output never appeared in the terminal"
+            );
             cx.executor().timer(Duration::from_millis(50)).await;
         };
 
-        let input_log = terminal.update(&mut cx, |terminal, _| terminal.take_input_log());
-        assert_eq!(
-            input_log,
-            vec![b"printf 'init_ran_%s\\n' 42\r".to_vec()],
-            "init command should be written only after terminal startup has settled"
-        );
         assert!(
             !terminal.read_with(&cx, |terminal, _| terminal.keyboard_input_sent()),
             "writing the init command must not mark the terminal as having received \
@@ -11026,6 +10971,7 @@ mod tests {
             request_token_usage: HashMap::default(),
             model: None,
             profile: None,
+            imported: false,
             subagent_context: None,
             speed: None,
             thinking_enabled: false,
@@ -11033,7 +10979,6 @@ mod tests {
             draft_prompt: None,
             ui_scroll_position: None,
             sandboxed_terminal_temp_dir: None,
-            sandbox_grants: Default::default(),
         };
 
         let thread_store = cx.update(|cx| ThreadStore::global(cx));
@@ -12891,6 +12836,7 @@ mod tests {
 
         fn prompt(
             &self,
+            _id: UserMessageId,
             params: acp::PromptRequest,
             _cx: &mut App,
         ) -> Task<Result<acp::PromptResponse>> {

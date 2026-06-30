@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use agent_skills::GLOBAL_SKILLS_DIR_DISPLAY;
+use ama10_i18n::tr;
 use auto_update::{AutoUpdater, release_notes_url};
 use client::zed_urls;
 use db::kvp::Dismissable;
@@ -73,7 +74,7 @@ fn notify_release_notes_failed_to_show(
 
     impl WorkspaceError for ReleaseNotesError {
         fn primary_message(&self) -> SharedString {
-            "Couldn't load release notes".into()
+            tr!("Couldn't load release notes")
         }
         fn severity(&self) -> ErrorSeverity {
             ErrorSeverity::Error
@@ -81,7 +82,7 @@ fn notify_release_notes_failed_to_show(
         fn primary_action(&self) -> ErrorAction {
             self.url
                 .clone()
-                .map(|url| ErrorAction::link("View in Browser", url))
+                .map(|url| ErrorAction::link(tr!("View in Browser"), url))
                 .unwrap_or_else(ErrorAction::dismiss)
         }
     }
@@ -225,19 +226,19 @@ fn announcement_for_version(version: &Version, cx: &App) -> Option<AnnouncementC
         let mut bullet_items: Vec<SharedString> = Vec::with_capacity(3);
         bullet_items
             .push(format!("Skills live in {GLOBAL_SKILLS_DIR_DISPLAY}/<name>/SKILL.md").into());
-        bullet_items.push("Type / to manually invoke a skill".into());
+        bullet_items.push(tr!("Type / to manually invoke a skill"));
         if migrated_anything {
             bullet_items.push(
-                "The Rules Library is making way for skills: your default rules are now in a global AGENTS.md, and your other rules have been converted to skills".into(),
+                tr!("The Rules Library is making way for skills: your default rules are now in a global AGENTS.md, and your other rules have been converted to skills")
             );
         }
 
         Some(AnnouncementContent {
-            heading: "Introducing Skills Support".into(),
-            description: "Extend the agent with focused instructions and domain knowledge.".into(),
+            heading: tr!("Introducing Skills Support"),
+            description: tr!("Extend the agent with focused instructions and domain knowledge."),
             bullet_items,
-            primary_action_label: "Try Now".into(),
-            secondary_action_label: "Read Documentation".into(),
+            primary_action_label: tr!("Try Now"),
+            secondary_action_label: tr!("Read Documentation"),
             primary_action_url: None,
             primary_action_callback: Some(Arc::new(move |window, cx| {
                 window.dispatch_action(Box::new(zed_actions::assistant::FocusAgent), cx);
@@ -351,7 +352,7 @@ fn show_update_notification(cx: &mut App) {
                 let workspace_handle = cx.entity().downgrade();
                 cx.new(|cx| {
                     MessageNotification::new(format!("Updated to {app_name} {}", version), cx)
-                        .primary_message("View Release Notes")
+                        .primary_message(tr!("View Release Notes"))
                         .primary_on_click(move |window, cx| {
                             if let Some(workspace) = workspace_handle.upgrade() {
                                 workspace.update(cx, |workspace, cx| {
