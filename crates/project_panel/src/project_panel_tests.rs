@@ -8163,115 +8163,26 @@ async fn test_collapse_non_root_multi_worktree(cx: &mut gpui::TestAppContext) {
 }
 
 #[gpui::test]
-async fn test_collapse_all_for_root_single_worktree(cx: &mut gpui::TestAppContext) {
-    init_test(cx);
+async fn test_expand_all_for_entry_single_worktree(cx: &mut gpui::TestAppContext) {
+    init_test_with_editor(cx);
 
     let fs = FakeFs::new(cx.executor());
-    fs.insert_tree(
-        path!("/root"),
-        json!({
-            "dir1": {
-                "subdir1": {
-                    "file1.txt": ""
-                },
-                "file2.txt": ""
-            },
-            "dir2": {
-                "file3.txt": ""
-            }
-        }),
-    )
-    .await;
-
-    let project = Project::test(fs.clone(), [path!("/root").as_ref()], cx).await;
-    let window = cx.add_window(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-    let workspace = window
-        .read_with(cx, |mw, _| mw.workspace().clone())
-        .unwrap();
-    let cx = &mut VisualTestContext::from_window(window.into(), cx);
-
-    let panel = workspace.update_in(cx, ProjectPanel::new);
-    cx.run_until_parked();
-
-    toggle_expand_dir(&panel, "root/dir1", cx);
-    toggle_expand_dir(&panel, "root/dir1/subdir1", cx);
-    toggle_expand_dir(&panel, "root/dir2", cx);
-
-    assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &[
-            "v root",
-            "    v dir1",
-            "        v subdir1",
-            "              file1.txt",
-            "          file2.txt",
-            "    v dir2  <== selected",
-            "          file3.txt",
-        ],
-        "Initial state with directories expanded"
-    );
-
-    select_path(&panel, "root", cx);
-    cx.run_until_parked();
-
-    panel.update_in(cx, |panel, window, cx| {
-        panel.collapse_all_for_root(window, cx);
+    let worktree_content = json!({
+        "dir_1": {
+            "file_1.py": "# File contents",
+        },
+        "dir_2": {
+            "file_1.py": "# File contents",
+        }
     });
-    cx.run_until_parked();
 
-    assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &["v root  <== selected", "    > dir1", "    > dir2"],
-        "Root should remain expanded but all children should be collapsed"
-    );
-
-    toggle_expand_dir(&panel, "root/dir1", cx);
-    cx.run_until_parked();
-
-    assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &[
-            "v root",
-            "    v dir1  <== selected",
-            "        > subdir1",
-            "          file2.txt",
-            "    > dir2",
-        ],
-        "After re-expanding dir1, subdir1 should still be collapsed"
-    );
-}
-
-#[gpui::test]
-async fn test_collapse_all_for_root_multi_worktree(cx: &mut gpui::TestAppContext) {
-    init_test(cx);
-
-    let fs = FakeFs::new(cx.executor());
-    fs.insert_tree(
-        path!("/root1"),
-        json!({
-            "dir1": {
-                "subdir1": {
-                    "file1.txt": ""
-                },
-                "file2.txt": ""
-            }
-        }),
-    )
-    .await;
-    fs.insert_tree(
-        path!("/root2"),
-        json!({
-            "dir2": {
-                "file3.txt": ""
-            },
-            "file4.txt": ""
-        }),
-    )
-    .await;
+    fs.insert_tree("/project_root_1", worktree_content.clone())
+        .await;
+    fs.insert_tree("/project_root_2", worktree_content).await;
 
     let project = Project::test(
         fs.clone(),
-        [path!("/root1").as_ref(), path!("/root2").as_ref()],
+        ["/project_root_1".as_ref(), "/project_root_2".as_ref()],
         cx,
     )
     .await;
@@ -8280,117 +8191,39 @@ async fn test_collapse_all_for_root_multi_worktree(cx: &mut gpui::TestAppContext
         .read_with(cx, |mw, _| mw.workspace().clone())
         .unwrap();
     let cx = &mut VisualTestContext::from_window(window.into(), cx);
-
     let panel = workspace.update_in(cx, ProjectPanel::new);
     cx.run_until_parked();
 
-    toggle_expand_dir(&panel, "root1/dir1", cx);
-    toggle_expand_dir(&panel, "root1/dir1/subdir1", cx);
-    toggle_expand_dir(&panel, "root2/dir2", cx);
-
-    assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &[
-            "v root1",
-            "    v dir1",
-            "        v subdir1",
-            "              file1.txt",
-            "          file2.txt",
-            "v root2",
-            "    v dir2  <== selected",
-            "          file3.txt",
-            "      file4.txt",
-        ],
-        "Initial state with directories expanded across worktrees"
-    );
-
-    select_path(&panel, "root1", cx);
-    cx.run_until_parked();
-
     panel.update_in(cx, |panel, window, cx| {
-        panel.collapse_all_for_root(window, cx);
+        panel.collapse_all_entries(&CollapseAllEntries, window, cx)
     });
-    cx.run_until_parked();
-
+    cx.executor().run_until_parked();
     assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &[
-            "> root1  <== selected",
-            "v root2",
-            "    v dir2",
-            "          file3.txt",
-            "      file4.txt",
-        ],
-        "With multiple worktrees, root1 should collapse completely (including itself)"
-    );
-}
-
-#[gpui::test]
-async fn test_collapse_all_for_root_noop_on_non_root(cx: &mut gpui::TestAppContext) {
-    init_test(cx);
-
-    let fs = FakeFs::new(cx.executor());
-    fs.insert_tree(
-        path!("/root"),
-        json!({
-            "dir1": {
-                "subdir1": {
-                    "file1.txt": ""
-                },
-            },
-            "dir2": {
-                "file2.txt": ""
-            }
-        }),
-    )
-    .await;
-
-    let project = Project::test(fs.clone(), [path!("/root").as_ref()], cx).await;
-    let window = cx.add_window(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-    let workspace = window
-        .read_with(cx, |mw, _| mw.workspace().clone())
-        .unwrap();
-    let cx = &mut VisualTestContext::from_window(window.into(), cx);
-
-    let panel = workspace.update_in(cx, ProjectPanel::new);
-    cx.run_until_parked();
-
-    toggle_expand_dir(&panel, "root/dir1", cx);
-    toggle_expand_dir(&panel, "root/dir1/subdir1", cx);
-    toggle_expand_dir(&panel, "root/dir2", cx);
-
-    assert_eq!(
-        visible_entries_as_strings(&panel, 0..20, cx),
-        &[
-            "v root",
-            "    v dir1",
-            "        v subdir1",
-            "              file1.txt",
-            "    v dir2  <== selected",
-            "          file2.txt",
-        ],
-        "Initial state with directories expanded"
+        visible_entries_as_strings(&panel, 0..10, cx),
+        &["> project_root_1", "> project_root_2",]
     );
 
-    select_path(&panel, "root/dir1", cx);
-    cx.run_until_parked();
-
+    let root2_entry = find_project_entry(&panel, "project_root_2", cx).unwrap();
     panel.update_in(cx, |panel, window, cx| {
-        panel.collapse_all_for_root(window, cx);
+        let worktree_id = panel
+            .project
+            .read(cx)
+            .worktree_id_for_entry(root2_entry, cx)
+            .unwrap();
+        panel.expand_all_for_entry(worktree_id, root2_entry, cx);
+        panel.update_visible_entries(None, false, false, window, cx);
     });
-    cx.run_until_parked();
-
+    cx.executor().run_until_parked();
     assert_eq!(
         visible_entries_as_strings(&panel, 0..20, cx),
         &[
-            "v root",
-            "    v dir1  <== selected",
-            "        v subdir1",
-            "              file1.txt",
-            "    v dir2",
-            "          file2.txt",
-        ],
-        "collapse_all_for_root should be a no-op when called on a non-root directory"
+            "> project_root_1",
+            "v project_root_2",
+            "    v dir_1",
+            "          file_1.py",
+            "    v dir_2",
+            "          file_1.py",
+        ]
     );
 }
 

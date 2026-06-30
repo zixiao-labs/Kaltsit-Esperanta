@@ -681,6 +681,16 @@ impl TruncatedPatch {
     }
 }
 
+// We only allow a single remote operation at a time to avoid concurrent
+// credential prompts and competing ref/working-tree updates.
+#[derive(Clone, Copy)]
+#[expect(dead_code)]
+pub(crate) enum RemoteOperationKind {
+    Fetch,
+    Pull,
+    Push,
+}
+
 pub struct GitPanel {
     pub(crate) active_repository: Option<Entity<Repository>>,
     pub(crate) commit_editor: Entity<Editor>,
@@ -4920,6 +4930,7 @@ impl GitPanel {
                         &branch,
                         focus_handle,
                         true,
+                        None,
                     ))
                 })
                 .into_any_element(),

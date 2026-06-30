@@ -1,4 +1,5 @@
 use gpui::{Action, ClickEvent, FocusHandle, prelude::*};
+use language_model::DisabledReason;
 use ui::{Chip, ElevationIndex, KeyBinding, ListItem, ListItemSpacing, Tooltip, prelude::*};
 use zed_actions::agent::ToggleModelSelector;
 
@@ -54,6 +55,7 @@ pub struct ModelSelectorListItem {
     is_favorite: bool,
     on_toggle_favorite: Option<Box<dyn Fn(&ClickEvent, &mut Window, &mut App) + 'static>>,
     cost_info: Option<SharedString>,
+    disabled: Option<DisabledReason>,
 }
 
 impl ModelSelectorListItem {
@@ -68,6 +70,7 @@ impl ModelSelectorListItem {
             is_favorite: false,
             on_toggle_favorite: None,
             cost_info: None,
+            disabled: None,
         }
     }
 
@@ -113,6 +116,11 @@ impl ModelSelectorListItem {
         self.cost_info = cost_info;
         self
     }
+
+    pub fn disabled(mut self, disabled: Option<DisabledReason>) -> Self {
+        self.disabled = disabled;
+        self
+    }
 }
 
 impl RenderOnce for ModelSelectorListItem {
@@ -129,6 +137,7 @@ impl RenderOnce for ModelSelectorListItem {
             .inset(true)
             .spacing(ListItemSpacing::Sparse)
             .toggle_state(self.is_focused)
+            .disabled(self.disabled.is_some())
             .child(
                 h_flex()
                     .w_full()

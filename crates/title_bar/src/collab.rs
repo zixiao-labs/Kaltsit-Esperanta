@@ -647,7 +647,7 @@ impl TitleBar {
                                     }
                                 });
                                 task.detach_and_prompt_err(
-                                    tr!("Sharing Screen Failed"),
+                                    tr!("Sharing Screen Failed").as_ref(),
                                     window,
                                     cx,
                                     |e, _, _| Some(format!("{e:?}")),

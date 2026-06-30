@@ -177,6 +177,7 @@ impl TabSwitcher {
                 } else {
                     Picker::nonsearchable_list(delegate, window, cx)
                 }
+                .initial_width(rems(PANEL_WIDTH_REMS))
             }),
             init_modifiers,
         }

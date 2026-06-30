@@ -43,7 +43,7 @@ impl Focusable for SettingsProfileSelector {
 
 impl Render for SettingsProfileSelector {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        v_flex().w(rems(22.)).child(self.picker.clone())
+        v_flex().child(self.picker.clone())
     }
 }
 
@@ -53,7 +53,8 @@ impl SettingsProfileSelector {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let picker = cx.new(|cx| Picker::uniform_list(delegate, window, cx));
+        let picker =
+            cx.new(|cx| Picker::uniform_list(delegate, window, cx).initial_width(rems(22.)));
         Self { picker }
     }
 }

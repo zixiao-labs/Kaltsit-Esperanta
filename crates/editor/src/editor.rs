@@ -3943,7 +3943,7 @@ impl Editor {
             });
             for bookmark in bookmarks {
                 let Some(multi_buffer_anchor) =
-                    multi_buffer_snapshot.anchor_in_buffer(bookmark.anchor())
+                    multi_buffer_snapshot.anchor_in_buffer(bookmark.anchor)
                 else {
                     continue;
                 };
@@ -3965,8 +3965,8 @@ impl Editor {
             .size(ui::ButtonSize::None)
             .icon_color(Color::Info)
             .style(ButtonStyle::Transparent)
-            .on_click(cx.listener(move |editor, _, _, cx| {
-                editor.toggle_bookmark_at_row(row, cx);
+            .on_click(cx.listener(move |editor, _, window, cx| {
+                editor.toggle_bookmark_at_row(row, window, cx);
             }))
             .on_right_click(cx.listener(move |editor, event: &ClickEvent, window, cx| {
                 editor.set_gutter_context_menu(row, None, event.position(), window, cx);
@@ -4256,10 +4256,10 @@ impl Editor {
                     }
                 })
                 .separator()
-                .entry(set_bookmark_msg, None, move |_window, cx| {
+                .entry(set_bookmark_msg, None, move |window, cx| {
                     weak_editor
                         .update(cx, |this, cx| {
-                            this.toggle_bookmark_at_anchor(anchor, cx);
+                            this.toggle_bookmark_at_anchor(anchor, window, cx);
                         })
                         .log_err();
                 })
@@ -4445,7 +4445,7 @@ impl Editor {
                     };
 
                     match intent {
-                        Intent::SetBookmark => editor.toggle_bookmark_at_row(row, cx),
+                        Intent::SetBookmark => editor.toggle_bookmark_at_row(row, window, cx),
                         Intent::SetBreakpoint => editor.edit_breakpoint_at_anchor(
                             position,
                             Breakpoint::new_standard(),
@@ -5810,6 +5810,74 @@ impl Editor {
         });
     }
 
+    fn add_edit_block(
+        &mut self,
+        anchor: Anchor,
+        base_text: &str,
+        placeholder_text: &str,
+        confirm: Option<PromptEditorCallback>,
+        cancel: Option<PromptEditorCallback>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let weak_editor = cx.weak_entity();
+        let bp_prompt = cx.new(|cx| {
+            let edit_action = BreakpointPromptEditAction::Log;
+            let mut prompt_editor = BreakpointPromptEditor::new(
+                weak_editor,
+                anchor,
+                Breakpoint {
+                    message: Some(base_text.into()),
+                    condition: None,
+                    hit_condition: None,
+                    state: project::debugger::breakpoint_store::BreakpointState::Enabled,
+                },
+                edit_action,
+                window,
+                cx,
+            );
+
+            if let Some(callback) = confirm {
+                prompt_editor = prompt_editor.on_confirm(callback);
+            }
+            if let Some(callback) = cancel {
+                prompt_editor = prompt_editor.on_cancel(callback);
+            }
+
+            prompt_editor
+        });
+
+        let height = bp_prompt.update(cx, |this, cx| {
+            this.prompt
+                .update(cx, |prompt, cx| prompt.max_point(cx).row().0 + 1 + 2)
+        });
+        let cloned_prompt = bp_prompt.clone();
+        let blocks = vec![BlockProperties {
+            style: BlockStyle::Sticky,
+            placement: BlockPlacement::Above(anchor),
+            height: Some(height),
+            render: Arc::new(move |cx| {
+                *cloned_prompt.read(cx).editor_margins.lock() = *cx.margins;
+                cloned_prompt.clone().into_any_element()
+            }),
+            priority: 0,
+        }];
+
+        let focus_handle = bp_prompt.focus_handle(cx);
+        window.focus(&focus_handle, cx);
+
+        let block_ids = self.insert_blocks(blocks, None, cx);
+        bp_prompt.update(cx, |prompt, _| {
+            prompt.add_block_ids(block_ids);
+        });
+
+        bp_prompt.update(cx, |prompt, cx| {
+            prompt.prompt.update(cx, |editor, cx| {
+                editor.set_placeholder_text(placeholder_text, window, cx)
+            });
+        });
+    }
+
     pub(crate) fn breakpoint_at_row(
         &self,
         row: u32,
@@ -5915,13 +5983,13 @@ impl Editor {
                     .first()
                     .and_then(|bookmark| {
                         let bookmark_row = buffer_snapshot
-                            .summary_for_anchor::<text::PointUtf16>(&bookmark.anchor())
+                            .summary_for_anchor::<text::PointUtf16>(&bookmark.anchor)
                             .row;
 
                         if bookmark_row == row {
                             snapshot
                                 .buffer_snapshot()
-                                .anchor_in_excerpt(bookmark.anchor())
+                                .anchor_in_excerpt(bookmark.anchor)
                         } else {
                             None
                         }
@@ -11832,6 +11900,12 @@ impl ui_input::ErasedEditor for ErasedEditorImpl {
         });
     }
 
+    fn select_all(&self, window: &mut Window, cx: &mut App) {
+        self.0.update(cx, |editor, cx| {
+            editor.select_all(&SelectAll, window, cx);
+        });
+    }
+
     fn subscribe(
         &self,
         mut callback: Box<dyn FnMut(ui_input::ErasedEditorEvent, &mut Window, &mut App) + 'static>,
@@ -12068,12 +12142,16 @@ enum BreakpointPromptEditAction {
     HitCondition,
 }
 
+type PromptEditorCallback = Box<dyn FnMut(String, &mut Editor, &mut Context<Editor>)>;
+
 struct BreakpointPromptEditor {
     pub(crate) prompt: Entity<Editor>,
     editor: WeakEntity<Editor>,
     breakpoint_anchor: Anchor,
     breakpoint: Breakpoint,
     edit_action: BreakpointPromptEditAction,
+    confirm_callback: Option<PromptEditorCallback>,
+    cancel_callback: Option<PromptEditorCallback>,
     block_ids: HashSet<CustomBlockId>,
     editor_margins: Arc<Mutex<EditorMargins>>,
     _subscriptions: Vec<Subscription>,
@@ -12134,10 +12212,22 @@ impl BreakpointPromptEditor {
             breakpoint_anchor,
             breakpoint,
             edit_action,
+            confirm_callback: None,
+            cancel_callback: None,
             editor_margins: Arc::new(Mutex::new(EditorMargins::default())),
             block_ids: Default::default(),
             _subscriptions: vec![],
         }
+    }
+
+    fn on_confirm(mut self, confirm: PromptEditorCallback) -> Self {
+        self.confirm_callback = Some(confirm);
+        self
+    }
+
+    fn on_cancel(mut self, cancel: PromptEditorCallback) -> Self {
+        self.cancel_callback = Some(cancel);
+        self
     }
 
     pub(crate) fn add_block_ids(&mut self, block_ids: Vec<CustomBlockId>) {
@@ -12152,28 +12242,32 @@ impl BreakpointPromptEditor {
                 .buffer
                 .read(cx)
                 .as_singleton()
-                .expect("A multi buffer in breakpoint prompt isn't possible")
+                .expect("A multi buffer in prompt isn't possible")
                 .read(cx)
                 .as_rope()
                 .to_string();
 
             editor.update(cx, |editor, cx| {
-                editor.edit_breakpoint_at_anchor(
-                    self.breakpoint_anchor,
-                    self.breakpoint.clone(),
-                    match self.edit_action {
-                        BreakpointPromptEditAction::Log => {
-                            BreakpointEditAction::EditLogMessage(message.into())
-                        }
-                        BreakpointPromptEditAction::Condition => {
-                            BreakpointEditAction::EditCondition(message.into())
-                        }
-                        BreakpointPromptEditAction::HitCondition => {
-                            BreakpointEditAction::EditHitCondition(message.into())
-                        }
-                    },
-                    cx,
-                );
+                if let Some(confirm) = self.confirm_callback.as_mut() {
+                    confirm(message, editor, cx);
+                } else {
+                    editor.edit_breakpoint_at_anchor(
+                        self.breakpoint_anchor,
+                        self.breakpoint.clone(),
+                        match self.edit_action {
+                            BreakpointPromptEditAction::Log => {
+                                BreakpointEditAction::EditLogMessage(message.into())
+                            }
+                            BreakpointPromptEditAction::Condition => {
+                                BreakpointEditAction::EditCondition(message.into())
+                            }
+                            BreakpointPromptEditAction::HitCondition => {
+                                BreakpointEditAction::EditHitCondition(message.into())
+                            }
+                        },
+                        cx,
+                    );
+                }
 
                 editor.remove_blocks(self.block_ids.clone(), None, cx);
                 cx.focus_self(window);
@@ -12184,6 +12278,21 @@ impl BreakpointPromptEditor {
     fn cancel(&mut self, _: &menu::Cancel, window: &mut Window, cx: &mut Context<Self>) {
         self.editor
             .update(cx, |editor, cx| {
+                let message = self
+                    .prompt
+                    .read(cx)
+                    .buffer
+                    .read(cx)
+                    .as_singleton()
+                    .expect("A multi buffer in prompt isn't possible")
+                    .read(cx)
+                    .as_rope()
+                    .to_string();
+
+                if let Some(cancel) = self.cancel_callback.as_mut() {
+                    cancel(message, editor, cx);
+                }
+
                 editor.remove_blocks(self.block_ids.clone(), None, cx);
                 window.focus(&editor.focus_handle, cx);
             })

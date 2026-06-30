@@ -66,7 +66,7 @@ impl ChannelModal {
                 window,
                 cx,
             )
-            .modal(false)
+            .embedded()
         });
 
         Self {
@@ -147,7 +147,6 @@ impl Render for ChannelModal {
             .on_action(cx.listener(Self::toggle_mode))
             .on_action(cx.listener(Self::dismiss))
             .elevation_3(cx)
-            .w(rems(34.))
             .child(
                 v_flex()
                     .px_2()

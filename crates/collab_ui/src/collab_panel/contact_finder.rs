@@ -22,7 +22,7 @@ impl ContactFinder {
             potential_contacts: Arc::from([]),
             selected_index: 0,
         };
-        let picker = cx.new(|cx| Picker::uniform_list(delegate, window, cx).modal(false));
+        let picker = cx.new(|cx| Picker::uniform_list(delegate, window, cx).embedded());
 
         Self { picker }
     }
@@ -49,7 +49,6 @@ impl Render for ContactFinder {
                     .child(h_flex().child(Label::new(tr!("Invite new contacts")))),
             )
             .child(self.picker.clone())
-            .w(rems(34.))
     }
 }
 

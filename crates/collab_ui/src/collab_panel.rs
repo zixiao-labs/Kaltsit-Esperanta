@@ -12,7 +12,7 @@ use collections::{HashMap, HashSet};
 use contact_finder::ContactFinder;
 use db::kvp::KeyValueStore;
 use editor::{Editor, EditorElement, EditorStyle};
-use feature_flags::{AutoWatchFeatureFlag, FeatureFlagAppExt as _};
+
 use fuzzy::{StringMatch, StringMatchCandidate, match_strings};
 use gpui::{
     AnyElement, App, AsyncWindowContext, Bounds, ClickEvent, ClipboardItem, DismissEvent, Div,
@@ -2951,8 +2951,7 @@ impl CollabPanel {
 
         let button = match section {
             Section::ActiveCall => {
-                let has_auto_watch_flag = cx.has_flag::<AutoWatchFeatureFlag>();
-                let show_auto_watch = has_auto_watch_flag && is_auto_watching;
+                let show_auto_watch = is_auto_watching;
                 let show_copy = channel_link.is_some();
 
                 if show_auto_watch || show_copy {
@@ -2965,47 +2964,43 @@ impl CollabPanel {
                                         .tooltip_label(tr!("Copy Channel Link")),
                                 )
                             })
-                            .when(has_auto_watch_flag, |this| {
-                                this.child(
-                                    IconButton::new(
-                                        "auto-watch-screens",
-                                        if is_auto_watching {
-                                            IconName::Eye
-                                        } else {
-                                            IconName::EyeOff
-                                        },
-                                    )
-                                    .icon_size(IconSize::Small)
-                                    .toggle_state(is_auto_watching)
-                                    .selected_style(match auto_watch_state {
-                                        AutoWatch::Paused => {
-                                            ButtonStyle::Tinted(TintColor::Warning)
-                                        }
-                                        _ => ButtonStyle::Tinted(TintColor::Accent),
-                                    })
-                                    .when(!is_auto_watching, |this| {
-                                        this.visible_on_hover("section-header")
-                                    })
-                                    .tooltip(Tooltip::text(match auto_watch_state {
-                                        AutoWatch::Paused => {
-                                            tr!("Auto Watch Screens (paused while sharing)")
-                                        }
-                                        AutoWatch::Active { .. } => {
-                                            tr!("Stop Auto Watching Screens")
-                                        }
-                                        AutoWatch::Off => tr!("Auto Watch Screens"),
-                                    }))
-                                    .on_click(cx.listener(
-                                        |this, _, window, cx| {
-                                            this.workspace
-                                                .update(cx, |workspace, cx| {
-                                                    workspace.toggle_auto_watch(window, cx)
-                                                })
-                                                .ok();
-                                        },
-                                    )),
+                            .child(
+                                IconButton::new(
+                                    "auto-watch-screens",
+                                    if is_auto_watching {
+                                        IconName::Eye
+                                    } else {
+                                        IconName::EyeOff
+                                    },
                                 )
-                            })
+                                .icon_size(IconSize::Small)
+                                .toggle_state(is_auto_watching)
+                                .selected_style(match auto_watch_state {
+                                    AutoWatch::Paused => ButtonStyle::Tinted(TintColor::Warning),
+                                    _ => ButtonStyle::Tinted(TintColor::Accent),
+                                })
+                                .when(!is_auto_watching, |this| {
+                                    this.visible_on_hover("section-header")
+                                })
+                                .tooltip(Tooltip::text(match auto_watch_state {
+                                    AutoWatch::Paused => {
+                                        tr!("Auto Watch Screens (paused while sharing)")
+                                    }
+                                    AutoWatch::Active { .. } => {
+                                        tr!("Stop Auto Watching Screens")
+                                    }
+                                    AutoWatch::Off => tr!("Auto Watch Screens"),
+                                }))
+                                .on_click(cx.listener(
+                                    |this, _, window, cx| {
+                                        this.workspace
+                                            .update(cx, |workspace, cx| {
+                                                workspace.toggle_auto_watch(window, cx)
+                                            })
+                                            .ok();
+                                    },
+                                )),
+                            )
                             .into_any_element(),
                     )
                 } else {
