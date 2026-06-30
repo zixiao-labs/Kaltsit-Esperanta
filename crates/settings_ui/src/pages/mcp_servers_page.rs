@@ -1013,14 +1013,11 @@ fn render_form_field(
     cx: &mut Context<SettingsWindow>,
 ) -> AnyElement {
     let control = input_box(editor, cx).into_any_element();
-    crate::render_settings_item_layout(
+    crate::render_form_field_layout(
         settings_window,
-        title,
-        description,
+        title.into(),
+        description.into(),
         control,
-        None,
-        None,
-        None,
         false,
         cx,
     )
@@ -1083,14 +1080,11 @@ fn render_kv_section(
         )
         .into_any_element();
 
-    crate::render_settings_item_layout(
+    crate::render_form_field_layout(
         settings_window,
-        title,
-        description,
+        title.into(),
+        description.into(),
         control,
-        None,
-        None,
-        None,
         false,
         cx,
     )

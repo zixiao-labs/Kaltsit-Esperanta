@@ -216,68 +216,61 @@ fn git_panel_view_options_menu(
     ContextMenu::build(window, cx, move |context_menu, _, _| {
         context_menu
             .context(focus_handle)
-            .action_disabled_when(
-                !state.has_unstaged_changes,
-                ama10_i18n::tr!("Stage All"),
-                StageAll.boxed_clone(),
-            )
-            .action_disabled_when(
-                !state.has_staged_changes,
-                ama10_i18n::tr!("Unstage All"),
-                UnstageAll.boxed_clone(),
-            )
-            .separator()
-            .action_disabled_when(
-                !(state.has_new_changes || state.has_tracked_changes),
-                ama10_i18n::tr!("Stash All"),
-                StashAll.boxed_clone(),
-            )
-            .action_disabled_when(
-                !state.has_stash_items,
-                ama10_i18n::tr!("Stash Pop"),
-                StashPop.boxed_clone(),
-            )
-            .action(
-                ama10_i18n::tr!("View Stash"),
-                zed_actions::git::ViewStash.boxed_clone(),
-            )
-            .separator()
-            .action(
-                ama10_i18n::tr!("Open Diff"),
-                project_diff::Diff.boxed_clone(),
-            )
-            .separator()
-            .action_disabled_when(
-                !state.has_tracked_changes,
-                ama10_i18n::tr!("Discard Tracked Changes"),
-                RestoreTrackedFiles.boxed_clone(),
-            )
-            .action_disabled_when(
-                !state.has_new_changes,
-                ama10_i18n::tr!("Trash Untracked Files"),
-                TrashUntrackedFiles.boxed_clone(),
-            )
-            .separator()
-            .entry(
-                if state.tree_view {
+            .header(ama10_i18n::tr!("View"))
+            .item(
+                ContextMenuEntry::new(if state.tree_view {
                     ama10_i18n::tr!("Flat View")
                 } else {
                     ama10_i18n::tr!("Tree View")
-                },
-                Some(Box::new(ToggleTreeView)),
-                move |window, cx| window.dispatch_action(Box::new(ToggleTreeView), cx),
+                })
+                .handler(move |window, cx| {
+                    window.dispatch_action(ToggleTreeView.boxed_clone(), cx)
+                }),
             )
             .when(!state.tree_view, |this| {
-                this.entry(
-                    if state.sort_by_path {
-                        ama10_i18n::tr!("Sort by Status")
-                    } else {
-                        ama10_i18n::tr!("Sort by Path")
-                    },
-                    Some(Box::new(ToggleSortByPath)),
-                    move |window, cx| window.dispatch_action(Box::new(ToggleSortByPath), cx),
-                )
+                this.separator()
+                    .header(ama10_i18n::tr!("Sort By"))
+                    .item(
+                        ContextMenuEntry::new(ama10_i18n::tr!("Path"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Path)
+                            .disabled(state.tree_view)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    window.dispatch_action(SetSortByPath.boxed_clone(), cx);
+                                }
+                            }),
+                    )
+                    .item(
+                        ContextMenuEntry::new(ama10_i18n::tr!("Name"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Name)
+                            .disabled(state.tree_view)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    window.dispatch_action(SetSortByName.boxed_clone(), cx);
+                                }
+                            }),
+                    )
             })
+            .separator()
+            .header(ama10_i18n::tr!("Group By"))
+            .item(
+                ContextMenuEntry::new(ama10_i18n::tr!("None"))
+                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::None)
+                    .handler(move |window, cx| {
+                        if state.group_by != GitPanelGroupBy::None {
+                            window.dispatch_action(SetGroupByNone.boxed_clone(), cx);
+                        }
+                    }),
+            )
+            .item(
+                ContextMenuEntry::new(ama10_i18n::tr!("Status"))
+                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::Status)
+                    .handler(move |window, cx| {
+                        if state.group_by != GitPanelGroupBy::Status {
+                            window.dispatch_action(SetGroupByStatus.boxed_clone(), cx);
+                        }
+                    }),
+            )
     })
 }
 

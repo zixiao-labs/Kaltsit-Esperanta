@@ -1394,6 +1394,35 @@ fn render_settings_item_layout(
         })
 }
 
+pub(crate) fn render_form_field_layout(
+    _settings_window: &SettingsWindow,
+    title: SharedString,
+    description: SharedString,
+    control: AnyElement,
+    _sub_field: bool,
+    _cx: &mut Context<'_, SettingsWindow>,
+) -> Stateful<Div> {
+    h_flex()
+        .id(title.clone())
+        .min_w_0()
+        .justify_between()
+        .child(
+            v_flex()
+                .relative()
+                .w_full()
+                .max_w_2_3()
+                .min_w_0()
+                .child(h_flex().w_full().gap_1().child(Label::new(title)))
+                .child(
+                    Label::new(description)
+                        .size(LabelSize::Small)
+                        .color(Color::Muted)
+                        .render_code_spans(),
+                ),
+        )
+        .child(control)
+}
+
 fn render_settings_item(
     settings_window: &SettingsWindow,
     setting_item: &SettingItem,
