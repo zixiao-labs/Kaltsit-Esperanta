@@ -232,13 +232,14 @@ impl Editor {
     ) {
         for target in targets {
             let bookmark_store = bookmark_store.clone();
+            let buffer = target.buffer.clone();
             self.add_edit_block(
                 target.anchor,
                 "",
                 "Enter bookmark label (Optional)",
                 Some(Box::new(move |label: String, _, cx| {
                     bookmark_store.update(cx, |store, cx| {
-                        store.toggle_bookmark(target.buffer, target.buffer_anchor, label, cx);
+                        store.toggle_bookmark(buffer.clone(), target.buffer_anchor, label, cx);
                     });
                 })),
                 None,

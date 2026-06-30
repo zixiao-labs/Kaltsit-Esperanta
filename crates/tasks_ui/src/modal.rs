@@ -149,7 +149,7 @@ impl TasksModal {
                 window,
                 cx,
             )
-            .modal(is_modal)
+            .when(!is_modal, |this| this.embedded())
         });
         let mut _subscriptions = [
             cx.subscribe(&picker, |_, _, _: &DismissEvent, cx| {
