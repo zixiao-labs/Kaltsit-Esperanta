@@ -154,7 +154,6 @@ When your changes affect UI, consult this checklist:
 - Are power features discoverable but not intrusive?
 - Is there a path from beginner → expert usage (progressive disclosure)?
 
-<<<<<<< HEAD
 ## Things we will (probably) not merge
 
 Although there are few hard and fast rules, typically we don't merge:
@@ -169,9 +168,6 @@ Although there are few hard and fast rules, typically we don't merge:
 - Anything that seems AI-generated without understanding the output.
 
 ## Bird's-eye view of Kaltsit-Esperanta
-=======
-## Bird's-eye view of Zed
->>>>>>> upstream/main
 
 We suggest you keep the [Zed glossary](docs/src/development/glossary.md) at your side when starting out. It lists and explains some of the structures and terms you will see throughout the codebase.
 
