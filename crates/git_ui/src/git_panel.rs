@@ -11,6 +11,7 @@ use crate::{
     git_panel_settings::GitPanelSettings, git_status_icon, repository_selector::RepositorySelector,
 };
 use agent_settings::{AgentSettings, UserAgentsMd};
+
 use anyhow::Context as _;
 use askpass::AskPassDelegate;
 use collections::{BTreeMap, HashMap, HashSet};
@@ -215,64 +216,58 @@ fn git_panel_view_options_menu(
     ContextMenu::build(window, cx, move |context_menu, _, _| {
         context_menu
             .context(focus_handle)
-            .header("View")
+            .header(ama10_i18n::tr!("View"))
             .item(
-                ContextMenuEntry::new("List")
-                    .toggle(IconPosition::End, !state.tree_view)
-                    .handler(move |window, cx| {
-                        if state.tree_view {
-                            window.dispatch_action(Box::new(ToggleTreeView), cx);
-                        }
-                    }),
+                ContextMenuEntry::new(if state.tree_view {
+                    ama10_i18n::tr!("Flat View")
+                } else {
+                    ama10_i18n::tr!("Tree View")
+                })
+                .handler(move |window, cx| {
+                    window.dispatch_action(ToggleTreeView.boxed_clone(), cx)
+                }),
             )
-            .item(
-                ContextMenuEntry::new("Tree")
-                    .toggle(IconPosition::End, state.tree_view)
-                    .handler(move |window, cx| {
-                        if !state.tree_view {
-                            window.dispatch_action(Box::new(ToggleTreeView), cx);
-                        }
-                    }),
-            )
+            .when(!state.tree_view, |this| {
+                this.separator()
+                    .header(ama10_i18n::tr!("Sort By"))
+                    .item(
+                        ContextMenuEntry::new(ama10_i18n::tr!("Path"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Path)
+                            .disabled(state.tree_view)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    window.dispatch_action(SetSortByPath.boxed_clone(), cx);
+                                }
+                            }),
+                    )
+                    .item(
+                        ContextMenuEntry::new(ama10_i18n::tr!("Name"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Name)
+                            .disabled(state.tree_view)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    window.dispatch_action(SetSortByName.boxed_clone(), cx);
+                                }
+                            }),
+                    )
+            })
             .separator()
-            .header("Sort By")
+            .header(ama10_i18n::tr!("Group By"))
             .item(
-                ContextMenuEntry::new("Path")
-                    .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Path)
-                    .disabled(state.tree_view)
-                    .handler(move |window, cx| {
-                        if !state.tree_view {
-                            window.dispatch_action(Box::new(SetSortByPath), cx);
-                        }
-                    }),
-            )
-            .item(
-                ContextMenuEntry::new("Name")
-                    .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Name)
-                    .disabled(state.tree_view)
-                    .handler(move |window, cx| {
-                        if !state.tree_view {
-                            window.dispatch_action(Box::new(SetSortByName), cx);
-                        }
-                    }),
-            )
-            .separator()
-            .header("Group By")
-            .item(
-                ContextMenuEntry::new("None")
+                ContextMenuEntry::new(ama10_i18n::tr!("None"))
                     .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::None)
                     .handler(move |window, cx| {
                         if state.group_by != GitPanelGroupBy::None {
-                            window.dispatch_action(Box::new(SetGroupByNone), cx);
+                            window.dispatch_action(SetGroupByNone.boxed_clone(), cx);
                         }
                     }),
             )
             .item(
-                ContextMenuEntry::new("Status")
+                ContextMenuEntry::new(ama10_i18n::tr!("Status"))
                     .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::Status)
                     .handler(move |window, cx| {
                         if state.group_by != GitPanelGroupBy::Status {
-                            window.dispatch_action(Box::new(SetGroupByStatus), cx);
+                            window.dispatch_action(SetGroupByStatus.boxed_clone(), cx);
                         }
                     }),
             )
@@ -1681,7 +1676,7 @@ impl GitPanel {
             if !entry.status.is_created() {
                 self.perform_checkout(vec![entry.clone()], window, cx);
             } else {
-                let prompt = prompt(&format!("Trash {}?", filename), None, window, cx);
+                let prompt = prompt(&ama10_i18n::tr_f!("Trash {}?", filename), None, window, cx);
                 cx.spawn_in(window, async move |_, cx| {
                     match prompt.await? {
                         TrashCancel::Trash => {}
@@ -1698,10 +1693,10 @@ impl GitPanel {
                     Ok(())
                 })
                 .detach_and_prompt_err(
-                    "Failed to trash file",
+                    ama10_i18n::tr!("Failed to trash file").as_ref(),
                     window,
                     cx,
-                    |e, _, _| Some(format!("{e}")),
+                    |e, _, _| Some(e.to_string()),
                 );
             }
             Some(())
@@ -1818,8 +1813,8 @@ impl GitPanel {
             Cancel,
         }
         let prompt = prompt(
-            "Discard changes to these files?",
-            Some(&details),
+            ama10_i18n::tr!("Discard changes to these files?").as_ref(),
+            None,
             window,
             cx,
         );
@@ -2464,7 +2459,10 @@ impl GitPanel {
 
         if self.has_unstaged_conflicts() {
             error_spawn(
-                "There are still conflicts. You must stage these before committing",
+                ama10_i18n::tr!(
+                    "There are still conflicts. You must stage these before committing"
+                )
+                .as_ref(),
                 window,
                 cx,
             );
@@ -2502,7 +2500,7 @@ impl GitPanel {
                 .collect::<Vec<_>>();
 
             if changed_files.is_empty() && !options.amend {
-                error_spawn("No changes to commit", window, cx);
+                error_spawn(ama10_i18n::tr!("No changes to commit").as_ref(), window, cx);
                 return;
             }
 
@@ -2608,12 +2606,20 @@ impl GitPanel {
                     Uncommit,
                     Cancel,
                 }
-                let detail = format!(
+                let detail = ama10_i18n::tr_f!(
                     "This commit was already pushed to {}.",
                     pushed_to.into_iter().join(", ")
-                );
+                )
+                .to_string();
                 let result = cx
-                    .update(|window, cx| prompt("Are you sure?", Some(&detail), window, cx))?
+                    .update(|window, cx| {
+                        prompt(
+                            ama10_i18n::tr!("Are you sure?").as_ref(),
+                            Some(&detail),
+                            window,
+                            cx,
+                        )
+                    })?
                     .await?;
 
                 match result {
@@ -4518,14 +4524,16 @@ impl GitPanel {
                             .icon_color(Color::Error)
                             .icon_size(IconSize::Small)
                             .style(ButtonStyle::Tinted(TintColor::Error))
-                            .tooltip(Tooltip::text("Cancel Commit Message Generation"))
+                            .tooltip(Tooltip::text(ama10_i18n::tr!(
+                                "Cancel Commit Message Generation"
+                            )))
                             .on_click(cx.listener(|this, _event, _window, cx| {
                                 this.generate_commit_message_task.take();
                                 cx.notify();
                             })),
                     )
                     .child(
-                        Label::new("Generating Commit…")
+                        Label::new(ama10_i18n::tr!("Generating Commit…"))
                             .size(LabelSize::Small)
                             .color(Color::Muted),
                     )
@@ -4551,12 +4559,17 @@ impl GitPanel {
                 })
                 .tooltip(move |_window, cx| {
                     if !can_commit {
-                        Tooltip::simple("No Changes to Commit", cx)
+                        Tooltip::simple(ama10_i18n::tr!("No changes to commit"), cx)
                     } else if has_commit_model_configuration_error {
-                        Tooltip::simple("Configure an LLM provider to generate commit messages", cx)
+                        Tooltip::simple(
+                            ama10_i18n::tr!(
+                                "Configure an LLM provider to generate commit messages"
+                            ),
+                            cx,
+                        )
                     } else {
                         Tooltip::for_action_in(
-                            "Generate Commit Message",
+                            ama10_i18n::tr!("Generate Commit Message"),
                             &git::GenerateCommitMessage,
                             &editor_focus_handle,
                             cx,
@@ -4575,9 +4588,9 @@ impl GitPanel {
         let potential_co_authors = self.potential_co_authors(cx);
 
         let (tooltip_label, icon) = if self.add_coauthors {
-            ("Remove co-authored-by", IconName::Person)
+            (ama10_i18n::tr!("Remove co-authored-by"), IconName::Person)
         } else {
-            ("Add co-authored-by", IconName::UserCheck)
+            (ama10_i18n::tr!("Add co-authored-by"), IconName::UserCheck)
         };
 
         if potential_co_authors.is_empty() {
@@ -4649,7 +4662,7 @@ impl GitPanel {
                             })
                             .when(has_previous_commit, |this| {
                                 this.toggleable_entry(
-                                    "Amend",
+                                    ama10_i18n::tr!("Amend"),
                                     amend,
                                     IconPosition::Start,
                                     Some(Box::new(Amend)),
@@ -4666,7 +4679,7 @@ impl GitPanel {
                                 )
                             })
                             .toggleable_entry(
-                                "Signoff",
+                                ama10_i18n::tr!("Signoff"),
                                 signoff,
                                 IconPosition::Start,
                                 Some(Box::new(Signoff)),
@@ -5171,7 +5184,7 @@ impl GitPanel {
                             Tooltip::with_meta_in(
                                 tooltip,
                                 Some(&git::Commit),
-                                format!(
+                                ama10_i18n::tr_f!(
                                     "git commit{}{}",
                                     if amend { " --amend" } else { "" },
                                     if signoff { " --signoff" } else { "" }
@@ -5207,13 +5220,13 @@ impl GitPanel {
                     .overflow_hidden()
                     .max_w(relative(0.85))
                     .child(
-                        Label::new("This will update your most recent commit.")
+                        Label::new(ama10_i18n::tr!("This will update your most recent commit."))
                             .size(LabelSize::Small)
                             .truncate(),
                     ),
             )
             .child(
-                Button::new("cancel", "Cancel")
+                Button::new("cancel", ama10_i18n::tr!("Cancel"))
                     .label_size(LabelSize::Small)
                     .layer(ElevationIndex::ModalSurface)
                     .on_click(cx.listener(|this, _, _, cx| this.set_amend_pending(false, cx))),
@@ -5290,7 +5303,7 @@ impl GitPanel {
                                     .icon_size(IconSize::Small)
                                     .tooltip(move |_window, cx| {
                                         Tooltip::with_meta(
-                                            "Uncommit",
+                                            ama10_i18n::tr!("Uncommit"),
                                             Some(&git::Uncommit),
                                             if has_unstaged {
                                                 "git reset HEAD^ --soft"
@@ -5312,7 +5325,7 @@ impl GitPanel {
                                 .icon_size(IconSize::Small)
                                 .tooltip(|_window, cx| {
                                     Tooltip::for_action(
-                                        "Open Git Graph",
+                                        ama10_i18n::tr!("Open Git Graph"),
                                         &crate::git_graph::Open,
                                         cx,
                                     )
@@ -5377,7 +5390,7 @@ impl GitPanel {
                 ElementId::Name("changes-tab".into()),
                 active_tab == GitPanelTab::Changes,
                 true,
-                "Changes".into(),
+                ama10_i18n::tr!("Changes"),
                 GitPanelTab::Changes,
                 ActivateChangesTab.boxed_clone(),
             ))
@@ -5386,7 +5399,7 @@ impl GitPanel {
                 ElementId::Name("history-tab".into()),
                 active_tab != GitPanelTab::Changes,
                 false,
-                "History".into(),
+                ama10_i18n::tr!("History"),
                 GitPanelTab::History,
                 ActivateHistoryTab.boxed_clone(),
             ))
@@ -5401,28 +5414,22 @@ impl GitPanel {
                 .map_or(false, |shas| !shas.is_empty());
             let is_loading = self.commit_history_shas.is_none() && has_repo;
             if is_loading {
-                this.child(
-                    h_flex()
-                        .flex_1()
-                        .justify_center()
-                        .child(Label::new("Loading Commit History…").color(Color::Muted)),
-                )
+                this.child(h_flex().flex_1().justify_center().child(
+                    Label::new(ama10_i18n::tr!("Loading Commit History…")).color(Color::Muted),
+                ))
             } else if !has_repo || !has_commits {
                 this.child(
                     h_flex()
                         .flex_1()
                         .justify_center()
-                        .child(Label::new("No commits yet").color(Color::Muted)),
+                        .child(Label::new(ama10_i18n::tr!("No commits yet")).color(Color::Muted)),
                 )
             } else {
                 match self.render_commit_history(window, cx) {
                     Some(history) => this.child(history),
-                    None => this.child(
-                        h_flex()
-                            .flex_1()
-                            .justify_center()
-                            .child(Label::new("Failed to load commits").color(Color::Muted)),
-                    ),
+                    None => this.child(h_flex().flex_1().justify_center().child(
+                        Label::new(ama10_i18n::tr!("Failed to load commits")).color(Color::Muted),
+                    )),
                 }
             }
         })
@@ -5833,10 +5840,10 @@ impl GitPanel {
         v_flex()
             .gap_1()
             .items_center()
-            .child(Label::new("No changes to commit").color(Color::Muted))
+            .child(Label::new(ama10_i18n::tr!("No changes to commit")).color(Color::Muted))
             .when(show_branch_diff, |this| {
                 this.child(
-                    Button::new("view_branch_diff", "View Branch Diff")
+                    Button::new("view_branch_diff", ama10_i18n::tr!("View Branch Diff"))
                         .label_size(LabelSize::Small)
                         .style(ButtonStyle::Outlined)
                         .on_click(move |_, _, cx| {
@@ -5904,27 +5911,30 @@ impl GitPanel {
             v_flex()
                 .gap_1()
                 .items_center()
-                .child(Label::new("No Git Repositories").color(Color::Muted))
+                .child(Label::new(ama10_i18n::tr!("No Git Repositories")).color(Color::Muted))
                 .child(
-                    Button::new("initialize_repository", "Initialize Repository")
-                        .label_size(LabelSize::Small)
-                        .style(ButtonStyle::Outlined)
-                        .tooltip(Tooltip::for_action_title_in(
-                            "git init",
-                            &git::Init,
-                            &self.focus_handle,
-                        ))
-                        .on_click(move |_, _, cx| {
-                            cx.defer(move |cx| {
-                                cx.dispatch_action(&git::Init);
-                            })
-                        }),
+                    Button::new(
+                        "initialize_repository",
+                        ama10_i18n::tr!("Initialize Repository"),
+                    )
+                    .label_size(LabelSize::Small)
+                    .style(ButtonStyle::Outlined)
+                    .tooltip(Tooltip::for_action_title_in(
+                        ama10_i18n::tr!("git init"),
+                        &git::Init,
+                        &self.focus_handle,
+                    ))
+                    .on_click(move |_, _, cx| {
+                        cx.defer(move |cx| {
+                            cx.dispatch_action(&git::Init);
+                        })
+                    }),
                 )
                 .into_any_element()
         } else if worktree_count == 0 {
             let focus_handle = self.focus_handle.clone();
             ProjectEmptyState::new(
-                "Git Panel",
+                ama10_i18n::tr!("Git Panel"),
                 focus_handle.clone(),
                 KeyBinding::for_action_in(&workspace::Open::default(), &focus_handle, cx),
             )
@@ -6549,12 +6559,13 @@ impl GitPanel {
                             })
                             .tooltip(move |_window, cx| {
                                 let action = match stage_status {
-                                    StageStatus::Staged => "Unstage",
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => "Stage",
+                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
+                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
+                                        ama10_i18n::tr!("Stage")
+                                    }
                                 };
-                                let tooltip_name = action.to_string();
 
-                                Tooltip::for_action(tooltip_name, &ToggleStaged, cx)
+                                Tooltip::for_action(action, &ToggleStaged, cx)
                             }),
                     ),
             )
@@ -6726,10 +6737,12 @@ impl GitPanel {
                             })
                             .tooltip(move |_window, cx| {
                                 let action = match stage_status {
-                                    StageStatus::Staged => "Unstage",
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => "Stage",
+                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
+                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
+                                        ama10_i18n::tr!("Stage")
+                                    }
                                 };
-                                Tooltip::simple(format!("{action} folder"), cx)
+                                Tooltip::simple(ama10_i18n::tr_f!("{} folder", action), cx)
                             }),
                     ),
             )

@@ -184,7 +184,7 @@ impl ManageProfilesModal {
     ) {
         let name_editor = cx.new(|cx| Editor::single_line(window, cx));
         name_editor.update(cx, |editor, cx| {
-            editor.set_placeholder_text("Profile name", window, cx);
+            editor.set_placeholder_text(&ama10_i18n::tr!("Profile name"), window, cx);
         });
 
         self.mode = Mode::NewProfile(NewProfileMode {
@@ -545,7 +545,7 @@ impl ManageProfilesModal {
                             h_flex()
                                 .gap_1()
                                 .child(
-                                    Label::new("Customize")
+                                    Label::new(ama10_i18n::tr!("Customize"))
                                         .size(LabelSize::Small)
                                         .color(Color::Muted),
                                 )
@@ -575,7 +575,10 @@ impl ManageProfilesModal {
             div()
                 .track_focus(&self.focus_handle(cx))
                 .size_full()
-                .child(ProfileModalHeader::new("Agent Profiles", None))
+                .child(ProfileModalHeader::new(
+                    ama10_i18n::tr!("Agent Profiles"),
+                    None,
+                ))
                 .child(
                     v_flex()
                         .pb_1()
@@ -589,7 +592,7 @@ impl ManageProfilesModal {
                             this.child(ListSeparator)
                                 .child(
                                     div().pl_2().pb_1().child(
-                                        Label::new("Custom Profiles")
+                                        Label::new(ama10_i18n::tr!("Custom Profiles"))
                                             .size(LabelSize::Small)
                                             .color(Color::Muted),
                                     ),
@@ -618,7 +621,7 @@ impl ManageProfilesModal {
                                         .inset(true)
                                         .spacing(ListItemSpacing::Sparse)
                                         .start_slot(Icon::new(IconName::Plus))
-                                        .child(Label::new("Add New Profile"))
+                                        .child(Label::new(ama10_i18n::tr!("Add New Profile")))
                                         .on_click({
                                             cx.listener(move |this, _, window, cx| {
                                                 this.new_profile(None, window, cx);
@@ -655,7 +658,7 @@ impl ManageProfilesModal {
                 .profiles
                 .get(base_profile_id)
                 .map(|profile| profile.name.clone())
-                .unwrap_or_else(|| "Unknown".into())
+                .unwrap_or_else(|| ama10_i18n::tr!("Unknown"))
         });
 
         v_flex()
@@ -663,8 +666,8 @@ impl ManageProfilesModal {
             .track_focus(&self.focus_handle(cx))
             .child(ProfileModalHeader::new(
                 match &base_profile_name {
-                    Some(base_profile) => format!("Fork {base_profile}"),
-                    None => "New Profile".into(),
+                    Some(base_profile) => ama10_i18n::tr_f!("Fork {}", base_profile),
+                    None => ama10_i18n::tr!("New Profile"),
                 },
                 match base_profile_name {
                     Some(_) => Some(IconName::Scissors),
@@ -687,7 +690,7 @@ impl ManageProfilesModal {
             .profiles
             .get(&mode.profile_id)
             .map(|profile| profile.name.clone())
-            .unwrap_or_else(|| "Unknown".into());
+            .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
 
         let icon = match mode.profile_id.as_str() {
             "write" => IconName::Pencil,
@@ -728,7 +731,7 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Muted),
                                         )
-                                        .child(Label::new("Fork Profile"))
+                                        .child(Label::new(ama10_i18n::tr!("Fork Profile")))
                                         .on_click({
                                             let profile_id = mode.profile_id.clone();
                                             cx.listener(move |this, _, window, cx| {
@@ -769,7 +772,9 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Muted),
                                         )
-                                        .child(Label::new("Configure Default Model"))
+                                        .child(Label::new(ama10_i18n::tr!(
+                                            "Configure Default Model"
+                                        )))
                                         .on_click({
                                             let profile_id = mode.profile_id.clone();
                                             cx.listener(move |this, _, window, cx| {
@@ -810,7 +815,9 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Muted),
                                         )
-                                        .child(Label::new("Configure Built-in Tools"))
+                                        .child(Label::new(ama10_i18n::tr!(
+                                            "Configure Built-in Tools"
+                                        )))
                                         .on_click({
                                             let profile_id = mode.profile_id.clone();
                                             cx.listener(move |this, _, window, cx| {
@@ -847,7 +854,7 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Muted),
                                         )
-                                        .child(Label::new("Configure MCP Tools"))
+                                        .child(Label::new(ama10_i18n::tr!("Configure MCP Tools")))
                                         .on_click({
                                             let profile_id = mode.profile_id.clone();
                                             cx.listener(move |this, _, window, cx| {
@@ -884,7 +891,10 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Error),
                                         )
-                                        .child(Label::new("Delete Profile").color(Color::Error))
+                                        .child(
+                                            Label::new(ama10_i18n::tr!("Delete Profile"))
+                                                .color(Color::Error),
+                                        )
                                         .disabled(builtin_profiles::is_builtin(&mode.profile_id))
                                         .on_click({
                                             let profile_id = mode.profile_id.clone();
@@ -918,7 +928,7 @@ impl ManageProfilesModal {
                                                 .size(IconSize::Small)
                                                 .color(Color::Muted),
                                         )
-                                        .child(Label::new("Go Back"))
+                                        .child(Label::new(ama10_i18n::tr!("Go Back")))
                                         .end_slot(
                                             div().child(
                                                 KeyBinding::for_action_in(
@@ -970,7 +980,7 @@ impl Render for ManageProfilesModal {
                             .size(IconSize::Small)
                             .color(Color::Muted),
                     )
-                    .child(Label::new("Go Back"))
+                    .child(Label::new(ama10_i18n::tr!("Go Back")))
                     .end_slot(
                         div().child(
                             KeyBinding::for_action_in(&menu::Cancel, &self.focus_handle, cx)
@@ -1013,12 +1023,12 @@ impl Render for ManageProfilesModal {
                         .profiles
                         .get(profile_id)
                         .map(|profile| profile.name.clone())
-                        .unwrap_or_else(|| "Unknown".into());
+                        .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
 
                     v_flex()
                         .pb_1()
                         .child(ProfileModalHeader::new(
-                            format!("{profile_name} — Configure Built-in Tools"),
+                            ama10_i18n::tr_f!("{} — Configure Built-in Tools", &profile_name),
                             Some(IconName::Settings),
                         ))
                         .child(ListSeparator)
@@ -1036,12 +1046,12 @@ impl Render for ManageProfilesModal {
                         .profiles
                         .get(profile_id)
                         .map(|profile| profile.name.clone())
-                        .unwrap_or_else(|| "Unknown".into());
+                        .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
 
                     v_flex()
                         .pb_1()
                         .child(ProfileModalHeader::new(
-                            format!("{profile_name} — Configure Default Model"),
+                            ama10_i18n::tr_f!("{} — Configure Default Model", &profile_name),
                             Some(IconName::ZedAgent),
                         ))
                         .child(ListSeparator)
@@ -1059,12 +1069,12 @@ impl Render for ManageProfilesModal {
                         .profiles
                         .get(profile_id)
                         .map(|profile| profile.name.clone())
-                        .unwrap_or_else(|| "Unknown".into());
+                        .unwrap_or_else(|| ama10_i18n::tr!("Unknown"));
 
                     v_flex()
                         .pb_1()
                         .child(ProfileModalHeader::new(
-                            format!("{profile_name} — Configure MCP Tools"),
+                            ama10_i18n::tr_f!("{} — Configure MCP Tools", &profile_name),
                             Some(IconName::ToolHammer),
                         ))
                         .child(ListSeparator)

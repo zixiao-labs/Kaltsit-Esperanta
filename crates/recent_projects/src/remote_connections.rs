@@ -3,12 +3,13 @@ use std::{
     sync::Arc,
 };
 
+use ama10_i18n::tr;
 use anyhow::{Context as _, Result};
 use askpass::EncryptedPassword;
 use editor::Editor;
 use extension_host::ExtensionStore;
 use futures::{FutureExt as _, channel::oneshot, select};
-use gpui::{AppContext, AsyncApp, PromptLevel, WindowHandle};
+use gpui::{AppContext, AsyncApp, PromptLevel, SharedString, WindowHandle};
 
 use project::trusted_worktrees;
 use remote::{
@@ -310,23 +311,26 @@ pub async fn open_remote_project(
                     }
                 });
                 log::error!("Failed to open project: {e:#}");
+                let retry: SharedString = tr!("Retry");
+                let cancel: SharedString = tr!("Cancel");
+                let prompt_msg: SharedString = match connection_options {
+                    RemoteConnectionOptions::Ssh(_) => tr!("Failed to connect over SSH"),
+                    RemoteConnectionOptions::Wsl(_) => tr!("Failed to connect to WSL"),
+                    RemoteConnectionOptions::Docker(_) => {
+                        tr!("Failed to connect to Dev Container")
+                    }
+                    #[cfg(any(test, feature = "test-support"))]
+                    RemoteConnectionOptions::Mock(_) => {
+                        tr!("Failed to connect to mock server")
+                    }
+                };
                 let response = window
                     .update(cx, |_, window, cx| {
                         window.prompt(
                             PromptLevel::Critical,
-                            match connection_options {
-                                RemoteConnectionOptions::Ssh(_) => "Failed to connect over SSH",
-                                RemoteConnectionOptions::Wsl(_) => "Failed to connect to WSL",
-                                RemoteConnectionOptions::Docker(_) => {
-                                    "Failed to connect to Dev Container"
-                                }
-                                #[cfg(any(test, feature = "test-support"))]
-                                RemoteConnectionOptions::Mock(_) => {
-                                    "Failed to connect to mock server"
-                                }
-                            },
+                            &prompt_msg,
                             Some(&format!("{e:#}")),
-                            &["Retry", "Cancel"],
+                            &[retry.as_ref(), cancel.as_ref()],
                             cx,
                         )
                     })?
@@ -371,23 +375,26 @@ pub async fn open_remote_project(
         match opened_items {
             Err(e) => {
                 log::error!("Failed to open project: {e:#}");
+                let retry: SharedString = tr!("Retry");
+                let cancel: SharedString = tr!("Cancel");
+                let prompt_msg: SharedString = match connection_options {
+                    RemoteConnectionOptions::Ssh(_) => tr!("Failed to connect over SSH"),
+                    RemoteConnectionOptions::Wsl(_) => tr!("Failed to connect to WSL"),
+                    RemoteConnectionOptions::Docker(_) => {
+                        tr!("Failed to connect to Dev Container")
+                    }
+                    #[cfg(any(test, feature = "test-support"))]
+                    RemoteConnectionOptions::Mock(_) => {
+                        tr!("Failed to connect to mock server")
+                    }
+                };
                 let response = window
                     .update(cx, |_, window, cx| {
                         window.prompt(
                             PromptLevel::Critical,
-                            match connection_options {
-                                RemoteConnectionOptions::Ssh(_) => "Failed to connect over SSH",
-                                RemoteConnectionOptions::Wsl(_) => "Failed to connect to WSL",
-                                RemoteConnectionOptions::Docker(_) => {
-                                    "Failed to connect to Dev Container"
-                                }
-                                #[cfg(any(test, feature = "test-support"))]
-                                RemoteConnectionOptions::Mock(_) => {
-                                    "Failed to connect to mock server"
-                                }
-                            },
+                            &prompt_msg,
                             Some(&format!("{e:#}")),
-                            &["Retry", "Cancel"],
+                            &[retry.as_ref(), cancel.as_ref()],
                             cx,
                         )
                     })?

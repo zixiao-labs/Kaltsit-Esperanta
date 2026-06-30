@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use ama10_i18n::tr;
 use db::kvp::KeyValueStore;
 use gpui::{App, EntityId, EventEmitter, Subscription};
 use ui::{IconButtonShape, Tooltip, prelude::*};
@@ -154,12 +155,12 @@ impl Render for MultibufferHint {
                                     .size(IconSize::XSmall)
                                     .color(Color::Muted),
                             )
-                            .child(Label::new(
-                                "Edit and save files directly in the results multibuffer!",
-                            )),
+                            .child(Label::new(tr!(
+                                "Edit and save files directly in the results multibuffer!"
+                            ))),
                     )
                     .child(
-                        Button::new("open_docs", "Learn More")
+                        Button::new("open_docs", tr!("Learn More"))
                             .end_icon(
                                 Icon::new(IconName::ArrowUpRight)
                                     .size(IconSize::Small)
@@ -180,7 +181,7 @@ impl Render for MultibufferHint {
                             ToolbarItemLocation::Hidden,
                         ))
                     }))
-                    .tooltip(Tooltip::text("Dismiss Hint")),
+                    .tooltip(Tooltip::text(tr!("Dismiss Hint"))),
             )
             .into_any_element()
     }

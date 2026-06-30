@@ -361,7 +361,10 @@ fn parse_http_input(
     }
     let value: HashMap<String, Temp> = serde_json_lenient::from_str(text)?;
     if value.len() != 1 {
-        anyhow::bail!("Expected exactly one context server configuration");
+        anyhow::bail!(
+            "{}",
+            ama10_i18n::tr!("Expected exactly one context server configuration")
+        );
     }
 
     let (key, value) = value.into_iter().next().unwrap();
@@ -592,11 +595,9 @@ impl ConfigureContextServerModal {
                     scroll_handle: ScrollHandle::new(),
                     secret_editor: cx.new(|cx| {
                         let mut editor = Editor::single_line(window, cx);
-                        editor.set_placeholder_text(
-                            "Enter client secret (leave empty for public clients)",
-                            window,
-                            cx,
-                        );
+                        let placeholder =
+                            ama10_i18n::tr!("Enter client secret (leave empty for public clients)");
+                        editor.set_placeholder_text(&placeholder, window, cx);
                         editor.set_masked(true, cx);
                         editor
                     }),
@@ -778,7 +779,7 @@ impl ConfigureContextServerModal {
             .update(cx, {
                 |workspace, cx| {
                     let status_toast = StatusToast::new(
-                        format!("{} configured successfully.", id.0),
+                        ama10_i18n::tr_f!("{} configured successfully.", &*id.0),
                         cx,
                         |this, _cx| {
                             this.icon(
@@ -786,7 +787,7 @@ impl ConfigureContextServerModal {
                                     .size(IconSize::Small)
                                     .color(Color::Muted),
                             )
-                            .action("Dismiss", |_, _| {})
+                            .action(&ama10_i18n::tr!("Dismiss"), |_, _| {})
                         },
                     );
 
@@ -799,8 +800,14 @@ impl ConfigureContextServerModal {
 
 fn parse_input(text: &str) -> Result<(ContextServerId, ContextServerCommand)> {
     let value: serde_json::Value = serde_json_lenient::from_str(text)?;
-    let object = value.as_object().context("Expected object")?;
-    anyhow::ensure!(object.len() == 1, "Expected exactly one key-value pair");
+    let object = value
+        .as_object()
+        .context(ama10_i18n::tr!("Expected object"))?;
+    anyhow::ensure!(
+        object.len() == 1,
+        "{}",
+        ama10_i18n::tr!("Expected exactly one key-value pair")
+    );
     let (context_server_name, value) = object.into_iter().next().unwrap();
     let command: ContextServerCommand = serde_json::from_value(value.clone())?;
     Ok((ContextServerId(context_server_name.clone().into()), command))
@@ -826,17 +833,16 @@ impl EventEmitter<DismissEvent> for ConfigureContextServerModal {}
 impl ConfigureContextServerModal {
     fn render_modal_header(&self) -> ModalHeader {
         let text: SharedString = match &self.source {
-            ConfigurationSource::New { .. } => "Add MCP Server".into(),
-            ConfigurationSource::Existing { .. } => "Configure MCP Server".into(),
-            ConfigurationSource::Extension { id, .. } => format!("Configure {}", id.0).into(),
+            ConfigurationSource::New { .. } => ama10_i18n::tr!("Add MCP Server"),
+            ConfigurationSource::Existing { .. } => ama10_i18n::tr!("Configure MCP Server"),
+            ConfigurationSource::Extension { id, .. } => {
+                ama10_i18n::tr_f!("Configure {}", &*id.0)
+            }
         };
         ModalHeader::new().headline(text)
     }
 
     fn render_modal_description(&self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
-        const MODAL_DESCRIPTION: &str =
-            "Check the server docs for required arguments and environment variables.";
-
         if let ConfigurationSource::Extension {
             installation_instructions: Some(installation_instructions),
             ..
@@ -851,9 +857,11 @@ impl ConfigureContextServerModal {
                 ))
                 .into_any_element()
         } else {
-            Label::new(MODAL_DESCRIPTION)
-                .color(Color::Muted)
-                .into_any_element()
+            Label::new(ama10_i18n::tr!(
+                "Check the server docs for required arguments and environment variables."
+            ))
+            .color(Color::Muted)
+            .into_any_element()
         }
     }
 
@@ -863,23 +871,28 @@ impl ConfigureContextServerModal {
             _ => return None,
         };
 
-        let tab = |label: &'static str, active: bool| {
+        let border_focused = cx.theme().colors().border_focused;
+        let text_muted = cx.theme().colors().text_muted;
+        let text = cx.theme().colors().text;
+
+        let tab = |id: &'static str, label: SharedString, active: bool| {
             div()
-                .id(label)
+                .id(id)
                 .cursor_pointer()
                 .p_1()
                 .text_sm()
                 .border_b_1()
-                .when(active, |this| {
-                    this.border_color(cx.theme().colors().border_focused)
-                })
+                .when(active, |this| this.border_color(border_focused))
                 .when(!active, |this| {
                     this.border_color(gpui::transparent_black())
-                        .text_color(cx.theme().colors().text_muted)
-                        .hover(|s| s.text_color(cx.theme().colors().text))
+                        .text_color(text_muted)
+                        .hover(|s| s.text_color(text))
                 })
                 .child(label)
         };
+
+        let local_label = ama10_i18n::tr!("Local");
+        let remote_label = ama10_i18n::tr!("Remote");
 
         Some(
             h_flex()
@@ -888,8 +901,8 @@ impl ConfigureContextServerModal {
                 .gap_1()
                 .border_b_1()
                 .border_color(cx.theme().colors().border.opacity(0.5))
-                .child(
-                    tab("Local", !is_http).on_click(cx.listener(|this, _, window, cx| {
+                .child(tab("Local", local_label, !is_http).on_click(cx.listener(
+                    |this, _, window, cx| {
                         if let ConfigurationSource::New { editor, is_http } = &mut this.source {
                             if *is_http {
                                 *is_http = false;
@@ -899,10 +912,10 @@ impl ConfigureContextServerModal {
                                 });
                             }
                         }
-                    })),
-                )
-                .child(
-                    tab("Remote", is_http).on_click(cx.listener(|this, _, window, cx| {
+                    },
+                )))
+                .child(tab("Remote", remote_label, is_http).on_click(cx.listener(
+                    |this, _, window, cx| {
                         if let ConfigurationSource::New { editor, is_http } = &mut this.source {
                             if !*is_http {
                                 *is_http = true;
@@ -912,8 +925,8 @@ impl ConfigureContextServerModal {
                                 });
                             }
                         }
-                    })),
-                )
+                    },
+                )))
                 .into_any_element(),
         )
     }
@@ -973,7 +986,7 @@ impl ConfigureContextServerModal {
                 } = &self.source
                 {
                     Some(
-                        Button::new("open-repository", "Open Repository")
+                        Button::new("open-repository", ama10_i18n::tr!("Open Repository"))
                             .end_icon(
                                 Icon::new(IconName::ArrowUpRight)
                                     .size(IconSize::Small)
@@ -981,13 +994,9 @@ impl ConfigureContextServerModal {
                             )
                             .tooltip({
                                 let repository_url = repository_url.clone();
+                                let open_repo = ama10_i18n::tr!("Open Repository");
                                 move |_window, cx| {
-                                    Tooltip::with_meta(
-                                        "Open Repository",
-                                        None,
-                                        repository_url.clone(),
-                                        cx,
-                                    )
+                                    Tooltip::with_meta(&open_repo, None, repository_url.clone(), cx)
                                 }
                             })
                             .on_click({
@@ -1006,9 +1015,9 @@ impl ConfigureContextServerModal {
                         Button::new(
                             "cancel",
                             if self.source.has_configuration_options() {
-                                "Cancel"
+                                ama10_i18n::tr!("Cancel")
                             } else {
-                                "Dismiss"
+                                ama10_i18n::tr!("Dismiss")
                             },
                         )
                         .key_binding(
@@ -1023,9 +1032,9 @@ impl ConfigureContextServerModal {
                         Button::new(
                             "add-server",
                             if self.source.is_new() {
-                                "Add Server"
+                                ama10_i18n::tr!("Add Server")
                             } else {
-                                "Configure Server"
+                                ama10_i18n::tr!("Configure Server")
                             },
                         )
                         .disabled(is_busy)
@@ -1072,13 +1081,13 @@ impl ConfigureContextServerModal {
                             .color(Color::Muted),
                     )
                     .child(
-                        Label::new("Authenticate to connect this server")
+                        Label::new(ama10_i18n::tr!("Authenticate to connect this server"))
                             .size(LabelSize::Small)
                             .color(Color::Muted),
                     ),
             )
             .child(
-                Button::new("authenticate-server", "Authenticate")
+                Button::new("authenticate-server", ama10_i18n::tr!("Authenticate"))
                     .style(ButtonStyle::Outlined)
                     .label_size(LabelSize::Small)
                     .on_click({
@@ -1122,9 +1131,9 @@ impl ConfigureContextServerModal {
                             .color(Color::Muted),
                     )
                     .child(
-                        Label::new(
+                        Label::new(ama10_i18n::tr!(
                             "Enter your OAuth client secret, or leave empty for public clients",
-                        )
+                        ))
                         .size(LabelSize::Small)
                         .color(Color::Muted),
                     ),
@@ -1150,7 +1159,7 @@ impl ConfigureContextServerModal {
                         },
                     )))
                     .child(
-                        Button::new("submit-client-secret", "Submit")
+                        Button::new("submit-client-secret", ama10_i18n::tr!("Submit"))
                             .style(ButtonStyle::Outlined)
                             .label_size(LabelSize::Small)
                             .on_click({
@@ -1178,13 +1187,13 @@ impl ConfigureContextServerModal {
                             .with_rotate_animation(3),
                     )
                     .child(
-                        Label::new("Authenticating…")
+                        Label::new(ama10_i18n::tr!("Authenticating…"))
                             .size(LabelSize::Small)
                             .color(Color::Muted),
                     ),
             )
             .child(
-                Button::new("cancel-authentication", "Cancel")
+                Button::new("cancel-authentication", ama10_i18n::tr!("Cancel"))
                     .style(ButtonStyle::Outlined)
                     .label_size(LabelSize::Small)
                     .on_click({
@@ -1249,9 +1258,9 @@ impl Render for ConfigureContextServerModal {
                                         .child(self.render_modal_content(cx))
                                         .child(match &self.state {
                                             State::Idle => div(),
-                                            State::Waiting => {
-                                                self.render_loading("Connecting Server…")
-                                            }
+                                            State::Waiting => self.render_loading(ama10_i18n::tr!(
+                                                "Connecting Server…"
+                                            )),
                                             State::AuthRequired { server_id } => {
                                                 self.render_auth_required(&server_id.clone(), cx)
                                             }
@@ -1308,7 +1317,7 @@ fn wait_for_context_server(
             }
             ContextServerStatus::Stopped => {
                 if let Some(tx) = tx.lock().take() {
-                    let _ = tx.send(Err("Context server stopped running".into()));
+                    let _ = tx.send(Err(ama10_i18n::tr!("Context server stopped running").into()));
                 }
             }
             ContextServerStatus::Error(error) => {
@@ -1327,12 +1336,13 @@ fn wait_for_context_server(
         match result {
             futures::future::Either::Left((Ok(inner), _)) => inner,
             futures::future::Either::Left((Err(_), _)) => {
-                Err(Arc::from("Context server store was dropped"))
+                Err(ama10_i18n::tr!("Context server store was dropped").into())
             }
-            futures::future::Either::Right(_) => Err(Arc::from(format!(
+            futures::future::Either::Right(_) => Err(ama10_i18n::tr_f!(
                 "Timed out waiting for context server `{}` to start. Check the Zed log for details.",
-                context_server_id_for_timeout
-            ))),
+                &*context_server_id_for_timeout.0
+            )
+            .into()),
         }
     })
 }

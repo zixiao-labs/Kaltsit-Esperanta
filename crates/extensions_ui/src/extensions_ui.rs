@@ -464,7 +464,11 @@ impl ExtensionsPage {
 
             let query_editor = cx.new(|cx| {
                 let mut input = Editor::single_line(window, cx);
-                input.set_placeholder_text("Search extensions...", window, cx);
+                input.set_placeholder_text(
+                    ama10_i18n::tr!("Search extensions...").as_ref(),
+                    window,
+                    cx,
+                );
                 if let Some(id) = focus_extension_id {
                     input.set_text(format!("id:{id}"), window, cx);
                 }
@@ -756,8 +760,8 @@ impl ExtensionsPage {
                             .items_end()
                             .child(Headline::new(extension.name.clone()).size(HeadlineSize::Medium))
                             .child(
-                                Headline::new(format!("v{}", extension.version))
-                                    .size(HeadlineSize::XSmall),
+                                Headline::new(ama10_i18n::tr_f!("v{}", extension.version))
+                                        .size(HeadlineSize::XSmall),
                             ),
                     )
                     .child(
@@ -767,7 +771,7 @@ impl ExtensionsPage {
                             .child(
                                 Button::new(
                                     SharedString::from(format!("rebuild-{}", extension.id)),
-                                    "Rebuild",
+                                    ama10_i18n::tr!("Rebuild"),
                                 )
                                 .color(Color::Accent)
                                 .disabled(matches!(status, ExtensionStatus::Upgrading))
@@ -781,7 +785,7 @@ impl ExtensionsPage {
                                 }),
                             )
                             .child(
-                                Button::new(extension_button_id(&extension.id, ExtensionOperation::Remove), "Uninstall")
+                                Button::new(extension_button_id(&extension.id, ExtensionOperation::Remove), ama10_i18n::tr!("Uninstall"))
                                     .color(Color::Accent)
                                     .disabled(matches!(status, ExtensionStatus::Removing))
                                     .on_click({
@@ -797,7 +801,7 @@ impl ExtensionsPage {
                                 this.child(
                                     Button::new(
                                         SharedString::from(format!("configure-{}", extension.id)),
-                                        "Configure",
+                                        ama10_i18n::tr!("Configure"),
                                     )
                                     .color(Color::Accent)
                                     .disabled(matches!(status, ExtensionStatus::Installing))
@@ -830,9 +834,9 @@ impl ExtensionsPage {
                         Label::new(format!(
                             "{}: {}",
                             if extension.authors.len() > 1 {
-                                "Authors"
+                                ama10_i18n::tr!("Authors")
                             } else {
-                                "Author"
+                                ama10_i18n::tr!("Author")
                             },
                             extension.authors.join(", ")
                         ))
@@ -902,13 +906,19 @@ impl ExtensionsPage {
                                 Headline::new(extension.manifest.name.clone())
                                     .size(HeadlineSize::Small),
                             )
-                            .child(Headline::new(format!("v{version}")).size(HeadlineSize::XSmall))
+                            .child(
+                                Headline::new(ama10_i18n::tr_f!("v{}", version))
+                                    .size(HeadlineSize::XSmall),
+                            )
                             .children(
                                 installed_version
                                     .filter(|installed_version| *installed_version != version)
                                     .map(|installed_version| {
-                                        Headline::new(format!("(v{installed_version} installed)",))
-                                            .size(HeadlineSize::XSmall)
+                                        Headline::new(ama10_i18n::tr_f!(
+                                            "(v{} installed)",
+                                            installed_version
+                                        ))
+                                        .size(HeadlineSize::XSmall)
                                     }),
                             )
                             .map(|parent| {
@@ -958,7 +968,7 @@ impl ExtensionsPage {
                             .truncate()
                     }))
                     .child(
-                        Label::new(format!(
+                        Label::new(ama10_i18n::tr_f!(
                             "Downloads: {}",
                             extension.download_count.to_formatted_string(&Locale::en)
                         ))
@@ -1000,7 +1010,7 @@ impl ExtensionsPage {
                                 .icon_size(IconSize::Small)
                                 .tooltip(move |_, cx| {
                                     Tooltip::with_meta(
-                                        "Visit Extension Repository",
+                                        ama10_i18n::tr!("Visit Extension Repository"),
                                         None,
                                         repo_url_for_tooltip.clone(),
                                         cx,
@@ -1055,7 +1065,7 @@ impl ExtensionsPage {
         ContextMenu::build(window, cx, |context_menu, window, _| {
             context_menu
                 .entry(
-                    "Install Another Version...",
+                    ama10_i18n::tr!("Install Another Version..."),
                     None,
                     window.handler_for(this, {
                         let extension_id = extension_id.clone();
@@ -1064,13 +1074,13 @@ impl ExtensionsPage {
                         }
                     }),
                 )
-                .entry("Copy Extension ID", None, {
+                .entry(ama10_i18n::tr!("Copy Extension ID"), None, {
                     let extension_id = extension_id.clone();
                     move |_, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(extension_id.to_string()));
                     }
                 })
-                .entry("Copy Author Info", None, {
+                .entry(ama10_i18n::tr!("Copy Author Info"), None, {
                     let authors = authors.clone();
                     move |_, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(authors.join(", ")));
@@ -1134,7 +1144,7 @@ impl ExtensionsPage {
             return ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Install),
-                    "Install",
+                    ama10_i18n::tr!("Install"),
                 ),
                 configure: None,
                 upgrade: None,
@@ -1150,7 +1160,7 @@ impl ExtensionsPage {
             ExtensionStatus::NotInstalled => ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Install),
-                    "Install",
+                    ama10_i18n::tr!("Install"),
                 )
                 .style(ButtonStyle::Tinted(ui::TintColor::Accent))
                 .start_icon(
@@ -1173,7 +1183,7 @@ impl ExtensionsPage {
             ExtensionStatus::Installing => ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Install),
-                    "Install",
+                    ama10_i18n::tr!("Install"),
                 )
                 .style(ButtonStyle::Tinted(ui::TintColor::Accent))
                 .start_icon(
@@ -1188,21 +1198,21 @@ impl ExtensionsPage {
             ExtensionStatus::Upgrading => ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Remove),
-                    "Uninstall",
+                    ama10_i18n::tr!("Uninstall"),
                 )
                 .style(ButtonStyle::OutlinedGhost)
                 .disabled(true),
                 configure: is_configurable.then(|| {
                     Button::new(
                         SharedString::from(format!("configure-{}", extension.id)),
-                        "Configure",
+                        ama10_i18n::tr!("Configure"),
                     )
                     .disabled(true)
                 }),
                 upgrade: Some(
                     Button::new(
                         extension_button_id(&extension.id, ExtensionOperation::Upgrade),
-                        "Upgrade",
+                        ama10_i18n::tr!("Upgrade"),
                     )
                     .disabled(true),
                 ),
@@ -1210,7 +1220,7 @@ impl ExtensionsPage {
             ExtensionStatus::Installed(installed_version) => ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Remove),
-                    "Uninstall",
+                    ama10_i18n::tr!("Uninstall"),
                 )
                 .style(ButtonStyle::OutlinedGhost)
                 .on_click({
@@ -1227,7 +1237,7 @@ impl ExtensionsPage {
                 configure: is_configurable.then(|| {
                     Button::new(
                         SharedString::from(format!("configure-{}", extension.id)),
-                        "Configure",
+                        ama10_i18n::tr!("Configure"),
                     )
                     .style(ButtonStyle::OutlinedGhost)
                     .on_click({
@@ -1253,52 +1263,56 @@ impl ExtensionsPage {
                     None
                 } else {
                     Some(
-                        Button::new(extension_button_id(&extension.id, ExtensionOperation::Upgrade), "Upgrade")
-                          .style(ButtonStyle::Tinted(ui::TintColor::Accent))
-                            .when(!is_compatible, |upgrade_button| {
-                                upgrade_button.disabled(true).tooltip({
-                                    let version = extension.manifest.version.clone();
-                                    move |_, cx| {
-                                        Tooltip::simple(
-                                            format!(
-                                                "v{version} is not compatible with this version of Zed.",
-                                            ),
-                                             cx,
-                                        )
-                                    }
-                                })
-                            })
-                            .disabled(!is_compatible)
-                            .on_click({
-                                let extension_id = extension.id.clone();
+                        Button::new(
+                            extension_button_id(&extension.id, ExtensionOperation::Upgrade),
+                            ama10_i18n::tr!("Upgrade"),
+                        )
+                        .style(ButtonStyle::Tinted(ui::TintColor::Accent))
+                        .when(!is_compatible, |upgrade_button| {
+                            upgrade_button.disabled(true).tooltip({
                                 let version = extension.manifest.version.clone();
-                                move |_, _, cx| {
-                                    telemetry::event!("Extension Installed", extension_id, version);
-                                    ExtensionStore::global(cx).update(cx, |store, cx| {
-                                        store
-                                            .upgrade_extension(
-                                                extension_id.clone(),
-                                                version.clone(),
-                                                cx,
-                                            )
-                                            .detach_and_log_err(cx)
-                                    });
+                                move |_, cx| {
+                                    Tooltip::simple(
+                                        ama10_i18n::tr_f!(
+                                            "v{} is not compatible with this version of Zed.",
+                                            version,
+                                        ),
+                                        cx,
+                                    )
                                 }
-                            }),
+                            })
+                        })
+                        .disabled(!is_compatible)
+                        .on_click({
+                            let extension_id = extension.id.clone();
+                            let version = extension.manifest.version.clone();
+                            move |_, _, cx| {
+                                telemetry::event!("Extension Installed", extension_id, version);
+                                ExtensionStore::global(cx).update(cx, |store, cx| {
+                                    store
+                                        .upgrade_extension(
+                                            extension_id.clone(),
+                                            version.clone(),
+                                            cx,
+                                        )
+                                        .detach_and_log_err(cx)
+                                });
+                            }
+                        }),
                     )
                 },
             },
             ExtensionStatus::Removing => ExtensionCardButtons {
                 install_or_uninstall: Button::new(
                     extension_button_id(&extension.id, ExtensionOperation::Remove),
-                    "Uninstall",
+                    ama10_i18n::tr!("Uninstall"),
                 )
                 .style(ButtonStyle::OutlinedGhost)
                 .disabled(true),
                 configure: is_configurable.then(|| {
                     Button::new(
                         SharedString::from(format!("configure-{}", extension.id)),
-                        "Configure",
+                        ama10_i18n::tr!("Configure"),
                     )
                     .disabled(true)
                 }),
@@ -1449,31 +1463,33 @@ impl ExtensionsPage {
     fn render_empty_state(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let has_search = self.search_query(cx).is_some();
 
-        let message = if self.is_fetching_extensions {
-            "Loading extensions…"
+        let message: SharedString = if self.is_fetching_extensions {
+            ama10_i18n::tr!("Loading extensions…")
         } else if self.fetch_failed {
-            "Failed to load extensions. Please check your connection and try again."
+            ama10_i18n::tr!(
+                "Failed to load extensions. Please check your connection and try again."
+            )
         } else {
             match self.filter {
                 ExtensionFilter::All => {
                     if has_search {
-                        "No extensions that match your search."
+                        ama10_i18n::tr!("No extensions that match your search.")
                     } else {
-                        "No extensions."
+                        ama10_i18n::tr!("No extensions.")
                     }
                 }
                 ExtensionFilter::Installed => {
                     if has_search {
-                        "No installed extensions that match your search."
+                        ama10_i18n::tr!("No installed extensions that match your search.")
                     } else {
-                        "No installed extensions."
+                        ama10_i18n::tr!("No installed extensions.")
                     }
                 }
                 ExtensionFilter::NotInstalled => {
                     if has_search {
-                        "No not installed extensions that match your search."
+                        ama10_i18n::tr!("No not installed extensions that match your search.")
                     } else {
-                        "No not installed extensions."
+                        ama10_i18n::tr!("No not installed extensions.")
                     }
                 }
             }
@@ -1562,7 +1578,7 @@ impl ExtensionsPage {
         vim: bool,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        let docs_url_button = Button::new("open_docs", "View Documentation")
+        let docs_url_button = Button::new("open_docs", ama10_i18n::tr!("View Documentation"))
             .end_icon(Icon::new(IconName::ArrowUpRight).size(IconSize::Small))
             .on_click({
                 move |_event, _window, cx| {
@@ -1593,7 +1609,7 @@ impl ExtensionsPage {
                                         h_flex()
                                             .pl_1()
                                             .gap_1()
-                                            .child(Label::new("Enable Vim mode"))
+                                            .child(Label::new(ama10_i18n::tr!("Enable Vim mode")))
                                             .child(
                                                 Switch::new(
                                                     "enable-vim",
@@ -1635,110 +1651,113 @@ impl ExtensionsPage {
         for feature in &self.upsells {
             let banner = match feature {
                 Feature::AgentClaude => self.render_feature_upsell_banner(
-                    "Claude Agent support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Claude Agent support is built-in to Zed!"),
                     "https://zed.dev/docs/ai/external-agents#claude-agent".into(),
                     false,
                     cx,
                 ),
                 Feature::AgentCodex => self.render_feature_upsell_banner(
-                    "Codex CLI support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Codex CLI support is built-in to Zed!"),
                     "https://zed.dev/docs/ai/external-agents#codex-cli".into(),
                     false,
                     cx,
                 ),
                 Feature::AgentGemini => self.render_feature_upsell_banner(
-                    "Gemini CLI support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Gemini CLI support is built-in to Zed!"),
                     "https://zed.dev/docs/ai/external-agents#gemini-cli".into(),
                     false,
                     cx,
                 ),
                 Feature::ExtensionBasedpyright => self.render_feature_upsell_banner(
-                    "Basedpyright (Python language server) support is built-in to Zed!".into(),
+                    ama10_i18n::tr!(
+                        "Basedpyright (Python language server) support is built-in to Zed!"
+                    ),
                     "https://zed.dev/docs/languages/python#basedpyright".into(),
                     false,
                     cx,
                 ),
                 Feature::ExtensionRuff => self.render_feature_upsell_banner(
-                    "Ruff (linter for Python) support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Ruff (linter for Python) support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/python#code-formatting--linting".into(),
                     false,
                     cx,
                 ),
                 Feature::ExtensionTailwind => self.render_feature_upsell_banner(
-                    "Tailwind CSS support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Tailwind CSS support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/tailwindcss".into(),
                     false,
                     cx,
                 ),
                 Feature::ExtensionTy => self.render_feature_upsell_banner(
-                    "Ty (Python language server) support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Ty (Python language server) support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/python".into(),
                     false,
                     cx,
                 ),
                 Feature::Git => self.render_feature_upsell_banner(
-                    "Zed comes with basic Git support—more features are coming in the future."
-                        .into(),
+                    ama10_i18n::tr!(
+                        "Zed comes with basic Git support—more features are coming in the future."
+                    ),
                     "https://zed.dev/docs/git".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageBash => self.render_feature_upsell_banner(
-                    "Shell support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Shell support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/bash".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageC => self.render_feature_upsell_banner(
-                    "C support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("C support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/c".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageCpp => self.render_feature_upsell_banner(
-                    "C++ support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("C++ support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/cpp".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageGo => self.render_feature_upsell_banner(
-                    "Go support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Go support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/go".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguagePython => self.render_feature_upsell_banner(
-                    "Python support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Python support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/python".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageReact => self.render_feature_upsell_banner(
-                    "React support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("React support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/typescript".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageRust => self.render_feature_upsell_banner(
-                    "Rust support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Rust support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/rust".into(),
                     false,
                     cx,
                 ),
                 Feature::LanguageTypescript => self.render_feature_upsell_banner(
-                    "Typescript support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Typescript support is built-in to Zed!"),
                     "https://zed.dev/docs/languages/typescript".into(),
                     false,
                     cx,
                 ),
                 Feature::OpenIn => self.render_feature_upsell_banner(
-                    "Zed supports linking to a source line on GitHub and others.".into(),
+                    ama10_i18n::tr!("Zed supports linking to a source line on GitHub and others."),
                     "https://zed.dev/docs/git#git-integrations".into(),
                     false,
                     cx,
                 ),
                 Feature::Vim => self.render_feature_upsell_banner(
-                    "Vim support is built-in to Zed!".into(),
+                    ama10_i18n::tr!("Vim support is built-in to Zed!"),
                     "https://zed.dev/docs/vim".into(),
                     true,
                     cx,
@@ -1932,14 +1951,20 @@ impl Render for ExtensionsPage {
                             .w_full()
                             .gap_1p5()
                             .justify_between()
-                            .child(Headline::new("Extensions").size(HeadlineSize::Large))
                             .child(
-                                Button::new("install-dev-extension", "Install Dev Extension")
-                                    .style(ButtonStyle::Outlined)
-                                    .size(ButtonSize::Medium)
-                                    .on_click(|_event, window, cx| {
-                                        window.dispatch_action(Box::new(InstallDevExtension), cx)
-                                    }),
+                                Headline::new(ama10_i18n::tr!("Extensions"))
+                                    .size(HeadlineSize::Large),
+                            )
+                            .child(
+                                Button::new(
+                                    "install-dev-extension",
+                                    ama10_i18n::tr!("Install Dev Extension"),
+                                )
+                                .style(ButtonStyle::Outlined)
+                                .size(ButtonSize::Medium)
+                                .on_click(|_event, window, cx| {
+                                    window.dispatch_action(Box::new(InstallDevExtension), cx)
+                                }),
                             ),
                     )
                     .child(
@@ -1954,7 +1979,7 @@ impl Render for ExtensionsPage {
                                         "filter-buttons",
                                         [
                                             ToggleButtonSimple::new(
-                                                "All",
+                                                ama10_i18n::tr!("All"),
                                                 cx.listener(|this, _event, _, cx| {
                                                     this.filter = ExtensionFilter::All;
                                                     this.filter_extension_entries(cx);
@@ -1962,7 +1987,7 @@ impl Render for ExtensionsPage {
                                                 }),
                                             ),
                                             ToggleButtonSimple::new(
-                                                "Installed",
+                                                ama10_i18n::tr!("Installed"),
                                                 cx.listener(|this, _event, _, cx| {
                                                     this.filter = ExtensionFilter::Installed;
                                                     this.filter_extension_entries(cx);
@@ -1970,7 +1995,7 @@ impl Render for ExtensionsPage {
                                                 }),
                                             ),
                                             ToggleButtonSimple::new(
-                                                "Not Installed",
+                                                ama10_i18n::tr!("Not Installed"),
                                                 cx.listener(|this, _event, _, cx| {
                                                     this.filter = ExtensionFilter::NotInstalled;
                                                     this.filter_extension_entries(cx);
@@ -2003,7 +2028,7 @@ impl Render for ExtensionsPage {
                     .border_color(cx.theme().colors().border_variant)
                     .overflow_x_scroll()
                     .child(
-                        Button::new("filter-all-categories", "All")
+                        Button::new("filter-all-categories", ama10_i18n::tr!("All"))
                             .when(self.provides_filter.is_none(), |button| {
                                 button.style(ButtonStyle::Filled)
                             })
@@ -2080,7 +2105,7 @@ impl Item for ExtensionsPage {
     type Event = ItemEvent;
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
-        "Extensions".into()
+        ama10_i18n::tr!("Extensions")
     }
 
     fn telemetry_event_text(&self) -> Option<&'static str> {

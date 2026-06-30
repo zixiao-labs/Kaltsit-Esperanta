@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use gpui::{Action, Entity, OwnedMenu, OwnedMenuItem, actions};
 use settings::Settings;
 
@@ -169,7 +170,7 @@ impl ApplicationMenu {
                         .style(ButtonStyle::Subtle)
                         .icon_size(IconSize::Small)
                         .aria_label("Application menu"),
-                        Tooltip::text("Open Application Menu"),
+                        Tooltip::text(tr!("Open Application Menu")),
                     )
                     .with_handle(handle),
             )

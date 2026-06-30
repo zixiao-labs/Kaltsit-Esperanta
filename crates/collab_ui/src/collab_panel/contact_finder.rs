@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use client::{ContactRequestStatus, User, UserStore};
 use gpui::{
     App, Context, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, ParentElement as _,
@@ -44,8 +45,8 @@ impl Render for ContactFinder {
                     .bg(cx.theme().colors().element_background)
                     // HACK: Prevent the background color from overflowing the parent container.
                     .rounded_t(px(8.))
-                    .child(Label::new("Contacts"))
-                    .child(h_flex().child(Label::new("Invite new contacts"))),
+                    .child(Label::new(tr!("Contacts")))
+                    .child(h_flex().child(Label::new(tr!("Invite new contacts")))),
             )
             .child(self.picker.clone())
             .w(rems(34.))
@@ -93,7 +94,7 @@ impl PickerDelegate for ContactFinderDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Search collaborator by username...".into()
+        tr!("Search collaborator by username...").to_string().into()
     }
 
     fn update_matches(

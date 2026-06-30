@@ -3,6 +3,7 @@ mod page_data;
 pub mod pages;
 
 use agent_skills::SkillIndex;
+use ama10_i18n::tr;
 use anyhow::{Context as _, Result};
 use cloud_api_types::OrganizationConfiguration;
 use editor::{Editor, EditorEvent};
@@ -497,12 +498,12 @@ fn init_renderers(cx: &mut App) {
                     settings_window,
                     item,
                     settings_file,
-                    Button::new("open-in-settings-file", "Edit in settings.json")
+                    Button::new("open-in-settings-file", tr!("Edit in settings.json"))
                         .style(ButtonStyle::Outlined)
                         .size(ButtonSize::Medium)
                         .tab_index(0_isize)
                         .tooltip(Tooltip::for_action_title_in(
-                            "Edit in settings.json",
+                            tr!("Edit in settings.json"),
                             &OpenCurrentFile,
                             &settings_window.focus_handle,
                         ))
@@ -727,9 +728,9 @@ fn open_settings_editor_at_target(
 
             if settings_window.filter_table[page_index][item_index]
                 && let SettingsPageItem::SubPageLink(link) = item
-                && let SettingsPageItem::SectionHeader(header) = page.items[header_index]
+                && let SettingsPageItem::SectionHeader(ref header) = page.items[header_index]
             {
-                settings_window.push_sub_page(link.clone(), SharedString::from(header), window, cx);
+                settings_window.push_sub_page(link.clone(), header.clone(), window, cx);
             }
         }
 
@@ -807,7 +808,7 @@ fn open_settings_editor_with(
         cx.open_window(
             WindowOptions {
                 titlebar: Some(TitlebarOptions {
-                    title: Some("Zed — Settings".into()),
+                    title: Some(tr!("Zed — Settings")),
                     appears_transparent: true,
                     traffic_light_position: Some(point(px(12.0), px(12.0))),
                 }),
@@ -976,7 +977,7 @@ impl Drop for SubPage {
 
 #[derive(Debug)]
 struct NavBarEntry {
-    title: &'static str,
+    title: SharedString,
     is_root: bool,
     expanded: bool,
     page_index: usize,
@@ -985,13 +986,13 @@ struct NavBarEntry {
 }
 
 struct SettingsPage {
-    title: &'static str,
+    title: SharedString,
     items: Box<[SettingsPageItem]>,
 }
 
 #[derive(PartialEq)]
 enum SettingsPageItem {
-    SectionHeader(&'static str),
+    SectionHeader(SharedString),
     SettingItem(SettingItem),
     SubPageLink(SubPageLink),
     DynamicItem(DynamicItem),
@@ -1019,9 +1020,9 @@ impl std::fmt::Debug for SettingsPageItem {
 }
 
 impl SettingsPageItem {
-    fn header_text(&self) -> Option<&'static str> {
+    fn header_text(&self) -> Option<SharedString> {
         match self {
-            SettingsPageItem::SectionHeader(header) => Some(header),
+            SettingsPageItem::SectionHeader(header) => Some(header.clone()),
             _ => None,
         }
     }
@@ -1106,7 +1107,7 @@ impl SettingsPageItem {
 
         match self {
             SettingsPageItem::SectionHeader(header) => {
-                SettingsSectionHeader::new(SharedString::new_static(header)).into_any_element()
+                SettingsSectionHeader::new(header.clone()).into_any_element()
             }
             SettingsPageItem::SettingItem(setting_item) => {
                 let (field_with_padding, _) =
@@ -1149,7 +1150,7 @@ impl SettingsPageItem {
                         .child(
                             Button::new(
                                 ("sub-page".into(), sub_page_link.title.clone()),
-                                "Configure",
+                                tr!("Configure"),
                             )
                             .aria_label(format!("Configure {}", sub_page_link.title))
                             .tab_index(0_isize)
@@ -1173,9 +1174,7 @@ impl SettingsPageItem {
                                                 .iter()
                                                 .take(item_index)
                                                 .rev()
-                                                .find_map(|item| {
-                                                    item.header_text().map(SharedString::new_static)
-                                                })
+                                                .find_map(|item| item.header_text())
                                         });
 
                                     let Some(header) = header_text else {
@@ -1315,19 +1314,16 @@ impl SettingsPageItem {
 /// optional reset button and copy-link icon.
 fn render_settings_item_layout(
     settings_window: &SettingsWindow,
-    title: &'static str,
-    description: &'static str,
+    setting_item: &SettingItem,
+    file: SettingsUiFile,
     control: AnyElement,
-    reset_fn: Option<Box<dyn Fn(&mut Window, &mut App)>>,
-    modified_in: Option<String>,
-    json_path: Option<&'static str>,
     sub_field: bool,
     cx: &mut Context<'_, SettingsWindow>,
 ) -> Stateful<Div> {
+    let (found_in_file, _) = setting_item.field.file_set_in(file.clone(), cx);
+    let file_set_in = SettingsUiFile::from_settings(found_in_file.clone());
     h_flex()
-        .id(title)
-        .role(Role::Group)
-        .aria_label(SharedString::new_static(title))
+        .id(setting_item.title.clone())
         .min_w_0()
         .justify_between()
         .child(
@@ -1340,29 +1336,47 @@ fn render_settings_item_layout(
                     h_flex()
                         .w_full()
                         .gap_1()
-                        .child(Label::new(SharedString::new_static(title)))
-                        .when_some(reset_fn, |this, reset_to_default| {
-                            this.child(
-                                IconButton::new("reset-to-default-btn", IconName::Undo)
-                                    .icon_color(Color::Muted)
-                                    .icon_size(IconSize::Small)
-                                    .aria_label("Reset to Default")
-                                    .tooltip(Tooltip::text("Reset to Default"))
-                                    .on_click(move |_, window, cx| {
-                                        reset_to_default(window, cx);
-                                    }),
-                            )
-                        })
-                        .when_some(modified_in, |this, modified_in| {
-                            this.child(
-                                Label::new(format!("\u{2014}  Modified in {modified_in}"))
+                        .child(Label::new(setting_item.title.clone()))
+                        .when_some(
+                            if sub_field {
+                                None
+                            } else {
+                                setting_item
+                                    .field
+                                    .reset_to_default_fn(&file, &found_in_file, cx)
+                            },
+                            |this, reset_to_default| {
+                                this.child(
+                                    IconButton::new("reset-to-default-btn", IconName::Undo)
+                                        .icon_color(Color::Muted)
+                                        .icon_size(IconSize::Small)
+                                        .tooltip(Tooltip::text("Reset to Default"))
+                                        .on_click({
+                                            move |_, window, cx| {
+                                                reset_to_default(window, cx);
+                                            }
+                                        }),
+                                )
+                            },
+                        )
+                        .when_some(
+                            file_set_in.filter(|file_set_in| file_set_in != &file),
+                            |this, file_set_in| {
+                                this.child(
+                                    Label::new(format!(
+                                        "—  Modified in {}",
+                                        settings_window
+                                            .display_name(&file_set_in)
+                                            .expect("File name should exist")
+                                    ))
                                     .color(Color::Muted)
                                     .size(LabelSize::Small),
-                            )
-                        }),
+                                )
+                            },
+                        ),
                 )
                 .child(
-                    Label::new(SharedString::new_static(description))
+                    Label::new(setting_item.description.clone())
                         .size(LabelSize::Small)
                         .color(Color::Muted)
                         .render_code_spans(),
@@ -1371,13 +1385,42 @@ fn render_settings_item_layout(
         .child(control)
         .when(settings_window.sub_page_stack.is_empty(), |this| {
             this.child(render_settings_item_link(
-                description,
-                json_path,
+                setting_item.description.clone(),
+                setting_item.field.json_path(),
                 sub_field,
                 settings_window,
                 cx,
             ))
         })
+}
+
+pub(crate) fn render_form_field_layout(
+    _settings_window: &SettingsWindow,
+    title: SharedString,
+    description: SharedString,
+    control: AnyElement,
+    _sub_field: bool,
+    _cx: &mut Context<'_, SettingsWindow>,
+) -> Stateful<Div> {
+    h_flex()
+        .id(title.clone())
+        .min_w_0()
+        .justify_between()
+        .child(
+            v_flex()
+                .relative()
+                .w_full()
+                .max_w_2_3()
+                .min_w_0()
+                .child(h_flex().w_full().gap_1().child(Label::new(title)))
+                .child(
+                    Label::new(description)
+                        .size(LabelSize::Small)
+                        .color(Color::Muted)
+                        .render_code_spans(),
+                ),
+        )
+        .child(control)
 }
 
 fn render_settings_item(
@@ -1388,21 +1431,6 @@ fn render_settings_item(
     sub_field: bool,
     cx: &mut Context<'_, SettingsWindow>,
 ) -> Stateful<Div> {
-    let (found_in_file, _) = setting_item.field.file_set_in(file.clone(), cx);
-    let file_set_in = SettingsUiFile::from_settings(found_in_file.clone());
-
-    let reset_fn = if sub_field {
-        None
-    } else {
-        setting_item
-            .field
-            .reset_to_default_fn(&file, &found_in_file, cx)
-    };
-
-    let modified_in = file_set_in
-        .filter(|f| f != &file)
-        .and_then(|f| settings_window.display_name(&f));
-
     let control = if setting_item.field.is_overridden_by_organization(cx) {
         h_flex()
             .gap_2()
@@ -1432,17 +1460,7 @@ fn render_settings_item(
         control
     };
 
-    render_settings_item_layout(
-        settings_window,
-        setting_item.title,
-        setting_item.description,
-        control,
-        reset_fn,
-        modified_in,
-        setting_item.field.json_path(),
-        sub_field,
-        cx,
-    )
+    render_settings_item_layout(settings_window, setting_item, file, control, sub_field, cx)
 }
 
 fn render_settings_item_link(
@@ -1492,8 +1510,8 @@ fn render_settings_item_link(
 }
 
 struct SettingItem {
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     field: Box<dyn AnySettingField>,
     metadata: Option<Box<SettingsFieldMetadata>>,
     files: FileMask,
@@ -2006,7 +2024,7 @@ impl SettingsWindow {
 
         for (page_index, page) in self.pages.iter().enumerate() {
             navbar_entries.push(NavBarEntry {
-                title: page.title,
+                title: page.title.clone(),
                 is_root: true,
                 expanded: false,
                 page_index,
@@ -2018,6 +2036,7 @@ impl SettingsWindow {
                 let SettingsPageItem::SectionHeader(title) = item else {
                     continue;
                 };
+                let title = title.clone();
                 navbar_entries.push(NavBarEntry {
                     title,
                     is_root: false,
@@ -2330,30 +2349,38 @@ impl SettingsWindow {
                         documents.push(SearchDocument {
                             id: key_index,
                             words: split_into_words(&[
-                                page.title,
+                                page.title.as_str(),
                                 header_str,
-                                item.title,
-                                item.description,
+                                item.title.as_str(),
+                                item.description.as_str(),
                             ]),
                         });
-                        push_candidates(&mut fuzzy_match_candidates, key_index, item.title);
-                        push_candidates(&mut fuzzy_match_candidates, key_index, item.description);
+                        push_candidates(
+                            &mut fuzzy_match_candidates,
+                            key_index,
+                            item.title.as_str(),
+                        );
+                        push_candidates(
+                            &mut fuzzy_match_candidates,
+                            key_index,
+                            item.description.as_str(),
+                        );
                     }
                     SettingsPageItem::SectionHeader(header) => {
                         documents.push(SearchDocument {
                             id: key_index,
-                            words: split_into_words(&[header]),
+                            words: split_into_words(&[header.as_str()]),
                         });
-                        push_candidates(&mut fuzzy_match_candidates, key_index, header);
+                        push_candidates(&mut fuzzy_match_candidates, key_index, header.as_str());
                         header_index = item_index;
-                        header_str = *header;
+                        header_str = header.as_str();
                     }
                     SettingsPageItem::SubPageLink(sub_page_link) => {
                         json_path = sub_page_link.json_path;
                         documents.push(SearchDocument {
                             id: key_index,
                             words: split_into_words(&[
-                                page.title,
+                                page.title.as_str(),
                                 header_str,
                                 sub_page_link.title.as_ref(),
                             ]),
@@ -2368,7 +2395,7 @@ impl SettingsWindow {
                         documents.push(SearchDocument {
                             id: key_index,
                             words: split_into_words(&[
-                                page.title,
+                                page.title.as_str(),
                                 header_str,
                                 action_link.title.as_ref(),
                             ]),
@@ -2380,7 +2407,7 @@ impl SettingsWindow {
                         );
                     }
                 }
-                push_candidates(&mut fuzzy_match_candidates, key_index, page.title);
+                push_candidates(&mut fuzzy_match_candidates, key_index, page.title.as_str());
                 push_candidates(&mut fuzzy_match_candidates, key_index, header_str);
 
                 key_lut.push(SearchKeyLUTEntry {
@@ -2839,11 +2866,11 @@ impl SettingsWindow {
                     }),
             )
             .child(
-                Button::new(edit_in_json_id, "Edit in settings.json")
+                Button::new(edit_in_json_id, tr!("Edit in settings.json"))
                     .tab_index(0_isize)
                     .style(ButtonStyle::OutlinedGhost)
                     .tooltip(Tooltip::for_action_title_in(
-                        "Edit in settings.json",
+                        tr!("Edit in settings.json"),
                         &OpenCurrentFile,
                         &self.focus_handle,
                     ))
@@ -3098,9 +3125,9 @@ impl SettingsWindow {
                                     .map(|(entry_index, entry)| {
                                         TreeViewItem::new(
                                             ("settings-ui-navbar-entry", entry_index),
-                                            entry.title,
-                                        )
-                                        .track_focus(&entry.focus_handle)
+                                            entry.title.clone(),
+                                            )
+                                            .track_focus(&entry.focus_handle)
                                         .root_item(entry.is_root)
                                         .toggle_state(this.is_navbar_entry_selected(entry_index))
                                         .when(entry.is_root, |item| {
@@ -3116,9 +3143,9 @@ impl SettingsWindow {
                                                 ))
                                         })
                                         .on_click({
-                                            let category = this.pages[entry.page_index].title;
+                                            let category = this.pages[entry.page_index].title.clone();
                                             let subcategory =
-                                                (!entry.is_root).then_some(entry.title);
+                                                (!entry.is_root).then_some(entry.title.clone());
 
                                             cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
                                                 if this.toggle_navbar_entry_on_double_click(
@@ -3416,7 +3443,7 @@ impl SettingsWindow {
             .child(Label::new("/").color(Color::Muted))
             .children(
                 itertools::intersperse(
-                    std::iter::once(self.current_page().title.into()).chain(
+                    std::iter::once(self.current_page().title.clone()).chain(
                         self.sub_page_stack
                             .iter()
                             .enumerate()
@@ -3478,7 +3505,7 @@ impl SettingsWindow {
                 .navbar_entries
                 .iter()
                 .find(|entry| entry.is_root && entry.page_index == self.current_page_index())
-                .map(|entry| entry.title);
+                .map(|entry| entry.title.clone());
 
             let list_content = list(
                 self.list_state.clone(),
@@ -3487,7 +3514,7 @@ impl SettingsWindow {
                         return div()
                             .px_8()
                             .when(this.sub_page_stack.is_empty(), |this| {
-                                this.when_some(root_nav_label, |this, title| {
+                                this.when_some(root_nav_label.clone(), |this, title| {
                                     this.child(
                                         Label::new(title).size(LabelSize::Large).mt_2().mb_3(),
                                     )
@@ -3601,7 +3628,7 @@ impl SettingsWindow {
                 .navbar_entries
                 .iter()
                 .find(|entry| entry.is_root && entry.page_index == self.current_page_index())
-                .map(|entry| entry.title);
+                .map(|entry| entry.title.clone());
 
             page_content
                 .when(self.sub_page_stack.is_empty(), |this| {
@@ -3672,11 +3699,11 @@ impl SettingsWindow {
                         .flex_shrink_0()
                         .when(current_sub_page.link.in_json, |this| {
                             this.child(
-                                Button::new("open-in-settings-file", "Edit in settings.json")
+                                Button::new("open-in-settings-file", tr!("Edit in settings.json"))
                                     .tab_index(0_isize)
                                     .style(ButtonStyle::OutlinedGhost)
                                     .tooltip(Tooltip::for_action_title_in(
-                                        "Edit in settings.json",
+                                        tr!("Edit in settings.json"),
                                         &OpenCurrentFile,
                                         &self.focus_handle,
                                     ))
@@ -4247,7 +4274,7 @@ impl SettingsWindow {
                             .iter()
                             .take(item_index)
                             .rev()
-                            .find_map(|item| item.header_text().map(SharedString::new_static))
+                            .find_map(|item| item.header_text())
                             .unwrap_or_else(|| "Settings".into());
 
                         self.push_sub_page(sub_page_link.clone(), section_header, window, cx);
@@ -5151,7 +5178,7 @@ pub mod test {
         pub fn test(window: &mut Window, cx: &mut Context<Self>) -> Self {
             let search_bar = cx.new(|cx| Editor::single_line(window, cx));
             let dummy_page = SettingsPage {
-                title: "Test",
+                title: "Test".into(),
                 items: Box::new([]),
             };
             Self {
@@ -5226,7 +5253,7 @@ pub mod test {
 
     fn parse(input: &'static str, window: &mut Window, cx: &mut App) -> SettingsWindow {
         struct PageBuilder {
-            title: &'static str,
+            title: SharedString,
             items: Vec<SettingsPageItem>,
         }
         let mut page_builders: Vec<PageBuilder> = Vec::new();
@@ -5252,14 +5279,14 @@ pub mod test {
                 let page_idx = page_builders.len();
                 expanded_pages.push(page_idx);
                 page_builders.push(PageBuilder {
-                    title,
+                    title: title.into(),
                     items: vec![],
                 });
                 index += 1;
                 in_expanded_section = true;
             } else if kind == '>' {
                 page_builders.push(PageBuilder {
-                    title,
+                    title: title.into(),
                     items: vec![],
                 });
                 index += 1;
@@ -5269,7 +5296,7 @@ pub mod test {
                     .last_mut()
                     .unwrap()
                     .items
-                    .push(SettingsPageItem::SectionHeader(title));
+                    .push(SettingsPageItem::SectionHeader(title.into()));
                 if selected_idx == Some(index) && !in_expanded_section {
                     panic!("Items in unexpanded sections cannot be selected");
                 }

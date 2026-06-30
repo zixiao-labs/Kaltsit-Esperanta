@@ -6,6 +6,7 @@ use crate::{
     actions::{Format, FormatSelections},
     selections_collection::SelectionsCollection,
 };
+use ama10_i18n::tr;
 use gpui::prelude::FluentBuilder;
 use gpui::{Context, DismissEvent, Entity, Focusable as _, Pixels, Point, Subscription, Window};
 use project::DisableAiSettings;
@@ -247,44 +248,44 @@ pub fn deploy_context_menu(
             let builder = menu
                 .on_blur_subscription(Subscription::new(|| {}))
                 .when(run_to_cursor, |builder| {
-                    builder.action("Run to Cursor", Box::new(RunToCursor))
+                    builder.action(tr!("Run to Cursor"), Box::new(RunToCursor))
                 })
                 .when(evaluate_selection && has_selections, |builder| {
-                    builder.action("Evaluate Selection", Box::new(EvaluateSelectedText))
+                    builder.action(tr!("Evaluate Selection"), Box::new(EvaluateSelectedText))
                 })
                 .when(
                     run_to_cursor || (evaluate_selection && has_selections),
                     |builder| builder.separator(),
                 )
-                .action("Go to Definition", Box::new(GoToDefinition))
-                .action("Go to Declaration", Box::new(GoToDeclaration))
-                .action("Go to Type Definition", Box::new(GoToTypeDefinition))
-                .action("Go to Implementation", Box::new(GoToImplementation))
+                .action(tr!("Go to Definition"), Box::new(GoToDefinition))
+                .action(tr!("Go to Declaration"), Box::new(GoToDeclaration))
+                .action(tr!("Go to Type Definition"), Box::new(GoToTypeDefinition))
+                .action(tr!("Go to Implementation"), Box::new(GoToImplementation))
                 .action(
-                    "Find All References",
+                    tr!("Find All References"),
                     Box::new(FindAllReferences::default()),
                 )
                 .separator()
-                .action("Rename Symbol", Box::new(Rename))
-                .action("Format Buffer", Box::new(Format))
+                .action(tr!("Rename Symbol"), Box::new(Rename))
+                .action(tr!("Format Buffer"), Box::new(Format))
                 .when(format_selections, |cx| {
-                    cx.action("Format Selections", Box::new(FormatSelections))
+                    cx.action(tr!("Format Selections"), Box::new(FormatSelections))
                 })
                 .action(
-                    "Show Code Actions",
+                    tr!("Show Code Actions"),
                     Box::new(ToggleCodeActions {
                         deployed_from: None,
                         quick_launch: false,
                     }),
                 )
                 .when(!disable_ai && has_selections, |this| {
-                    this.action("Add to Agent Thread", Box::new(AddSelectionToThread))
+                    this.action(tr!("Add to Agent Thread"), Box::new(AddSelectionToThread))
                 })
                 .separator()
-                .action("Cut", Box::new(Cut))
-                .action("Copy", Box::new(Copy))
-                .action("Copy and Trim", Box::new(CopyAndTrim))
-                .action("Paste", Box::new(Paste))
+                .action(tr!("Cut"), Box::new(Cut))
+                .action(tr!("Copy"), Box::new(Copy))
+                .action(tr!("Copy and Trim"), Box::new(CopyAndTrim))
+                .action(tr!("Paste"), Box::new(Paste))
                 .separator()
                 .action_disabled_when(
                     !has_reveal_target,
@@ -292,24 +293,24 @@ pub fn deploy_context_menu(
                     Box::new(RevealInFileManager),
                 )
                 .when(is_markdown, |builder| {
-                    builder.action("Open Markdown Preview", Box::new(OpenMarkdownPreview))
+                    builder.action(tr!("Open Markdown Preview"), Box::new(OpenMarkdownPreview))
                 })
                 .when(is_svg, |builder| {
-                    builder.action("Open SVG Preview", Box::new(OpenSvgPreview))
+                    builder.action(tr!("Open SVG Preview"), Box::new(OpenSvgPreview))
                 })
                 .action_disabled_when(
                     !has_reveal_target,
-                    "Open in Terminal",
+                    tr!("Open in Terminal"),
                     Box::new(OpenInTerminal),
                 )
                 .action_disabled_when(
                     !has_git_repo,
-                    "Copy Permalink",
+                    tr!("Copy Permalink"),
                     Box::new(CopyPermalinkToLine),
                 )
                 .action_disabled_when(
                     !has_git_repo,
-                    "View File History",
+                    tr!("View File History"),
                     Box::new(git::FileHistory),
                 );
             match focus {

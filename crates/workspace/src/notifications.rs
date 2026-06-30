@@ -1,6 +1,7 @@
 use crate::{
     MultiWorkspace, SuppressNotification, Toast, Workspace, workspace_error::WorkspaceError,
 };
+use ama10_i18n;
 use anyhow::Context as _;
 use gpui::{
     AnyEntity, AnyView, App, AppContext as _, AsyncApp, AsyncWindowContext, ClickEvent, Context,
@@ -358,16 +359,18 @@ impl Render for LanguageServerPrompt {
                                             .tooltip(move |_window, cx| {
                                                 if suppress {
                                                     Tooltip::with_meta(
-                                                        "Suppress",
+                                                        ama10_i18n::translate("Suppress"),
                                                         Some(&SuppressNotification),
-                                                        "Click to close",
+                                                        ama10_i18n::translate("Click to close"),
                                                         cx,
                                                     )
                                                 } else {
                                                     Tooltip::with_meta(
-                                                        "Close",
+                                                        ama10_i18n::translate("Close"),
                                                         Some(&menu::Cancel),
-                                                        "Suppress with shift-click",
+                                                        ama10_i18n::translate(
+                                                            "Suppress with shift-click",
+                                                        ),
                                                         cx,
                                                     )
                                                 }
@@ -991,20 +994,24 @@ pub mod simple_message_notification {
                             .tooltip(move |_window, cx| {
                                 if suppress {
                                     Tooltip::with_meta(
-                                        "Suppress",
+                                        ama10_i18n::translate("Suppress"),
                                         Some(&SuppressNotification),
-                                        "Click to Close",
+                                        ama10_i18n::translate("Click to Close"),
                                         cx,
                                     )
                                 } else if show_suppress_button {
                                     Tooltip::with_meta(
-                                        "Close",
+                                        ama10_i18n::translate("Close"),
                                         Some(&menu::Cancel),
-                                        "Shift-click to Suppress",
+                                        ama10_i18n::translate("Shift-click to Suppress"),
                                         cx,
                                     )
                                 } else {
-                                    Tooltip::for_action("Close", &menu::Cancel, cx)
+                                    Tooltip::for_action(
+                                        ama10_i18n::translate("Close"),
+                                        &menu::Cancel,
+                                        cx,
+                                    )
                                 }
                             })
                             .on_click(cx.listener(move |_, _, _, cx| {

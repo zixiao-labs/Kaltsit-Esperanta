@@ -305,9 +305,9 @@ struct WorktreePickerDelegate {
 
 fn remove_worktree_command(path: &Path, force: bool) -> String {
     if force {
-        format!("worktree remove --force {}", path.display())
+        ama10_i18n::tr_f!("worktree remove --force {}", path.display()).to_string()
     } else {
-        format!("worktree remove {}", path.display())
+        ama10_i18n::tr_f!("worktree remove {}", path.display()).to_string()
     }
 }
 
@@ -334,7 +334,11 @@ const WORKTREE_REMOVE_FORCE_DELETE_PROMPTS: &[WorktreeRemoveForceDeletePrompt] =
     }];
 
 fn dirty_worktree_force_delete_prompt(display_name: &str) -> String {
-    format!("Worktree \"{display_name}\" contains modified or untracked files. Force delete it?")
+    ama10_i18n::tr_f!(
+        "Worktree \"{}\" contains modified or untracked files. Force delete it?",
+        display_name
+    )
+    .to_string()
 }
 
 fn force_delete_prompt_for_worktree_remove_error(
@@ -385,7 +389,7 @@ impl Render for DeleteWorktreeTooltip {
 
         if force_delete {
             Tooltip::for_action_in(
-                "Force Delete Worktree",
+                ama10_i18n::tr!("Force Delete Worktree"),
                 &ForceDeleteWorktree,
                 &self.focus_handle,
                 cx,
@@ -393,9 +397,9 @@ impl Render for DeleteWorktreeTooltip {
             .into_any_element()
         } else {
             Tooltip::with_meta_in(
-                "Delete Worktree",
+                ama10_i18n::tr!("Delete Worktree"),
                 Some(&DeleteWorktree),
-                "Hold alt to force delete",
+                ama10_i18n::tr!("Hold alt to force delete"),
                 &self.focus_handle,
                 cx,
             )
@@ -428,9 +432,11 @@ impl WorktreePickerDelegate {
     fn creation_blocked_reason(&self, cx: &App) -> Option<SharedString> {
         let project = self.project.read(cx);
         if project.is_via_collab() {
-            Some("Worktree creation is not supported in collaborative projects".into())
+            Some(ama10_i18n::tr!(
+                "Worktree creation is not supported in collaborative projects"
+            ))
         } else if project.repositories(cx).is_empty() {
-            Some("Requires a Git repository in the project".into())
+            Some(ama10_i18n::tr!("Requires a Git repository in the project"))
         } else {
             None
         }
@@ -548,7 +554,10 @@ impl WorktreePickerDelegate {
                                 PromptLevel::Warning,
                                 &prompt_message,
                                 None,
-                                &["Force Delete", "Cancel"],
+                                &[
+                                    ama10_i18n::tr!("Force Delete").as_ref(),
+                                    ama10_i18n::tr!("Cancel").as_ref(),
+                                ],
                                 cx,
                             )
                         })?;
@@ -739,7 +748,9 @@ impl PickerDelegate for WorktreePickerDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Select or type to create a worktree…".into()
+        ama10_i18n::tr!("Select or type to create a worktree…")
+            .to_string()
+            .into()
     }
 
     fn editor_position(&self) -> PickerEditorPosition {
@@ -788,9 +799,14 @@ impl PickerDelegate for WorktreePickerDelegate {
             worktree.directory_name(main_worktree_path.as_deref()) == normalized_query
         });
         let create_named_disabled_reason: Option<String> = if self.has_multiple_repositories {
-            Some("Cannot create a named worktree in a project with multiple repositories".into())
+            Some(
+                ama10_i18n::tr!(
+                    "Cannot create a named worktree in a project with multiple repositories"
+                )
+                .to_string(),
+            )
         } else if has_named_worktree {
-            Some("A worktree with this name already exists".into())
+            Some(ama10_i18n::tr!("A worktree with this name already exists").to_string())
         } else {
             None
         };
@@ -1083,11 +1099,11 @@ impl PickerDelegate for WorktreePickerDelegate {
                     self.current_branch_name.as_deref(),
                 );
 
-                let label = format!("Create new worktree based on {branch_label}");
+                let label = ama10_i18n::tr_f!("Create new worktree based on {}", branch_label);
 
                 let item = create_new_list_item(
                     "create-from-current".to_string().into(),
-                    label.into(),
+                    label,
                     self.creation_blocked_reason(cx),
                     selected,
                 );
@@ -1224,7 +1240,7 @@ impl PickerDelegate for WorktreePickerDelegate {
                                             .with_rotate_animation(2),
                                     )
                                     .child(
-                                        Label::new("Deleting…")
+                                        Label::new(ama10_i18n::tr!("Deleting…"))
                                             .size(LabelSize::Small)
                                             .color(Color::Muted),
                                     ),
@@ -1234,7 +1250,7 @@ impl PickerDelegate for WorktreePickerDelegate {
                             let open_in_new_window_button =
                                 IconButton::new(("open-new-window", ix), IconName::ArrowUpRight)
                                     .icon_size(IconSize::Small)
-                                    .tooltip(Tooltip::text("Open in New Window"))
+                                    .tooltip(Tooltip::text(ama10_i18n::tr!("Open in New Window")))
                                     .on_click(cx.listener(move |picker, _, window, cx| {
                                         let Some(entry) = picker.delegate.matches.get(ix) else {
                                             return;
@@ -1332,9 +1348,9 @@ impl PickerDelegate for WorktreePickerDelegate {
                     .unwrap_or_else(|| {
                         self.current_branch_name
                             .clone()
-                            .unwrap_or_else(|| "HEAD".to_string())
+                            .unwrap_or_else(|| ama10_i18n::tr!("HEAD").to_string())
                     });
-                let label = format!("Create \"{name}\" based on {branch_label}");
+                let label = ama10_i18n::tr_f!("Create \"{}\" based on {}", name, branch_label);
                 let element_id = match from_branch {
                     Some(branch) => format!("create-named-from-{}", branch.display_name()),
                     None => "create-named-from-current".to_string(),
@@ -1342,7 +1358,7 @@ impl PickerDelegate for WorktreePickerDelegate {
 
                 let item = create_new_list_item(
                     element_id.into(),
-                    label.into(),
+                    label,
                     disabled_reason.clone().map(SharedString::from),
                     selected,
                 );
@@ -1396,7 +1412,7 @@ impl PickerDelegate for WorktreePickerDelegate {
             Some(
                 footer
                     .child(
-                        Button::new("create-worktree", "Create")
+                        Button::new("create-worktree", ama10_i18n::tr!("Create"))
                             .key_binding(
                                 KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
                                     .map(|kb| kb.size(rems_from_px(12.))),
@@ -1412,7 +1428,7 @@ impl PickerDelegate for WorktreePickerDelegate {
                 footer
                     .when(is_deleting, |this| {
                         this.child(
-                            Button::new("delete-worktree", "Deleting…")
+                            Button::new("delete-worktree", ama10_i18n::tr!("Deleting…"))
                                 .loading(true)
                                 .disabled(true),
                         )
@@ -1420,7 +1436,7 @@ impl PickerDelegate for WorktreePickerDelegate {
                     .when(!is_deleting && can_delete, |this| {
                         let focus_handle = focus_handle.clone();
                         this.child(
-                            Button::new("delete-worktree", "Delete")
+                            Button::new("delete-worktree", ama10_i18n::tr!("Delete"))
                                 .key_binding(
                                     KeyBinding::for_action_in(&DeleteWorktree, &focus_handle, cx)
                                         .map(|kb| kb.size(rems_from_px(12.))),
@@ -1433,23 +1449,26 @@ impl PickerDelegate for WorktreePickerDelegate {
                     .when(!is_deleting && !is_current, |this| {
                         let focus_handle = focus_handle.clone();
                         this.child(
-                            Button::new("open-in-new-window", "Open in New Window")
-                                .key_binding(
-                                    KeyBinding::for_action_in(
-                                        &menu::SecondaryConfirm,
-                                        &focus_handle,
-                                        cx,
-                                    )
-                                    .map(|kb| kb.size(rems_from_px(12.))),
+                            Button::new(
+                                "open-in-new-window",
+                                ama10_i18n::tr!("Open in New Window"),
+                            )
+                            .key_binding(
+                                KeyBinding::for_action_in(
+                                    &menu::SecondaryConfirm,
+                                    &focus_handle,
+                                    cx,
                                 )
-                                .on_click(|_, window, cx| {
-                                    window.dispatch_action(menu::SecondaryConfirm.boxed_clone(), cx)
-                                }),
+                                .map(|kb| kb.size(rems_from_px(12.))),
+                            )
+                            .on_click(|_, window, cx| {
+                                window.dispatch_action(menu::SecondaryConfirm.boxed_clone(), cx)
+                            }),
                         )
                     })
                     .when(!is_deleting, |this| {
                         this.child(
-                            Button::new("open-worktree", "Open")
+                            Button::new("open-worktree", ama10_i18n::tr!("Open"))
                                 .key_binding(
                                     KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
                                         .map(|kb| kb.size(rems_from_px(12.))),

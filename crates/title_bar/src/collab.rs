@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use ama10_i18n::{tr, tr_f};
 use call::{ActiveCall, Room};
 use channel::ChannelStore;
 use client::{User, proto::PeerId};
@@ -241,7 +242,7 @@ impl TitleBar {
                                 .occlude()
                                 .tooltip({
                                     let login = collaborator.user.github_login.clone();
-                                    Tooltip::text(format!("Follow {login}"))
+                                    Tooltip::text(tr_f!("Follow {}", login))
                                 }),
                         )
                     }))
@@ -296,7 +297,7 @@ impl TitleBar {
                                         AvatarAudioStatusIndicator::new(ui::AudioStatus::Muted)
                                             .tooltip({
                                                 let github_login = user.github_login.clone();
-                                                Tooltip::text(format!("{} is muted", github_login))
+                                                Tooltip::text(tr_f!("{} is muted", github_login))
                                             }),
                                     )
                                 }),
@@ -393,7 +394,7 @@ impl TitleBar {
                     .gap_1()
                     .child(
                         IconButton::new("leave-call", IconName::Exit)
-                            .tooltip(Tooltip::text("Leave Call"))
+                            .tooltip(Tooltip::text(tr!("Leave Call")))
                             .icon_size(IconSize::Small)
                             .on_click(move |_, _window, cx| {
                                 ActiveCall::global(cx)
@@ -465,16 +466,16 @@ impl TitleBar {
                         if is_muted {
                             if is_deafened {
                                 Tooltip::with_meta(
-                                    "Unmute Microphone",
+                                    tr!("Unmute Microphone"),
                                     None,
                                     "Audio will be unmuted",
                                     cx,
                                 )
                             } else {
-                                Tooltip::simple("Unmute Microphone", cx)
+                                Tooltip::simple(tr!("Unmute Microphone"), cx)
                             }
                         } else {
-                            Tooltip::simple("Mute Microphone", cx)
+                            Tooltip::simple(tr!("Mute Microphone"), cx)
                         }
                     })
                     .icon_size(IconSize::Small)
@@ -497,7 +498,7 @@ impl TitleBar {
                 .toggle_state(is_deafened)
                 .tooltip(move |_window, cx| {
                     if is_deafened {
-                        let label = "Unmute Audio";
+                        let label = tr!("Unmute Audio");
 
                         if !muted_by_user {
                             Tooltip::with_meta(label, None, "Microphone will be unmuted", cx)
@@ -505,7 +506,7 @@ impl TitleBar {
                             Tooltip::simple(label, cx)
                         }
                     } else {
-                        let label = "Mute Audio";
+                        let label = tr!("Mute Audio");
 
                         if !muted_by_user {
                             Tooltip::with_meta(label, None, "Microphone will be muted", cx)
@@ -556,14 +557,14 @@ impl TitleBar {
                     let folder_list = folder_names.join(", ");
 
                     let unshare_meta: SharedString = if folder_list.is_empty() {
-                        "Stop sharing project with call participants".into()
+                        tr!("Stop sharing project with call participants")
                     } else {
-                        format!("Stop sharing {folder_list} with call participants").into()
+                        tr_f!("Stop sharing {} with call participants", folder_list)
                     };
                     let share_meta: SharedString = if folder_list.is_empty() {
-                        "Share active project with call participants".into()
+                        tr!("Share active project with call participants")
                     } else {
-                        format!("Share {folder_list} with call participants").into()
+                        tr_f!("Share {} with call participants", folder_list)
                     };
 
                     this.child(
@@ -575,7 +576,7 @@ impl TitleBar {
                                 if is_shared {
                                     this.tooltip(move |_, cx| {
                                         Tooltip::with_meta(
-                                            "Unshare Project",
+                                            tr!("Unshare Project"),
                                             None,
                                             unshare_meta.clone(),
                                             cx,
@@ -587,13 +588,13 @@ impl TitleBar {
                                         },
                                     ))
                                 } else if is_sharing_disabled {
-                                    this.disabled(true).tooltip(Tooltip::text(
-                                        "This project may not be shared in a public channel.",
-                                    ))
+                                    this.disabled(true).tooltip(Tooltip::text(tr!(
+                                        "This project may not be shared in a public channel."
+                                    )))
                                 } else {
                                     this.tooltip(move |_, cx| {
                                         Tooltip::with_meta(
-                                            "Share Project",
+                                            tr!("Share Project"),
                                             None,
                                             share_meta.clone(),
                                             cx,
@@ -621,9 +622,9 @@ impl TitleBar {
                     .toggle_state(is_screen_sharing)
                     .selected_style(ButtonStyle::Tinted(TintColor::Accent))
                     .tooltip(Tooltip::text(if is_screen_sharing {
-                        "Stop Sharing Screen"
+                        tr!("Stop Sharing Screen")
                     } else {
-                        "Share Screen"
+                        tr!("Share Screen")
                     }))
                     .on_click(move |_, window, cx| {
                         let should_share = ActiveCall::global(cx)
@@ -646,7 +647,7 @@ impl TitleBar {
                                     }
                                 });
                                 task.detach_and_prompt_err(
-                                    "Sharing Screen Failed",
+                                    tr!("Sharing Screen Failed"),
                                     window,
                                     cx,
                                     |e, _, _| Some(format!("{e:?}")),

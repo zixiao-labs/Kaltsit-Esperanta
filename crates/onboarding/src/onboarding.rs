@@ -1,4 +1,5 @@
 use crate::multibuffer_hint::MultibufferHint;
+use ama10_i18n::tr;
 use client::{Client, UserStore, zed_urls};
 use cloud_api_types::Plan;
 use db::kvp::KeyValueStore;
@@ -351,19 +352,21 @@ impl Render for Onboarding {
                                             .child(
                                                 v_flex()
                                                     .child(
-                                                        Headline::new("Welcome to ZetaCode")
+                                                        Headline::new(tr!("Welcome to ZetaCode"))
                                                             .size(HeadlineSize::Small),
                                                     )
                                                     .child(
-                                                        Label::new("The editor for what's next")
-                                                            .color(Color::Muted)
-                                                            .size(LabelSize::Small)
-                                                            .italic(),
+                                                        Label::new(tr!(
+                                                            "The editor for what's next"
+                                                        ))
+                                                        .color(Color::Muted)
+                                                        .size(LabelSize::Small)
+                                                        .italic(),
                                                     ),
                                             ),
                                     )
                                     .child({
-                                        Button::new("finish_setup", "Finish Setup")
+                                        Button::new("finish_setup", tr!("Finish Setup"))
                                             .style(ButtonStyle::Filled)
                                             .size(ButtonSize::Medium)
                                             .width(rems_from_px(200.))

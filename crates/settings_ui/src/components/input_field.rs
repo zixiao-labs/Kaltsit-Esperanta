@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use ama10_i18n::tr;
 use editor::{Editor, MultiBufferOffset};
 use gpui::{
     A11ySubtreeBuilder, AccessibleAction, AnyElement, ElementId, Entity, Focusable, Role,
@@ -283,7 +284,7 @@ impl RenderOnce for SettingsInputField {
                                     .icon_size(IconSize::Small)
                                     .icon_color(Color::Muted)
                                     .aria_label("Clear")
-                                    .tooltip(Tooltip::text("Clear"))
+                                    .tooltip(Tooltip::text(tr!("Clear")))
                                     .on_click(move |_, window, cx| {
                                         let Some(editor) = weak_editor_for_clear.upgrade() else {
                                             return;
@@ -303,7 +304,7 @@ impl RenderOnce for SettingsInputField {
                                     .icon_size(IconSize::Small)
                                     .icon_color(Color::Success)
                                     .aria_label("Confirm")
-                                    .tooltip(Tooltip::text("Enter to Confirm"))
+                                    .tooltip(Tooltip::text(tr!("Enter to Confirm")))
                                     .on_click(move |_, window, cx| {
                                         let Some(confirm) = confirm_for_button.as_ref() else {
                                             return;

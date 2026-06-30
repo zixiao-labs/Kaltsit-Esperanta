@@ -1,4 +1,5 @@
 use crate::notification_window_options;
+use ama10_i18n::{tr, tr_f};
 use call::{ActiveCall, IncomingCall};
 use futures::StreamExt;
 use gpui::{App, TaskExt, WindowHandle, prelude::*};
@@ -116,18 +117,18 @@ impl Render for IncomingCallNotification {
         div().size_full().font(ui_font).child(
             CollabNotification::new(
                 self.state.call.calling_user.avatar_uri.clone(),
-                Button::new("accept", "Accept").on_click({
+                Button::new("accept", tr!("Accept")).on_click({
                     let state = self.state.clone();
                     move |_, _, cx| state.respond(true, cx)
                 }),
-                Button::new("decline", "Decline").on_click({
+                Button::new("decline", tr!("Decline")).on_click({
                     let state = self.state.clone();
                     move |_, _, cx| state.respond(false, cx)
                 }),
             )
-            .child(Label::new(format!(
-                "{} is sharing a project in Zed",
-                self.state.call.calling_user.github_login
+            .child(Label::new(tr_f!(
+                "{0} is sharing a project in Zed",
+                self.state.call.calling_user.github_login.clone()
             ))),
         )
     }

@@ -75,7 +75,7 @@ impl ExtensionVersionSelectorDelegate {
                 candidate_id: 0,
                 score: 0.0,
                 positions: Default::default(),
-                string: format!("v{}", extension.manifest.version),
+                string: ama10_i18n::tr_f!("v{}", extension.manifest.version).to_string(),
             })
             .collect();
 
@@ -97,7 +97,7 @@ impl PickerDelegate for ExtensionVersionSelectorDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _cx: &mut App) -> Arc<str> {
-        "Select extension version...".into()
+        ama10_i18n::tr!("Select extension version...").into()
     }
 
     fn match_count(&self) -> usize {
@@ -129,7 +129,10 @@ impl PickerDelegate for ExtensionVersionSelectorDelegate {
             .iter()
             .enumerate()
             .map(|(id, extension)| {
-                StringMatchCandidate::new(id, &format!("v{}", extension.manifest.version))
+                StringMatchCandidate::new(
+                    id,
+                    ama10_i18n::tr_f!("v{}", extension.manifest.version).as_ref(),
+                )
             })
             .collect::<Vec<_>>();
 
@@ -238,7 +241,9 @@ impl PickerDelegate for ExtensionVersionSelectorDelegate {
                     h_flex()
                         .gap_2()
                         .when(!is_version_compatible, |this| {
-                            this.child(Label::new("Incompatible").color(Color::Muted))
+                            this.child(
+                                Label::new(ama10_i18n::tr!("Incompatible")).color(Color::Muted),
+                            )
                         })
                         .child(
                             Label::new(

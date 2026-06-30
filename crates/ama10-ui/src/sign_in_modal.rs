@@ -21,6 +21,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use ama10::auth::{PollResult, Tokens, WulingClient};
 use ama10::server_url::ServerUrl;
+use ama10_i18n::{tr, tr_f};
 use anyhow::Result;
 use credentials_provider::CredentialsProvider;
 use gpui::{
@@ -115,11 +116,11 @@ impl WulingSignInModal {
 
     fn render_status_label(state: &State) -> SharedString {
         match state {
-            State::Discovering => "Contacting server…".into(),
-            State::RequestingCode => "Requesting device code…".into(),
-            State::WaitingForApproval { .. } => "Waiting for approval".into(),
-            State::Success { .. } => "Signed in".into(),
-            State::Error { .. } => "Sign-in failed".into(),
+            State::Discovering => tr!("Contacting server…"),
+            State::RequestingCode => tr!("Requesting device code…"),
+            State::WaitingForApproval { .. } => tr!("Waiting for approval"),
+            State::Success { .. } => tr!("Signed in"),
+            State::Error { .. } => tr!("Sign-in failed"),
         }
     }
 }
@@ -229,7 +230,7 @@ impl Render for WulingSignInModal {
                     .size(IconSize::Small)
                     .color(Color::Accent),
             )
-            .child(Headline::new("Sign in to Wuling DevOps").size(HeadlineSize::Small));
+            .child(Headline::new(tr!("Sign in to Wuling DevOps")).size(HeadlineSize::Small));
 
         let server_line = Label::new(self.server.as_str().to_string())
             .size(LabelSize::Small)
@@ -243,7 +244,7 @@ impl Render for WulingSignInModal {
             State::Discovering | State::RequestingCode => v_flex()
                 .gap_2()
                 .items_center()
-                .child(Label::new("Connecting to the Wuling DevOps server…"))
+                .child(Label::new(tr!("Connecting to the Wuling DevOps server…")))
                 .into_any_element(),
             State::WaitingForApproval {
                 user_code,
@@ -267,8 +268,10 @@ impl Render for WulingSignInModal {
                 v_flex()
                     .gap_3()
                     .child(
-                        Label::new("Visit the URL below in your browser, then enter this code:")
-                            .color(Color::Muted),
+                        Label::new(tr!(
+                            "Visit the URL below in your browser, then enter this code:"
+                        ))
+                        .color(Color::Muted),
                     )
                     .child(
                         div()
@@ -290,7 +293,7 @@ impl Render for WulingSignInModal {
                                     .child(
                                         Button::new(
                                             "copy-code",
-                                            if copied { "Copied!" } else { "Copy" },
+                                            if copied { tr!("Copied!") } else { tr!("Copy") },
                                         )
                                         .size(ButtonSize::Compact)
                                         .style(ButtonStyle::Outlined)
@@ -309,20 +312,22 @@ impl Render for WulingSignInModal {
                         h_flex()
                             .gap_2()
                             .child(
-                                Button::new("open-browser", "Open browser")
+                                Button::new("open-browser", tr!("Open browser"))
                                     .style(ButtonStyle::Filled)
                                     .full_width()
                                     .on_click(move |_, _, cx| cx.open_url(&open_url)),
                             )
                             .child(
-                                Button::new("cancel", "Cancel")
+                                Button::new("cancel", tr!("Cancel"))
                                     .style(ButtonStyle::Subtle)
                                     .on_click(cx.listener(|_, _, _, cx| cx.emit(DismissEvent))),
                             ),
                     )
                     .child(
-                        Label::new(format!(
-                            "Or visit: {fallback_url}  ·  Code expires in {remaining}s"
+                        Label::new(tr_f!(
+                            "Or visit: {}  ·  Code expires in {}s",
+                            fallback_url,
+                            remaining
                         ))
                         .size(LabelSize::Small)
                         .color(Color::Muted),
@@ -331,9 +336,9 @@ impl Render for WulingSignInModal {
             }
             State::Success { username } => v_flex()
                 .gap_3()
-                .child(Label::new(format!("Signed in as {username}.")).color(Color::Success))
+                .child(Label::new(tr_f!("Signed in as {}.", username)).color(Color::Success))
                 .child(
-                    Button::new("done", "Done")
+                    Button::new("done", tr!("Done"))
                         .style(ButtonStyle::Filled)
                         .full_width()
                         .on_click(cx.listener(|_, _, _, cx| cx.emit(DismissEvent))),
@@ -343,7 +348,7 @@ impl Render for WulingSignInModal {
                 .gap_3()
                 .child(Label::new(message.clone()).color(Color::Error))
                 .child(
-                    Button::new("close", "Close")
+                    Button::new("close", tr!("Close"))
                         .style(ButtonStyle::Subtle)
                         .full_width()
                         .on_click(cx.listener(|_, _, _, cx| cx.emit(DismissEvent))),

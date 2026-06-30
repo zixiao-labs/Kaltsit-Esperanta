@@ -528,42 +528,33 @@ fn render_custom_agent_form_page(
         .w_full()
         .gap_4()
         .child(
-            crate::render_settings_item_layout(
+            crate::render_form_field_layout(
                 settings_window,
-                "Agent Name",
-                "Required. A unique name used to identify this agent.",
+                "Agent Name".into(),
+                "Required. A unique name used to identify this agent.".into(),
                 input_box(&form.name, cx).into_any_element(),
-                None,
-                None,
-                None,
                 false,
                 cx,
             )
             .into_any_element(),
         )
         .child(
-            crate::render_settings_item_layout(
+            crate::render_form_field_layout(
                 settings_window,
-                "Command",
-                "Required. Path to the executable that launches the agent.",
+                "Command".into(),
+                "Required. Path to the executable that launches the agent.".into(),
                 input_box(&form.command, cx).into_any_element(),
-                None,
-                None,
-                None,
                 false,
                 cx,
             )
             .into_any_element(),
         )
         .child(
-            crate::render_settings_item_layout(
+            crate::render_form_field_layout(
                 settings_window,
-                "Arguments",
-                "Space-separated arguments passed to the command.",
+                "Arguments".into(),
+                "Space-separated arguments passed to the command.".into(),
                 input_box(&form.args, cx).into_any_element(),
-                None,
-                None,
-                None,
                 false,
                 cx,
             )
@@ -663,14 +654,11 @@ fn render_env_section(
         )
         .into_any_element();
 
-    crate::render_settings_item_layout(
+    crate::render_form_field_layout(
         settings_window,
-        "Environment Variables",
-        "Environment variables provided to the agent process.",
+        "Environment Variables".into(),
+        "Environment variables provided to the agent process.".into(),
         control,
-        None,
-        None,
-        None,
         false,
         cx,
     )

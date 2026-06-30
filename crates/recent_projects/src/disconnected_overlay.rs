@@ -1,3 +1,4 @@
+use ama10_i18n::{tr, tr_f};
 use gpui::{ClickEvent, DismissEvent, EventEmitter, FocusHandle, Focusable, Render, WeakEntity};
 use project::project_settings::ProjectSettings;
 use remote::RemoteConnectionOptions;
@@ -148,25 +149,27 @@ impl Render for DisconnectedOverlay {
 
         let message = match &self.host {
             Host::CollabGuestProject => {
-                "Your connection to the remote project has been lost.".to_string()
+                tr!("Your connection to the remote project has been lost.")
             }
             Host::RemoteServerProject(options, server_not_running) => {
-                let autosave = if ProjectSettings::get_global(cx)
+                let autosave: SharedString = if ProjectSettings::get_global(cx)
                     .session
                     .restore_unsaved_buffers
                 {
-                    "\nUnsaved changes are stored locally."
+                    tr!("\nUnsaved changes are stored locally.")
                 } else {
-                    ""
+                    SharedString::default()
                 };
-                let reason = if *server_not_running {
-                    "process exiting unexpectedly"
+                let reason: SharedString = if *server_not_running {
+                    tr!("process exiting unexpectedly")
                 } else {
-                    "not responding"
+                    tr!("not responding")
                 };
-                format!(
-                    "Your connection to {} has been lost due to the server {reason}.{autosave}",
+                tr_f!(
+                    "Your connection to {} has been lost due to the server {}.{}",
                     options.display_name(),
+                    reason,
+                    autosave,
                 )
             }
         };
@@ -183,7 +186,7 @@ impl Render for DisconnectedOverlay {
                     .header(
                         ModalHeader::new()
                             .show_dismiss_button(true)
-                            .child(Headline::new("Disconnected").size(HeadlineSize::Small)),
+                            .child(Headline::new(tr!("Disconnected")).size(HeadlineSize::Small)),
                     )
                     .section(Section::new().child(Label::new(message)))
                     .footer(
@@ -191,7 +194,7 @@ impl Render for DisconnectedOverlay {
                             h_flex()
                                 .gap_2()
                                 .child(
-                                    Button::new("close-window", "Close Window")
+                                    Button::new("close-window", tr!("Close Window"))
                                         .style(ButtonStyle::Filled)
                                         .layer(ElevationIndex::ModalSurface)
                                         .on_click(cx.listener(move |_, _, window, _| {
@@ -200,7 +203,7 @@ impl Render for DisconnectedOverlay {
                                 )
                                 .when(can_reconnect, |el| {
                                     el.child(
-                                        Button::new("reconnect", "Reconnect")
+                                        Button::new("reconnect", tr!("Reconnect"))
                                             .style(ButtonStyle::Filled)
                                             .layer(ElevationIndex::ModalSurface)
                                             .start_icon(Icon::new(IconName::ArrowCircle))

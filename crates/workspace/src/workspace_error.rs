@@ -1,3 +1,4 @@
+use ama10_i18n::tr;
 use std::{sync::Arc, time::Duration};
 
 use gpui::{Action, SharedString};
@@ -81,7 +82,7 @@ impl ErrorAction {
     /// recovery affordance beyond closing the notification.
     pub fn dismiss() -> Self {
         Self {
-            label: "Dismiss".into(),
+            label: tr!("Dismiss"),
             icon: None,
             tooltip: None,
             handler: ErrorActionHandler::Dismiss,
@@ -197,7 +198,7 @@ impl WorkspaceError for PortalError {
 
     fn primary_action(&self) -> ErrorAction {
         ErrorAction::link(
-            "See docs",
+            tr!("See docs"),
             "https://zed.dev/docs/linux#i-cant-open-any-files",
         )
     }

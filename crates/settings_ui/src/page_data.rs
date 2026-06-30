@@ -1,4 +1,5 @@
-use gpui::{Action as _, App};
+use ama10_i18n::{tr, tr_f};
+use gpui::{Action as _, App, SharedString};
 use itertools::Itertools as _;
 use settings::{
     AudioInputDeviceName, AudioOutputDeviceName, EditPredictionDataCollectionChoice,
@@ -89,9 +90,9 @@ fn developer_page(cx: &App) -> SettingsPage {
 
     // Feature flag overrides are a staff-only affordance, so only surface the section when the overrides are enabled.
     if cx.feature_flag_overrides_enabled() {
-        items.push(SettingsPageItem::SectionHeader("Feature Flags"));
+        items.push(SettingsPageItem::SectionHeader(tr!("Feature Flags")));
         items.push(SettingsPageItem::SubPageLink(SubPageLink {
-            title: "Feature Flags".into(),
+            title: tr!("Feature Flags"),
             r#type: Default::default(),
             description: None,
             json_path: Some("feature_flags"),
@@ -101,10 +102,10 @@ fn developer_page(cx: &App) -> SettingsPage {
         }));
     }
 
-    items.push(SettingsPageItem::SectionHeader("Instrumentation"));
+    items.push(SettingsPageItem::SectionHeader(tr!("Instrumentation")));
     items.push(SettingsPageItem::SettingItem(SettingItem {
-        title: "Performance Profiler",
-        description: "Collect timing data for foreground and background executor tasks so they can be inspected via `zed: open performance profiler`. May lead to increased memory usage.",
+        title: tr!("Performance Profiler"),
+        description: tr!("Collect timing data for foreground and background executor tasks so they can be inspected via `zed: open performance profiler`. May lead to increased memory usage."),
         field: Box::new(SettingField {
             organization_override: None,
             json_path: Some("instrumentation.performance_profiler.enabled"),
@@ -129,7 +130,7 @@ fn developer_page(cx: &App) -> SettingsPage {
     }));
 
     SettingsPage {
-        title: "Developer",
+        title: tr!("Developer"),
         items: items.into_boxed_slice(),
     }
 }
@@ -137,10 +138,12 @@ fn developer_page(cx: &App) -> SettingsPage {
 fn general_page(cx: &App) -> SettingsPage {
     fn general_settings_section(_cx: &App) -> Vec<SettingsPageItem> {
         vec![
-            SettingsPageItem::SectionHeader("General Settings"),
+            SettingsPageItem::SectionHeader(tr!("General Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "When Closing With No Tabs",
-                description: "What to do when using the 'close active item' action with no tabs.",
+                title: tr!("When Closing With No Tabs"),
+                description: tr!(
+                    "What to do when using the 'close active item' action with no tabs."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("when_closing_with_no_tabs"),
@@ -158,8 +161,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "On Last Window Closed",
-                description: "What to do when the last window is closed.",
+                title: tr!("On Last Window Closed"),
+                description: tr!("What to do when the last window is closed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("on_last_window_closed"),
@@ -174,8 +177,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use System Path Prompts",
-                description: "Use native OS dialogs for 'Open' and 'Save As'.",
+                title: tr!("Use System Path Prompts"),
+                description: tr!("Use native OS dialogs for 'Open' and 'Save As'."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("use_system_path_prompts"),
@@ -190,8 +193,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use System Prompts",
-                description: "Use native OS dialogs for confirmations.",
+                title: tr!("Use System Prompts"),
+                description: tr!("Use native OS dialogs for confirmations."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("use_system_prompts"),
@@ -204,8 +207,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Redact Private Values",
-                description: "Hide the values of variables in private files.",
+                title: tr!("Redact Private Values"),
+                description: tr!("Hide the values of variables in private files."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("redact_private_values"),
@@ -218,8 +221,10 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Private Files",
-                description: "Globs to match against file paths to determine if a file is private.",
+                title: tr!("Private Files"),
+                description: tr!(
+                    "Globs to match against file paths to determine if a file is private."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -237,8 +242,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "CLI Default Open Behavior",
-                description: "How `zed <path>` opens directories when no flag is specified.",
+                title: tr!("CLI Default Open Behavior"),
+                description: tr!("How `zed <path>` opens directories when no flag is specified."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("cli_default_open_behavior"),
@@ -259,8 +264,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Default Open Behavior",
-                description: "How projects open from the UI by default.",
+                title: tr!("Default Open Behavior"),
+                description: tr!("How projects open from the UI by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("default_open_behavior"),
@@ -281,10 +286,12 @@ fn general_page(cx: &App) -> SettingsPage {
     }
     fn security_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Security"),
+            SettingsPageItem::SectionHeader(tr!("Security")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Trust All Projects By Default",
-                description: "When opening Zed, avoid Restricted Mode by auto-trusting all projects, enabling use of all features without having to give permission to each new project.",
+                title: tr!("Trust All Projects By Default"),
+                description: tr!(
+                    "When opening Zed, avoid Restricted Mode by auto-trusting all projects, enabling use of all features without having to give permission to each new project."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("session.trust_all_projects"),
@@ -309,10 +316,10 @@ fn general_page(cx: &App) -> SettingsPage {
 
     fn workspace_restoration_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Workspace Restoration"),
+            SettingsPageItem::SectionHeader(tr!("Workspace Restoration")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Restore Unsaved Buffers",
-                description: "Whether or not to restore unsaved buffers on restart.",
+                title: tr!("Restore Unsaved Buffers"),
+                description: tr!("Whether or not to restore unsaved buffers on restart."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("session.restore_unsaved_buffers"),
@@ -333,8 +340,8 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Restore On Startup",
-                description: "What to restore from the previous session when opening Zed.",
+                title: tr!("Restore On Startup"),
+                description: tr!("What to restore from the previous session when opening Zed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("restore_on_startup"),
@@ -351,11 +358,13 @@ fn general_page(cx: &App) -> SettingsPage {
 
     fn scoped_settings_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Scoped Settings"),
+            SettingsPageItem::SectionHeader(tr!("Scoped Settings")),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Preview Channel",
-                description: "Which settings should be activated only in Preview build of Zed.",
+                title: tr!("Preview Channel"),
+                description: tr!(
+                    "Which settings should be activated only in Preview build of Zed."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -369,8 +378,10 @@ fn general_page(cx: &App) -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Settings Profiles",
-                description: "Any number of settings profiles that are temporarily applied on top of your existing user settings.",
+                title: tr!("Settings Profiles"),
+                description: tr!(
+                    "Any number of settings profiles that are temporarily applied on top of your existing user settings."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -387,10 +398,10 @@ fn general_page(cx: &App) -> SettingsPage {
 
     fn privacy_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Privacy"),
+            SettingsPageItem::SectionHeader(tr!("Privacy")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Telemetry Diagnostics",
-                description: "Send debug information like crash reports.",
+                title: tr!("Telemetry Diagnostics"),
+                description: tr!("Send debug information like crash reports."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("telemetry.diagnostics"),
@@ -411,8 +422,10 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Telemetry Metrics",
-                description: "Send anonymized usage data like what languages you're using Zed with.",
+                title: tr!("Telemetry Metrics"),
+                description: tr!(
+                    "Send anonymized usage data like what languages you're using Zed with."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("telemetry.metrics"),
@@ -430,8 +443,10 @@ fn general_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Anthropic Data Retention",
-                description: "Allow sending requests to Anthropic models that cannot be offered with Zero Data Retention.",
+                title: tr!("Anthropic Data Retention"),
+                description: tr!(
+                    "Allow sending requests to Anthropic models that cannot be offered with Zero Data Retention."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("telemetry.anthropic_retention"),
@@ -456,10 +471,10 @@ fn general_page(cx: &App) -> SettingsPage {
 
     fn auto_update_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Auto Update"),
+            SettingsPageItem::SectionHeader(tr!("Auto Update")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Update",
-                description: "Whether or not to automatically check for updates.",
+                title: tr!("Auto Update"),
+                description: tr!("Whether or not to automatically check for updates."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("auto_update"),
@@ -475,7 +490,7 @@ fn general_page(cx: &App) -> SettingsPage {
     }
 
     SettingsPage {
-        title: "General",
+        title: tr!("General"),
         items: concat_sections!(
             @vec,
             general_settings_section(cx),
@@ -492,12 +507,12 @@ fn general_page(cx: &App) -> SettingsPage {
 fn appearance_page() -> SettingsPage {
     fn theme_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Theme"),
+            SettingsPageItem::SectionHeader(tr!("Theme")),
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Theme Mode",
-                    description: "Choose a static, fixed theme or dynamically select themes based on appearance and light/dark modes.",
+                    title: tr!("Theme Mode"),
+                    description: tr!("Choose a static, fixed theme or dynamically select themes based on appearance and light/dark modes."),
                     field: Box::new(SettingField {
                         organization_override: None,
                         json_path: Some("theme$"),
@@ -560,8 +575,8 @@ fn appearance_page() -> SettingsPage {
                         settings::ThemeSelectionDiscriminants::Static => vec![
                             SettingItem {
                                 files: USER,
-                                title: "Theme Name",
-                                description: "The name of your selected theme.",
+                                title: tr!("Theme Name"),
+                                description: tr!("The name of your selected theme."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("theme"),
@@ -589,8 +604,8 @@ fn appearance_page() -> SettingsPage {
                         settings::ThemeSelectionDiscriminants::Dynamic => vec![
                             SettingItem {
                                 files: USER,
-                                title: "Mode",
-                                description: "Choose whether to use the selected light or dark theme or to follow your OS appearance configuration.",
+                                title: tr!("Mode"),
+                                description: tr!("Choose whether to use the selected light or dark theme or to follow your OS appearance configuration."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("theme.mode"),
@@ -616,8 +631,8 @@ fn appearance_page() -> SettingsPage {
                             },
                             SettingItem {
                                 files: USER,
-                                title: "Light Theme",
-                                description: "The theme to use when mode is set to light, or when mode is set to system and it is in light mode.",
+                                title: tr!("Light Theme"),
+                                description: tr!("The theme to use when mode is set to light, or when mode is set to system and it is in light mode."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("theme.light"),
@@ -643,8 +658,8 @@ fn appearance_page() -> SettingsPage {
                             },
                             SettingItem {
                                 files: USER,
-                                title: "Dark Theme",
-                                description: "The theme to use when mode is set to dark, or when mode is set to system and it is in dark mode.",
+                                title: tr!("Dark Theme"),
+                                description: tr!("The theme to use when mode is set to dark, or when mode is set to system and it is in dark mode."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("theme.dark"),
@@ -675,8 +690,8 @@ fn appearance_page() -> SettingsPage {
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Icon Theme",
-                    description: "The custom set of icons Zed will associate with files and directories.",
+                    title: tr!("Icon Theme"),
+                    description: tr!("The custom set of icons Zed will associate with files and directories."),
                     field: Box::new(SettingField {
                         organization_override: None,
                         json_path: Some("icon_theme$"),
@@ -741,8 +756,8 @@ fn appearance_page() -> SettingsPage {
                         settings::IconThemeSelectionDiscriminants::Static => vec![
                             SettingItem {
                                 files: USER,
-                                title: "Icon Theme Name",
-                                description: "The name of your selected icon theme.",
+                                title: tr!("Icon Theme Name"),
+                                description: tr!("The name of your selected icon theme."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("icon_theme$string"),
@@ -770,8 +785,8 @@ fn appearance_page() -> SettingsPage {
                         settings::IconThemeSelectionDiscriminants::Dynamic => vec![
                             SettingItem {
                                 files: USER,
-                                title: "Mode",
-                                description: "Choose whether to use the selected light or dark icon theme or to follow your OS appearance configuration.",
+                                title: tr!("Mode"),
+                                description: tr!("Choose whether to use the selected light or dark icon theme or to follow your OS appearance configuration."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("icon_theme"),
@@ -797,8 +812,8 @@ fn appearance_page() -> SettingsPage {
                             },
                             SettingItem {
                                 files: USER,
-                                title: "Light Icon Theme",
-                                description: "The icon theme to use when mode is set to light, or when mode is set to system and it is in light mode.",
+                                title: tr!("Light Icon Theme"),
+                                description: tr!("The icon theme to use when mode is set to light, or when mode is set to system and it is in light mode."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("icon_theme.light"),
@@ -824,8 +839,8 @@ fn appearance_page() -> SettingsPage {
                             },
                             SettingItem {
                                 files: USER,
-                                title: "Dark Icon Theme",
-                                description: "The icon theme to use when mode is set to dark, or when mode is set to system and it is in dark mode.",
+                                title: tr!("Dark Icon Theme"),
+                                description: tr!("The icon theme to use when mode is set to dark, or when mode is set to system and it is in dark mode."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("icon_theme.dark"),
@@ -858,10 +873,10 @@ fn appearance_page() -> SettingsPage {
 
     fn buffer_font_section() -> [SettingsPageItem; 7] {
         [
-            SettingsPageItem::SectionHeader("Buffer Font"),
+            SettingsPageItem::SectionHeader(tr!("Buffer Font")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Family",
-                description: "Font family for editor text.",
+                title: tr!("Font Family"),
+                description: tr!("Font family for editor text."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("buffer_font_family"),
@@ -874,8 +889,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Size",
-                description: "Font size for editor text.",
+                title: tr!("Font Size"),
+                description: tr!("Font size for editor text."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("buffer_font_size"),
@@ -888,8 +903,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Weight",
-                description: "Font weight for editor text (100-900).",
+                title: tr!("Font Weight"),
+                description: tr!("Font weight for editor text (100-900)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("buffer_font_weight"),
@@ -904,8 +919,8 @@ fn appearance_page() -> SettingsPage {
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Line Height",
-                    description: "Line height for editor text.",
+                    title: tr!("Line Height"),
+                    description: tr!("Line height for editor text."),
                     field: Box::new(SettingField {
                         organization_override: None,
                         json_path: Some("buffer_line_height$"),
@@ -962,8 +977,8 @@ fn appearance_page() -> SettingsPage {
                         settings::BufferLineHeightDiscriminants::Standard => vec![],
                         settings::BufferLineHeightDiscriminants::Custom => vec![SettingItem {
                             files: USER,
-                            title: "Custom Line Height",
-                            description: "Custom line height value (must be at least 1.0).",
+                            title: tr!("Custom Line Height"),
+                            description: tr!("Custom line height value (must be at least 1.0)."),
                             field: Box::new(SettingField {
                                 organization_override: None,
                                 json_path: Some("buffer_line_height"),
@@ -994,8 +1009,8 @@ fn appearance_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Font Features",
-                description: "The OpenType features to enable for rendering in text buffers.",
+                title: tr!("Font Features"),
+                description: tr!("The OpenType features to enable for rendering in text buffers."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -1013,8 +1028,8 @@ fn appearance_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Font Fallbacks",
-                description: "The font fallbacks to use for rendering in text buffers.",
+                title: tr!("Font Fallbacks"),
+                description: tr!("The font fallbacks to use for rendering in text buffers."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -1035,10 +1050,10 @@ fn appearance_page() -> SettingsPage {
 
     fn ui_font_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("UI Font"),
+            SettingsPageItem::SectionHeader(tr!("UI Font")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Family",
-                description: "Font family for UI elements.",
+                title: tr!("Font Family"),
+                description: tr!("Font family for UI elements."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("ui_font_family"),
@@ -1051,8 +1066,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Size",
-                description: "Font size for UI elements.",
+                title: tr!("Font Size"),
+                description: tr!("Font size for UI elements."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("ui_font_size"),
@@ -1065,8 +1080,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Weight",
-                description: "Font weight for UI elements (100-900).",
+                title: tr!("Font Weight"),
+                description: tr!("Font weight for UI elements (100-900)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("ui_font_weight"),
@@ -1080,8 +1095,8 @@ fn appearance_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Font Features",
-                description: "The OpenType features to enable for rendering in UI elements.",
+                title: tr!("Font Features"),
+                description: tr!("The OpenType features to enable for rendering in UI elements."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -1097,8 +1112,8 @@ fn appearance_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Font Fallbacks",
-                description: "The font fallbacks to use for rendering in the UI.",
+                title: tr!("Font Fallbacks"),
+                description: tr!("The font fallbacks to use for rendering in the UI."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -1117,10 +1132,12 @@ fn appearance_page() -> SettingsPage {
 
     fn agent_panel_font_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Agent Panel Font"),
+            SettingsPageItem::SectionHeader(tr!("Agent Panel Font")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "UI Font Size",
-                description: "Font size for agent response text in the agent panel. Falls back to the regular UI font size.",
+                title: tr!("UI Font Size"),
+                description: tr!(
+                    "Font size for agent response text in the agent panel. Falls back to the regular UI font size."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_ui_font_size"),
@@ -1139,8 +1156,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Buffer Font Size",
-                description: "Font size for user messages text in the agent panel.",
+                title: tr!("Buffer Font Size"),
+                description: tr!("Font size for user messages text in the agent panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_buffer_font_size"),
@@ -1163,10 +1180,10 @@ fn appearance_page() -> SettingsPage {
 
     fn text_rendering_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Text Rendering"),
+            SettingsPageItem::SectionHeader(tr!("Text Rendering")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Text Rendering Mode",
-                description: "The text rendering mode to use.",
+                title: tr!("Text Rendering Mode"),
+                description: tr!("The text rendering mode to use."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("text_rendering_mode"),
@@ -1185,10 +1202,10 @@ fn appearance_page() -> SettingsPage {
 
     fn cursor_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Cursor"),
+            SettingsPageItem::SectionHeader(tr!("Cursor")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Multi Cursor Modifier",
-                description: "Modifier key for adding multiple cursors.",
+                title: tr!("Multi Cursor Modifier"),
+                description: tr!("Modifier key for adding multiple cursors."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("multi_cursor_modifier"),
@@ -1201,8 +1218,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Blink",
-                description: "Whether the cursor blinks in the editor.",
+                title: tr!("Cursor Blink"),
+                description: tr!("Whether the cursor blinks in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("cursor_blink"),
@@ -1215,8 +1232,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape",
-                description: "Cursor shape for the editor.",
+                title: tr!("Cursor Shape"),
+                description: tr!("Cursor shape for the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("cursor_shape"),
@@ -1229,8 +1246,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hide Mouse",
-                description: "When to hide the mouse cursor.",
+                title: tr!("Hide Mouse"),
+                description: tr!("When to hide the mouse cursor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("hide_mouse"),
@@ -1247,10 +1264,10 @@ fn appearance_page() -> SettingsPage {
 
     fn highlighting_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Highlighting"),
+            SettingsPageItem::SectionHeader(tr!("Highlighting")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Unnecessary Code Fade",
-                description: "How much to fade out unused code (0.0 - 0.9).",
+                title: tr!("Unnecessary Code Fade"),
+                description: tr!("How much to fade out unused code (0.0 - 0.9)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("unnecessary_code_fade"),
@@ -1263,8 +1280,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Current Line Highlight",
-                description: "How to highlight the current line.",
+                title: tr!("Current Line Highlight"),
+                description: tr!("How to highlight the current line."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("current_line_highlight"),
@@ -1279,8 +1296,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Selection Highlight",
-                description: "Highlight all occurrences of selected text.",
+                title: tr!("Selection Highlight"),
+                description: tr!("Highlight all occurrences of selected text."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("selection_highlight"),
@@ -1293,8 +1310,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Rounded Selection",
-                description: "Whether the text selection should have rounded corners.",
+                title: tr!("Rounded Selection"),
+                description: tr!("Whether the text selection should have rounded corners."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("rounded_selection"),
@@ -1307,8 +1324,10 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Minimum Contrast For Highlights",
-                description: "The minimum APCA perceptual contrast to maintain when rendering text over highlight backgrounds.",
+                title: tr!("Minimum Contrast For Highlights"),
+                description: tr!(
+                    "The minimum APCA perceptual contrast to maintain when rendering text over highlight backgrounds."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimum_contrast_for_highlights"),
@@ -1330,10 +1349,10 @@ fn appearance_page() -> SettingsPage {
 
     fn guides_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Guides"),
+            SettingsPageItem::SectionHeader(tr!("Guides")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Wrap Guides",
-                description: "Show wrap guides (vertical rulers).",
+                title: tr!("Show Wrap Guides"),
+                description: tr!("Show wrap guides (vertical rulers)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("show_wrap_guides"),
@@ -1358,8 +1377,8 @@ fn appearance_page() -> SettingsPage {
             }),
             // todo(settings_ui): This needs a custom component
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Wrap Guides",
-                description: "Character counts at which to show wrap guides.",
+                title: tr!("Wrap Guides"),
+                description: tr!("Character counts at which to show wrap guides."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -1396,7 +1415,7 @@ fn appearance_page() -> SettingsPage {
     );
 
     SettingsPage {
-        title: "Appearance",
+        title: tr!("Appearance"),
         items,
     }
 }
@@ -1404,11 +1423,11 @@ fn appearance_page() -> SettingsPage {
 fn keymap_page() -> SettingsPage {
     fn keybindings_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Keybindings"),
+            SettingsPageItem::SectionHeader(tr!("Keybindings")),
             SettingsPageItem::ActionLink(ActionLink {
-                title: "Edit Keybindings".into(),
-                description: Some("Customize keybindings in the keymap editor.".into()),
-                button_text: "Open Keymap".into(),
+                title: tr!("Edit Keybindings"),
+                description: Some(tr!("Customize keybindings in the keymap editor.")),
+                button_text: tr!("Open Keymap"),
                 on_click: Arc::new(|settings_window, window, cx| {
                     let Some(original_window) = settings_window.original_window else {
                         return;
@@ -1429,10 +1448,10 @@ fn keymap_page() -> SettingsPage {
 
     fn base_keymap_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Base Keymap"),
+            SettingsPageItem::SectionHeader(tr!("Base Keymap")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Base Keymap",
-                description: "The name of a base set of key bindings to use.",
+                title: tr!("Base Keymap"),
+                description: tr!("The name of a base set of key bindings to use."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("base_keymap"),
@@ -1452,10 +1471,10 @@ fn keymap_page() -> SettingsPage {
 
     fn modal_editing_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Modal Editing"),
+            SettingsPageItem::SectionHeader(tr!("Modal Editing")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Vim Mode",
-                description: "Enable Vim mode and key bindings.",
+                title: tr!("Vim Mode"),
+                description: tr!("Enable Vim mode and key bindings."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim_mode"),
@@ -1466,8 +1485,8 @@ fn keymap_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Helix Mode",
-                description: "Enable Helix mode and key bindings.",
+                title: tr!("Helix Mode"),
+                description: tr!("Enable Helix mode and key bindings."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("helix_mode"),
@@ -1487,7 +1506,7 @@ fn keymap_page() -> SettingsPage {
     );
 
     SettingsPage {
-        title: "Keymap",
+        title: tr!("Keymap"),
         items,
     }
 }
@@ -1495,12 +1514,12 @@ fn keymap_page() -> SettingsPage {
 fn editor_page() -> SettingsPage {
     fn auto_save_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Auto Save"),
+            SettingsPageItem::SectionHeader(tr!("Auto Save")),
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Auto Save Mode",
-                    description: "When to auto save buffer changes.",
+                    title: tr!("Auto Save Mode"),
+                    description: tr!("When to auto save buffer changes."),
                     field: Box::new(SettingField {
                         organization_override: None,
                         json_path: Some("autosave$"),
@@ -1556,8 +1575,8 @@ fn editor_page() -> SettingsPage {
                         settings::AutosaveSettingDiscriminants::Off => vec![],
                         settings::AutosaveSettingDiscriminants::AfterDelay => vec![SettingItem {
                             files: USER,
-                            title: "Delay (milliseconds)",
-                            description: "Save after inactivity period (in milliseconds).",
+                            title: tr!("Delay (milliseconds)"),
+                            description: tr!("Save after inactivity period (in milliseconds)."),
                             field: Box::new(SettingField {
                                 organization_override: None,
                                 json_path: Some("autosave.after_delay.milliseconds"),
@@ -1596,10 +1615,12 @@ fn editor_page() -> SettingsPage {
 
     fn which_key_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Which-key Menu"),
+            SettingsPageItem::SectionHeader(tr!("Which-key Menu")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Which-key Menu",
-                description: "Display the which-key menu with matching bindings while a multi-stroke binding is pending.",
+                title: tr!("Show Which-key Menu"),
+                description: tr!(
+                    "Display the which-key menu with matching bindings while a multi-stroke binding is pending."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("which_key.enabled"),
@@ -1617,8 +1638,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Menu Delay",
-                description: "Delay in milliseconds before the which-key menu appears.",
+                title: tr!("Menu Delay"),
+                description: tr!("Delay in milliseconds before the which-key menu appears."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("which_key.delay_ms"),
@@ -1640,10 +1661,12 @@ fn editor_page() -> SettingsPage {
 
     fn multibuffer_section() -> [SettingsPageItem; 7] {
         [
-            SettingsPageItem::SectionHeader("Multibuffer"),
+            SettingsPageItem::SectionHeader(tr!("Multibuffer")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Double Click In Multibuffer",
-                description: "What to do when multibuffer is double-clicked in some of its excerpts.",
+                title: tr!("Double Click In Multibuffer"),
+                description: tr!(
+                    "What to do when multibuffer is double-clicked in some of its excerpts."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("double_click_in_multibuffer"),
@@ -1658,8 +1681,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Expand Excerpt Lines",
-                description: "How many lines to expand the multibuffer excerpts by default.",
+                title: tr!("Expand Excerpt Lines"),
+                description: tr!("How many lines to expand the multibuffer excerpts by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("expand_excerpt_lines"),
@@ -1672,8 +1695,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Excerpt Context Lines",
-                description: "How many lines of context to provide in multibuffer excerpts by default.",
+                title: tr!("Excerpt Context Lines"),
+                description: tr!(
+                    "How many lines of context to provide in multibuffer excerpts by default."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("excerpt_context_lines"),
@@ -1686,8 +1711,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Expand Outlines With Depth",
-                description: "Default depth to expand outline items in the current file.",
+                title: tr!("Expand Outlines With Depth"),
+                description: tr!("Default depth to expand outline items in the current file."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.expand_outlines_with_depth"),
@@ -1710,8 +1735,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Diff View Style",
-                description: "How to display diffs in the editor.",
+                title: tr!("Diff View Style"),
+                description: tr!("How to display diffs in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diff_view_style"),
@@ -1724,8 +1749,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Minimum Split Diff Width",
-                description: "The minimum width (in columns) at which the split diff view is used. When the editor is narrower, the diff view automatically switches to unified mode. Set to 0 to disable.",
+                title: tr!("Minimum Split Diff Width"),
+                description: tr!(
+                    "The minimum width (in columns) at which the split diff view is used. When the editor is narrower, the diff view automatically switches to unified mode. Set to 0 to disable."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimum_split_diff_width"),
@@ -1744,10 +1771,10 @@ fn editor_page() -> SettingsPage {
 
     fn scrolling_section() -> [SettingsPageItem; 9] {
         [
-            SettingsPageItem::SectionHeader("Scrolling"),
+            SettingsPageItem::SectionHeader(tr!("Scrolling")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scroll Beyond Last Line",
-                description: "Whether the editor will scroll beyond the last line.",
+                title: tr!("Scroll Beyond Last Line"),
+                description: tr!("Whether the editor will scroll beyond the last line."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scroll_beyond_last_line"),
@@ -1762,8 +1789,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Vertical Scroll Margin",
-                description: "The number of lines to keep above/below the cursor when auto-scrolling.",
+                title: tr!("Vertical Scroll Margin"),
+                description: tr!(
+                    "The number of lines to keep above/below the cursor when auto-scrolling."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vertical_scroll_margin"),
@@ -1778,8 +1807,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Horizontal Scroll Margin",
-                description: "The number of characters to keep on either side when scrolling with the mouse.",
+                title: tr!("Horizontal Scroll Margin"),
+                description: tr!(
+                    "The number of characters to keep on either side when scrolling with the mouse."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("horizontal_scroll_margin"),
@@ -1794,8 +1825,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scroll Sensitivity",
-                description: "Scroll sensitivity multiplier for both horizontal and vertical scrolling.",
+                title: tr!("Scroll Sensitivity"),
+                description: tr!(
+                    "Scroll sensitivity multiplier for both horizontal and vertical scrolling."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scroll_sensitivity"),
@@ -1808,8 +1841,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Mouse Wheel Zoom",
-                description: "Whether to zoom the editor font size with the mouse wheel while holding the primary modifier key.",
+                title: tr!("Mouse Wheel Zoom"),
+                description: tr!(
+                    "Whether to zoom the editor font size with the mouse wheel while holding the primary modifier key."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("mouse_wheel_zoom"),
@@ -1822,8 +1857,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Fast Scroll Sensitivity",
-                description: "Fast scroll sensitivity multiplier for both horizontal and vertical scrolling.",
+                title: tr!("Fast Scroll Sensitivity"),
+                description: tr!(
+                    "Fast scroll sensitivity multiplier for both horizontal and vertical scrolling."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("fast_scroll_sensitivity"),
@@ -1838,8 +1875,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Autoscroll On Clicks",
-                description: "Whether to scroll when clicking near the edge of the visible text area.",
+                title: tr!("Autoscroll On Clicks"),
+                description: tr!(
+                    "Whether to scroll when clicking near the edge of the visible text area."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("autoscroll_on_clicks"),
@@ -1852,8 +1891,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sticky Scroll",
-                description: "Whether to stick scopes to the top of the editor",
+                title: tr!("Sticky Scroll"),
+                description: tr!("Whether to stick scopes to the top of the editor"),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("sticky_scroll.enabled"),
@@ -1880,10 +1919,10 @@ fn editor_page() -> SettingsPage {
 
     fn signature_help_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Signature Help"),
+            SettingsPageItem::SectionHeader(tr!("Signature Help")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Signature Help",
-                description: "Automatically show a signature help pop-up.",
+                title: tr!("Auto Signature Help"),
+                description: tr!("Automatically show a signature help pop-up."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("auto_signature_help"),
@@ -1896,8 +1935,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Signature Help After Edits",
-                description: "Show the signature help pop-up after completions or bracket pairs are inserted.",
+                title: tr!("Show Signature Help After Edits"),
+                description: tr!(
+                    "Show the signature help pop-up after completions or bracket pairs are inserted."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("show_signature_help_after_edits"),
@@ -1915,8 +1956,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Snippet Sort Order",
-                description: "Determines how snippets are sorted relative to other completion items.",
+                title: tr!("Snippet Sort Order"),
+                description: tr!(
+                    "Determines how snippets are sorted relative to other completion items."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("snippet_sort_order"),
@@ -1933,10 +1976,12 @@ fn editor_page() -> SettingsPage {
 
     fn hover_popover_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Hover Popover"),
+            SettingsPageItem::SectionHeader(tr!("Hover Popover")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Show the informational hover box when moving the mouse over symbols in the editor.",
+                title: tr!("Enabled"),
+                description: tr!(
+                    "Show the informational hover box when moving the mouse over symbols in the editor."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("hover_popover_enabled"),
@@ -1950,8 +1995,10 @@ fn editor_page() -> SettingsPage {
             }),
             // todo(settings ui): add units to this number input
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Delay",
-                description: "Time to wait in milliseconds before showing the informational hover box.",
+                title: tr!("Delay"),
+                description: tr!(
+                    "Time to wait in milliseconds before showing the informational hover box."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("hover_popover_delay"),
@@ -1964,8 +2011,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sticky",
-                description: "Whether the hover popover sticks when the mouse moves toward it, allowing interaction with its contents.",
+                title: tr!("Sticky"),
+                description: tr!(
+                    "Whether the hover popover sticks when the mouse moves toward it, allowing interaction with its contents."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("hover_popover_sticky"),
@@ -1979,8 +2028,10 @@ fn editor_page() -> SettingsPage {
             }),
             // todo(settings ui): add units to this number input
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hiding Delay",
-                description: "Time to wait in milliseconds before hiding the hover popover after the mouse moves away.",
+                title: tr!("Hiding Delay"),
+                description: tr!(
+                    "Time to wait in milliseconds before hiding the hover popover after the mouse moves away."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("hover_popover_hiding_delay"),
@@ -1999,10 +2050,10 @@ fn editor_page() -> SettingsPage {
 
     fn drag_and_drop_selection_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Drag And Drop Selection"),
+            SettingsPageItem::SectionHeader(tr!("Drag And Drop Selection")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Enable drag and drop selection.",
+                title: tr!("Enabled"),
+                description: tr!("Enable drag and drop selection."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("drag_and_drop_selection.enabled"),
@@ -2025,8 +2076,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Delay",
-                description: "Delay in milliseconds before drag and drop selection starts.",
+                title: tr!("Delay"),
+                description: tr!("Delay in milliseconds before drag and drop selection starts."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("drag_and_drop_selection.delay"),
@@ -2053,10 +2104,10 @@ fn editor_page() -> SettingsPage {
 
     fn gutter_section() -> [SettingsPageItem; 9] {
         [
-            SettingsPageItem::SectionHeader("Gutter"),
+            SettingsPageItem::SectionHeader(tr!("Gutter")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Line Numbers",
-                description: "Show line numbers in the gutter.",
+                title: tr!("Show Line Numbers"),
+                description: tr!("Show line numbers in the gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.line_numbers"),
@@ -2079,8 +2130,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Relative Line Numbers",
-                description: "Controls line number display in the editor's gutter. \"disabled\" shows absolute line numbers, \"enabled\" shows relative line numbers for each absolute line, and \"wrapped\" shows relative line numbers for every line, absolute or wrapped.",
+                title: tr!("Relative Line Numbers"),
+                description: tr!(
+                    "Controls line number display in the editor's gutter. \"disabled\" shows absolute line numbers, \"enabled\" shows relative line numbers for each absolute line, and \"wrapped\" shows relative line numbers for every line, absolute or wrapped."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("relative_line_numbers"),
@@ -2093,8 +2146,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Runnables",
-                description: "Show runnable buttons in the gutter.",
+                title: tr!("Show Runnables"),
+                description: tr!("Show runnable buttons in the gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.runnables"),
@@ -2117,8 +2170,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Breakpoints",
-                description: "Show breakpoints in the gutter.",
+                title: tr!("Show Breakpoints"),
+                description: tr!("Show breakpoints in the gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.breakpoints"),
@@ -2141,8 +2194,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Bookmarks",
-                description: "Show bookmarks in the gutter.",
+                title: tr!("Show Bookmarks"),
+                description: tr!("Show bookmarks in the gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.bookmarks"),
@@ -2165,8 +2218,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Folds",
-                description: "Show code folding controls in the gutter.",
+                title: tr!("Show Folds"),
+                description: tr!("Show code folding controls in the gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.folds"),
@@ -2185,8 +2238,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Min Line Number Digits",
-                description: "Minimum number of characters to reserve space for in the gutter.",
+                title: tr!("Min Line Number Digits"),
+                description: tr!(
+                    "Minimum number of characters to reserve space for in the gutter."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.min_line_number_digits"),
@@ -2209,8 +2264,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Inline Code Actions",
-                description: "Show code action button at start of buffer line.",
+                title: tr!("Inline Code Actions"),
+                description: tr!("Show code action button at start of buffer line."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("inline_code_actions"),
@@ -2227,10 +2282,10 @@ fn editor_page() -> SettingsPage {
 
     fn scrollbar_section() -> [SettingsPageItem; 10] {
         [
-            SettingsPageItem::SectionHeader("Scrollbar"),
+            SettingsPageItem::SectionHeader(tr!("Scrollbar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show",
-                description: "When to show the scrollbar in the editor.",
+                title: tr!("Show"),
+                description: tr!("When to show the scrollbar in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar"),
@@ -2249,8 +2304,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursors",
-                description: "Show cursor positions in the scrollbar.",
+                title: tr!("Cursors"),
+                description: tr!("Show cursor positions in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.cursors"),
@@ -2269,8 +2324,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Diff",
-                description: "Show Git diff indicators in the scrollbar.",
+                title: tr!("Git Diff"),
+                description: tr!("Show Git diff indicators in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.git_diff"),
@@ -2294,8 +2349,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Search Results",
-                description: "Show buffer search result indicators in the scrollbar.",
+                title: tr!("Search Results"),
+                description: tr!("Show buffer search result indicators in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.search_results"),
@@ -2319,8 +2374,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Selected Text",
-                description: "Show selected text occurrences in the scrollbar.",
+                title: tr!("Selected Text"),
+                description: tr!("Show selected text occurrences in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.selected_text"),
@@ -2344,8 +2399,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Selected Symbol",
-                description: "Show selected symbol occurrences in the scrollbar.",
+                title: tr!("Selected Symbol"),
+                description: tr!("Show selected symbol occurrences in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.selected_symbol"),
@@ -2369,8 +2424,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Diagnostics",
-                description: "Which diagnostic indicators to show in the scrollbar.",
+                title: tr!("Diagnostics"),
+                description: tr!("Which diagnostic indicators to show in the scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.diagnostics"),
@@ -2394,8 +2449,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Horizontal Scrollbar",
-                description: "When false, forcefully disables the horizontal scrollbar.",
+                title: tr!("Horizontal Scrollbar"),
+                description: tr!("When false, forcefully disables the horizontal scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.axes.horizontal"),
@@ -2423,8 +2478,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Vertical Scrollbar",
-                description: "When false, forcefully disables the vertical scrollbar.",
+                title: tr!("Vertical Scrollbar"),
+                description: tr!("When false, forcefully disables the vertical scrollbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("scrollbar.axes.vertical"),
@@ -2456,10 +2511,10 @@ fn editor_page() -> SettingsPage {
 
     fn minimap_section() -> [SettingsPageItem; 7] {
         [
-            SettingsPageItem::SectionHeader("Minimap"),
+            SettingsPageItem::SectionHeader(tr!("Minimap")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show",
-                description: "When to show the minimap in the editor.",
+                title: tr!("Show"),
+                description: tr!("When to show the minimap in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.show"),
@@ -2474,8 +2529,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Display In",
-                description: "Where to show the minimap in the editor.",
+                title: tr!("Display In"),
+                description: tr!("Where to show the minimap in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.display_in"),
@@ -2499,8 +2554,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Thumb",
-                description: "When to show the minimap thumb.",
+                title: tr!("Thumb"),
+                description: tr!("When to show the minimap thumb."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.thumb"),
@@ -2519,8 +2574,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Thumb Border",
-                description: "Border style for the minimap's scrollbar thumb.",
+                title: tr!("Thumb Border"),
+                description: tr!("Border style for the minimap's scrollbar thumb."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.thumb_border"),
@@ -2544,8 +2599,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Current Line Highlight",
-                description: "How to highlight the current line in the minimap.",
+                title: tr!("Current Line Highlight"),
+                description: tr!("How to highlight the current line in the minimap."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.current_line_highlight"),
@@ -2569,8 +2624,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Max Width Columns",
-                description: "Maximum number of columns to display in the minimap.",
+                title: tr!("Max Width Columns"),
+                description: tr!("Maximum number of columns to display in the minimap."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("minimap.max_width_columns"),
@@ -2598,10 +2653,10 @@ fn editor_page() -> SettingsPage {
 
     fn toolbar_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Toolbar"),
+            SettingsPageItem::SectionHeader(tr!("Toolbar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Breadcrumbs",
-                description: "Show breadcrumbs.",
+                title: tr!("Breadcrumbs"),
+                description: tr!("Show breadcrumbs."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("toolbar.breadcrumbs"),
@@ -2625,8 +2680,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Quick Actions",
-                description: "Show quick action buttons (e.g., search, selection, editor controls, etc.).",
+                title: tr!("Quick Actions"),
+                description: tr!(
+                    "Show quick action buttons (e.g., search, selection, editor controls, etc.)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("toolbar.quick_actions"),
@@ -2650,8 +2707,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Selections Menu",
-                description: "Show the selections menu in the editor toolbar.",
+                title: tr!("Selections Menu"),
+                description: tr!("Show the selections menu in the editor toolbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("toolbar.selections_menu"),
@@ -2675,8 +2732,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Review",
-                description: "Show agent review buttons in the editor toolbar.",
+                title: tr!("Agent Review"),
+                description: tr!("Show agent review buttons in the editor toolbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("toolbar.agent_review"),
@@ -2700,8 +2757,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Code Actions",
-                description: "Show code action buttons in the editor toolbar.",
+                title: tr!("Code Actions"),
+                description: tr!("Show code action buttons in the editor toolbar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("toolbar.code_actions"),
@@ -2729,10 +2786,10 @@ fn editor_page() -> SettingsPage {
 
     fn vim_settings_section() -> [SettingsPageItem; 14] {
         [
-            SettingsPageItem::SectionHeader("Vim"),
+            SettingsPageItem::SectionHeader(tr!("Vim")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Default Mode",
-                description: "The default mode when Vim starts.",
+                title: tr!("Default Mode"),
+                description: tr!("The default mode when Vim starts."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.default_mode"),
@@ -2745,8 +2802,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Toggle Relative Line Numbers",
-                description: "Toggle relative line numbers in Vim mode.",
+                title: tr!("Toggle Relative Line Numbers"),
+                description: tr!("Toggle relative line numbers in Vim mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.toggle_relative_line_numbers"),
@@ -2768,8 +2825,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use System Clipboard",
-                description: "Controls when to use system clipboard in Vim mode.",
+                title: tr!("Use System Clipboard"),
+                description: tr!("Controls when to use system clipboard in Vim mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.use_system_clipboard"),
@@ -2787,8 +2844,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use Smartcase Find",
-                description: "Enable smartcase searching in Vim mode.",
+                title: tr!("Use Smartcase Find"),
+                description: tr!("Enable smartcase searching in Vim mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.use_smartcase_find"),
@@ -2806,8 +2863,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Global Substitution Default",
-                description: "When enabled, the :substitute command replaces all matches in a line by default. The 'g' flag then toggles this behavior.",
+                title: tr!("Global Substitution Default"),
+                description: tr!(
+                    "When enabled, the :substitute command replaces all matches in a line by default. The 'g' flag then toggles this behavior."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.gdefault"),
@@ -2820,8 +2879,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Highlight on Yank Duration",
-                description: "Duration in milliseconds to highlight yanked text in Vim mode.",
+                title: tr!("Highlight on Yank Duration"),
+                description: tr!("Duration in milliseconds to highlight yanked text in Vim mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.highlight_on_yank_duration"),
@@ -2843,8 +2902,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Regex Search",
-                description: "Use regex search by default in Vim search.",
+                title: tr!("Regex Search"),
+                description: tr!("Use regex search by default in Vim search."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.use_regex_search"),
@@ -2862,8 +2921,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Edit Predictions in Normal Mode",
-                description: "Whether edit predictions are shown in normal mode. By default, edit predictions are only shown in insert and replace modes.",
+                title: tr!("Show Edit Predictions in Normal Mode"),
+                description: tr!(
+                    "Whether edit predictions are shown in normal mode. By default, edit predictions are only shown in insert and replace modes."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.show_edit_predictions_in_normal_mode"),
@@ -2885,8 +2946,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape - Normal Mode",
-                description: "Cursor shape for normal mode.",
+                title: tr!("Cursor Shape - Normal Mode"),
+                description: tr!("Cursor shape for normal mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.cursor_shape.normal"),
@@ -2912,8 +2973,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape - Insert Mode",
-                description: "Cursor shape for insert mode. Inherit uses the editor's cursor shape.",
+                title: tr!("Cursor Shape - Insert Mode"),
+                description: tr!(
+                    "Cursor shape for insert mode. Inherit uses the editor's cursor shape."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.cursor_shape.insert"),
@@ -2939,8 +3002,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape - Replace Mode",
-                description: "Cursor shape for replace mode.",
+                title: tr!("Cursor Shape - Replace Mode"),
+                description: tr!("Cursor shape for replace mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.cursor_shape.replace"),
@@ -2966,8 +3029,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape - Visual Mode",
-                description: "Cursor shape for visual mode.",
+                title: tr!("Cursor Shape - Visual Mode"),
+                description: tr!("Cursor shape for visual mode."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("vim.cursor_shape.visual"),
@@ -2993,8 +3056,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Custom Digraphs",
-                description: "Custom digraph mappings for Vim mode.",
+                title: tr!("Custom Digraphs"),
+                description: tr!("Custom digraph mappings for Vim mode."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -3031,7 +3094,7 @@ fn editor_page() -> SettingsPage {
     );
 
     SettingsPage {
-        title: "Editor",
+        title: tr!("Editor"),
         items: items,
     }
 }
@@ -3039,10 +3102,12 @@ fn editor_page() -> SettingsPage {
 fn languages_and_tools_page(cx: &App) -> SettingsPage {
     fn file_types_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("File Types"),
+            SettingsPageItem::SectionHeader(tr!("File Types")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Type Associations",
-                description: "A mapping from languages to files and file extensions that should be treated as that language.",
+                title: tr!("File Type Associations"),
+                description: tr!(
+                    "A mapping from languages to files and file extensions that should be treated as that language."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -3064,10 +3129,12 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
 
     fn diagnostics_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Diagnostics"),
+            SettingsPageItem::SectionHeader(tr!("Diagnostics")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Max Severity",
-                description: "Which level to use to filter out diagnostics displayed in the editor.",
+                title: tr!("Max Severity"),
+                description: tr!(
+                    "Which level to use to filter out diagnostics displayed in the editor."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics_max_severity"),
@@ -3082,8 +3149,8 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Include Warnings",
-                description: "Whether to show warnings or not by default.",
+                title: tr!("Include Warnings"),
+                description: tr!("Whether to show warnings or not by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.include_warnings"),
@@ -3109,10 +3176,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
 
     fn inline_diagnostics_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Inline Diagnostics"),
+            SettingsPageItem::SectionHeader(tr!("Inline Diagnostics")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Whether to show diagnostics inline or not.",
+                title: tr!("Enabled"),
+                description: tr!("Whether to show diagnostics inline or not."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.inline.enabled"),
@@ -3138,8 +3205,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Update Debounce",
-                description: "The delay in milliseconds to show inline diagnostics after the last diagnostic update.",
+                title: tr!("Update Debounce"),
+                description: tr!(
+                    "The delay in milliseconds to show inline diagnostics after the last diagnostic update."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.inline.update_debounce_ms"),
@@ -3165,8 +3234,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Padding",
-                description: "The amount of padding between the end of the source line and the start of the inline diagnostic.",
+                title: tr!("Padding"),
+                description: tr!(
+                    "The amount of padding between the end of the source line and the start of the inline diagnostic."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.inline.padding"),
@@ -3192,8 +3263,8 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Minimum Column",
-                description: "The minimum column at which to display inline diagnostics.",
+                title: tr!("Minimum Column"),
+                description: tr!("The minimum column at which to display inline diagnostics."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.inline.min_column"),
@@ -3223,10 +3294,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
 
     fn lsp_pull_diagnostics_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("LSP Pull Diagnostics"),
+            SettingsPageItem::SectionHeader(tr!("LSP Pull Diagnostics")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Whether to pull for language server-powered diagnostics or not.",
+                title: tr!("Enabled"),
+                description: tr!("Whether to pull for language server-powered diagnostics or not."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.lsp_pull_diagnostics.enabled"),
@@ -3253,8 +3324,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
             }),
             // todo(settings_ui): Needs unit
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debounce",
-                description: "Minimum time to wait before pulling diagnostics from the language server(s).",
+                title: tr!("Debounce"),
+                description: tr!(
+                    "Minimum time to wait before pulling diagnostics from the language server(s)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.lsp_pull_diagnostics.debounce_ms"),
@@ -3284,10 +3357,12 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
 
     fn lsp_highlights_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("LSP Highlights"),
+            SettingsPageItem::SectionHeader(tr!("LSP Highlights")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debounce",
-                description: "The debounce delay before querying highlights from the language.",
+                title: tr!("Debounce"),
+                description: tr!(
+                    "The debounce delay before querying highlights from the language."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("lsp_highlight_debounce"),
@@ -3307,7 +3382,7 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
     fn languages_list_section(cx: &App) -> Box<[SettingsPageItem]> {
         // todo(settings_ui): Refresh on extension (un)/installed
         // Note that `crates/json_schema_store` solves the same problem, there is probably a way to unify the two
-        std::iter::once(SettingsPageItem::SectionHeader("Languages"))
+        std::iter::once(SettingsPageItem::SectionHeader(tr!("Languages")))
             .chain(all_language_names(cx).into_iter().map(|language_name| {
                 let link = format!("languages.{language_name}");
                 SettingsPageItem::SubPageLink(SubPageLink {
@@ -3337,7 +3412,7 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Languages & Tools",
+        title: tr!("Languages & Tools"),
         items: {
             concat_sections!(
                 non_editor_language_settings_data(),
@@ -3355,10 +3430,10 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
 fn search_and_files_page() -> SettingsPage {
     fn search_section() -> [SettingsPageItem; 9] {
         [
-            SettingsPageItem::SectionHeader("Search"),
+            SettingsPageItem::SectionHeader(tr!("Search")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Whole Word",
-                description: "Search for whole words by default.",
+                title: tr!("Whole Word"),
+                description: tr!("Search for whole words by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search.whole_word"),
@@ -3377,8 +3452,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Case Sensitive",
-                description: "Search case-sensitively by default.",
+                title: tr!("Case Sensitive"),
+                description: tr!("Search case-sensitively by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search.case_sensitive"),
@@ -3402,8 +3477,10 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use Smartcase Search",
-                description: "Whether to automatically enable case-sensitive search based on the search query.",
+                title: tr!("Use Smartcase Search"),
+                description: tr!(
+                    "Whether to automatically enable case-sensitive search based on the search query."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("use_smartcase_search"),
@@ -3416,8 +3493,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Include Ignored",
-                description: "Include ignored files in search results by default.",
+                title: tr!("Include Ignored"),
+                description: tr!("Include ignored files in search results by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search.include_ignored"),
@@ -3441,8 +3518,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Regex",
-                description: "Use regex search by default.",
+                title: tr!("Regex"),
+                description: tr!("Use regex search by default."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search.regex"),
@@ -3457,8 +3534,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Search Wrap",
-                description: "Whether the editor search results will loop.",
+                title: tr!("Search Wrap"),
+                description: tr!("Whether the editor search results will loop."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search_wrap"),
@@ -3471,8 +3548,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Center on Match",
-                description: "Whether to center the current match in the editor",
+                title: tr!("Center on Match"),
+                description: tr!("Whether to center the current match in the editor"),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("editor.search.center_on_match"),
@@ -3495,8 +3572,10 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Seed Search Query From Cursor",
-                description: "When to populate a new search's query based on the text under the cursor.",
+                title: tr!("Seed Search Query From Cursor"),
+                description: tr!(
+                    "When to populate a new search's query based on the text under the cursor."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("seed_search_query_from_cursor"),
@@ -3516,13 +3595,13 @@ fn search_and_files_page() -> SettingsPage {
         ]
     }
 
-    fn file_finder_section() -> [SettingsPageItem; 4] {
+    fn file_finder_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("File Finder"),
+            SettingsPageItem::SectionHeader(tr!("File Finder")),
             // todo: null by default
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Include Ignored in Search",
-                description: "Use gitignored files when searching.",
+                title: tr!("Include Ignored in Search"),
+                description: tr!("Use gitignored files when searching."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("file_finder.include_ignored"),
@@ -3544,8 +3623,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Icons",
-                description: "Show file icons in the file finder.",
+                title: tr!("File Icons"),
+                description: tr!("Show file icons in the file finder."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("file_finder.file_icons"),
@@ -3563,8 +3642,35 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Skip Focus For Active In Search",
-                description: "Whether the file finder should skip focus for the active file in search results.",
+                title: tr!("Modal Max Width"),
+                description: tr!(
+                    "Determines how much space the file finder can take up in relation to the available window width."
+                ),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("file_finder.modal_max_width"),
+                    pick: |settings_content| {
+                        settings_content
+                            .file_finder
+                            .as_ref()?
+                            .modal_max_width
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .file_finder
+                            .get_or_insert_default()
+                            .modal_max_width = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Skip Focus For Active In Search"),
+                description: tr!(
+                    "Whether the file finder should skip focus for the active file in search results."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("file_finder.skip_focus_for_active_in_search"),
@@ -3590,10 +3696,12 @@ fn search_and_files_page() -> SettingsPage {
 
     fn file_scan_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("File Scan"),
+            SettingsPageItem::SectionHeader(tr!("File Scan")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Scan Exclusions",
-                description: "Files or globs of files that will be excluded by Zed entirely. They will be skipped during file scans, file searches, and not be displayed in the project file tree. Takes precedence over \"File Scan Inclusions\"",
+                title: tr!("File Scan Exclusions"),
+                description: tr!(
+                    "Files or globs of files that will be excluded by Zed entirely. They will be skipped during file scans, file searches, and not be displayed in the project file tree. Takes precedence over \"File Scan Inclusions\""
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -3615,8 +3723,10 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Scan Inclusions",
-                description: "Files or globs of files that will be included by Zed, even when ignored by git. This is useful for files that are not tracked by git, but are still important to your project. Note that globs that are overly broad can slow down Zed's file scanning. \"File Scan Exclusions\" takes precedence over these inclusions",
+                title: tr!("File Scan Inclusions"),
+                description: tr!(
+                    "Files or globs of files that will be included by Zed, even when ignored by git. This is useful for files that are not tracked by git, but are still important to your project. Note that globs that are overly broad can slow down Zed's file scanning. \"File Scan Exclusions\" takes precedence over these inclusions"
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -3638,8 +3748,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scan Symbolic Links",
-                description: "When to scan content of linked directories",
+                title: tr!("Scan Symbolic Links"),
+                description: tr!("When to scan content of linked directories"),
                 field: Box::new(SettingField {
                     json_path: Some("scan_symlinks"),
                     organization_override: None,
@@ -3654,8 +3764,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Restore File State",
-                description: "Restore previous file state when reopening.",
+                title: tr!("Restore File State"),
+                description: tr!("Restore previous file state when reopening."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("restore_on_file_reopen"),
@@ -3670,8 +3780,8 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Close on File Delete",
-                description: "Automatically close files that have been deleted.",
+                title: tr!("Close on File Delete"),
+                description: tr!("Automatically close files that have been deleted."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("close_on_file_delete"),
@@ -3689,7 +3799,7 @@ fn search_and_files_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Search & Files",
+        title: tr!("Search & Files"),
         items: concat_sections![search_section(), file_finder_section(), file_scan_section()],
     }
 }
@@ -3697,10 +3807,10 @@ fn search_and_files_page() -> SettingsPage {
 fn window_and_layout_page() -> SettingsPage {
     fn status_bar_section() -> [SettingsPageItem; 11] {
         [
-            SettingsPageItem::SectionHeader("Status Bar"),
+            SettingsPageItem::SectionHeader(tr!("Status Bar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Project Panel Button",
-                description: "Show the project panel button in the status bar.",
+                title: tr!("Project Panel Button"),
+                description: tr!("Show the project panel button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.button"),
@@ -3718,8 +3828,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Active Language Button",
-                description: "Show the active language button in the status bar.",
+                title: tr!("Active Language Button"),
+                description: tr!("Show the active language button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("status_bar.active_language_button"),
@@ -3741,8 +3851,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Active Encoding Button",
-                description: "Control when to show the active encoding in the status bar.",
+                title: tr!("Active Encoding Button"),
+                description: tr!("Control when to show the active encoding in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("status_bar.active_encoding_button"),
@@ -3764,8 +3874,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Position Button",
-                description: "Show the cursor position button in the status bar.",
+                title: tr!("Cursor Position Button"),
+                description: tr!("Show the cursor position button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("status_bar.cursor_position_button"),
@@ -3787,8 +3897,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Line Endings Button",
-                description: "Show the active line endings button in the status bar.",
+                title: tr!("Line Endings Button"),
+                description: tr!("Show the active line endings button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("status_bar.line_endings_button"),
@@ -3810,8 +3920,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Terminal Button",
-                description: "Show the terminal button in the status bar.",
+                title: tr!("Terminal Button"),
+                description: tr!("Show the terminal button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.button"),
@@ -3824,8 +3934,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Diagnostics Button",
-                description: "Show the project diagnostics button in the status bar.",
+                title: tr!("Diagnostics Button"),
+                description: tr!("Show the project diagnostics button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("diagnostics.button"),
@@ -3838,8 +3948,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Project Search Button",
-                description: "Show the project search button in the status bar.",
+                title: tr!("Project Search Button"),
+                description: tr!("Show the project search button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("search.button"),
@@ -3858,8 +3968,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debugger Button",
-                description: "Show the debugger button in the status bar.",
+                title: tr!("Debugger Button"),
+                description: tr!("Show the debugger button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.button"),
@@ -3872,8 +3982,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Active File Name",
-                description: "Show the name of the active file in the status bar.",
+                title: tr!("Active File Name"),
+                description: tr!("Show the name of the active file in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("status_bar.show_active_file"),
@@ -3899,10 +4009,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn title_bar_section() -> [SettingsPageItem; 10] {
         [
-            SettingsPageItem::SectionHeader("Title Bar"),
+            SettingsPageItem::SectionHeader(tr!("Title Bar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Branch Status Icon",
-                description: "Show git status indicators on the branch icon in the titlebar.",
+                title: tr!("Show Branch Status Icon"),
+                description: tr!("Show git status indicators on the branch icon in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_branch_status_icon"),
@@ -3924,8 +4034,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Branch Name",
-                description: "Show the branch name button in the titlebar.",
+                title: tr!("Show Branch Name"),
+                description: tr!("Show the branch name button in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_branch_name"),
@@ -3947,8 +4057,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Project Items",
-                description: "Show the project host and name in the titlebar.",
+                title: tr!("Show Project Items"),
+                description: tr!("Show the project host and name in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_project_items"),
@@ -3970,8 +4080,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Onboarding Banner",
-                description: "Show banners announcing new features in the titlebar.",
+                title: tr!("Show Onboarding Banner"),
+                description: tr!("Show banners announcing new features in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_onboarding_banner"),
@@ -3993,8 +4103,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Sign In",
-                description: "Show the sign in button in the titlebar.",
+                title: tr!("Show Sign In"),
+                description: tr!("Show the sign in button in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_sign_in"),
@@ -4012,8 +4122,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show User Menu",
-                description: "Show the user menu button in the titlebar.",
+                title: tr!("Show User Menu"),
+                description: tr!("Show the user menu button in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_user_menu"),
@@ -4031,8 +4141,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show User Picture",
-                description: "Show user picture in the titlebar.",
+                title: tr!("Show User Picture"),
+                description: tr!("Show user picture in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_user_picture"),
@@ -4054,8 +4164,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Menus",
-                description: "Show the menus in the titlebar.",
+                title: tr!("Show Menus"),
+                description: tr!("Show the menus in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_menus"),
@@ -4075,21 +4185,23 @@ fn window_and_layout_page() -> SettingsPage {
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Button Layout",
-                    description:
-                        "(Linux only) choose how window control buttons are laid out in the titlebar.",
+                    title: tr!("Button Layout"),
+                    description: tr!(
+                        "(Linux only) choose how window control buttons are laid out in the titlebar."
+                    ),
                     field: Box::new(SettingField {
                         organization_override: None,
                         json_path: Some("title_bar.button_layout$"),
                         pick: |settings_content| {
                             Some(
-                                &dynamic_variants::<settings::WindowButtonLayoutContent>()[settings_content
-                                    .title_bar
-                                    .as_ref()?
-                                    .button_layout
-                                    .as_ref()?
-                                    .discriminant()
-                                    as usize],
+                                &dynamic_variants::<settings::WindowButtonLayoutContent>()
+                                    [settings_content
+                                        .title_bar
+                                        .as_ref()?
+                                        .button_layout
+                                        .as_ref()?
+                                        .discriminant()
+                                        as usize],
                             )
                         },
                         write: |settings_content, value, _| {
@@ -4153,12 +4265,13 @@ fn window_and_layout_page() -> SettingsPage {
                             vec![]
                         }
                         settings::WindowButtonLayoutContentDiscriminants::Standard => vec![],
-                        settings::WindowButtonLayoutContentDiscriminants::Custom => vec![
-                            SettingItem {
+                        settings::WindowButtonLayoutContentDiscriminants::Custom => {
+                            vec![SettingItem {
                                 files: USER,
-                                title: "Custom Button Layout",
-                                description:
-                                    "GNOME-style layout string such as \"close:minimize,maximize\".",
+                                title: tr!("Custom Button Layout"),
+                                description: tr!(
+                                    "GNOME-style layout string such as \"close:minimize,maximize\"."
+                                ),
                                 field: Box::new(SettingField {
                                     organization_override: None,
                                     json_path: Some("title_bar.button_layout"),
@@ -4177,16 +4290,16 @@ fn window_and_layout_page() -> SettingsPage {
                                         settings_content
                                             .title_bar
                                             .get_or_insert_default()
-                                            .button_layout = value
-                                            .map(settings::WindowButtonLayoutContent::Custom);
+                                            .button_layout =
+                                            value.map(settings::WindowButtonLayoutContent::Custom);
                                     },
                                 }),
                                 metadata: Some(Box::new(SettingsFieldMetadata {
                                     placeholder: Some("close:minimize,maximize"),
                                     ..Default::default()
                                 })),
-                            },
-                        ],
+                            }]
+                        }
                     })
                     .collect(),
             }),
@@ -4195,10 +4308,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn tab_bar_section() -> [SettingsPageItem; 9] {
         [
-            SettingsPageItem::SectionHeader("Tab Bar"),
+            SettingsPageItem::SectionHeader(tr!("Tab Bar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Tab Bar",
-                description: "Show the tab bar in the editor.",
+                title: tr!("Show Tab Bar"),
+                description: tr!("Show the tab bar in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tab_bar.show"),
@@ -4211,8 +4324,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Git Status In Tabs",
-                description: "Show the Git file status on a tab item.",
+                title: tr!("Show Git Status In Tabs"),
+                description: tr!("Show the Git file status on a tab item."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.git_status"),
@@ -4225,8 +4338,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show File Icons In Tabs",
-                description: "Show the file icon for a tab.",
+                title: tr!("Show File Icons In Tabs"),
+                description: tr!("Show the file icon for a tab."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.file_icons"),
@@ -4239,8 +4352,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Tab Close Position",
-                description: "Position of the close button in a tab.",
+                title: tr!("Tab Close Position"),
+                description: tr!("Position of the close button in a tab."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.close_position"),
@@ -4256,8 +4369,8 @@ fn window_and_layout_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Maximum Tabs",
-                description: "Maximum open tabs in a pane. Will not close an unsaved tab.",
+                title: tr!("Maximum Tabs"),
+                description: tr!("Maximum open tabs in a pane. Will not close an unsaved tab."),
                 // todo(settings_ui): The default for this value is null and it's use in code
                 // is complex, so I'm going to come back to this later
                 field: Box::new(
@@ -4274,8 +4387,8 @@ fn window_and_layout_page() -> SettingsPage {
                 metadata: None,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Navigation History Buttons",
-                description: "Show the navigation history buttons in the tab bar.",
+                title: tr!("Show Navigation History Buttons"),
+                description: tr!("Show the navigation history buttons in the tab bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tab_bar.show_nav_history_buttons"),
@@ -4297,8 +4410,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Tab Bar Buttons",
-                description: "Show the tab bar buttons (New, Split Pane, Zoom).",
+                title: tr!("Show Tab Bar Buttons"),
+                description: tr!("Show the tab bar buttons (New, Split Pane, Zoom)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tab_bar.show_tab_bar_buttons"),
@@ -4320,8 +4433,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Pinned Tabs Layout",
-                description: "Show pinned tabs in a separate row above unpinned tabs.",
+                title: tr!("Pinned Tabs Layout"),
+                description: tr!("Show pinned tabs in a separate row above unpinned tabs."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tab_bar.show_pinned_tabs_in_separate_row"),
@@ -4347,10 +4460,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn tab_settings_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Tab Settings"),
+            SettingsPageItem::SectionHeader(tr!("Tab Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Activate On Close",
-                description: "What to do after closing the current tab.",
+                title: tr!("Activate On Close"),
+                description: tr!("What to do after closing the current tab."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.activate_on_close"),
@@ -4368,8 +4481,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Tab Show Diagnostics",
-                description: "Which files containing diagnostic errors/warnings to mark in the tabs.",
+                title: tr!("Tab Show Diagnostics"),
+                description: tr!(
+                    "Which files containing diagnostic errors/warnings to mark in the tabs."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.show_diagnostics"),
@@ -4387,8 +4502,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Close Button",
-                description: "Controls the appearance behavior of the tab's close button.",
+                title: tr!("Show Close Button"),
+                description: tr!("Controls the appearance behavior of the tab's close button."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("tabs.show_close_button"),
@@ -4410,10 +4525,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn preview_tabs_section() -> [SettingsPageItem; 8] {
         [
-            SettingsPageItem::SectionHeader("Preview Tabs"),
+            SettingsPageItem::SectionHeader(tr!("Preview Tabs")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Preview Tabs Enabled",
-                description: "Show opened editors as preview tabs.",
+                title: tr!("Preview Tabs Enabled"),
+                description: tr!("Show opened editors as preview tabs."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enabled"),
@@ -4431,8 +4546,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Preview From Project Panel",
-                description: "Whether to open tabs in preview mode when opened from the project panel with a single click.",
+                title: tr!("Enable Preview From Project Panel"),
+                description: tr!(
+                    "Whether to open tabs in preview mode when opened from the project panel with a single click."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_preview_from_project_panel"),
@@ -4454,8 +4571,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Preview From File Finder",
-                description: "Whether to open tabs in preview mode when selected from the file finder.",
+                title: tr!("Enable Preview From File Finder"),
+                description: tr!(
+                    "Whether to open tabs in preview mode when selected from the file finder."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_preview_from_file_finder"),
@@ -4477,8 +4596,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Preview From Multibuffer",
-                description: "Whether to open tabs in preview mode when opened from a multibuffer.",
+                title: tr!("Enable Preview From Multibuffer"),
+                description: tr!(
+                    "Whether to open tabs in preview mode when opened from a multibuffer."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_preview_from_multibuffer"),
@@ -4500,8 +4621,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Preview Multibuffer From Code Navigation",
-                description: "Whether to open tabs in preview mode when code navigation is used to open a multibuffer.",
+                title: tr!("Enable Preview Multibuffer From Code Navigation"),
+                description: tr!(
+                    "Whether to open tabs in preview mode when code navigation is used to open a multibuffer."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_preview_multibuffer_from_code_navigation"),
@@ -4523,8 +4646,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Preview File From Code Navigation",
-                description: "Whether to open tabs in preview mode when code navigation is used to open a single file.",
+                title: tr!("Enable Preview File From Code Navigation"),
+                description: tr!(
+                    "Whether to open tabs in preview mode when code navigation is used to open a single file."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_preview_file_from_code_navigation"),
@@ -4546,8 +4671,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Keep Preview On Code Navigation",
-                description: "Whether to keep tabs in preview mode when code navigation is used to navigate away from them. If `enable_preview_file_from_code_navigation` or `enable_preview_multibuffer_from_code_navigation` is also true, the new tab may replace the existing one.",
+                title: tr!("Enable Keep Preview On Code Navigation"),
+                description: tr!(
+                    "Whether to keep tabs in preview mode when code navigation is used to navigate away from them. If `enable_preview_file_from_code_navigation` or `enable_preview_multibuffer_from_code_navigation` is also true, the new tab may replace the existing one."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("preview_tabs.enable_keep_preview_on_code_navigation"),
@@ -4573,10 +4700,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn layout_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Layout"),
+            SettingsPageItem::SectionHeader(tr!("Layout")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Bottom Dock Layout",
-                description: "Layout mode for the bottom dock.",
+                title: tr!("Bottom Dock Layout"),
+                description: tr!("Layout mode for the bottom dock."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("bottom_dock_layout"),
@@ -4590,8 +4717,8 @@ fn window_and_layout_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Centered Layout Left Padding",
-                description: "Left padding for centered layout.",
+                title: tr!("Centered Layout Left Padding"),
+                description: tr!("Left padding for centered layout."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("centered_layout.left_padding"),
@@ -4615,8 +4742,8 @@ fn window_and_layout_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Centered Layout Right Padding",
-                description: "Right padding for centered layout.",
+                title: tr!("Centered Layout Right Padding"),
+                description: tr!("Right padding for centered layout."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("centered_layout.right_padding"),
@@ -4639,8 +4766,10 @@ fn window_and_layout_page() -> SettingsPage {
                 metadata: None,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Focus Follows Mouse",
-                description: "Whether to change focus to a pane when the mouse hovers over it.",
+                title: tr!("Focus Follows Mouse"),
+                description: tr!(
+                    "Whether to change focus to a pane when the mouse hovers over it."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("focus_follows_mouse.enabled"),
@@ -4663,8 +4792,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Focus Follows Mouse Debounce ms",
-                description: "Amount of time to wait before changing focus.",
+                title: tr!("Focus Follows Mouse Debounce ms"),
+                description: tr!("Amount of time to wait before changing focus."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("focus_follows_mouse.debounce_ms"),
@@ -4691,11 +4820,11 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn window_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Window"),
+            SettingsPageItem::SectionHeader(tr!("Window")),
             // todo(settings_ui): Should we filter by platform.as_ref()?
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use System Window Tabs",
-                description: "(macOS only) whether to allow Windows to tab together.",
+                title: tr!("Use System Window Tabs"),
+                description: tr!("(macOS only) whether to allow Windows to tab together."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("use_system_window_tabs"),
@@ -4710,8 +4839,10 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Window Decorations",
-                description: "(Linux only) whether Zed or your compositor should draw window decorations.",
+                title: tr!("Window Decorations"),
+                description: tr!(
+                    "(Linux only) whether Zed or your compositor should draw window decorations."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("window_decorations"),
@@ -4728,10 +4859,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn pane_modifiers_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Pane Modifiers"),
+            SettingsPageItem::SectionHeader(tr!("Pane Modifiers")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Inactive Opacity",
-                description: "Opacity of inactive panels (0.0 - 1.0).",
+                title: tr!("Inactive Opacity"),
+                description: tr!("Opacity of inactive panels (0.0 - 1.0)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("active_pane_modifiers.inactive_opacity"),
@@ -4755,8 +4886,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Border Size",
-                description: "Size of the border surrounding the active pane.",
+                title: tr!("Border Size"),
+                description: tr!("Size of the border surrounding the active pane."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("active_pane_modifiers.border_size"),
@@ -4780,8 +4911,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Zoomed Padding",
-                description: "Show padding for zoomed panes.",
+                title: tr!("Zoomed Padding"),
+                description: tr!("Show padding for zoomed panes."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("zoomed_padding"),
@@ -4798,10 +4929,10 @@ fn window_and_layout_page() -> SettingsPage {
 
     fn pane_split_direction_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Pane Split Direction"),
+            SettingsPageItem::SectionHeader(tr!("Pane Split Direction")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Vertical Split Direction",
-                description: "Direction to split vertically.",
+                title: tr!("Vertical Split Direction"),
+                description: tr!("Direction to split vertically."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("pane_split_direction_vertical"),
@@ -4819,8 +4950,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Horizontal Split Direction",
-                description: "Direction to split horizontally.",
+                title: tr!("Horizontal Split Direction"),
+                description: tr!("Direction to split horizontally."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("pane_split_direction_horizontal"),
@@ -4841,7 +4972,7 @@ fn window_and_layout_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Window & Layout",
+        title: tr!("Window & Layout"),
         items: concat_sections![
             status_bar_section(),
             title_bar_section(),
@@ -4859,10 +4990,10 @@ fn window_and_layout_page() -> SettingsPage {
 fn panels_page() -> SettingsPage {
     fn project_panel_section() -> [SettingsPageItem; 29] {
         [
-            SettingsPageItem::SectionHeader("Project Panel"),
+            SettingsPageItem::SectionHeader(tr!("Project Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Project Panel Dock",
-                description: "Where to dock the project panel.",
+                title: tr!("Project Panel Dock"),
+                description: tr!("Where to dock the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.dock"),
@@ -4875,8 +5006,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Project Panel Default Width",
-                description: "Default width of the project panel in pixels.",
+                title: tr!("Project Panel Default Width"),
+                description: tr!("Default width of the project panel in pixels."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.default_width"),
@@ -4898,8 +5029,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hide .gitignore",
-                description: "Whether to hide the gitignore entries in the project panel.",
+                title: tr!("Hide .gitignore"),
+                description: tr!("Whether to hide the gitignore entries in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.hide_gitignore"),
@@ -4921,8 +5052,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Entry Spacing",
-                description: "Spacing between worktree entries in the project panel.",
+                title: tr!("Entry Spacing"),
+                description: tr!("Spacing between worktree entries in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.entry_spacing"),
@@ -4944,8 +5075,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Icons",
-                description: "Show file icons in the project panel.",
+                title: tr!("File Icons"),
+                description: tr!("Show file icons in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.file_icons"),
@@ -4963,8 +5094,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Folder Icons",
-                description: "Whether to show folder icons or chevrons for directories in the project panel.",
+                title: tr!("Folder Icons"),
+                description: tr!(
+                    "Whether to show folder icons or chevrons for directories in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.folder_icons"),
@@ -4986,8 +5119,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Status",
-                description: "Show the Git status in the project panel.",
+                title: tr!("Git Status"),
+                description: tr!("Show the Git status in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.git_status"),
@@ -5005,8 +5138,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Indent Size",
-                description: "Amount of indentation for nested items.",
+                title: tr!("Indent Size"),
+                description: tr!("Amount of indentation for nested items."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.indent_size"),
@@ -5028,8 +5161,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Reveal Entries",
-                description: "Whether to reveal entries in the project panel automatically when a corresponding project entry becomes active.",
+                title: tr!("Auto Reveal Entries"),
+                description: tr!(
+                    "Whether to reveal entries in the project panel automatically when a corresponding project entry becomes active."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.auto_reveal_entries"),
@@ -5051,8 +5186,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Starts Open",
-                description: "Whether the project panel should open on startup.",
+                title: tr!("Starts Open"),
+                description: tr!("Whether the project panel should open on startup."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.starts_open"),
@@ -5074,8 +5209,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Fold Directories",
-                description: "Whether to fold directories automatically and show compact folders when a directory has only one subdirectory inside.",
+                title: tr!("Auto Fold Directories"),
+                description: tr!(
+                    "Whether to fold directories automatically and show compact folders when a directory has only one subdirectory inside."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.auto_fold_dirs"),
@@ -5097,8 +5234,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Bold Folder Labels",
-                description: "Whether to show folder names with bold text in the project panel.",
+                title: tr!("Bold Folder Labels"),
+                description: tr!(
+                    "Whether to show folder names with bold text in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.bold_folder_labels"),
@@ -5120,8 +5259,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Scrollbar",
-                description: "Show the scrollbar in the project panel.",
+                title: tr!("Show Scrollbar"),
+                description: tr!("Show the scrollbar in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.scrollbar.show"),
@@ -5149,8 +5288,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Horizontal Scroll",
-                description: "Whether to allow horizontal scrolling in the project panel. When disabled, the view is always locked to the leftmost position and long file names are clipped.",
+                title: tr!("Horizontal Scroll"),
+                description: tr!(
+                    "Whether to allow horizontal scrolling in the project panel. When disabled, the view is always locked to the leftmost position and long file names are clipped."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.scrollbar.horizontal_scroll"),
@@ -5176,8 +5317,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Diagnostics",
-                description: "Which files containing diagnostic errors/warnings to mark in the project panel.",
+                title: tr!("Show Diagnostics"),
+                description: tr!(
+                    "Which files containing diagnostic errors/warnings to mark in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.show_diagnostics"),
@@ -5199,8 +5342,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Diagnostic Badges",
-                description: "Show error and warning count badges next to file names in the project panel.",
+                title: tr!("Diagnostic Badges"),
+                description: tr!(
+                    "Show error and warning count badges next to file names in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.diagnostic_badges"),
@@ -5222,8 +5367,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Status Indicator",
-                description: "Show a git status indicator next to file names in the project panel.",
+                title: tr!("Git Status Indicator"),
+                description: tr!(
+                    "Show a git status indicator next to file names in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.git_status_indicator"),
@@ -5245,8 +5392,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sticky Scroll",
-                description: "Whether to stick parent directories at top of the project panel.",
+                title: tr!("Sticky Scroll"),
+                description: tr!(
+                    "Whether to stick parent directories at top of the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.sticky_scroll"),
@@ -5269,8 +5418,8 @@ fn panels_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Show Indent Guides",
-                description: "Show indent guides in the project panel.",
+                title: tr!("Show Indent Guides"),
+                description: tr!("Show indent guides in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.indent_guides.show"),
@@ -5295,8 +5444,10 @@ fn panels_page() -> SettingsPage {
                 metadata: None,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Drag and Drop",
-                description: "Whether to enable drag-and-drop operations in the project panel.",
+                title: tr!("Drag and Drop"),
+                description: tr!(
+                    "Whether to enable drag-and-drop operations in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.drag_and_drop"),
@@ -5318,8 +5469,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hide Root",
-                description: "Whether to hide the root entry when only one folder is open in the window.",
+                title: tr!("Hide Root"),
+                description: tr!(
+                    "Whether to hide the root entry when only one folder is open in the window."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.hide_root"),
@@ -5337,8 +5490,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hide Hidden",
-                description: "Whether to hide the hidden entries in the project panel.",
+                title: tr!("Hide Hidden"),
+                description: tr!("Whether to hide the hidden entries in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.hide_hidden"),
@@ -5360,8 +5513,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sort Mode",
-                description: "Sort order for entries in the project panel.",
+                title: tr!("Sort Mode"),
+                description: tr!("Sort order for entries in the project panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.sort_mode"),
@@ -5379,8 +5532,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sort Order",
-                description: "Whether to sort file and folder names case-sensitively in the project panel.",
+                title: tr!("Sort Order"),
+                description: tr!(
+                    "Whether to sort file and folder names case-sensitively in the project panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     pick: |settings_content| {
@@ -5398,8 +5553,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Open Files On Create",
-                description: "Whether to automatically open newly created files in the editor.",
+                title: tr!("Auto Open Files On Create"),
+                description: tr!(
+                    "Whether to automatically open newly created files in the editor."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.auto_open.on_create"),
@@ -5425,8 +5582,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Open Files On Paste",
-                description: "Whether to automatically open files after pasting or duplicating them.",
+                title: tr!("Auto Open Files On Paste"),
+                description: tr!(
+                    "Whether to automatically open files after pasting or duplicating them."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.auto_open.on_paste"),
@@ -5452,8 +5611,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Open Files On Drop",
-                description: "Whether to automatically open files dropped from external sources.",
+                title: tr!("Auto Open Files On Drop"),
+                description: tr!(
+                    "Whether to automatically open files dropped from external sources."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("project_panel.auto_open.on_drop"),
@@ -5479,8 +5640,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hidden Files",
-                description: "Globs to match files that will be considered \"hidden\" and can be hidden from the project panel.",
+                title: tr!("Hidden Files"),
+                description: tr!(
+                    "Globs to match files that will be considered \"hidden\" and can be hidden from the project panel."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -5502,10 +5665,10 @@ fn panels_page() -> SettingsPage {
 
     fn terminal_panel_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Terminal Panel"),
+            SettingsPageItem::SectionHeader(tr!("Terminal Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Terminal Dock",
-                description: "Where to dock the terminal panel.",
+                title: tr!("Terminal Dock"),
+                description: tr!("Where to dock the terminal panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.dock"),
@@ -5518,8 +5681,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Terminal Panel Flexible Sizing",
-                description: "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right.",
+                title: tr!("Terminal Panel Flexible Sizing"),
+                description: tr!(
+                    "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.flexible"),
@@ -5532,8 +5697,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Count Badge",
-                description: "Show a badge on the terminal panel icon with the count of open terminals.",
+                title: tr!("Show Count Badge"),
+                description: tr!(
+                    "Show a badge on the terminal panel icon with the count of open terminals."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.show_count_badge"),
@@ -5559,10 +5726,10 @@ fn panels_page() -> SettingsPage {
 
     fn outline_panel_section() -> [SettingsPageItem; 11] {
         [
-            SettingsPageItem::SectionHeader("Outline Panel"),
+            SettingsPageItem::SectionHeader(tr!("Outline Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Outline Panel Button",
-                description: "Show the outline panel button in the status bar.",
+                title: tr!("Outline Panel Button"),
+                description: tr!("Show the outline panel button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.button"),
@@ -5580,8 +5747,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Outline Panel Dock",
-                description: "Where to dock the outline panel.",
+                title: tr!("Outline Panel Dock"),
+                description: tr!("Where to dock the outline panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.dock"),
@@ -5594,8 +5761,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Outline Panel Default Width",
-                description: "Default width of the outline panel in pixels.",
+                title: tr!("Outline Panel Default Width"),
+                description: tr!("Default width of the outline panel in pixels."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.default_width"),
@@ -5617,8 +5784,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Icons",
-                description: "Show file icons in the outline panel.",
+                title: tr!("File Icons"),
+                description: tr!("Show file icons in the outline panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.file_icons"),
@@ -5636,8 +5803,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Folder Icons",
-                description: "Whether to show folder icons or chevrons for directories in the outline panel.",
+                title: tr!("Folder Icons"),
+                description: tr!(
+                    "Whether to show folder icons or chevrons for directories in the outline panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.folder_icons"),
@@ -5659,8 +5828,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Status",
-                description: "Show the Git status in the outline panel.",
+                title: tr!("Git Status"),
+                description: tr!("Show the Git status in the outline panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.git_status"),
@@ -5678,8 +5847,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Indent Size",
-                description: "Amount of indentation for nested items.",
+                title: tr!("Indent Size"),
+                description: tr!("Amount of indentation for nested items."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.indent_size"),
@@ -5701,8 +5870,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Reveal Entries",
-                description: "Whether to reveal when a corresponding outline entry becomes active.",
+                title: tr!("Auto Reveal Entries"),
+                description: tr!(
+                    "Whether to reveal when a corresponding outline entry becomes active."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.auto_reveal_entries"),
@@ -5724,8 +5895,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Fold Directories",
-                description: "Whether to fold directories automatically when a directory contains only one subdirectory.",
+                title: tr!("Auto Fold Directories"),
+                description: tr!(
+                    "Whether to fold directories automatically when a directory contains only one subdirectory."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.auto_fold_dirs"),
@@ -5748,8 +5921,8 @@ fn panels_page() -> SettingsPage {
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 files: USER,
-                title: "Show Indent Guides",
-                description: "When to show indent guides in the outline panel.",
+                title: tr!("Show Indent Guides"),
+                description: tr!("When to show indent guides in the outline panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("outline_panel.indent_guides.show"),
@@ -5778,10 +5951,10 @@ fn panels_page() -> SettingsPage {
 
     fn git_panel_section() -> [SettingsPageItem; 17] {
         [
-            SettingsPageItem::SectionHeader("Git Panel"),
+            SettingsPageItem::SectionHeader(tr!("Git Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Panel Button",
-                description: "Show the Git panel button in the status bar.",
+                title: tr!("Git Panel Button"),
+                description: tr!("Show the Git panel button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.button"),
@@ -5794,8 +5967,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Panel Dock",
-                description: "Where to dock the Git panel.",
+                title: tr!("Git Panel Dock"),
+                description: tr!("Where to dock the Git panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.dock"),
@@ -5808,8 +5981,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Panel Default Width",
-                description: "Default width of the Git panel in pixels.",
+                title: tr!("Git Panel Default Width"),
+                description: tr!("Default width of the Git panel in pixels."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.default_width"),
@@ -5827,8 +6000,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Git Panel Status Style",
-                description: "How entry statuses are displayed.",
+                title: tr!("Git Panel Status Style"),
+                description: tr!("How entry statuses are displayed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.status_style"),
@@ -5846,8 +6019,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Fallback Branch Name",
-                description: "Default branch name will be when init.defaultbranch is not set in Git.",
+                title: tr!("Fallback Branch Name"),
+                description: tr!(
+                    "Default branch name will be when init.defaultbranch is not set in Git."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.fallback_branch_name"),
@@ -5869,8 +6044,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Sort By",
-                description: "How to sort entries in the git panel.",
+                title: tr!("Sort By Path"),
+                description: tr!(
+                    "Enable to sort entries in the panel by path, disable to sort by status."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.sort_by"),
@@ -5883,8 +6060,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Group By",
-                description: "How to group entries in the git panel.",
+                title: tr!("Group By"),
+                description: tr!("How to group entries in the git panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.group_by"),
@@ -5897,8 +6074,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Collapse Untracked Diff",
-                description: "Whether to collapse untracked files in the diff panel.",
+                title: tr!("Collapse Untracked Diff"),
+                description: tr!("Whether to collapse untracked files in the diff panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.collapse_untracked_diff"),
@@ -5920,8 +6097,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Tree View",
-                description: "Enable to show entries in tree view list, disable to show in flat view list.",
+                title: tr!("Tree View"),
+                description: tr!(
+                    "Enable to show entries in tree view list, disable to show in flat view list."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.tree_view"),
@@ -5936,8 +6115,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "File Icons",
-                description: "Show file icons next to the Git status icon.",
+                title: tr!("File Icons"),
+                description: tr!("Show file icons next to the Git status icon."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.file_icons"),
@@ -5955,8 +6134,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Folder Icons",
-                description: "Whether to show folder icons or chevrons for directories in the git panel.",
+                title: tr!("Folder Icons"),
+                description: tr!(
+                    "Whether to show folder icons or chevrons for directories in the git panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.folder_icons"),
@@ -5974,8 +6155,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Diff Stats",
-                description: "Whether to show the addition/deletion change count next to each file in the Git panel.",
+                title: tr!("Diff Stats"),
+                description: tr!(
+                    "Whether to show the addition/deletion change count next to each file in the Git panel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.diff_stats"),
@@ -5993,8 +6176,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Primary Click Behavior",
-                description: "Default action when clicking a changed file in the Git panel.",
+                title: tr!("Primary Click Behavior"),
+                description: tr!("Default action when clicking a changed file in the Git panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.entry_primary_click_action"),
@@ -6016,8 +6199,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Count Badge",
-                description: "Whether to show a badge on the git panel icon with the count of uncommitted changes.",
+                title: tr!("Show Count Badge"),
+                description: tr!(
+                    "Whether to show a badge on the git panel icon with the count of uncommitted changes."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.show_count_badge"),
@@ -6039,8 +6224,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Commit Title Max Length",
-                description: "Maximum length of the commit message title before a warning is shown. Set to 0 to disable.",
+                title: tr!("Commit Title Max Length"),
+                description: tr!(
+                    "Maximum length of the commit message title before a warning is shown. Set to 0 to disable."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.commit_title_max_length"),
@@ -6062,8 +6249,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scroll Bar",
-                description: "How and when the scrollbar should be displayed.",
+                title: tr!("Scroll Bar"),
+                description: tr!("How and when the scrollbar should be displayed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.scrollbar.show"),
@@ -6095,10 +6282,10 @@ fn panels_page() -> SettingsPage {
 
     fn debugger_panel_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Debugger Panel"),
+            SettingsPageItem::SectionHeader(tr!("Debugger Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debugger Panel Dock",
-                description: "The dock position of the debug panel.",
+                title: tr!("Debugger Panel Dock"),
+                description: tr!("The dock position of the debug panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.dock"),
@@ -6115,10 +6302,10 @@ fn panels_page() -> SettingsPage {
 
     fn collaboration_panel_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Collaboration Panel"),
+            SettingsPageItem::SectionHeader(tr!("Collaboration Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Collaboration Panel Button",
-                description: "Show the collaboration panel button in the status bar.",
+                title: tr!("Collaboration Panel Button"),
+                description: tr!("Show the collaboration panel button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("collaboration_panel.button"),
@@ -6140,8 +6327,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Collaboration Panel Dock",
-                description: "Where to dock the collaboration panel.",
+                title: tr!("Collaboration Panel Dock"),
+                description: tr!("Where to dock the collaboration panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("collaboration_panel.dock"),
@@ -6159,8 +6346,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Collaboration Panel Default Width",
-                description: "Default width of the collaboration panel in pixels.",
+                title: tr!("Collaboration Panel Default Width"),
+                description: tr!("Default width of the collaboration panel in pixels."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("collaboration_panel.dock"),
@@ -6186,10 +6373,10 @@ fn panels_page() -> SettingsPage {
 
     fn agent_panel_section() -> [SettingsPageItem; 7] {
         [
-            SettingsPageItem::SectionHeader("Agent Panel"),
+            SettingsPageItem::SectionHeader(tr!("Agent Panel")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Button",
-                description: "Whether to show the agent panel button in the status bar.",
+                title: tr!("Agent Panel Button"),
+                description: tr!("Whether to show the agent panel button in the status bar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.button"),
@@ -6202,8 +6389,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Dock",
-                description: "Where to dock the agent panel.",
+                title: tr!("Agent Panel Dock"),
+                description: tr!("Where to dock the agent panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.dock"),
@@ -6216,8 +6403,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Flexible Sizing",
-                description: "Whether the agent panel should use flexible (proportional) sizing when docked to the left or right.",
+                title: tr!("Agent Panel Flexible Sizing"),
+                description: tr!(
+                    "Whether the agent panel should use flexible (proportional) sizing when docked to the left or right."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.flexible"),
@@ -6230,8 +6419,10 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Default Width",
-                description: "Default width when the agent panel is docked to the left or right.",
+                title: tr!("Agent Panel Default Width"),
+                description: tr!(
+                    "Default width when the agent panel is docked to the left or right."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.default_width"),
@@ -6246,8 +6437,8 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Agent Panel Default Height",
-                description: "Default height when the agent panel is docked to the bottom.",
+                title: tr!("Agent Panel Default Height"),
+                description: tr!("Default height when the agent panel is docked to the bottom."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.default_height"),
@@ -6267,8 +6458,10 @@ fn panels_page() -> SettingsPage {
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Limit Content Width",
-                    description: "Whether to constrain the agent panel content to a maximum width, centering it when the panel is wider, for optimal readability.",
+                    title: tr!("Limit Content Width"),
+                    description: tr!(
+                        "Whether to constrain the agent panel content to a maximum width, centering it when the panel is wider, for optimal readability."
+                    ),
                     field: Box::new(SettingField::<bool> {
                         organization_override: None,
                         json_path: Some("agent.limit_content_width"),
@@ -6300,8 +6493,10 @@ fn panels_page() -> SettingsPage {
                     vec![],
                     vec![SettingItem {
                         files: USER,
-                        title: "Max Content Width",
-                        description: "Maximum content width in pixels. Content will be centered when the panel is wider than this value.",
+                        title: tr!("Max Content Width"),
+                        description: tr!(
+                            "Maximum content width in pixels. Content will be centered when the panel is wider than this value."
+                        ),
                         field: Box::new(SettingField {
                             organization_override: None,
                             json_path: Some("agent.max_content_width"),
@@ -6323,7 +6518,7 @@ fn panels_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Panels",
+        title: tr!("Panels"),
         items: concat_sections![
             project_panel_section(),
             terminal_panel_section(),
@@ -6339,10 +6534,10 @@ fn panels_page() -> SettingsPage {
 fn debugger_page() -> SettingsPage {
     fn general_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("General"),
+            SettingsPageItem::SectionHeader(tr!("General")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Stepping Granularity",
-                description: "Determines the stepping granularity for debug operations.",
+                title: tr!("Stepping Granularity"),
+                description: tr!("Determines the stepping granularity for debug operations."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.stepping_granularity"),
@@ -6364,8 +6559,8 @@ fn debugger_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Save Breakpoints",
-                description: "Whether breakpoints should be reused across Zed sessions.",
+                title: tr!("Save Breakpoints"),
+                description: tr!("Whether breakpoints should be reused across Zed sessions."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.save_breakpoints"),
@@ -6387,8 +6582,10 @@ fn debugger_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Timeout",
-                description: "Time in milliseconds until timeout error when connecting to a TCP debug adapter.",
+                title: tr!("Timeout"),
+                description: tr!(
+                    "Time in milliseconds until timeout error when connecting to a TCP debug adapter."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.timeout"),
@@ -6401,8 +6598,8 @@ fn debugger_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Log DAP Communications",
-                description: "Whether to log messages between active debug adapters and Zed.",
+                title: tr!("Log DAP Communications"),
+                description: tr!("Whether to log messages between active debug adapters and Zed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.log_dap_communications"),
@@ -6424,8 +6621,10 @@ fn debugger_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Format DAP Log Messages",
-                description: "Whether to format DAP messages when adding them to debug adapter logger.",
+                title: tr!("Format DAP Log Messages"),
+                description: tr!(
+                    "Whether to format DAP messages when adding them to debug adapter logger."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("debugger.format_dap_log_messages"),
@@ -6450,7 +6649,7 @@ fn debugger_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Debugger",
+        title: tr!("Debugger"),
         items: concat_sections![general_section()],
     }
 }
@@ -6458,100 +6657,150 @@ fn debugger_page() -> SettingsPage {
 fn terminal_page() -> SettingsPage {
     fn environment_section() -> [SettingsPageItem; 5] {
         [
-                SettingsPageItem::SectionHeader("Environment"),
-                SettingsPageItem::DynamicItem(DynamicItem {
-                    discriminant: SettingItem {
-                        files: USER | PROJECT,
-                        title: "Shell",
-                        description: "What shell to use when opening a terminal.",
-                        field: Box::new(SettingField {
-                            organization_override: None,
-                            json_path: Some("terminal.shell$"),
-                            pick: |settings_content| {
-                                Some(&dynamic_variants::<settings::Shell>()[
-                                    settings_content
-                                        .terminal
-                                        .as_ref()?
-                                        .project
-                                        .shell
-                                        .as_ref()?
-                                        .discriminant() as usize
-                                ])
-                            },
-                            write: |settings_content, value, _| {
-                                let Some(value) = value else {
-                                    if let Some(terminal) = settings_content.terminal.as_mut() {
-                                        terminal.project.shell = None;
-                                    }
-                                    return;
-                                };
-                                let settings_value = settings_content
+            SettingsPageItem::SectionHeader(tr!("Environment")),
+            SettingsPageItem::DynamicItem(DynamicItem {
+                discriminant: SettingItem {
+                    files: USER | PROJECT,
+                    title: tr!("Shell"),
+                    description: tr!("What shell to use when opening a terminal."),
+                    field: Box::new(SettingField {
+                        organization_override: None,
+                        json_path: Some("terminal.shell$"),
+                        pick: |settings_content| {
+                            Some(
+                                &dynamic_variants::<settings::Shell>()[settings_content
                                     .terminal
-                                    .get_or_insert_default()
+                                    .as_ref()?
                                     .project
                                     .shell
-                                    .get_or_insert_with(|| settings::Shell::default());
-                                let default_shell = if cfg!(target_os = "windows") {
-                                    "powershell.exe"
-                                } else {
-                                    "sh"
-                                };
-                                *settings_value = match value {
-                                    settings::ShellDiscriminants::System => settings::Shell::System,
-                                    settings::ShellDiscriminants::Program => {
-                                        let program = match settings_value {
-                                            settings::Shell::Program(program) => program.clone(),
-                                            settings::Shell::WithArguments { program, .. } => program.clone(),
-                                            _ => String::from(default_shell),
-                                        };
-                                        settings::Shell::Program(program)
-                                    }
-                                    settings::ShellDiscriminants::WithArguments => {
-                                        let (program, args, title_override) = match settings_value {
-                                            settings::Shell::Program(program) => (program.clone(), vec![], None),
-                                            settings::Shell::WithArguments {
-                                                program,
-                                                args,
-                                                title_override,
-                                            } => (program.clone(), args.clone(), title_override.clone()),
-                                            _ => (String::from(default_shell), vec![], None),
-                                        };
+                                    .as_ref()?
+                                    .discriminant()
+                                    as usize],
+                            )
+                        },
+                        write: |settings_content, value, _| {
+                            let Some(value) = value else {
+                                if let Some(terminal) = settings_content.terminal.as_mut() {
+                                    terminal.project.shell = None;
+                                }
+                                return;
+                            };
+                            let settings_value = settings_content
+                                .terminal
+                                .get_or_insert_default()
+                                .project
+                                .shell
+                                .get_or_insert_with(|| settings::Shell::default());
+                            let default_shell = if cfg!(target_os = "windows") {
+                                "powershell.exe"
+                            } else {
+                                "sh"
+                            };
+                            *settings_value = match value {
+                                settings::ShellDiscriminants::System => settings::Shell::System,
+                                settings::ShellDiscriminants::Program => {
+                                    let program = match settings_value {
+                                        settings::Shell::Program(program) => program.clone(),
+                                        settings::Shell::WithArguments { program, .. } => {
+                                            program.clone()
+                                        }
+                                        _ => String::from(default_shell),
+                                    };
+                                    settings::Shell::Program(program)
+                                }
+                                settings::ShellDiscriminants::WithArguments => {
+                                    let (program, args, title_override) = match settings_value {
+                                        settings::Shell::Program(program) => {
+                                            (program.clone(), vec![], None)
+                                        }
                                         settings::Shell::WithArguments {
                                             program,
                                             args,
                                             title_override,
+                                        } => {
+                                            (program.clone(), args.clone(), title_override.clone())
                                         }
+                                        _ => (String::from(default_shell), vec![], None),
+                                    };
+                                    settings::Shell::WithArguments {
+                                        program,
+                                        args,
+                                        title_override,
                                     }
-                                };
-                            },
-                        }),
-                        metadata: None,
-                    },
-                    pick_discriminant: |settings_content| {
-                        Some(
-                            settings_content
-                                .terminal
-                                .as_ref()?
-                                .project
-                                .shell
-                                .as_ref()?
-                                .discriminant() as usize,
-                        )
-                    },
-                    fields: dynamic_variants::<settings::Shell>()
-                        .into_iter()
-                        .map(|variant| match variant {
-                            settings::ShellDiscriminants::System => vec![],
-                            settings::ShellDiscriminants::Program => vec![SettingItem {
+                                }
+                            };
+                        },
+                    }),
+                    metadata: None,
+                },
+                pick_discriminant: |settings_content| {
+                    Some(
+                        settings_content
+                            .terminal
+                            .as_ref()?
+                            .project
+                            .shell
+                            .as_ref()?
+                            .discriminant() as usize,
+                    )
+                },
+                fields: dynamic_variants::<settings::Shell>()
+                    .into_iter()
+                    .map(|variant| match variant {
+                        settings::ShellDiscriminants::System => vec![],
+                        settings::ShellDiscriminants::Program => vec![SettingItem {
+                            files: USER | PROJECT,
+                            title: tr!("Program"),
+                            description: tr!("The shell program to use."),
+                            field: Box::new(SettingField {
+                                organization_override: None,
+                                json_path: Some("terminal.shell"),
+                                pick: |settings_content| match settings_content
+                                    .terminal
+                                    .as_ref()?
+                                    .project
+                                    .shell
+                                    .as_ref()
+                                {
+                                    Some(settings::Shell::Program(program)) => Some(program),
+                                    _ => None,
+                                },
+                                write: |settings_content, value, _| {
+                                    let Some(value) = value else {
+                                        return;
+                                    };
+                                    match settings_content
+                                        .terminal
+                                        .get_or_insert_default()
+                                        .project
+                                        .shell
+                                        .as_mut()
+                                    {
+                                        Some(settings::Shell::Program(program)) => *program = value,
+                                        _ => return,
+                                    }
+                                },
+                            }),
+                            metadata: None,
+                        }],
+                        settings::ShellDiscriminants::WithArguments => vec![
+                            SettingItem {
                                 files: USER | PROJECT,
-                                title: "Program",
-                                description: "The shell program to use.",
+                                title: tr!("Program"),
+                                description: tr!("The shell program to run."),
                                 field: Box::new(SettingField {
                                     organization_override: None,
-                                    json_path: Some("terminal.shell"),
-                                    pick: |settings_content| match settings_content.terminal.as_ref()?.project.shell.as_ref()
+                                    json_path: Some("terminal.shell.program"),
+                                    pick: |settings_content| match settings_content
+                                        .terminal
+                                        .as_ref()?
+                                        .project
+                                        .shell
+                                        .as_ref()
                                     {
-                                        Some(settings::Shell::Program(program)) => Some(program),
+                                        Some(settings::Shell::WithArguments {
+                                            program, ..
+                                        }) => Some(program),
                                         _ => None,
                                     },
                                     write: |settings_content, value, _| {
@@ -6565,26 +6814,35 @@ fn terminal_page() -> SettingsPage {
                                             .shell
                                             .as_mut()
                                         {
-                                            Some(settings::Shell::Program(program)) => *program = value,
+                                            Some(settings::Shell::WithArguments {
+                                                program,
+                                                ..
+                                            }) => *program = value,
                                             _ => return,
                                         }
                                     },
                                 }),
                                 metadata: None,
-                            }],
-                            settings::ShellDiscriminants::WithArguments => vec![
-                                SettingItem {
-                                    files: USER | PROJECT,
-                                    title: "Program",
-                                    description: "The shell program to run.",
-                                    field: Box::new(SettingField {
+                            },
+                            SettingItem {
+                                files: USER | PROJECT,
+                                title: tr!("Arguments"),
+                                description: tr!("The arguments to pass to the shell program."),
+                                field: Box::new(
+                                    SettingField {
                                         organization_override: None,
-                                        json_path: Some("terminal.shell.program"),
-                                        pick: |settings_content| {
-                                            match settings_content.terminal.as_ref()?.project.shell.as_ref() {
-                                                Some(settings::Shell::WithArguments { program, .. }) => Some(program),
-                                                _ => None,
-                                            }
+                                        json_path: Some("terminal.shell.args"),
+                                        pick: |settings_content| match settings_content
+                                            .terminal
+                                            .as_ref()?
+                                            .project
+                                            .shell
+                                            .as_ref()
+                                        {
+                                            Some(settings::Shell::WithArguments {
+                                                args, ..
+                                            }) => Some(args),
+                                            _ => None,
                                         },
                                         write: |settings_content, value, _| {
                                             let Some(value) = value else {
@@ -6597,118 +6855,96 @@ fn terminal_page() -> SettingsPage {
                                                 .shell
                                                 .as_mut()
                                             {
-                                                Some(settings::Shell::WithArguments { program, .. }) => {
-                                                    *program = value
-                                                }
+                                                Some(settings::Shell::WithArguments {
+                                                    args,
+                                                    ..
+                                                }) => *args = value,
                                                 _ => return,
                                             }
                                         },
-                                    }),
-                                    metadata: None,
-                                },
-                                SettingItem {
-                                    files: USER | PROJECT,
-                                    title: "Arguments",
-                                    description: "The arguments to pass to the shell program.",
-                                    field: Box::new(
-                                        SettingField {
-                                            organization_override: None,
-                                            json_path: Some("terminal.shell.args"),
-                                            pick: |settings_content| {
-                                                match settings_content.terminal.as_ref()?.project.shell.as_ref() {
-                                                    Some(settings::Shell::WithArguments { args, .. }) => Some(args),
-                                                    _ => None,
-                                                }
-                                            },
-                                            write: |settings_content, value, _| {
-                                                let Some(value) = value else {
-                                                    return;
-                                                };
-                                                match settings_content
-                                                    .terminal
-                                                    .get_or_insert_default()
-                                                    .project
-                                                    .shell
-                                                    .as_mut()
-                                                {
-                                                    Some(settings::Shell::WithArguments { args, .. }) => *args = value,
-                                                    _ => return,
-                                                }
-                                            },
-                                        }
-                                        .unimplemented(),
-                                    ),
-                                    metadata: None,
-                                },
-                                SettingItem {
-                                    files: USER | PROJECT,
-                                    title: "Title Override",
-                                    description: "An optional string to override the title of the terminal tab.",
-                                    field: Box::new(SettingField {
-                                        organization_override: None,
-                                        json_path: Some("terminal.shell.title_override"),
-                                        pick: |settings_content| {
-                                            match settings_content.terminal.as_ref()?.project.shell.as_ref() {
-                                                Some(settings::Shell::WithArguments { title_override, .. }) => {
-                                                    title_override.as_ref().or(DEFAULT_EMPTY_STRING)
-                                                }
-                                                _ => None,
-                                            }
-                                        },
-                                        write: |settings_content, value, _| {
-                                            match settings_content
-                                                .terminal
-                                                .get_or_insert_default()
-                                                .project
-                                                .shell
-                                                .as_mut()
-                                            {
-                                                Some(settings::Shell::WithArguments { title_override, .. }) => {
-                                                    *title_override = value.filter(|s| !s.is_empty())
-                                                }
-                                                _ => return,
-                                            }
-                                        },
-                                    }),
-                                    metadata: None,
-                                },
-                            ],
-                        })
-                        .collect(),
-                }),
-                SettingsPageItem::DynamicItem(DynamicItem {
-                    discriminant: SettingItem {
-                        files: USER | PROJECT,
-                        title: "Working Directory",
-                        description: "What working directory to use when launching the terminal.",
-                        field: Box::new(SettingField {
-                            organization_override: None,
-                            json_path: Some("terminal.working_directory$"),
-                            pick: |settings_content| {
-                                Some(&dynamic_variants::<settings::WorkingDirectory>()[
-                                    settings_content
+                                    }
+                                    .unimplemented(),
+                                ),
+                                metadata: None,
+                            },
+                            SettingItem {
+                                files: USER | PROJECT,
+                                title: tr!("Title Override"),
+                                description: tr!(
+                                    "An optional string to override the title of the terminal tab."
+                                ),
+                                field: Box::new(SettingField {
+                                    organization_override: None,
+                                    json_path: Some("terminal.shell.title_override"),
+                                    pick: |settings_content| match settings_content
                                         .terminal
                                         .as_ref()?
                                         .project
-                                        .working_directory
-                                        .as_ref()?
-                                        .discriminant() as usize
-                                ])
+                                        .shell
+                                        .as_ref()
+                                    {
+                                        Some(settings::Shell::WithArguments {
+                                            title_override,
+                                            ..
+                                        }) => title_override.as_ref().or(DEFAULT_EMPTY_STRING),
+                                        _ => None,
+                                    },
+                                    write: |settings_content, value, _| match settings_content
+                                        .terminal
+                                        .get_or_insert_default()
+                                        .project
+                                        .shell
+                                        .as_mut()
+                                    {
+                                        Some(settings::Shell::WithArguments {
+                                            title_override,
+                                            ..
+                                        }) => *title_override = value.filter(|s| !s.is_empty()),
+                                        _ => return,
+                                    },
+                                }),
+                                metadata: None,
                             },
-                            write: |settings_content, value, _| {
-                                let Some(value) = value else {
-                                    if let Some(terminal) = settings_content.terminal.as_mut() {
-                                        terminal.project.working_directory = None;
-                                    }
-                                    return;
-                                };
-                                let settings_value = settings_content
+                        ],
+                    })
+                    .collect(),
+            }),
+            SettingsPageItem::DynamicItem(DynamicItem {
+                discriminant: SettingItem {
+                    files: USER | PROJECT,
+                    title: tr!("Working Directory"),
+                    description: tr!("What working directory to use when launching the terminal."),
+                    field: Box::new(SettingField {
+                        organization_override: None,
+                        json_path: Some("terminal.working_directory$"),
+                        pick: |settings_content| {
+                            Some(
+                                &dynamic_variants::<settings::WorkingDirectory>()[settings_content
                                     .terminal
-                                    .get_or_insert_default()
+                                    .as_ref()?
                                     .project
                                     .working_directory
-                                    .get_or_insert_with(|| settings::WorkingDirectory::CurrentProjectDirectory);
-                                *settings_value = match value {
+                                    .as_ref()?
+                                    .discriminant()
+                                    as usize],
+                            )
+                        },
+                        write: |settings_content, value, _| {
+                            let Some(value) = value else {
+                                if let Some(terminal) = settings_content.terminal.as_mut() {
+                                    terminal.project.working_directory = None;
+                                }
+                                return;
+                            };
+                            let settings_value = settings_content
+                                .terminal
+                                .get_or_insert_default()
+                                .project
+                                .working_directory
+                                .get_or_insert_with(|| {
+                                    settings::WorkingDirectory::CurrentProjectDirectory
+                                });
+                            *settings_value = match value {
                                     settings::WorkingDirectoryDiscriminants::CurrentFileDirectory => {
                                         settings::WorkingDirectory::CurrentFileDirectory
                                     },
@@ -6729,107 +6965,132 @@ fn terminal_page() -> SettingsPage {
                                         settings::WorkingDirectory::Always { directory }
                                     }
                                 };
-                            },
-                        }),
-                        metadata: None,
-                    },
-                    pick_discriminant: |settings_content| {
-                        Some(
+                        },
+                    }),
+                    metadata: None,
+                },
+                pick_discriminant: |settings_content| {
+                    Some(
+                        settings_content
+                            .terminal
+                            .as_ref()?
+                            .project
+                            .working_directory
+                            .as_ref()?
+                            .discriminant() as usize,
+                    )
+                },
+                fields: dynamic_variants::<settings::WorkingDirectory>()
+                    .into_iter()
+                    .map(|variant| match variant {
+                        settings::WorkingDirectoryDiscriminants::CurrentFileDirectory => vec![],
+                        settings::WorkingDirectoryDiscriminants::CurrentProjectDirectory => vec![],
+                        settings::WorkingDirectoryDiscriminants::FirstProjectDirectory => vec![],
+                        settings::WorkingDirectoryDiscriminants::AlwaysHome => vec![],
+                        settings::WorkingDirectoryDiscriminants::Always => vec![SettingItem {
+                            files: USER | PROJECT,
+                            title: tr!("Directory"),
+                            description: tr!("The directory path to use (will be shell expanded)."),
+                            field: Box::new(SettingField {
+                                organization_override: None,
+                                json_path: Some("terminal.working_directory.always"),
+                                pick: |settings_content| match settings_content
+                                    .terminal
+                                    .as_ref()?
+                                    .project
+                                    .working_directory
+                                    .as_ref()
+                                {
+                                    Some(settings::WorkingDirectory::Always { directory }) => {
+                                        Some(directory)
+                                    }
+                                    _ => None,
+                                },
+                                write: |settings_content, value, _| {
+                                    let value = value.unwrap_or_default();
+                                    match settings_content
+                                        .terminal
+                                        .get_or_insert_default()
+                                        .project
+                                        .working_directory
+                                        .as_mut()
+                                    {
+                                        Some(settings::WorkingDirectory::Always { directory }) => {
+                                            *directory = value
+                                        }
+                                        _ => return,
+                                    }
+                                },
+                            }),
+                            metadata: None,
+                        }],
+                    })
+                    .collect(),
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Environment Variables"),
+                description: tr!("Key-value pairs to add to the terminal's environment."),
+                field: Box::new(
+                    SettingField {
+                        organization_override: None,
+                        json_path: Some("terminal.env"),
+                        pick: |settings_content| {
+                            settings_content.terminal.as_ref()?.project.env.as_ref()
+                        },
+                        write: |settings_content, value, _| {
+                            settings_content
+                                .terminal
+                                .get_or_insert_default()
+                                .project
+                                .env = value;
+                        },
+                    }
+                    .unimplemented(),
+                ),
+                metadata: None,
+                files: USER | PROJECT,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Detect Virtual Environment"),
+                description: tr!(
+                    "Activates the Python virtual environment, if one is found, in the terminal's working directory."
+                ),
+                field: Box::new(
+                    SettingField {
+                        organization_override: None,
+                        json_path: Some("terminal.detect_venv"),
+                        pick: |settings_content| {
                             settings_content
                                 .terminal
                                 .as_ref()?
                                 .project
-                                .working_directory
-                                .as_ref()?
-                                .discriminant() as usize,
-                        )
-                    },
-                    fields: dynamic_variants::<settings::WorkingDirectory>()
-                        .into_iter()
-                        .map(|variant| match variant {
-                            settings::WorkingDirectoryDiscriminants::CurrentFileDirectory => vec![],
-                            settings::WorkingDirectoryDiscriminants::CurrentProjectDirectory => vec![],
-                            settings::WorkingDirectoryDiscriminants::FirstProjectDirectory => vec![],
-                            settings::WorkingDirectoryDiscriminants::AlwaysHome => vec![],
-                            settings::WorkingDirectoryDiscriminants::Always => vec![SettingItem {
-                                files: USER | PROJECT,
-                                title: "Directory",
-                                description: "The directory path to use (will be shell expanded).",
-                                field: Box::new(SettingField {
-                                    organization_override: None,
-                                    json_path: Some("terminal.working_directory.always"),
-                                    pick: |settings_content| {
-                                        match settings_content.terminal.as_ref()?.project.working_directory.as_ref() {
-                                            Some(settings::WorkingDirectory::Always { directory }) => Some(directory),
-                                            _ => None,
-                                        }
-                                    },
-                                    write: |settings_content, value, _| {
-                                        let value = value.unwrap_or_default();
-                                        match settings_content
-                                            .terminal
-                                            .get_or_insert_default()
-                                            .project
-                                            .working_directory
-                                            .as_mut()
-                                        {
-                                            Some(settings::WorkingDirectory::Always { directory }) => *directory = value,
-                                            _ => return,
-                                        }
-                                    },
-                                }),
-                                metadata: None,
-                            }],
-                        })
-                        .collect(),
-                }),
-                SettingsPageItem::SettingItem(SettingItem {
-                    title: "Environment Variables",
-                    description: "Key-value pairs to add to the terminal's environment.",
-                    field: Box::new(
-                        SettingField {
-                            organization_override: None,
-                            json_path: Some("terminal.env"),
-                            pick: |settings_content| settings_content.terminal.as_ref()?.project.env.as_ref(),
-                            write: |settings_content, value, _| {
-                                settings_content.terminal.get_or_insert_default().project.env = value;
-                            },
-                        }
-                        .unimplemented(),
-                    ),
-                    metadata: None,
-                    files: USER | PROJECT,
-                }),
-                SettingsPageItem::SettingItem(SettingItem {
-                    title: "Detect Virtual Environment",
-                    description: "Activates the Python virtual environment, if one is found, in the terminal's working directory.",
-                    field: Box::new(
-                        SettingField {
-                            organization_override: None,
-                            json_path: Some("terminal.detect_venv"),
-                            pick: |settings_content| settings_content.terminal.as_ref()?.project.detect_venv.as_ref(),
-                            write: |settings_content, value, _| {
-                                settings_content
-                                    .terminal
-                                    .get_or_insert_default()
-                                    .project
-                                    .detect_venv = value;
-                            },
-                        }
-                        .unimplemented(),
-                    ),
-                    metadata: None,
-                    files: USER | PROJECT,
-                }),
-            ]
+                                .detect_venv
+                                .as_ref()
+                        },
+                        write: |settings_content, value, _| {
+                            settings_content
+                                .terminal
+                                .get_or_insert_default()
+                                .project
+                                .detect_venv = value;
+                        },
+                    }
+                    .unimplemented(),
+                ),
+                metadata: None,
+                files: USER | PROJECT,
+            }),
+        ]
     }
 
     fn font_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Font"),
+            SettingsPageItem::SectionHeader(tr!("Font")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Size",
-                description: "Font size for terminal text. If not set, defaults to buffer font size.",
+                title: tr!("Font Size"),
+                description: tr!(
+                    "Font size for terminal text. If not set, defaults to buffer font size."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.font_size"),
@@ -6848,8 +7109,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Family",
-                description: "Font family for terminal text. If not set, defaults to buffer font family.",
+                title: tr!("Font Family"),
+                description: tr!(
+                    "Font family for terminal text. If not set, defaults to buffer font family."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.font_family"),
@@ -6871,8 +7134,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Fallbacks",
-                description: "Font fallbacks for terminal text. If not set, defaults to buffer font fallbacks.",
+                title: tr!("Font Fallbacks"),
+                description: tr!(
+                    "Font fallbacks for terminal text. If not set, defaults to buffer font fallbacks."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -6897,8 +7162,8 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Weight",
-                description: "Font weight for terminal text in CSS weight units (100-900).",
+                title: tr!("Font Weight"),
+                description: tr!("Font weight for terminal text in CSS weight units (100-900)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.font_weight"),
@@ -6916,8 +7181,8 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Font Features",
-                description: "Font features for terminal text.",
+                title: tr!("Font Features"),
+                description: tr!("Font features for terminal text."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -6946,10 +7211,10 @@ fn terminal_page() -> SettingsPage {
 
     fn display_settings_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Display Settings"),
+            SettingsPageItem::SectionHeader(tr!("Display Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Line Height",
-                description: "Line height for terminal text.",
+                title: tr!("Line Height"),
+                description: tr!("Line height for terminal text."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -6970,8 +7235,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Shape",
-                description: "Default cursor shape for the terminal (bar, block, underline, or hollow).",
+                title: tr!("Cursor Shape"),
+                description: tr!(
+                    "Default cursor shape for the terminal (bar, block, underline, or hollow)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.cursor_shape"),
@@ -6989,8 +7256,8 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cursor Blinking",
-                description: "Sets the cursor blinking behavior in the terminal.",
+                title: tr!("Cursor Blinking"),
+                description: tr!("Sets the cursor blinking behavior in the terminal."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.blinking"),
@@ -7003,8 +7270,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Alternate Scroll",
-                description: "Whether alternate scroll mode is active by default (converts mouse scroll to arrow keys in apps like Vim).",
+                title: tr!("Alternate Scroll"),
+                description: tr!(
+                    "Whether alternate scroll mode is active by default (converts mouse scroll to arrow keys in apps like Vim)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.alternate_scroll"),
@@ -7026,8 +7295,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Minimum Contrast",
-                description: "The minimum APCA perceptual contrast between foreground and background colors (0-106).",
+                title: tr!("Minimum Contrast"),
+                description: tr!(
+                    "The minimum APCA perceptual contrast between foreground and background colors (0-106)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.minimum_contrast"),
@@ -7053,10 +7324,10 @@ fn terminal_page() -> SettingsPage {
 
     fn behavior_settings_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Behavior Settings"),
+            SettingsPageItem::SectionHeader(tr!("Behavior Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Option As Meta",
-                description: "Whether the option key behaves as the meta key.",
+                title: tr!("Option As Meta"),
+                description: tr!("Whether the option key behaves as the meta key."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.option_as_meta"),
@@ -7074,8 +7345,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Copy On Select",
-                description: "Whether selecting text in the terminal automatically copies to the system clipboard.",
+                title: tr!("Copy On Select"),
+                description: tr!(
+                    "Whether selecting text in the terminal automatically copies to the system clipboard."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.copy_on_select"),
@@ -7093,8 +7366,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Keep Selection On Copy",
-                description: "Whether to keep the text selection after copying it to the clipboard.",
+                title: tr!("Keep Selection On Copy"),
+                description: tr!(
+                    "Whether to keep the text selection after copying it to the clipboard."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.keep_selection_on_copy"),
@@ -7116,8 +7391,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Audible Bell",
-                description: "Whether to play a sound when the BEL character (`\\a`, `0x07`) is printed",
+                title: tr!("Audible Bell"),
+                description: tr!(
+                    "Whether to play a sound when the BEL character (`\\a`, `0x07`) is printed"
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.bell"),
@@ -7134,10 +7411,12 @@ fn terminal_page() -> SettingsPage {
 
     fn layout_settings_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Layout Settings"),
+            SettingsPageItem::SectionHeader(tr!("Layout Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Default Width",
-                description: "Default width when the terminal is docked to the left or right (in pixels).",
+                title: tr!("Default Width"),
+                description: tr!(
+                    "Default width when the terminal is docked to the left or right (in pixels)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.default_width"),
@@ -7155,8 +7434,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Default Height",
-                description: "Default height when the terminal is docked to the bottom (in pixels).",
+                title: tr!("Default Height"),
+                description: tr!(
+                    "Default height when the terminal is docked to the bottom (in pixels)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.default_height"),
@@ -7178,10 +7459,12 @@ fn terminal_page() -> SettingsPage {
 
     fn advanced_settings_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Advanced Settings"),
+            SettingsPageItem::SectionHeader(tr!("Advanced Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Max Scroll History Lines",
-                description: "Maximum number of lines to keep in scrollback history (max: 100,000; 0 disables scrolling).",
+                title: tr!("Max Scroll History Lines"),
+                description: tr!(
+                    "Maximum number of lines to keep in scrollback history (max: 100,000; 0 disables scrolling)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.max_scroll_history_lines"),
@@ -7203,8 +7486,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scroll Multiplier",
-                description: "The multiplier for scrolling in the terminal with the mouse wheel",
+                title: tr!("Scroll Multiplier"),
+                description: tr!(
+                    "The multiplier for scrolling in the terminal with the mouse wheel"
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.scroll_multiplier"),
@@ -7230,10 +7515,12 @@ fn terminal_page() -> SettingsPage {
 
     fn toolbar_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Toolbar"),
+            SettingsPageItem::SectionHeader(tr!("Toolbar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Breadcrumbs",
-                description: "Display the terminal title in breadcrumbs inside the terminal pane.",
+                title: tr!("Breadcrumbs"),
+                description: tr!(
+                    "Display the terminal title in breadcrumbs inside the terminal pane."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.toolbar.breadcrumbs"),
@@ -7263,10 +7550,10 @@ fn terminal_page() -> SettingsPage {
 
     fn scrollbar_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Scrollbar"),
+            SettingsPageItem::SectionHeader(tr!("Scrollbar")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Scrollbar",
-                description: "When to show the scrollbar in the terminal.",
+                title: tr!("Show Scrollbar"),
+                description: tr!("When to show the scrollbar in the terminal."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.scrollbar.show"),
@@ -7297,7 +7584,7 @@ fn terminal_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Terminal",
+        title: tr!("Terminal"),
         items: concat_sections![
             environment_section(),
             font_section(),
@@ -7314,12 +7601,12 @@ fn terminal_page() -> SettingsPage {
 fn version_control_page() -> SettingsPage {
     fn git_integration_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Git Integration"),
+            SettingsPageItem::SectionHeader(tr!("Git Integration")),
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Disable Git Integration",
-                    description: "Disable all Git integration features in Zed.",
+                    title: tr!("Disable Git Integration"),
+                    description: tr!("Disable all Git integration features in Zed."),
                     field: Box::new(SettingField::<bool> {
                         organization_override: None,
                         json_path: Some("git.disable_git"),
@@ -7358,8 +7645,8 @@ fn version_control_page() -> SettingsPage {
                     vec![
                         SettingItem {
                             files: USER,
-                            title: "Enable Git Status",
-                            description: "Show Git status information in the editor.",
+                            title: tr!("Enable Git Status"),
+                            description: tr!("Show Git status information in the editor."),
                             field: Box::new(SettingField::<bool> {
                                 organization_override: None,
                                 json_path: Some("git.enable_status"),
@@ -7385,8 +7672,8 @@ fn version_control_page() -> SettingsPage {
                         },
                         SettingItem {
                             files: USER,
-                            title: "Enable Git Diff",
-                            description: "Show Git diff information in the editor.",
+                            title: tr!("Enable Git Diff"),
+                            description: tr!("Show Git diff information in the editor."),
                             field: Box::new(SettingField::<bool> {
                                 organization_override: None,
                                 json_path: Some("git.enable_diff"),
@@ -7418,10 +7705,10 @@ fn version_control_page() -> SettingsPage {
 
     fn git_gutter_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Git Gutter"),
+            SettingsPageItem::SectionHeader(tr!("Git Gutter")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Visibility",
-                description: "Control whether Git status is shown in the editor's gutter.",
+                title: tr!("Visibility"),
+                description: tr!("Control whether Git status is shown in the editor's gutter."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.git_gutter"),
@@ -7435,8 +7722,10 @@ fn version_control_page() -> SettingsPage {
             }),
             // todo(settings_ui): Figure out the right default for this value in default.json
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debounce",
-                description: "Debounce threshold in milliseconds after which changes are reflected in the Git gutter.",
+                title: tr!("Debounce"),
+                description: tr!(
+                    "Debounce threshold in milliseconds after which changes are reflected in the Git gutter."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.gutter_debounce"),
@@ -7455,10 +7744,12 @@ fn version_control_page() -> SettingsPage {
 
     fn inline_git_blame_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Inline Git Blame"),
+            SettingsPageItem::SectionHeader(tr!("Inline Git Blame")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Whether or not to show Git blame data inline in the currently focused line.",
+                title: tr!("Enabled"),
+                description: tr!(
+                    "Whether or not to show Git blame data inline in the currently focused line."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.inline_blame.enabled"),
@@ -7484,8 +7775,8 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Delay",
-                description: "The delay after which the inline blame information is shown.",
+                title: tr!("Delay"),
+                description: tr!("The delay after which the inline blame information is shown."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.inline_blame.delay_ms"),
@@ -7511,8 +7802,10 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Padding",
-                description: "Padding between the end of the source line and the start of the inline blame in columns.",
+                title: tr!("Padding"),
+                description: tr!(
+                    "Padding between the end of the source line and the start of the inline blame in columns."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.inline_blame.padding"),
@@ -7538,8 +7831,10 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Minimum Column",
-                description: "The minimum column number at which to show the inline blame information.",
+                title: tr!("Minimum Column"),
+                description: tr!(
+                    "The minimum column number at which to show the inline blame information."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.inline_blame.min_column"),
@@ -7565,8 +7860,8 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Commit Summary",
-                description: "Show commit summary as part of the inline blame.",
+                title: tr!("Show Commit Summary"),
+                description: tr!("Show commit summary as part of the inline blame."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.inline_blame.show_commit_summary"),
@@ -7596,10 +7891,10 @@ fn version_control_page() -> SettingsPage {
 
     fn git_blame_view_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Git Blame View"),
+            SettingsPageItem::SectionHeader(tr!("Git Blame View")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Avatar",
-                description: "Show the avatar of the author of the commit.",
+                title: tr!("Show Avatar"),
+                description: tr!("Show the avatar of the author of the commit."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.blame.show_avatar"),
@@ -7629,10 +7924,12 @@ fn version_control_page() -> SettingsPage {
 
     fn branch_picker_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Branch Picker"),
+            SettingsPageItem::SectionHeader(tr!("Branch Picker")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Author Name",
-                description: "Show author name as part of the commit information in branch picker.",
+                title: tr!("Show Author Name"),
+                description: tr!(
+                    "Show author name as part of the commit information in branch picker."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.branch_picker.show_author_name"),
@@ -7662,10 +7959,10 @@ fn version_control_page() -> SettingsPage {
 
     fn git_hunks_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Git Hunks"),
+            SettingsPageItem::SectionHeader(tr!("Git Hunks")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hunk Style",
-                description: "How Git hunks are displayed visually in the editor.",
+                title: tr!("Hunk Style"),
+                description: tr!("How Git hunks are displayed visually in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.hunk_style"),
@@ -7678,8 +7975,8 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Path Style",
-                description: "Should the name or path be displayed first in the git view.",
+                title: tr!("Path Style"),
+                description: tr!("Should the name or path be displayed first in the git view."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.path_style"),
@@ -7692,8 +7989,8 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Stage/Restore Buttons",
-                description: "Whether to show the stage and restore buttons on diff hunks.",
+                title: tr!("Show Stage/Restore Buttons"),
+                description: tr!("Whether to show the stage and restore buttons on diff hunks."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.show_stage_restore_buttons"),
@@ -7718,7 +8015,7 @@ fn version_control_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Version Control",
+        title: tr!("Version Control"),
         items: concat_sections![
             git_integration_section(),
             git_gutter_section(),
@@ -7733,10 +8030,12 @@ fn version_control_page() -> SettingsPage {
 fn collaboration_page() -> SettingsPage {
     fn calls_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("Calls"),
+            SettingsPageItem::SectionHeader(tr!("Calls")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Mute On Join",
-                description: "Whether the microphone should be muted when joining a channel or a call.",
+                title: tr!("Mute On Join"),
+                description: tr!(
+                    "Whether the microphone should be muted when joining a channel or a call."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("calls.mute_on_join"),
@@ -7749,8 +8048,10 @@ fn collaboration_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Share On Join",
-                description: "Whether your current project should be shared when joining an empty channel.",
+                title: tr!("Share On Join"),
+                description: tr!(
+                    "Whether your current project should be shared when joining an empty channel."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("calls.share_on_join"),
@@ -7770,17 +8071,17 @@ fn collaboration_page() -> SettingsPage {
     fn audio_settings() -> [SettingsPageItem; 3] {
         [
             SettingsPageItem::ActionLink(ActionLink {
-                title: "Test Audio".into(),
-                description: Some("Test your microphone and speaker setup".into()),
-                button_text: "Test Audio".into(),
+                title: tr!("Test Audio"),
+                description: Some(tr!("Test your microphone and speaker setup")),
+                button_text: tr!("Test Audio"),
                 on_click: Arc::new(|_settings_window, window, cx| {
                     open_audio_test_window(window, cx);
                 }),
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Output Audio Device",
-                description: "Select output audio device",
+                title: tr!("Output Audio Device"),
+                description: tr!("Select output audio device"),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("audio.experimental.output_audio_device"),
@@ -7803,8 +8104,8 @@ fn collaboration_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Input Audio Device",
-                description: "Select input audio device",
+                title: tr!("Input Audio Device"),
+                description: tr!("Select input audio device"),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("audio.experimental.input_audio_device"),
@@ -7830,7 +8131,7 @@ fn collaboration_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Collaboration",
+        title: tr!("Collaboration"),
         items: concat_sections![calls_section(), audio_settings()],
     }
 }
@@ -7838,10 +8139,10 @@ fn collaboration_page() -> SettingsPage {
 fn ai_page(cx: &App) -> SettingsPage {
     fn general_section() -> [SettingsPageItem; 3] {
         [
-            SettingsPageItem::SectionHeader("General"),
+            SettingsPageItem::SectionHeader(tr!("General")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Disable AI",
-                description: "Whether to disable all AI features in Zed.",
+                title: tr!("Disable AI"),
+                description: tr!("Whether to disable all AI features in Zed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("disable_ai"),
@@ -7854,8 +8155,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Threads Sidebar Side",
-                description: "Which side of the window the threads sidebar appears on.",
+                title: tr!("Threads Sidebar Side"),
+                description: tr!("Which side of the window the threads sidebar appears on."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.sidebar_side"),
@@ -7877,7 +8178,7 @@ fn ai_page(cx: &App) -> SettingsPage {
         // while their configuration is being moved out of the agent panel.
         let agent_settings_ui_enabled = cx.has_flag::<feature_flags::AgentSettingsUiFeatureFlag>();
 
-        let mut items = vec![SettingsPageItem::SectionHeader("Agent Configuration")];
+        let mut items = vec![SettingsPageItem::SectionHeader(tr!("Agent Configuration"))];
 
         if agent_settings_ui_enabled {
             items.push(SettingsPageItem::SubPageLink(SubPageLink {
@@ -7893,10 +8194,12 @@ fn ai_page(cx: &App) -> SettingsPage {
 
         items.extend([
             SettingsPageItem::SubPageLink(SubPageLink {
-                title: "Skills".into(),
+                title: tr!("Skills"),
                 r#type: Default::default(),
                 json_path: Some(zed_actions::AGENT_SKILLS_SETTINGS_PATH),
-                description: Some("View and manage agent skills installed globally or in project worktrees.".into()),
+                description: Some(tr!(
+                    "View and manage agent skills installed globally or in project worktrees."
+                )),
                 in_json: false,
                 files: USER | PROJECT,
                 render: render_skills_setup_page,
@@ -7914,10 +8217,12 @@ fn ai_page(cx: &App) -> SettingsPage {
                 render: render_sandbox_settings_page,
             }),
             SettingsPageItem::SubPageLink(SubPageLink {
-                title: "Tool Permissions".into(),
+                title: tr!("Tool Permissions"),
                 r#type: Default::default(),
                 json_path: Some("agent.tool_permissions"),
-                description: Some("Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs.".into()),
+                description: Some(tr!(
+                    "Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs."
+                )),
                 in_json: true,
                 files: USER,
                 render: render_tool_permissions_setup_page,
@@ -7952,8 +8257,8 @@ fn ai_page(cx: &App) -> SettingsPage {
 
         items.extend([
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Single File Review",
-                description: "When enabled, agent edits will also be displayed in single-file buffers for review.",
+                title: tr!("Single File Review"),
+                description: tr!("When enabled, agent edits will also be displayed in single-file buffers for review."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.single_file_review"),
@@ -7971,8 +8276,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Feedback",
-                description: "Show voting thumbs up/down icon buttons for feedback on agent edits.",
+                title: tr!("Enable Feedback"),
+                description: tr!("Show voting thumbs up/down icon buttons for feedback on agent edits."),
                 field: Box::new(SettingField {
                     organization_override: Some(|org_config| if org_config.is_agent_thread_feedback_enabled {
                         None
@@ -7994,8 +8299,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Notify When Agent Waiting",
-                description: "Where to show notifications when the agent has completed its response or needs confirmation before running a tool action.",
+                title: tr!("Notify When Agent Waiting"),
+                description: tr!("Where to show notifications when the agent has completed its response or needs confirmation before running a tool action."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.notify_when_agent_waiting"),
@@ -8017,8 +8322,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Play Sound When Agent Done",
-                description: "When to play a sound when the agent has either completed its response, or needs user input.",
+                title: tr!("Play Sound When Agent Done"),
+                description: tr!("When to play a sound when the agent has either completed its response, or needs user input."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.play_sound_when_agent_done"),
@@ -8040,8 +8345,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Expand Edit Card",
-                description: "Whether to have edit cards in the agent panel expanded, showing a Preview of the diff.",
+                title: tr!("Expand Edit Card"),
+                description: tr!("Whether to have edit cards in the agent panel expanded, showing a Preview of the diff."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.expand_edit_card"),
@@ -8059,8 +8364,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Expand Terminal Card",
-                description: "Whether to have terminal cards in the agent panel expanded, showing the whole command output.",
+                title: tr!("Expand Terminal Card"),
+                description: tr!("Whether to have terminal cards in the agent panel expanded, showing the whole command output."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.expand_terminal_card"),
@@ -8082,8 +8387,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Terminal Thread Init Command",
-                description: "Command to automatically run when Zed creates a Terminal Thread shell in the agent panel. Runs in your configured shell.",
+                title: tr!("Terminal Thread Init Command"),
+                description: tr!("Command to automatically run when Zed creates a Terminal Thread shell in the agent panel. Runs in your configured shell."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.terminal_init_command"),
@@ -8112,8 +8417,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Thinking Display",
-                description: "How thinking blocks should be displayed by default. 'Auto' fully expands during streaming, then auto-collapses when done. 'Preview' auto-expands with a height constraint during streaming. 'Always Expanded' shows full content. 'Always Collapsed' keeps them collapsed.",
+                title: tr!("Thinking Display"),
+                description: tr!("How thinking blocks should be displayed by default. 'Auto' fully expands during streaming, then auto-collapses when done. 'Preview' auto-expands with a height constraint during streaming. 'Always Expanded' shows full content. 'Always Collapsed' keeps them collapsed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.thinking_display"),
@@ -8135,8 +8440,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Cancel Generation On Terminal Stop",
-                description: "Whether clicking the stop button on a running terminal tool should also cancel the agent's generation. Note that this only applies to the stop button, not to ctrl+c inside the terminal.",
+                title: tr!("Cancel Generation On Terminal Stop"),
+                description: tr!("Whether clicking the stop button on a running terminal tool should also cancel the agent's generation. Note that this only applies to the stop button, not to ctrl+c inside the terminal."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.cancel_generation_on_terminal_stop"),
@@ -8158,8 +8463,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use Modifier To Send",
-                description: "Whether to always use cmd-enter (or ctrl-enter on Linux or Windows) to send messages.",
+                title: tr!("Use Modifier To Send"),
+                description: tr!("Whether to always use cmd-enter (or ctrl-enter on Linux or Windows) to send messages."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.use_modifier_to_send"),
@@ -8181,8 +8486,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Message Editor Min Lines",
-                description: "Minimum number of lines to display in the agent message editor.",
+                title: tr!("Message Editor Min Lines"),
+                description: tr!("Minimum number of lines to display in the agent message editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.message_editor_min_lines"),
@@ -8204,8 +8509,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Turn Stats",
-                description: "Whether to show turn statistics like elapsed time during generation and final turn duration.",
+                title: tr!("Show Turn Stats"),
+                description: tr!("Whether to show turn statistics like elapsed time during generation and final turn duration."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.show_turn_stats"),
@@ -8223,8 +8528,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Merge Conflict Indicator",
-                description: "Whether to show the merge conflict indicator in the status bar that offers to resolve conflicts using the agent.",
+                title: tr!("Show Merge Conflict Indicator"),
+                description: tr!("Whether to show the merge conflict indicator in the status bar that offers to resolve conflicts using the agent."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.show_merge_conflict_indicator"),
@@ -8245,8 +8550,8 @@ fn ai_page(cx: &App) -> SettingsPage {
 
         items.extend([
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Compact",
-                description: "Automatically compact the agent's context when it grows too large, summarizing earlier messages to free up room in the model's context window.",
+                title: tr!("Auto Compact"),
+                description: tr!("Automatically compact the agent's context when it grows too large, summarizing earlier messages to free up room in the model's context window."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.auto_compact.enabled"),
@@ -8272,8 +8577,8 @@ fn ai_page(cx: &App) -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Compact Threshold",
-                description: "When auto compaction runs. A percentage string like \"90%\" is measured against the context window. A positive integer is the number of used tokens to compact after. A negative integer is the number of tokens remaining in the context window before compacting.",
+                title: tr!("Auto Compact Threshold"),
+                description: tr!("When auto compaction runs. A percentage string like \"90%\" is measured against the context window. A positive integer is the number of used tokens to compact after. A negative integer is the number of tokens remaining in the context window before compacting."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent.auto_compact.threshold"),
@@ -8308,10 +8613,12 @@ fn ai_page(cx: &App) -> SettingsPage {
 
     fn context_servers_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Context Servers"),
+            SettingsPageItem::SectionHeader(tr!("Context Servers")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Context Server Timeout",
-                description: "Default timeout in seconds for context server tool calls. Can be overridden per-server in context_servers configuration.",
+                title: tr!("Context Server Timeout"),
+                description: tr!(
+                    "Default timeout in seconds for context server tool calls. Can be overridden per-server in context_servers configuration."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("context_server_timeout"),
@@ -8330,8 +8637,10 @@ fn ai_page(cx: &App) -> SettingsPage {
 
     fn edit_prediction_display_sub_section() -> [SettingsPageItem; 1] {
         [SettingsPageItem::SettingItem(SettingItem {
-            title: "Display Mode",
-            description: "When to show edit predictions previews in buffer. The eager mode displays them inline, while the subtle mode displays them only when holding a modifier key.",
+            title: tr!("Display Mode"),
+            description: tr!(
+                "When to show edit predictions previews in buffer. The eager mode displays them inline, while the subtle mode displays them only when holding a modifier key."
+            ),
             field: Box::new(SettingField {
                 organization_override: None,
                 json_path: Some("edit_prediction.display_mode"),
@@ -8359,7 +8668,7 @@ fn ai_page(cx: &App) -> SettingsPage {
     }
 
     SettingsPage {
-        title: "AI",
+        title: tr!("AI"),
         items: concat_sections![
             general_section(),
             agent_configuration_section(cx),
@@ -8373,10 +8682,10 @@ fn ai_page(cx: &App) -> SettingsPage {
 fn network_page() -> SettingsPage {
     fn network_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Network"),
+            SettingsPageItem::SectionHeader(tr!("Network")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Proxy",
-                description: "The proxy to use for network requests.",
+                title: tr!("Proxy"),
+                description: tr!("The proxy to use for network requests."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("proxy"),
@@ -8392,8 +8701,8 @@ fn network_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Server URL",
-                description: "The URL of the Zed server to connect to.",
+                title: tr!("Server URL"),
+                description: tr!("The URL of the Zed server to connect to."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("server_url"),
@@ -8409,23 +8718,19 @@ fn network_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::ActionLink(ActionLink {
-                title: "Wuling DevOps Server URL".into(),
-                description: Some(
-                    format!(
-                        "The Wuling DevOps server used for OAuth sign-in and git authentication. Default: {}",
-                        ama10_ui::DEFAULT_SERVER_URL
-                    )
-                    .into(),
-                ),
-                button_text: "Edit".into(),
+                title: tr!("Wuling DevOps Server URL"),
+                description: Some(tr_f!(
+                    "The Wuling DevOps server used for OAuth sign-in and git authentication. Default: {}",
+                    ama10_ui::DEFAULT_SERVER_URL
+                )),
+                button_text: tr!("Edit"),
                 on_click: Arc::new(|settings_window, window, cx| {
                     let Some(original_window) = settings_window.original_window else {
                         return;
                     };
                     original_window
                         .update(cx, |_workspace, original_window, cx| {
-                            original_window
-                                .dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
+                            original_window.dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
                             original_window.activate_window();
                         })
                         .ok();
@@ -8437,7 +8742,7 @@ fn network_page() -> SettingsPage {
     }
 
     SettingsPage {
-        title: "Network",
+        title: tr!("Network"),
         items: concat_sections![network_section()],
     }
 }
@@ -8480,10 +8785,10 @@ fn language_settings_field_mut<T>(
 fn language_settings_data() -> Box<[SettingsPageItem]> {
     fn indentation_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Indentation"),
+            SettingsPageItem::SectionHeader(tr!("Indentation")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Tab Size",
-                description: "How many columns a tab should occupy.",
+                title: tr!("Tab Size"),
+                description: tr!("How many columns a tab should occupy."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).tab_size"), // TODO(cameron): not JQ syntax because not URL-safe
@@ -8502,8 +8807,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Hard Tabs",
-                description: "Whether to indent lines using tab characters, as opposed to multiple spaces.",
+                title: tr!("Hard Tabs"),
+                description: tr!(
+                    "Whether to indent lines using tab characters, as opposed to multiple spaces."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).hard_tabs"),
@@ -8522,8 +8829,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Indent",
-                description: "Controls automatic indentation behavior when typing.",
+                title: tr!("Auto Indent"),
+                description: tr!("Controls automatic indentation behavior when typing."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).auto_indent"),
@@ -8542,8 +8849,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Indent On Paste",
-                description: "Whether indentation of pasted content should be adjusted based on the context.",
+                title: tr!("Auto Indent On Paste"),
+                description: tr!(
+                    "Whether indentation of pasted content should be adjusted based on the context."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).auto_indent_on_paste"),
@@ -8566,10 +8875,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn wrapping_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Wrapping"),
+            SettingsPageItem::SectionHeader(tr!("Wrapping")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Soft Wrap",
-                description: "How to soft-wrap long lines of text.",
+                title: tr!("Soft Wrap"),
+                description: tr!("How to soft-wrap long lines of text."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).soft_wrap"),
@@ -8588,8 +8897,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Wrap Guides",
-                description: "Show wrap guides in the editor.",
+                title: tr!("Show Wrap Guides"),
+                description: tr!("Show wrap guides in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).show_wrap_guides"),
@@ -8608,8 +8917,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Preferred Line Length",
-                description: "The column at which to soft-wrap lines, for buffers where soft-wrap is enabled.",
+                title: tr!("Preferred Line Length"),
+                description: tr!(
+                    "The column at which to soft-wrap lines, for buffers where soft-wrap is enabled."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).preferred_line_length"),
@@ -8628,8 +8939,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Wrap Guides",
-                description: "Character counts at which to show wrap guides in the editor.",
+                title: tr!("Wrap Guides"),
+                description: tr!("Character counts at which to show wrap guides in the editor."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -8655,8 +8966,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Allow Rewrap",
-                description: "Controls where the `editor::rewrap` action is allowed for this language.",
+                title: tr!("Allow Rewrap"),
+                description: tr!(
+                    "Controls where the `editor::rewrap` action is allowed for this language."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).allow_rewrap"),
@@ -8679,10 +8992,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn indent_guides_section() -> [SettingsPageItem; 6] {
         [
-            SettingsPageItem::SectionHeader("Indent Guides"),
+            SettingsPageItem::SectionHeader(tr!("Indent Guides")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Display indent guides in the editor.",
+                title: tr!("Enabled"),
+                description: tr!("Display indent guides in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).indent_guides.enabled"),
@@ -8704,8 +9017,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Line Width",
-                description: "The width of the indent guides in pixels, between 1 and 10.",
+                title: tr!("Line Width"),
+                description: tr!("The width of the indent guides in pixels, between 1 and 10."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).indent_guides.line_width"),
@@ -8727,8 +9040,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Active Line Width",
-                description: "The width of the active indent guide in pixels, between 1 and 10.",
+                title: tr!("Active Line Width"),
+                description: tr!(
+                    "The width of the active indent guide in pixels, between 1 and 10."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).indent_guides.active_line_width"),
@@ -8753,8 +9068,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Coloring",
-                description: "Determines how indent guides are colored.",
+                title: tr!("Coloring"),
+                description: tr!("Determines how indent guides are colored."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).indent_guides.coloring"),
@@ -8776,8 +9091,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Background Coloring",
-                description: "Determines how indent guide backgrounds are colored.",
+                title: tr!("Background Coloring"),
+                description: tr!("Determines how indent guide backgrounds are colored."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).indent_guides.background_coloring"),
@@ -8805,10 +9120,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn formatting_section() -> [SettingsPageItem; 8] {
         [
-            SettingsPageItem::SectionHeader("Formatting"),
+            SettingsPageItem::SectionHeader(tr!("Formatting")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Format On Save",
-                description: "Whether or not to perform a buffer format before saving.",
+                title: tr!("Format On Save"),
+                description: tr!("Whether or not to perform a buffer format before saving."),
                 field: Box::new(
                     // TODO(settings_ui): this setting should just be a bool
                     SettingField {
@@ -8834,8 +9149,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Remove Trailing Whitespace On Save",
-                description: "Whether or not to remove any trailing whitespace from lines of a buffer before saving it.",
+                title: tr!("Remove Trailing Whitespace On Save"),
+                description: tr!(
+                    "Whether or not to remove any trailing whitespace from lines of a buffer before saving it."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).remove_trailing_whitespace_on_save"),
@@ -8854,8 +9171,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Ensure Final Newline On Save",
-                description: "Whether or not to ensure there's a single newline at the end of a buffer when saving it.",
+                title: tr!("Ensure Final Newline On Save"),
+                description: tr!(
+                    "Whether or not to ensure there's a single newline at the end of a buffer when saving it."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).ensure_final_newline_on_save"),
@@ -8874,8 +9193,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Line Ending",
-                description: "How line endings should be handled for new files and during format and save operations.",
+                title: tr!("Line Ending"),
+                description: tr!(
+                    "How line endings should be handled for new files and during format and save operations."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).line_ending"),
@@ -8897,8 +9218,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Formatter",
-                description: "How to perform a buffer format.",
+                title: tr!("Formatter"),
+                description: tr!("How to perform a buffer format."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -8924,8 +9245,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use On Type Format",
-                description: "Whether to use additional LSP queries to format (and amend) the code after every \"trigger\" symbol input, defined by LSP server capabilities",
+                title: tr!("Use On Type Format"),
+                description: tr!(
+                    "Whether to use additional LSP queries to format (and amend) the code after every \"trigger\" symbol input, defined by LSP server capabilities"
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).use_on_type_format"),
@@ -8944,8 +9267,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Code Actions On Format",
-                description: "Additional code actions to run when formatting.",
+                title: tr!("Code Actions On Format"),
+                description: tr!("Additional code actions to run when formatting."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -8975,10 +9298,12 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn autoclose_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Autoclose"),
+            SettingsPageItem::SectionHeader(tr!("Autoclose")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use Autoclose",
-                description: "Whether to automatically type closing characters for you. For example, when you type '(', Zed will automatically add a closing ')' at the correct position.",
+                title: tr!("Use Autoclose"),
+                description: tr!(
+                    "Whether to automatically type closing characters for you. For example, when you type '(', Zed will automatically add a closing ')' at the correct position."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).use_autoclose"),
@@ -8997,8 +9322,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Use Auto Surround",
-                description: "Whether to automatically surround text with characters for you. For example, when you select text and type '(', Zed will automatically surround text with ().",
+                title: tr!("Use Auto Surround"),
+                description: tr!(
+                    "Whether to automatically surround text with characters for you. For example, when you select text and type '(', Zed will automatically surround text with ()."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).use_auto_surround"),
@@ -9017,8 +9344,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Always Treat Brackets As Autoclosed",
-                description: "Controls whether the closing characters are always skipped over and auto-removed no matter how they were inserted.",
+                title: tr!("Always Treat Brackets As Autoclosed"),
+                description: tr!(
+                    "Controls whether the closing characters are always skipped over and auto-removed no matter how they were inserted."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).always_treat_brackets_as_autoclosed"),
@@ -9037,8 +9366,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "JSX Tag Auto Close",
-                description: "Whether to automatically close JSX tags.",
+                title: tr!("JSX Tag Auto Close"),
+                description: tr!("Whether to automatically close JSX tags."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).jsx_tag_auto_close"),
@@ -9062,10 +9391,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn whitespace_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Whitespace"),
+            SettingsPageItem::SectionHeader(tr!("Whitespace")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Whitespaces",
-                description: "Whether to show tabs and spaces in the editor.",
+                title: tr!("Show Whitespaces"),
+                description: tr!("Whether to show tabs and spaces in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).show_whitespaces"),
@@ -9084,8 +9413,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Space Whitespace Indicator",
-                description: "Visible character used to render space characters when show_whitespaces is enabled (default: \"•\")",
+                title: tr!("Space Whitespace Indicator"),
+                description: tr!(
+                    "Visible character used to render space characters when show_whitespaces is enabled (default: \"•\")"
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9111,8 +9442,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Tab Whitespace Indicator",
-                description: "Visible character used to render tab characters when show_whitespaces is enabled (default: \"→\")",
+                title: tr!("Tab Whitespace Indicator"),
+                description: tr!(
+                    "Visible character used to render tab characters when show_whitespaces is enabled (default: \"→\")"
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9142,10 +9475,12 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn completions_section() -> [SettingsPageItem; 8] {
         [
-            SettingsPageItem::SectionHeader("Completions"),
+            SettingsPageItem::SectionHeader(tr!("Completions")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Completions On Input",
-                description: "Whether to pop the completions menu while typing in an editor without explicitly requesting it.",
+                title: tr!("Show Completions On Input"),
+                description: tr!(
+                    "Whether to pop the completions menu while typing in an editor without explicitly requesting it."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).show_completions_on_input"),
@@ -9164,8 +9499,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Completion Documentation",
-                description: "Whether to display inline and alongside documentation for items in the completions menu.",
+                title: tr!("Show Completion Documentation"),
+                description: tr!(
+                    "Whether to display inline and alongside documentation for items in the completions menu."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).show_completion_documentation"),
@@ -9184,8 +9521,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Words",
-                description: "Controls how words are completed.",
+                title: tr!("Words"),
+                description: tr!("Controls how words are completed."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).completions.words"),
@@ -9204,8 +9541,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Words Min Length",
-                description: "How many characters has to be in the completions query to automatically show the words-based completions.",
+                title: tr!("Words Min Length"),
+                description: tr!(
+                    "How many characters has to be in the completions query to automatically show the words-based completions."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).completions.words_min_length"),
@@ -9227,8 +9566,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Completion Menu Scrollbar",
-                description: "When to show the scrollbar in the completion menu.",
+                title: tr!("Completion Menu Scrollbar"),
+                description: tr!("When to show the scrollbar in the completion menu."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("editor.completion_menu_scrollbar"),
@@ -9243,8 +9582,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Completion Detail Alignment",
-                description: "Whether to align detail text in code completions context menus left or right.",
+                title: tr!("Completion Detail Alignment"),
+                description: tr!(
+                    "Whether to align detail text in code completions context menus left or right."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("editor.completion_detail_alignment"),
@@ -9259,8 +9600,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Completion Menu Item Kind",
-                description: "How to display the LSP item kind (function, method, variable, etc.) of each entry in the completions menu.",
+                title: tr!("Completion Menu Item Kind"),
+                description: tr!(
+                    "How to display the LSP item kind (function, method, variable, etc.) of each entry in the completions menu."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("editor.completion_menu_item_kind"),
@@ -9279,10 +9622,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn inlay_hints_section() -> [SettingsPageItem; 10] {
         [
-            SettingsPageItem::SectionHeader("Inlay Hints"),
+            SettingsPageItem::SectionHeader(tr!("Inlay Hints")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Global switch to toggle hints on and off.",
+                title: tr!("Enabled"),
+                description: tr!("Global switch to toggle hints on and off."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.enabled"),
@@ -9301,8 +9644,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Value Hints",
-                description: "Global switch to toggle inline values on and off when debugging.",
+                title: tr!("Show Value Hints"),
+                description: tr!(
+                    "Global switch to toggle inline values on and off when debugging."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.show_value_hints"),
@@ -9324,8 +9669,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Type Hints",
-                description: "Whether type hints should be shown.",
+                title: tr!("Show Type Hints"),
+                description: tr!("Whether type hints should be shown."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.show_type_hints"),
@@ -9344,8 +9689,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Parameter Hints",
-                description: "Whether parameter hints should be shown.",
+                title: tr!("Show Parameter Hints"),
+                description: tr!("Whether parameter hints should be shown."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.show_parameter_hints"),
@@ -9367,8 +9712,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Other Hints",
-                description: "Whether other hints should be shown.",
+                title: tr!("Show Other Hints"),
+                description: tr!("Whether other hints should be shown."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.show_other_hints"),
@@ -9390,8 +9735,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Background",
-                description: "Show a background for inlay hints.",
+                title: tr!("Show Background"),
+                description: tr!("Show a background for inlay hints."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.show_background"),
@@ -9410,8 +9755,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Edit Debounce Ms",
-                description: "Whether or not to debounce inlay hints updates after buffer edits (set to 0 to disable debouncing).",
+                title: tr!("Edit Debounce Ms"),
+                description: tr!(
+                    "Whether or not to debounce inlay hints updates after buffer edits (set to 0 to disable debouncing)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.edit_debounce_ms"),
@@ -9433,8 +9780,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Scroll Debounce Ms",
-                description: "Whether or not to debounce inlay hints updates after buffer scrolls (set to 0 to disable debouncing).",
+                title: tr!("Scroll Debounce Ms"),
+                description: tr!(
+                    "Whether or not to debounce inlay hints updates after buffer scrolls (set to 0 to disable debouncing)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).inlay_hints.scroll_debounce_ms"),
@@ -9456,8 +9805,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Toggle On Modifiers Press",
-                description: "Toggles inlay hints (hides or shows) when the user presses the modifiers specified.",
+                title: tr!("Toggle On Modifiers Press"),
+                description: tr!(
+                    "Toggles inlay hints (hides or shows) when the user presses the modifiers specified."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9496,10 +9847,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn tasks_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("Tasks"),
+            SettingsPageItem::SectionHeader(tr!("Tasks")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Whether tasks are enabled for this language.",
+                title: tr!("Enabled"),
+                description: tr!("Whether tasks are enabled for this language."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).tasks.enabled"),
@@ -9518,8 +9869,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Variables",
-                description: "Extra task variables to set for a particular language.",
+                title: tr!("Variables"),
+                description: tr!("Extra task variables to set for a particular language."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9545,8 +9896,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Prefer LSP",
-                description: "Use LSP tasks over Zed language extension tasks.",
+                title: tr!("Prefer LSP"),
+                description: tr!("Use LSP tasks over Zed language extension tasks."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).tasks.prefer_lsp"),
@@ -9569,10 +9920,12 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn miscellaneous_section() -> [SettingsPageItem; 7] {
         [
-            SettingsPageItem::SectionHeader("Miscellaneous"),
+            SettingsPageItem::SectionHeader(tr!("Miscellaneous")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Word Diff Enabled",
-                description: "Whether to enable word diff highlighting in the editor. When enabled, changed words within modified lines are highlighted to show exactly what changed.",
+                title: tr!("Word Diff Enabled"),
+                description: tr!(
+                    "Whether to enable word diff highlighting in the editor. When enabled, changed words within modified lines are highlighted to show exactly what changed."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).word_diff_enabled"),
@@ -9591,8 +9944,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debuggers",
-                description: "Preferred debuggers for this language.",
+                title: tr!("Debuggers"),
+                description: tr!("Preferred debuggers for this language."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9618,8 +9971,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Middle Click Paste",
-                description: "Enable middle-click paste on Linux.",
+                title: tr!("Middle Click Paste"),
+                description: tr!("Enable middle-click paste on Linux."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).editor.middle_click_paste"),
@@ -9632,8 +9985,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Extend Comment On Newline",
-                description: "Whether to start a new line with a comment when a previous line is a comment as well.",
+                title: tr!("Extend Comment On Newline"),
+                description: tr!(
+                    "Whether to start a new line with a comment when a previous line is a comment as well."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).extend_comment_on_newline"),
@@ -9652,8 +10007,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Colorize Brackets",
-                description: "Whether to colorize brackets in the editor.",
+                title: tr!("Colorize Brackets"),
+                description: tr!("Whether to colorize brackets in the editor."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).colorize_brackets"),
@@ -9672,8 +10027,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Vim/Emacs Modeline Support",
-                description: "Number of lines to search for modelines (set to 0 to disable).",
+                title: tr!("Vim/Emacs Modeline Support"),
+                description: tr!("Number of lines to search for modelines (set to 0 to disable)."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("modeline_lines"),
@@ -9691,8 +10046,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
     fn global_only_miscellaneous_sub_section() -> [SettingsPageItem; 4] {
         [
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Image Viewer",
-                description: "The unit for image file sizes.",
+                title: tr!("Image Viewer"),
+                description: tr!("The unit for image file sizes."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("image_viewer.unit"),
@@ -9712,8 +10067,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
             SettingsPageItem::DynamicItem(DynamicItem {
                 discriminant: SettingItem {
                     files: USER,
-                    title: "Limit Markdown Preview Width",
-                    description: "Whether to constrain the markdown preview content to a maximum width, centering it when the pane is wider, for optimal readability.",
+                    title: tr!("Limit Markdown Preview Width"),
+                    description: tr!(
+                        "Whether to constrain the markdown preview content to a maximum width, centering it when the pane is wider, for optimal readability."
+                    ),
                     field: Box::new(SettingField::<bool> {
                         organization_override: None,
                         json_path: Some("markdown_preview.limit_content_width"),
@@ -9745,8 +10102,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                     vec![],
                     vec![SettingItem {
                         files: USER,
-                        title: "Max Width",
-                        description: "Maximum content width in pixels. Content will be centered when the pane is wider than this value.",
+                        title: tr!("Max Width"),
+                        description: tr!(
+                            "Maximum content width in pixels. Content will be centered when the pane is wider than this value."
+                        ),
                         field: Box::new(SettingField {
                             organization_override: None,
                             json_path: Some("markdown_preview.max_width"),
@@ -9769,8 +10128,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 ],
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Replace Emoji Shortcode",
-                description: "Whether to automatically replace emoji shortcodes with emoji characters.",
+                title: tr!("Auto Replace Emoji Shortcode"),
+                description: tr!(
+                    "Whether to automatically replace emoji shortcodes with emoji characters."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("message_editor.auto_replace_emoji_shortcode"),
@@ -9793,8 +10154,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Drop Size Target",
-                description: "Relative size of the drop target in the editor that will open dropped file as a split pane.",
+                title: tr!("Drop Size Target"),
+                description: tr!(
+                    "Relative size of the drop target in the editor that will open dropped file as a split pane."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("drop_target_size"),
@@ -9812,8 +10175,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
     let is_global = active_language().is_none();
 
     let code_lens_item = [SettingsPageItem::SettingItem(SettingItem {
-        title: "Code Lens",
-        description: "Whether and how to display code lenses from language servers.",
+        title: tr!("Code Lens"),
+        description: tr!("Whether and how to display code lenses from language servers."),
         field: Box::new(SettingField {
             organization_override: None,
             json_path: Some("code_lens"),
@@ -9827,8 +10190,8 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
     })];
 
     let lsp_document_colors_item = [SettingsPageItem::SettingItem(SettingItem {
-        title: "LSP Document Colors",
-        description: "How to render LSP color previews in the editor.",
+        title: tr!("LSP Document Colors"),
+        description: tr!("How to render LSP color previews in the editor."),
         field: Box::new(SettingField {
             organization_override: None,
             json_path: Some("lsp_document_colors"),
@@ -9879,10 +10242,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
 fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
     fn lsp_section() -> [SettingsPageItem; 9] {
         [
-            SettingsPageItem::SectionHeader("LSP"),
+            SettingsPageItem::SectionHeader(tr!("LSP")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enable Language Server",
-                description: "Whether to use language servers to provide code intelligence.",
+                title: tr!("Enable Language Server"),
+                description: tr!("Whether to use language servers to provide code intelligence."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).enable_language_server"),
@@ -9901,8 +10264,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Language Servers",
-                description: "The list of language servers to use (or disable) for this language.",
+                title: tr!("Language Servers"),
+                description: tr!(
+                    "The list of language servers to use (or disable) for this language."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -9928,8 +10293,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Linked Edits",
-                description: "Whether to perform linked edits of associated ranges, if the LS supports it. For example, when editing opening <html> tag, the contents of the closing </html> tag will be edited as well.",
+                title: tr!("Linked Edits"),
+                description: tr!(
+                    "Whether to perform linked edits of associated ranges, if the LS supports it. For example, when editing opening <html> tag, the contents of the closing </html> tag will be edited as well."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).linked_edits"),
@@ -9948,8 +10315,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Go To Definition Fallback",
-                description: "Whether to follow-up empty Go to definition responses from the language server.",
+                title: tr!("Go To Definition Fallback"),
+                description: tr!(
+                    "Whether to follow-up empty Go to definition responses from the language server."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("go_to_definition_fallback"),
@@ -9964,8 +10333,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Go To Definition Scroll Strategy",
-                description: "How to scroll the target into view when navigating to a definition or reference.",
+                title: tr!("Go To Definition Scroll Strategy"),
+                description: tr!(
+                    "How to scroll the target into view when navigating to a definition or reference."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("go_to_definition_scroll_strategy"),
@@ -9983,18 +10354,20 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Semantic Tokens",
+                title: tr!("Semantic Tokens"),
                 description: {
-                    static DESCRIPTION: OnceLock<&'static str> = OnceLock::new();
-                    DESCRIPTION.get_or_init(|| {
-                        SemanticTokens::VARIANTS
-                            .iter()
-                            .filter_map(|v| {
-                                v.get_documentation().map(|doc| format!("{v:?}: {doc}"))
-                            })
-                            .join("\n")
-                            .leak()
-                    })
+                    static DESCRIPTION: OnceLock<SharedString> = OnceLock::new();
+                    DESCRIPTION
+                        .get_or_init(|| {
+                            SemanticTokens::VARIANTS
+                                .iter()
+                                .filter_map(|v| {
+                                    v.get_documentation().map(|doc| format!("{v:?}: {doc}"))
+                                })
+                                .join("\n")
+                                .into()
+                        })
+                        .clone()
                 },
                 field: Box::new(SettingField {
                     organization_override: None,
@@ -10019,8 +10392,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "LSP Folding Ranges",
-                description: "When enabled, use folding ranges from the language server instead of indent-based folding.",
+                title: tr!("LSP Folding Ranges"),
+                description: tr!(
+                    "When enabled, use folding ranges from the language server instead of indent-based folding."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).document_folding_ranges"),
@@ -10039,8 +10414,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "LSP Document Symbols",
-                description: "When enabled, use the language server's document symbols for outlines and breadcrumbs instead of tree-sitter.",
+                title: tr!("LSP Document Symbols"),
+                description: tr!(
+                    "When enabled, use the language server's document symbols for outlines and breadcrumbs instead of tree-sitter."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).document_symbols"),
@@ -10063,10 +10440,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn lsp_completions_section() -> [SettingsPageItem; 4] {
         [
-            SettingsPageItem::SectionHeader("LSP Completions"),
+            SettingsPageItem::SectionHeader(tr!("LSP Completions")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Enabled",
-                description: "Whether to fetch LSP completions or not.",
+                title: tr!("Enabled"),
+                description: tr!("Whether to fetch LSP completions or not."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).completions.lsp"),
@@ -10085,8 +10462,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Fetch Timeout (milliseconds)",
-                description: "When fetching LSP completions, determines how long to wait for a response of a particular server (set to 0 to wait indefinitely).",
+                title: tr!("Fetch Timeout (milliseconds)"),
+                description: tr!(
+                    "When fetching LSP completions, determines how long to wait for a response of a particular server (set to 0 to wait indefinitely)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).completions.lsp_fetch_timeout_ms"),
@@ -10108,8 +10487,8 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Insert Mode",
-                description: "Controls how LSP completions are inserted.",
+                title: tr!("Insert Mode"),
+                description: tr!("Controls how LSP completions are inserted."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).completions.lsp_insert_mode"),
@@ -10132,10 +10511,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn debugger_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("Debuggers"),
+            SettingsPageItem::SectionHeader(tr!("Debuggers")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Debuggers",
-                description: "Preferred debuggers for this language.",
+                title: tr!("Debuggers"),
+                description: tr!("Preferred debuggers for this language."),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -10165,10 +10544,12 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
 
     fn prettier_section() -> [SettingsPageItem; 5] {
         [
-            SettingsPageItem::SectionHeader("Prettier"),
+            SettingsPageItem::SectionHeader(tr!("Prettier")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Allowed",
-                description: "Enables or disables formatting with Prettier for a given language.",
+                title: tr!("Allowed"),
+                description: tr!(
+                    "Enables or disables formatting with Prettier for a given language."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).prettier.allowed"),
@@ -10187,8 +10568,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Parser",
-                description: "Forces Prettier integration to use a specific parser name when formatting files with the language.",
+                title: tr!("Parser"),
+                description: tr!(
+                    "Forces Prettier integration to use a specific parser name when formatting files with the language."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("languages.$(language).prettier.parser"),
@@ -10207,8 +10590,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Plugins",
-                description: "Forces Prettier integration to use specific plugins when formatting files with the language.",
+                title: tr!("Plugins"),
+                description: tr!(
+                    "Forces Prettier integration to use specific plugins when formatting files with the language."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -10234,8 +10619,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER | PROJECT,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Options",
-                description: "Default Prettier options, in the format as in package.json section for Prettier.",
+                title: tr!("Options"),
+                description: tr!(
+                    "Default Prettier options, in the format as in package.json section for Prettier."
+                ),
                 field: Box::new(
                     SettingField {
                         organization_override: None,
@@ -10273,22 +10660,27 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
 
 fn edit_prediction_language_settings_section() -> [SettingsPageItem; 5] {
     [
-        SettingsPageItem::SectionHeader("Edit Predictions"),
+        SettingsPageItem::SectionHeader(tr!("Edit Predictions")),
         SettingsPageItem::SubPageLink(SubPageLink {
-            title: "Configure Providers".into(),
+            title: tr!("Configure Providers"),
             r#type: Default::default(),
             json_path: Some("edit_predictions.providers"),
-            description: Some("Set up different edit prediction providers in complement to Zed's built-in Zeta model.".into()),
+            description: Some(tr!(
+                "Set up different edit prediction providers in complement to Zed's built-in Zeta model."
+            )),
             in_json: false,
             files: USER,
-            render: render_edit_prediction_setup_page
+            render: render_edit_prediction_setup_page,
         }),
         SettingsPageItem::SettingItem(SettingItem {
-            title: "Data Collection",
-            description: "Controls whether Zed may collect training data when using Zed's Edit Predictions. Data is only collected for files in projects detected as open source. The default value uses the preference previously set via the status-bar toggle, or false if no preference has been stored.",
+            title: tr!("Data Collection"),
+            description: tr!(
+                "Controls whether Zed may collect training data when using Zed's Edit Predictions. Data is only collected for files in projects detected as open source. The default value uses the preference previously set via the status-bar toggle, or false if no preference has been stored."
+            ),
             field: Box::new(SettingField {
                 organization_override: Some(|org_settings| {
-                    const DATA_COLLECTION_DISABLED: EditPredictionDataCollectionChoice = EditPredictionDataCollectionChoice::No;
+                    const DATA_COLLECTION_DISABLED: EditPredictionDataCollectionChoice =
+                        EditPredictionDataCollectionChoice::No;
 
                     if !org_settings.edit_prediction.is_feedback_enabled {
                         Some(&DATA_COLLECTION_DISABLED)
@@ -10319,8 +10711,10 @@ fn edit_prediction_language_settings_section() -> [SettingsPageItem; 5] {
             files: USER,
         }),
         SettingsPageItem::SettingItem(SettingItem {
-            title: "Show Edit Predictions",
-            description: "Controls whether edit predictions are shown immediately or manually.",
+            title: tr!("Show Edit Predictions"),
+            description: tr!(
+                "Controls whether edit predictions are shown immediately or manually."
+            ),
             field: Box::new(SettingField {
                 organization_override: None,
                 json_path: Some("languages.$(language).show_edit_predictions"),
@@ -10339,8 +10733,10 @@ fn edit_prediction_language_settings_section() -> [SettingsPageItem; 5] {
             files: USER | PROJECT,
         }),
         SettingsPageItem::SettingItem(SettingItem {
-            title: "Disable in Language Scopes",
-            description: "Controls whether edit predictions are shown in the given language scopes.",
+            title: tr!("Disable in Language Scopes"),
+            description: tr!(
+                "Controls whether edit predictions are shown in the given language scopes."
+            ),
             field: Box::new(
                 SettingField {
                     organization_override: None,

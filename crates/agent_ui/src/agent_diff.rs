@@ -530,15 +530,15 @@ impl Item for AgentDiffPane {
     }
 
     fn tab_tooltip_text(&self, _: &App) -> Option<SharedString> {
-        Some("Agent Diff".into())
+        Some(ama10_i18n::tr!("Agent Diff"))
     }
 
     fn tab_content(&self, params: TabContentParams, _window: &Window, cx: &App) -> AnyElement {
         let title = self.thread.read(cx).title();
         Label::new(if let Some(title) = title {
-            format!("Review: {}", title)
+            ama10_i18n::tr_f!("Review: {}", title)
         } else {
-            "Review".to_string()
+            ama10_i18n::tr!("Review")
         })
         .color(if params.selected {
             Color::Default
@@ -668,7 +668,7 @@ impl Item for AgentDiffPane {
     }
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
-        "Agent Diff".into()
+        ama10_i18n::tr!("Agent Diff")
     }
 }
 
@@ -697,24 +697,27 @@ impl Render for AgentDiffPane {
                     v_flex()
                         .items_center()
                         .gap_2()
-                        .child("No changes to review")
+                        .child(ama10_i18n::tr!("No changes to review"))
                         .child(
-                            Button::new("continue-iterating", "Continue Iterating")
-                                .style(ButtonStyle::Filled)
-                                .start_icon(
-                                    Icon::new(IconName::ForwardArrow)
-                                        .size(IconSize::Small)
-                                        .color(Color::Muted),
-                                )
-                                .full_width()
-                                .key_binding(KeyBinding::for_action_in(
-                                    &ToggleFocus,
-                                    &focus_handle.clone(),
-                                    cx,
-                                ))
-                                .on_click(|_event, window, cx| {
-                                    window.dispatch_action(ToggleFocus.boxed_clone(), cx)
-                                }),
+                            Button::new(
+                                "continue-iterating",
+                                ama10_i18n::tr!("Continue Iterating"),
+                            )
+                            .style(ButtonStyle::Filled)
+                            .start_icon(
+                                Icon::new(IconName::ForwardArrow)
+                                    .size(IconSize::Small)
+                                    .color(Color::Muted),
+                            )
+                            .full_width()
+                            .key_binding(KeyBinding::for_action_in(
+                                &ToggleFocus,
+                                &focus_handle.clone(),
+                                cx,
+                            ))
+                            .on_click(|_event, window, cx| {
+                                window.dispatch_action(ToggleFocus.boxed_clone(), cx)
+                            }),
                         ),
                 )
             })
@@ -778,7 +781,7 @@ fn render_diff_hunk_controls(
         .block_mouse_except_scroll()
         .when(opaque_window, |this| this.shadow_md())
         .children(vec![
-            Button::new(("reject", row as u64), "Reject")
+            Button::new(("reject", row as u64), ama10_i18n::tr!("Reject"))
                 .disabled(is_created_file)
                 .key_binding(
                     KeyBinding::for_action_in(&Reject, &editor.read(cx).focus_handle(cx), cx)
@@ -802,7 +805,7 @@ fn render_diff_hunk_controls(
                         })
                     }
                 }),
-            Button::new(("keep", row as u64), "Keep")
+            Button::new(("keep", row as u64), ama10_i18n::tr!("Keep"))
                 .key_binding(
                     KeyBinding::for_action_in(&Keep, &editor.read(cx).focus_handle(cx), cx)
                         .map(|kb| kb.size(rems_from_px(12.))),
@@ -836,7 +839,12 @@ fn render_diff_hunk_controls(
                         .tooltip({
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
-                                Tooltip::for_action_in("Next Hunk", &GoToHunk, &focus_handle, cx)
+                                Tooltip::for_action_in(
+                                    ama10_i18n::tr!("Next Hunk"),
+                                    &GoToHunk,
+                                    &focus_handle,
+                                    cx,
+                                )
                             }
                         })
                         .on_click({
@@ -868,7 +876,7 @@ fn render_diff_hunk_controls(
                             let focus_handle = editor.focus_handle(cx);
                             move |_window, cx| {
                                 Tooltip::for_action_in(
-                                    "Previous Hunk",
+                                    ama10_i18n::tr!("Previous Hunk"),
                                     &GoToPreviousHunk,
                                     &focus_handle,
                                     cx,
@@ -1038,7 +1046,7 @@ impl Render for AgentDiffToolbar {
         let spinner_icon = div()
             .px_0p5()
             .id("generating")
-            .tooltip(Tooltip::text("Generating Changes…"))
+            .tooltip(Tooltip::text(ama10_i18n::tr!("Generating Changes…")))
             .child(
                 Icon::new(IconName::LoadCircle)
                     .size(IconSize::Small)
@@ -1067,7 +1075,7 @@ impl Render for AgentDiffToolbar {
                                 IconButton::new("hunk-up", IconName::ArrowUp)
                                     .icon_size(IconSize::Small)
                                     .tooltip(Tooltip::for_action_title_in(
-                                        "Previous Hunk",
+                                        ama10_i18n::tr!("Previous Hunk"),
                                         &GoToPreviousHunk,
                                         &editor_focus_handle,
                                     ))
@@ -1086,7 +1094,7 @@ impl Render for AgentDiffToolbar {
                                 IconButton::new("hunk-down", IconName::ArrowDown)
                                     .icon_size(IconSize::Small)
                                     .tooltip(Tooltip::for_action_title_in(
-                                        "Next Hunk",
+                                        ama10_i18n::tr!("Next Hunk"),
                                         &GoToHunk,
                                         &editor_focus_handle,
                                     ))
@@ -1103,7 +1111,7 @@ impl Render for AgentDiffToolbar {
                         h_flex()
                             .gap_0p5()
                             .child(
-                                Button::new("reject-all", "Reject All")
+                                Button::new("reject-all", ama10_i18n::tr!("Reject All"))
                                     .key_binding({
                                         KeyBinding::for_action_in(
                                             &RejectAll,
@@ -1117,7 +1125,7 @@ impl Render for AgentDiffToolbar {
                                     })),
                             )
                             .child(
-                                Button::new("keep-all", "Keep All")
+                                Button::new("keep-all", ama10_i18n::tr!("Keep All"))
                                     .key_binding({
                                         KeyBinding::for_action_in(
                                             &KeepAll,
@@ -1147,7 +1155,7 @@ impl Render for AgentDiffToolbar {
                             IconButton::new("review", IconName::ListTodo)
                                 .icon_size(IconSize::Small)
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Review All Files",
+                                    ama10_i18n::tr!("Review All Files"),
                                     &OpenAgentDiff,
                                     &editor_focus_handle,
                                 ))
@@ -1199,7 +1207,7 @@ impl Render for AgentDiffToolbar {
                     .child(
                         h_group_sm()
                             .child(
-                                Button::new("reject-all", "Reject All")
+                                Button::new("reject-all", ama10_i18n::tr!("Reject All"))
                                     .key_binding({
                                         KeyBinding::for_action_in(&RejectAll, &focus_handle, cx)
                                             .map(|kb| kb.size(rems_from_px(12.)))
@@ -1209,7 +1217,7 @@ impl Render for AgentDiffToolbar {
                                     })),
                             )
                             .child(
-                                Button::new("keep-all", "Keep All")
+                                Button::new("keep-all", ama10_i18n::tr!("Keep All"))
                                     .key_binding({
                                         KeyBinding::for_action_in(&KeepAll, &focus_handle, cx)
                                             .map(|kb| kb.size(rems_from_px(12.)))

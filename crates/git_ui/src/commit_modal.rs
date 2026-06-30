@@ -3,6 +3,7 @@ use crate::git_panel::{
     GitPanel, commit_message_editor, commit_title_exceeds_limit, git_commit_editor_style,
 };
 use crate::git_panel_settings::GitPanelSettings;
+
 use git::repository::CommitOptions;
 use git::{Amend, Commit, GenerateCommitMessage, Signoff};
 use project::DisableAiSettings;
@@ -294,7 +295,7 @@ impl CommitModal {
                             })
                             .when(has_previous_commit, |this| {
                                 this.toggleable_entry(
-                                    "Amend",
+                                    ama10_i18n::tr!("Amend"),
                                     amend_enabled,
                                     IconPosition::Start,
                                     Some(Box::new(Amend)),
@@ -311,7 +312,7 @@ impl CommitModal {
                                 )
                             })
                             .toggleable_entry(
-                                "Signoff",
+                                ama10_i18n::tr!("Signoff"),
                                 signoff_enabled,
                                 IconPosition::Start,
                                 Some(Box::new(Signoff)),
@@ -367,7 +368,7 @@ impl CommitModal {
             .as_ref()
             .and_then(|repo| repo.read(cx).branch.as_ref())
             .map(|b| b.name().to_owned())
-            .unwrap_or_else(|| "<no branch>".to_owned());
+            .unwrap_or_else(|| ama10_i18n::tr!("<no branch>").to_string());
 
         let branch_picker_button = Button::new("branch_picker_button", branch)
             .start_icon(
@@ -394,7 +395,10 @@ impl CommitModal {
             .with_handle(self.branch_list_handle.clone())
             .trigger_with_tooltip(
                 branch_picker_button,
-                Tooltip::for_action_title("Switch Branch", &zed_actions::git::Branch),
+                Tooltip::for_action_title(
+                    ama10_i18n::tr!("Switch Branch"),
+                    &zed_actions::git::Branch,
+                ),
             )
             .anchor(Anchor::BottomLeft)
             .offset(gpui::Point {
@@ -404,7 +408,8 @@ impl CommitModal {
         let focus_handle = self.focus_handle(cx);
 
         let close_kb_hint = ui::KeyBinding::for_action(&menu::Cancel, cx).map(|close_kb| {
-            KeybindingHint::new(close_kb, cx.theme().colors().editor_background).suffix("Cancel")
+            KeybindingHint::new(close_kb, cx.theme().colors().editor_background)
+                .suffix(ama10_i18n::tr!("Cancel"))
         });
 
         h_flex()
@@ -669,9 +674,7 @@ impl Render for CommitModal {
                                         .color(Color::Warning),
                                 )
                                 .child(
-                                    Label::new(format!(
-                                        "Commit message title exceeds {max_title_length}-character limit."
-                                    ))
+                                    Label::new(ama10_i18n::tr_f!("Commit message title exceeds {max_title_length}-character limit."))
                                     .size(LabelSize::Small),
                                 ),
                         )

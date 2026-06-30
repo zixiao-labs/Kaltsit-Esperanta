@@ -7,6 +7,7 @@ mod diagnostic_renderer;
 #[cfg(test)]
 mod diagnostics_tests;
 
+use ama10_i18n::{tr, tr_f};
 use anyhow::Result;
 use buffer_diagnostics::BufferDiagnosticsEditor;
 use collections::{BTreeSet, HashMap, HashSet};
@@ -104,9 +105,9 @@ impl Render for ProjectDiagnosticsEditor {
         let child =
             if warning_count + self.summary.error_count == 0 && self.editor.read(cx).is_empty(cx) {
                 let label = if self.summary.warning_count == 0 {
-                    SharedString::new_static("No problems in workspace")
+                    tr!("No problems in workspace")
                 } else {
-                    SharedString::new_static("No errors in workspace")
+                    tr!("No errors in workspace")
                 };
                 v_flex()
                     .key_context("EmptyPane")
@@ -123,9 +124,10 @@ impl Render for ProjectDiagnosticsEditor {
                         } else {
                             ""
                         };
-                        let label = format!(
+                        let label = tr_f!(
                             "Show {} warning{}",
-                            self.summary.warning_count, plural_suffix
+                            self.summary.warning_count,
+                            plural_suffix
                         );
                         this.child(
                             Button::new("diagnostics-show-warning-label", label).on_click(
@@ -749,11 +751,11 @@ impl Item for ProjectDiagnosticsEditor {
     }
 
     fn tab_tooltip_text(&self, _: &App) -> Option<SharedString> {
-        Some("Project Diagnostics".into())
+        Some(tr!("Project Diagnostics"))
     }
 
     fn tab_content_text(&self, _detail: usize, _: &App) -> SharedString {
-        "Diagnostics".into()
+        tr!("Diagnostics")
     }
 
     fn tab_content(&self, params: TabContentParams, _window: &Window, _: &App) -> AnyElement {
@@ -766,7 +768,7 @@ impl Item for ProjectDiagnosticsEditor {
                         h_flex()
                             .gap_1()
                             .child(Icon::new(IconName::Check).color(Color::Success))
-                            .child(Label::new("No problems").color(params.text_color())),
+                            .child(Label::new(tr!("No problems")).color(params.text_color())),
                     )
                 },
             )

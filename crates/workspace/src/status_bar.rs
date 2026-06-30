@@ -2,6 +2,7 @@ use crate::{
     ItemHandle, MultiWorkspace, Pane, SidebarSide, ToggleWorkspaceSidebar,
     sidebar_side_context_menu,
 };
+use ama10_i18n::tr;
 use gpui::{
     Anchor, AnyView, App, Context, Decorations, Entity, IntoElement, ParentElement, Render,
     SharedString, Styled, Subscription, WeakEntity, Window,
@@ -227,7 +228,7 @@ impl StatusBar {
                         .indicator_border_color(Some(indicator_border))
                 })
                 .tooltip(move |_, cx| {
-                    Tooltip::for_action("Open Threads Sidebar", &ToggleWorkspaceSidebar, cx)
+                    Tooltip::for_action(tr!("Open Threads Sidebar"), &ToggleWorkspaceSidebar, cx)
                 })
                 .on_click(move |_, window, cx| {
                     if let Some(multi_workspace) = window.root::<MultiWorkspace>().flatten() {
@@ -276,7 +277,7 @@ fn render_hideable_item(
 /// Appends a "Hide Button" entry aligned with surrounding toggleable entries.
 pub fn add_hide_button_entry(menu: ContextMenu, hide: HideStatusItem) -> ContextMenu {
     menu.toggleable_entry(
-        "Hide Button",
+        tr!("Hide Button"),
         false,
         IconPosition::Start,
         None,

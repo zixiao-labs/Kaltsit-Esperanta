@@ -8,6 +8,9 @@ edition.workspace = true
 path = "src/ama10_i18n.rs"
 
 [dependencies]
+gpui_shared_string.workspace = true
+serde.workspace = true
+toml_edit.workspace = true
 
 [lints]
 workspace = true

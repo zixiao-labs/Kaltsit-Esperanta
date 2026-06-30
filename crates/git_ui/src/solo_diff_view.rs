@@ -1,4 +1,5 @@
 use crate::{git_panel::GitStatusEntry, git_status_icon};
+
 use anyhow::{Context as _, Result};
 use buffer_diff::DiffHunkSecondaryStatus;
 use editor::{
@@ -550,7 +551,7 @@ impl Render for SoloDiffStyleToolbar {
                 IconButton::new("solo-diff-unified", IconName::DiffUnified)
                     .icon_size(IconSize::Small)
                     .toggle_state(diff_view_style == DiffViewStyle::Unified)
-                    .tooltip(Tooltip::text("Unified"))
+                    .tooltip(Tooltip::text(ama10_i18n::tr!("Unified")))
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.set_diff_view_style(DiffViewStyle::Unified, window, cx);
                     })),
@@ -559,7 +560,7 @@ impl Render for SoloDiffStyleToolbar {
                 IconButton::new("solo-diff-split", split_icon)
                     .icon_size(IconSize::Small)
                     .toggle_state(diff_view_style == DiffViewStyle::Split)
-                    .tooltip(Tooltip::text("Split"))
+                    .tooltip(Tooltip::text(ama10_i18n::tr!("Split")))
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.set_diff_view_style(DiffViewStyle::Split, window, cx);
                     })),
@@ -663,9 +664,9 @@ impl Render for SoloDiffGitToolbar {
                 h_group_sm()
                     .when(button_states.selection, |el| {
                         el.child(
-                            Button::new("stage", "Toggle Staged")
+                            Button::new("stage", ama10_i18n::tr!("Toggle Staged"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Toggle Staged",
+                                    ama10_i18n::tr!("Toggle Staged"),
                                     &ToggleStaged,
                                     &focus_handle,
                                 ))
@@ -677,9 +678,9 @@ impl Render for SoloDiffGitToolbar {
                     })
                     .when(!button_states.selection, |el| {
                         el.child(
-                            Button::new("stage", "Stage")
+                            Button::new("stage", ama10_i18n::tr!("Stage"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Stage and go to next hunk",
+                                    ama10_i18n::tr!("Stage and go to next hunk"),
                                     &StageAndNext,
                                     &focus_handle,
                                 ))
@@ -689,9 +690,9 @@ impl Render for SoloDiffGitToolbar {
                                 })),
                         )
                         .child(
-                            Button::new("unstage", "Unstage")
+                            Button::new("unstage", ama10_i18n::tr!("Unstage"))
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Unstage and go to next hunk",
+                                    ama10_i18n::tr!("Unstage and go to next hunk"),
                                     &UnstageAndNext,
                                     &focus_handle,
                                 ))
@@ -702,9 +703,9 @@ impl Render for SoloDiffGitToolbar {
                         )
                     })
                     .child(
-                        Button::new("restore", "Restore")
+                        Button::new("restore", ama10_i18n::tr!("Restore"))
                             .tooltip(Tooltip::for_action_title_in(
-                                "Restore selected hunk",
+                                ama10_i18n::tr!("Restore selected hunk"),
                                 &Restore,
                                 &focus_handle,
                             ))
@@ -720,7 +721,7 @@ impl Render for SoloDiffGitToolbar {
                         IconButton::new("up", IconName::ArrowUp)
                             .shape(IconButtonShape::Square)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to previous hunk",
+                                ama10_i18n::tr!("Go to previous hunk"),
                                 &GoToPreviousHunk,
                                 &focus_handle,
                             ))
@@ -733,7 +734,7 @@ impl Render for SoloDiffGitToolbar {
                         IconButton::new("down", IconName::ArrowDown)
                             .shape(IconButtonShape::Square)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to next hunk",
+                                ama10_i18n::tr!("Go to next hunk"),
                                 &GoToHunk,
                                 &focus_handle,
                             ))
@@ -747,9 +748,9 @@ impl Render for SoloDiffGitToolbar {
             .child(
                 h_group_sm()
                     .child(
-                        Button::new("stage-file", "Stage File")
+                        Button::new("stage-file", ama10_i18n::tr!("Stage File"))
                             .tooltip(Tooltip::for_action_title_in(
-                                "Stage file",
+                                ama10_i18n::tr!("Stage file"),
                                 &StageFile,
                                 &focus_handle,
                             ))
@@ -759,9 +760,9 @@ impl Render for SoloDiffGitToolbar {
                             ),
                     )
                     .child(
-                        Button::new("unstage-file", "Unstage File")
+                        Button::new("unstage-file", ama10_i18n::tr!("Unstage File"))
                             .tooltip(Tooltip::for_action_title_in(
-                                "Unstage file",
+                                ama10_i18n::tr!("Unstage file"),
                                 &UnstageFile,
                                 &focus_handle,
                             ))
@@ -772,9 +773,9 @@ impl Render for SoloDiffGitToolbar {
                     )
                     .child(Divider::vertical())
                     .child(
-                        Button::new("commit", "Commit")
+                        Button::new("commit", ama10_i18n::tr!("Commit"))
                             .tooltip(Tooltip::for_action_title_in(
-                                "Commit",
+                                ama10_i18n::tr!("Commit"),
                                 &Commit,
                                 &focus_handle,
                             ))

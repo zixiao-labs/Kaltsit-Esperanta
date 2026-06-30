@@ -21,6 +21,7 @@ use crate::application_menu::{
     ActivateDirection, ActivateMenuLeft, ActivateMenuRight, OpenApplicationMenu,
 };
 
+use ama10_i18n::{tr, tr_f};
 use auto_update::AutoUpdateStatus;
 use call::ActiveCall;
 use client::{Client, UserStore, zed_urls};
@@ -376,7 +377,7 @@ impl Render for TitleBar {
                 )
                 .when(is_signing_in, |this| {
                     this.child(
-                        Label::new("Signing in…")
+                        Label::new(tr!("Signing in…"))
                             .size(LabelSize::Small)
                             .color(Color::Muted)
                             .with_animation(
@@ -621,18 +622,18 @@ impl TitleBar {
         let nickname = nickname.unwrap_or_else(|| host.clone());
 
         let (indicator_color, meta) = match self.project.read(cx).remote_connection_state(cx)? {
-            remote::ConnectionState::Connecting => (Color::Info, format!("Connecting to: {host}")),
-            remote::ConnectionState::Connected => (Color::Success, format!("Connected to: {host}")),
+            remote::ConnectionState::Connecting => (Color::Info, tr_f!("Connecting to: {}", host)),
+            remote::ConnectionState::Connected => (Color::Success, tr_f!("Connected to: {}", host)),
             remote::ConnectionState::HeartbeatMissed => (
                 Color::Warning,
-                format!("Connection attempt to {host} missed. Retrying..."),
+                tr_f!("Connection attempt to {} missed. Retrying...", host),
             ),
             remote::ConnectionState::Reconnecting => (
                 Color::Warning,
-                format!("Lost connection to {host}. Reconnecting..."),
+                tr_f!("Lost connection to {}. Reconnecting...", host),
             ),
             remote::ConnectionState::Disconnected => {
-                (Color::Error, format!("Disconnected from {host}"))
+                (Color::Error, tr_f!("Disconnected from {}", host))
             }
         };
 
@@ -643,8 +644,6 @@ impl TitleBar {
             remote::ConnectionState::Reconnecting => Color::Warning,
             remote::ConnectionState::Disconnected => Color::Error,
         };
-
-        let meta = SharedString::from(meta);
 
         Some(
             PopoverMenu::new("remote-project-menu")
@@ -699,7 +698,7 @@ impl TitleBar {
             return None;
         }
 
-        let button = Button::new("restricted_mode_trigger", "Restricted Mode")
+        let button = Button::new("restricted_mode_trigger", tr!("Restricted Mode"))
             .style(ButtonStyle::Tinted(TintColor::Warning))
             .label_size(LabelSize::Small)
             .color(Color::Warning)
@@ -710,9 +709,9 @@ impl TitleBar {
             )
             .tooltip(|_, cx| {
                 Tooltip::with_meta(
-                    "You're in Restricted Mode",
+                    tr!("You're in Restricted Mode"),
                     Some(&ToggleWorktreeSecurity),
-                    "Mark this project as trusted and unlock all features",
+                    tr!("Mark this project as trusted and unlock all features"),
                     cx,
                 )
             })
@@ -741,7 +740,7 @@ impl TitleBar {
 
         if self.project.read(cx).is_disconnected(cx) {
             return Some(
-                Button::new("disconnected", "Disconnected")
+                Button::new("disconnected", tr!("Disconnected"))
                     .disabled(true)
                     .color(Color::Disabled)
                     .label_size(LabelSize::Small)
@@ -762,12 +761,12 @@ impl TitleBar {
                 .color(Color::Player(participant_index.0))
                 .label_size(LabelSize::Small)
                 .tooltip(move |_, cx| {
-                    let tooltip_title = format!(
+                    let tooltip_title = tr_f!(
                         "{} is sharing this project. Click to follow.",
                         host_user.github_login
                     );
 
-                    Tooltip::with_meta(tooltip_title, None, "Click to Follow", cx)
+                    Tooltip::with_meta(tooltip_title, None, tr!("Click to Follow"), cx)
                 })
                 .on_click({
                     let host_peer_id = host.peer_id;
@@ -975,9 +974,9 @@ impl TitleBar {
 
         let display_label: SharedString = if let Some(ref name) = creation_in_progress {
             if is_switch {
-                format!("Loading {}…", name).into()
+                tr_f!("Loading {}…", name)
             } else {
-                format!("Creating {}…", name).into()
+                tr_f!("Creating {}…", name)
             }
         } else {
             worktree_label.clone()
@@ -1008,9 +1007,9 @@ impl TitleBar {
                         ),
                     move |_window, cx| {
                         Tooltip::with_meta(
-                            "Worktree",
+                            tr!("Worktree"),
                             Some(&zed_actions::git::Worktree),
-                            format!("Currently In Use: {}", worktree_label),
+                            tr_f!("Currently In Use: {}", worktree_label),
                             cx,
                         )
                     },
@@ -1028,7 +1027,7 @@ impl TitleBar {
                 };
 
                 let trigger = if is_detached_head {
-                    Button::new("project_branch_trigger", "Create Branch")
+                    Button::new("project_branch_trigger", tr!("Create Branch"))
                         .selected_style(ButtonStyle::Tinted(TintColor::Accent))
                         .label_size(LabelSize::Small)
                         .start_icon(
@@ -1158,7 +1157,7 @@ impl TitleBar {
                 div()
                     .id("disconnected")
                     .child(Icon::new(IconName::Disconnected).size(IconSize::Small))
-                    .tooltip(Tooltip::text("Disconnected"))
+                    .tooltip(Tooltip::text(tr!("Disconnected")))
                     .into_any_element(),
             ),
             client::Status::UpgradeRequired => {
@@ -1206,7 +1205,7 @@ impl TitleBar {
                 return None;
             }
             return Some(
-                Button::new("wuling-sign-in", "Sign in to Wuling")
+                Button::new("wuling-sign-in", tr!("Sign in to Wuling"))
                     .label_size(LabelSize::Small)
                     .on_click(|_, window, cx| {
                         window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
@@ -1248,7 +1247,7 @@ impl TitleBar {
         let client = self.client.clone();
         let workspace = self.workspace.clone();
 
-        let trigger = Button::new("sign_in", "Sign In").label_size(LabelSize::Small);
+        let trigger = Button::new("sign_in", tr!("Sign In")).label_size(LabelSize::Small);
 
         PopoverMenu::new("sign-in-picker")
             .trigger(trigger)
@@ -1379,7 +1378,10 @@ impl TitleBar {
                                     .w_full()
                                     .gap_1()
                                     .justify_between()
-                                    .child(Label::new("Restart to update Zed").color(Color::Accent))
+                                    .child(
+                                        Label::new(tr!("Restart to update Zed"))
+                                            .color(Color::Accent),
+                                    )
                                     .child(
                                         Icon::new(IconName::Download)
                                             .size(IconSize::Small)

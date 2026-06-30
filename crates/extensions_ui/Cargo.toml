@@ -12,6 +12,7 @@ workspace = true
 path = "src/extensions_ui.rs"
 
 [dependencies]
+ama10-i18n.workspace = true
 anyhow.workspace = true
 cloud_api_types.workspace = true
 command_palette_hooks.workspace = true
