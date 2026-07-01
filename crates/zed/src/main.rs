@@ -507,10 +507,15 @@ fn main() {
             .raw_user_settings()
             .and_then(|s| s.content.locale)
             .unwrap_or_default();
-        ama10_i18n::init(match locale {
+        let locale_for_init = match locale {
             settings::Locale::English => ama10_i18n::Language::English,
             settings::Locale::Chinese => ama10_i18n::Language::Chinese,
-        });
+        };
+        ama10_i18n::init(locale_for_init);
+        settings::settings_content::LocaleSettings::set_global(
+            cx,
+            settings::settings_content::LocaleSettings(locale),
+        );
 
         // React to locale changes at runtime.
         cx.observe_global::<settings::SettingsStore>({
@@ -522,10 +527,15 @@ fn main() {
                     .unwrap_or_default();
                 if new_locale != old_locale {
                     old_locale = new_locale;
-                    ama10_i18n::init(match new_locale {
+                    let language = match new_locale {
                         settings::Locale::English => ama10_i18n::Language::English,
                         settings::Locale::Chinese => ama10_i18n::Language::Chinese,
-                    });
+                    };
+                    ama10_i18n::init(language);
+                    settings::settings_content::LocaleSettings::set_global(
+                        cx,
+                        settings::settings_content::LocaleSettings(new_locale),
+                    );
                 }
             }
         })

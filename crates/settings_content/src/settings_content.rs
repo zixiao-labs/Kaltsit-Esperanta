@@ -137,6 +137,14 @@ pub enum Locale {
     Chinese,
 }
 
+/// A GPUI global that tracks the current `Locale`.
+///
+/// Setting this global automatically notifies observers,
+/// allowing views to re-render when the language changes.
+pub struct LocaleSettings(pub Locale);
+
+impl gpui::Global for LocaleSettings {}
+
 #[with_fallible_options]
 #[derive(Debug, PartialEq, Default, Clone, Serialize, Deserialize, JsonSchema, MergeFrom)]
 pub struct SettingsContent {

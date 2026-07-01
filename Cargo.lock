@@ -18465,6 +18465,7 @@ dependencies = [
  "project",
  "serde",
  "serde_json",
+ "settings",
  "task",
  "tree-sitter-rust",
  "tree-sitter-typescript",

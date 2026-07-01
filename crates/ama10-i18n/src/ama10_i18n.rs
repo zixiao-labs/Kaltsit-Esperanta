@@ -38,6 +38,16 @@ struct I18nInner {
     translations: HashMap<&'static str, &'static str>,
 }
 
+/// 注册的回调函数列表，在语言变更时被调用。
+static ON_LOCALE_CHANGE: RwLock<Vec<Box<dyn Fn() + Send + Sync>>> = RwLock::new(Vec::new());
+
+/// 注册一个在语言变更时被调用的回调。
+///
+/// 回调在 `init()` 内部被同步调用，因此不应执行长时间操作。
+pub fn on_locale_change(callback: Box<dyn Fn() + Send + Sync>) {
+    ON_LOCALE_CHANGE.write().unwrap().push(callback);
+}
+
 /// 全局 i18n 状态。
 static I18N: RwLock<Option<I18nInner>> = RwLock::new(None);
 
@@ -53,6 +63,12 @@ pub fn init(language: Language) {
         language,
         translations,
     });
+
+    // 通知所有已注册的语言变更回调
+    let callbacks = ON_LOCALE_CHANGE.read().unwrap();
+    for callback in callbacks.iter() {
+        callback();
+    }
 }
 
 /// 从嵌入式 TOML 字符串加载翻译。

@@ -1790,6 +1790,16 @@ impl SettingsWindow {
         })
         .detach();
 
+        // Rebuild pages when the UI locale changes, so all `tr!()` labels are refreshed.
+        cx.observe_global_in::<settings::settings_content::LocaleSettings>(
+            window,
+            |this, window, cx| {
+                this.rebuild_pages(window, cx);
+                cx.notify();
+            },
+        )
+        .detach();
+
         cx.on_window_closed(|cx, _window_id| {
             if let Some(existing_window) = cx
                 .windows()
