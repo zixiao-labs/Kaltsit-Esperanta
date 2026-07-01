@@ -19,7 +19,7 @@
 use gpui_shared_string::SharedString;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::RwLock;
 
 /// 支持的语言/区域设置。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,17 +39,17 @@ struct I18nInner {
 }
 
 /// 全局 i18n 状态。
-static I18N: OnceLock<I18nInner> = OnceLock::new();
+static I18N: RwLock<Option<I18nInner>> = RwLock::new(None);
 
 /// 初始化 i18n 系统。
 ///
-/// 应在应用启动时调用一次。如果多次调用，后续调用将被忽略。
+/// 应在应用启动时调用一次。可多次调用以切换语言，后续调用会覆盖之前的设置。
 pub fn init(language: Language) {
     let translations = match language {
         Language::English => HashMap::new(),
         Language::Chinese => load_translations(include_str!("../assets/zh_CN.toml")),
     };
-    let _ = I18N.set(I18nInner {
+    *I18N.write().unwrap() = Some(I18nInner {
         language,
         translations,
     });
@@ -81,7 +81,7 @@ fn load_translations(toml_str: &'static str) -> HashMap<&'static str, &'static s
 /// 在初始化后的 i18n 系统中查找 `key` 的翻译。
 /// 如果未找到翻译或系统未初始化，则返回 `key` 本身（英文回退）。
 pub fn translate(key: &str) -> SharedString {
-    if let Some(i18n) = I18N.get() {
+    if let Some(i18n) = I18N.read().unwrap().as_ref() {
         if let Some(translated) = i18n.translations.get(key) {
             return SharedString::from(*translated);
         }
@@ -116,14 +116,16 @@ pub fn translate_fmt(key: &str, args: &[&dyn std::fmt::Display]) -> SharedString
 
 /// 返回当前语言设置。
 pub fn current_language() -> Language {
-    I18N.get()
+    I18N.read()
+        .unwrap()
+        .as_ref()
         .map(|i18n| i18n.language)
         .unwrap_or(Language::English)
 }
 
 /// 检查 i18n 系统是否已初始化。
 pub fn is_initialized() -> bool {
-    I18N.get().is_some()
+    I18N.read().unwrap().is_some()
 }
 
 /// 简单字符串翻译宏。
