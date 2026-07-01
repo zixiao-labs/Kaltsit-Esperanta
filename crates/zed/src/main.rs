@@ -30,7 +30,8 @@ use futures::{StreamExt, channel::oneshot, future};
 use git::GitHostingProviderRegistry;
 use git_ui::clone::clone_and_open;
 use gpui::{
-    App, AppContext, Application, AsyncApp, QuitMode, Task, TaskExt, UpdateGlobal as _, block_on,
+    App, AppContext, Application, AsyncApp, QuitMode, ReadGlobal, Task, TaskExt, UpdateGlobal as _,
+    block_on,
 };
 use gpui_platform;
 
@@ -502,9 +503,43 @@ fn main() {
         handle_keymap_file_changes(user_keymap_file_rx, user_keymap_watcher, cx);
 
         // Initialize i18n with the user's preferred language.
-        // TODO: Read language preference from settings/CLI args.
-        // Defaults to English (pass-through) when not called.
-        ama10_i18n::init(ama10_i18n::Language::English);
+        let locale = settings::SettingsStore::global(cx)
+            .raw_user_settings()
+            .and_then(|s| s.content.locale)
+            .unwrap_or_default();
+        let locale_for_init = match locale {
+            settings::Locale::English => ama10_i18n::Language::English,
+            settings::Locale::Chinese => ama10_i18n::Language::Chinese,
+        };
+        ama10_i18n::init(locale_for_init);
+        settings::settings_content::LocaleSettings::set_global(
+            cx,
+            settings::settings_content::LocaleSettings(locale),
+        );
+
+        // React to locale changes at runtime.
+        cx.observe_global::<settings::SettingsStore>({
+            let mut old_locale = locale;
+            move |cx| {
+                let new_locale = settings::SettingsStore::global(cx)
+                    .raw_user_settings()
+                    .and_then(|s| s.content.locale)
+                    .unwrap_or_default();
+                if new_locale != old_locale {
+                    old_locale = new_locale;
+                    let language = match new_locale {
+                        settings::Locale::English => ama10_i18n::Language::English,
+                        settings::Locale::Chinese => ama10_i18n::Language::Chinese,
+                    };
+                    ama10_i18n::init(language);
+                    settings::settings_content::LocaleSettings::set_global(
+                        cx,
+                        settings::settings_content::LocaleSettings(new_locale),
+                    );
+                }
+            }
+        })
+        .detach();
 
         let user_agent = format!(
             "ZetaCode/{} ({}; {})",

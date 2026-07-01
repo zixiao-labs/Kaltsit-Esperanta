@@ -140,6 +140,20 @@ fn general_page(cx: &App) -> SettingsPage {
         vec![
             SettingsPageItem::SectionHeader(tr!("General Settings")),
             SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Language"),
+                description: tr!("The display language for the interface."),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("locale"),
+                    pick: |settings_content| settings_content.locale.as_ref(),
+                    write: |settings_content, value, _| {
+                        settings_content.locale = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("When Closing With No Tabs"),
                 description: tr!(
                     "What to do when using the 'close active item' action with no tabs."

@@ -358,7 +358,6 @@
 # --- project_search.rs ---
 "Loading project…" = "正在加载项目…"
 "Searching…" = "正在搜索…"
-"No Results" = "无结果"
 "Search All Files" = "搜索所有文件"
 "No results found in this project for the provided query" = "项目中未找到与所提供查询匹配的结果"
 "Project Search" = "项目搜索"
@@ -473,8 +472,11 @@
 "Audio Test" = "音频测试"
 "Zed — Settings" = "Zed — 设置"
 
+# --- general page ---
+"Language" = "语言"
+"The display language for the interface." = "界面的显示语言。"
+
 # --- components/ ---
-"Clear" = "清除"
 "Enter to Confirm" = "按回车确认"
 "Search fonts…" = "搜索字体…"
 "Search icon themes…" = "搜索图标主题…"
@@ -551,7 +553,6 @@
 "Generating Commit…" = "正在生成提交信息…"
 "Configure an LLM provider to generate commit messages" = "配置 LLM 提供者以生成提交信息"
 "This will update your most recent commit." = "这将更新您最近的提交。"
-"Cancel" = "取消"
 "There are still conflicts. You must stage these before committing" = "仍有冲突。提交前必须先暂存这些冲突"
 "Failed to trash file" = "删除文件失败"
 "Discard changes to these files?" = "放弃对这些文件的更改？"
@@ -570,7 +571,6 @@
 "Push To" = "推送到..."
 "Force Push" = "强制推送"
 "Clone a repository from GitHub or other sources." = "从 GitHub 或其他源克隆仓库。"
-"Learn More" = "了解更多"
 
 # --- branch_picker.rs ---
 "Branch \"{}\" is not fully merged. Force delete it?" = "分支 \"{}\" 未完全合并。是否强制删除？"
@@ -614,7 +614,6 @@
 "•" = "•"
 "Commit SHA" = "提交 SHA"
 "Copy Commit SHA" = "复制提交 SHA"
-"Buffer Search" = "缓冲区搜索"
 "Show in Git Graph" = "在 Git 图中显示"
 "View on {}" = "在 {} 上查看"
 "Open File in Project" = "在项目中打开文件"
@@ -635,13 +634,10 @@
 "Description" = "描述"
 "Date" = "日期"
 "Author" = "作者"
-"Commit" = "提交"
 "Copy SHA" = "复制 SHA"
 "Copy Ref Name" = "复制引用名称"
 "Copy Tag" = "复制标签"
 "Custom Commands" = "自定义命令"
-"Select Previous Match" = "选择上一个匹配"
-"Select Next Match" = "选择下一个匹配"
 "Email Copied!" = "邮箱已复制！"
 "Copy Email" = "复制邮箱"
 "Commit SHA Copied!" = "提交 SHA 已复制！"
@@ -655,7 +651,6 @@
 
 # --- stash_picker.rs ---
 "#{}: {}" = "#{}：{}"
-"View Stash" = "查看暂存"
 "Pop Stash" = "恢复暂存"
 "Drop Stash" = "丢弃暂存"
 "Failed to pop stash" = "恢复暂存失败"
@@ -663,23 +658,18 @@
 "Failed to drop stash" = "丢弃暂存失败"
 
 # --- solo_diff_view.rs ---
-"Unified" = "统一"
-"Split" = "拆分"
 "Toggle Staged" = "切换暂存状态"
 "Stage" = "暂存"
 "Unstage" = "取消暂存"
 "Restore" = "恢复"
 "Go to previous hunk" = "转到上一个区块"
 "Go to next hunk" = "转到下一个区块"
-"Stage File" = "暂存文件"
-"Unstage File" = "取消暂存文件"
 
 # --- project_diff.rs ---
 "Uncommitted Changes" = "未提交的更改"
 "Changes since {}" = "自 {} 以来的更改"
 "No uncommitted changes" = "没有未提交的更改"
 "Remote up to date" = "远程已是最新"
-"Close" = "关闭"
 "Send Review to Agent ({})" = "向代理发送审查 ({})"
 "Send all review comments to the Agent panel" = "将所有审查评论发送到代理面板"
 "Base: {}" = "基准：{}"
@@ -720,7 +710,6 @@
 
 # --- ui/agent_notification.rs ---
 "View" = "查看"
-"Dismiss" = "关闭"
 
 # --- ui/end_trial_upsell.rs ---
 "Pro" = "专业版"
@@ -734,7 +723,6 @@
 "Latest" = "最新"
 "Change Model" = "更改模型"
 "Cycle Favorite Models" = "循环切换收藏模型"
-"Configure" = "配置"
 "Unfavorite Model" = "取消收藏模型"
 "Favorite Model" = "收藏模型"
 "Cost Multiplier: {}" = "成本倍数：{}"
@@ -825,7 +813,6 @@
 "Terminal" = "终端"
 "Title generation failed. Retry" = "标题生成失败。重试"
 "Edit Thread Title" = "编辑线程标题"
-"Go Back" = "返回"
 "New {} Thread" = "新建 {} 线程"
 "Regenerate Thread Title" = "重新生成线程标题"
 "Toggle Agent Menu" = "切换代理菜单"
@@ -852,9 +839,7 @@
 "All" = "全部"
 "Installed" = "已安装"
 "Not Installed" = "未安装"
-"Install" = "安装"
 "Remove" = "移除"
-"Retry" = "重试"
 
 # --- agent_configuration.rs ---
 "Add Provider" = "添加提供者"
@@ -867,7 +852,6 @@
 "{} tools" = "{} 个工具"
 "Configure MCP Server" = "配置 MCP 服务器"
 "Uninstall" = "卸载"
-"Start New Thread" = "开始新线程"
 "Authenticate" = "身份验证"
 "Add Agent" = "添加代理"
 "Add Custom Agent" = "添加自定义代理"
@@ -898,8 +882,6 @@
 
 # --- agent_configuration/configure_context_server_modal.rs ---
 "Add MCP Server" = "添加 MCP 服务器"
-"Configure MCP Server" = "配置 MCP 服务器"
-"Add Server" = "添加服务器"
 "Open Repository" = "打开仓库"
 "Authenticating…" = "身份验证中…"
 "Context server stopped running" = "上下文服务器已停止运行"
@@ -925,13 +907,11 @@
 "Select extension version..." = "选择扩展版本…"
 "Incompatible" = "不兼容"
 "Rebuild" = "重新构建"
-"Uninstall" = "卸载"
-"Configure" = "配置"
 "Authors" = "作者"
-"Author" = "作者"
 "Visit Extension Repository" = "访问扩展仓库"
 "Install Another Version..." = "安装其他版本…"
 "Copy Extension ID" = "复制扩展 ID"
 "Copy Author Info" = "复制作者信息"
-"Install" = "安装"
 "Upgrade" = "升级"
+
+

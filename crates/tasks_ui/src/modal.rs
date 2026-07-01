@@ -35,7 +35,6 @@ pub struct TasksModalDelegate {
     workspace: WeakEntity<Workspace>,
     prompt: String,
     task_contexts: Arc<TaskContexts>,
-    placeholder_text: Arc<str>,
 }
 
 /// Task template amendments to do before resolving the context.
@@ -52,14 +51,6 @@ impl TasksModalDelegate {
         task_overrides: Option<TaskOverrides>,
         workspace: WeakEntity<Workspace>,
     ) -> Self {
-        let placeholder_text = if let Some(TaskOverrides {
-            reveal_target: Some(RevealTarget::Center),
-        }) = &task_overrides
-        {
-            Arc::from(tr!("Find a task, or run a command in the central pane"))
-        } else {
-            Arc::from(tr!("Find a task, or run a command"))
-        };
         Self {
             task_store,
             workspace,
@@ -71,7 +62,6 @@ impl TasksModalDelegate {
             prompt: String::default(),
             task_contexts,
             task_overrides,
-            placeholder_text,
         }
     }
 
@@ -125,7 +115,7 @@ impl TasksModalDelegate {
 
 pub struct TasksModal {
     pub picker: Entity<Picker<TasksModalDelegate>>,
-    _subscriptions: [Subscription; 2],
+    _subscriptions: Vec<Subscription>,
 }
 
 impl TasksModal {
@@ -151,7 +141,7 @@ impl TasksModal {
             )
             .when(!is_modal, |this| this.embedded())
         });
-        let mut _subscriptions = [
+        let mut _subscriptions = vec![
             cx.subscribe(&picker, |_, _, _: &DismissEvent, cx| {
                 cx.emit(DismissEvent);
             }),
@@ -161,6 +151,13 @@ impl TasksModal {
                 });
             }),
         ];
+
+        // Re-render when the UI locale changes, so that `tr!()` results are refreshed.
+        _subscriptions.push(
+            cx.observe_global::<settings::settings_content::LocaleSettings>(move |_this, cx| {
+                cx.notify();
+            }),
+        );
 
         Self {
             picker,
@@ -260,7 +257,14 @@ impl PickerDelegate for TasksModalDelegate {
     }
 
     fn placeholder_text(&self, _window: &mut Window, _: &mut App) -> Arc<str> {
-        self.placeholder_text.clone()
+        if let Some(TaskOverrides {
+            reveal_target: Some(RevealTarget::Center),
+        }) = &self.task_overrides
+        {
+            Arc::from(tr!("Find a task, or run a command in the central pane"))
+        } else {
+            Arc::from(tr!("Find a task, or run a command"))
+        }
     }
 
     fn update_matches(

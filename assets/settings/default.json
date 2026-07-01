@@ -23,6 +23,11 @@
   // 5. "SublimeText"
   // 6. "TextMate"
   "base_keymap": "VSCode",
+  // The display language for the interface.
+  // May take 2 values:
+  //  1. "english"
+  //  2. "chinese"
+  "locale": "english",
   // The name of a font to use for rendering text in the editor
   // ".ZedMono" currently aliases to Lilex
   // but this may change in the future.

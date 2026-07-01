@@ -336,6 +336,8 @@ actions!(
     [
         /// Expands the selected entry in the project tree.
         ExpandSelectedEntry,
+        /// Expands all entries in the project tree.
+        ExpandAllEntries,
         /// Collapses the selected entry in the project tree.
         CollapseSelectedEntry,
         /// Collapses the selected entry and its children in the project tree.
@@ -490,6 +492,14 @@ pub fn init(cx: &mut App) {
                         .unwrap_or(false),
                 );
             })
+        });
+
+        workspace.register_action(|workspace, action: &ExpandAllEntries, window, cx| {
+            if let Some(panel) = workspace.panel::<ProjectPanel>(cx) {
+                panel.update(cx, |panel, cx| {
+                    panel.expand_all_entries(action, window, cx);
+                });
+            }
         });
 
         workspace.register_action(|workspace, action: &CollapseAllEntries, window, cx| {
@@ -1444,6 +1454,39 @@ impl ProjectPanel {
         }
 
         self.update_visible_entries(Some((worktree_id, root_id)), false, false, window, cx);
+        cx.notify();
+    }
+
+    fn expand_all_entries(
+        &mut self,
+        _: &ExpandAllEntries,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let worktree_roots: Vec<(WorktreeId, ProjectEntryId)> = self
+            .project
+            .read(cx)
+            .visible_worktrees(cx)
+            .filter_map(|worktree| {
+                let snapshot = worktree.read(cx);
+                Some((snapshot.id(), snapshot.root_entry()?.id))
+            })
+            .collect();
+
+        for (worktree_id, root_entry_id) in worktree_roots {
+            let ids = self.state.expanded_dir_ids.entry(worktree_id).or_default();
+            if let Err(ix) = ids.binary_search(&root_entry_id) {
+                ids.insert(ix, root_entry_id);
+            }
+
+            self.project.update(cx, |project, cx| {
+                if let Some(task) = project.expand_all_for_entry(worktree_id, root_entry_id, cx) {
+                    task.detach();
+                }
+            });
+        }
+
+        self.update_visible_entries(None, false, false, window, cx);
         cx.notify();
     }
 

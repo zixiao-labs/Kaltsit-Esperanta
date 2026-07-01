@@ -598,6 +598,7 @@ fn init_renderers(cx: &mut App) {
         .add_basic_renderer::<settings::VimInsertModeCursorShape>(render_dropdown)
         .add_basic_renderer::<settings::SteppingGranularity>(render_dropdown)
         .add_basic_renderer::<settings::NotifyWhenAgentWaiting>(render_dropdown)
+                .add_basic_renderer::<settings::Locale>(render_dropdown)
         .add_basic_renderer::<settings::PlaySoundWhenAgentDone>(render_dropdown)
         .add_basic_renderer::<settings::ThinkingBlockDisplay>(render_dropdown)
         .add_basic_renderer::<settings::ImageFileSizeUnit>(render_dropdown)
@@ -1787,6 +1788,16 @@ impl SettingsWindow {
             }
             cx.notify();
         })
+        .detach();
+
+        // Rebuild pages when the UI locale changes, so all `tr!()` labels are refreshed.
+        cx.observe_global_in::<settings::settings_content::LocaleSettings>(
+            window,
+            |this, window, cx| {
+                this.rebuild_pages(window, cx);
+                cx.notify();
+            },
+        )
         .detach();
 
         cx.on_window_closed(|cx, _window_id| {

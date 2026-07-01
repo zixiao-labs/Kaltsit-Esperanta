@@ -111,6 +111,40 @@ pub enum HideMouseMode {
     OnTypingAndAction,
 }
 
+/// The UI language (locale) setting.
+///
+/// Default: English
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    JsonSchema,
+    MergeFrom,
+    strum::VariantArray,
+    strum::VariantNames,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum Locale {
+    /// English
+    #[default]
+    English,
+    /// Simplified Chinese
+    Chinese,
+}
+
+/// A GPUI global that tracks the current `Locale`.
+///
+/// Setting this global automatically notifies observers,
+/// allowing views to re-render when the language changes.
+pub struct LocaleSettings(pub Locale);
+
+impl gpui::Global for LocaleSettings {}
+
 #[with_fallible_options]
 #[derive(Debug, PartialEq, Default, Clone, Serialize, Deserialize, JsonSchema, MergeFrom)]
 pub struct SettingsContent {
@@ -153,6 +187,11 @@ pub struct SettingsContent {
     ///
     /// Default: true
     pub auto_update: Option<bool>,
+
+    /// The UI language (locale) used for displaying the interface.
+    ///
+    /// Default: english
+    pub locale: Option<Locale>,
 
     /// This base keymap settings adjusts the default keybindings in Zed to be similar
     /// to other common code editors. By default, Zed's keymap closely follows VSCode's

@@ -225,6 +225,7 @@ impl VsCodeSettings {
             modeline_lines: None,
             feature_flags: None,
             instrumentation: None,
+            locale: None,
         }
     }
 
