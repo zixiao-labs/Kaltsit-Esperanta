@@ -6,6 +6,7 @@ use crate::{
     thread_metadata_store::{ThreadId, ThreadMetadataStore},
 };
 use agent_client_protocol::schema::v1 as acp;
+use rand::Rng;
 use std::cell::RefCell;
 
 use acp_thread::{
@@ -41,12 +42,9 @@ use super::*;
 
 const DATA_RETENTION_LEARN_MORE_URL: &str = "https://support.claude.com/en/articles/15425996-data-retention-practices-for-mythos-class-models";
 
-// Reserved for future use: displayed to the right of the generating spinner
-// in the Thread list (render_generating) when the agent enters normal generation
-// mode. Each invocation should pick one at random.
-// TODO: Wire up after full-editor i18n is complete — these are Chinese phrases
-// and should not be shown before the editor properly handles localized strings.
-#[allow(dead_code)]
+/// Displayed to the right of the generating spinner in `render_generating()`
+/// when the agent enters normal generation mode and the current locale is Chinese.
+/// Each invocation picks one at random.
 const LOADING_PHRASES: &[&str] = &[
     "雷霆破翳，前路昭明！",
     "以剑为令——",
@@ -634,6 +632,10 @@ pub struct ThreadView {
     pub show_codex_windows_warning: bool,
     pub multi_root_callout_dismissed: bool,
     pub generating_indicator_in_list: bool,
+    /// Randomly selected Chinese phrase displayed next to the spinner during
+    /// normal generation when the current locale is Chinese.
+    /// Picked once when the generating state is entered, cleared on exit.
+    loading_phrase: Option<&'static str>,
     pub skill_loading_issues: Vec<SkillLoadingIssue>,
     /// Issues the user has explicitly dismissed. Each entry is matched against
     /// emitted issues by full equality; when an issue no longer appears in the
@@ -1006,6 +1008,7 @@ impl ThreadView {
             show_codex_windows_warning,
             multi_root_callout_dismissed: false,
             generating_indicator_in_list: false,
+            loading_phrase: None,
             skill_loading_issues: Vec::new(),
             dismissed_skill_loading_issues: HashSet::default(),
             thread_search_bar: None,
@@ -6483,10 +6486,15 @@ impl ThreadView {
             let entries_count = self.thread.read(cx).entries().len();
             self.list_state.splice(entries_count..entries_count, 1);
             self.generating_indicator_in_list = true;
+            // Pick a random loading phrase when entering the generating state.
+            // The phrase stays fixed until generation ends.
+            let idx = rand::rng().random_range(0..LOADING_PHRASES.len());
+            self.loading_phrase = Some(LOADING_PHRASES[idx]);
         } else if !is_generating && self.generating_indicator_in_list {
             let entries_count = self.thread.read(cx).entries().len();
             self.list_state.splice(entries_count..entries_count + 1, 0);
             self.generating_indicator_in_list = false;
+            self.loading_phrase = None;
         }
     }
 
@@ -6549,6 +6557,18 @@ impl ThreadView {
                             .w_2()
                             .justify_center()
                             .child(GeneratingSpinnerElement::new(SpinnerVariant::Dots)),
+                    )
+                    .when_some(
+                        self.loading_phrase.filter(|_| {
+                            ama10_i18n::current_language() == ama10_i18n::Language::Chinese
+                        }),
+                        |this, phrase| {
+                            this.child(
+                                Label::new(phrase)
+                                    .size(LabelSize::Small)
+                                    .color(Color::Muted),
+                            )
+                        },
                     )
                 }
             })
