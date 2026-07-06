@@ -3,10 +3,10 @@ use collections::HashMap;
 use context_server::{ContextServerCommand, ContextServerId};
 use editor::{Editor, EditorElement, EditorStyle};
 
+use extension_host::ExtensionStore;
 use gpui::{
     AsyncWindowContext, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, ScrollHandle,
-    Subscription, Task, TaskExt, TextStyle, TextStyleRefinement, UnderlineStyle, WeakEntity,
-    prelude::*,
+    Subscription, Task, TextStyle, TextStyleRefinement, UnderlineStyle, WeakEntity, prelude::*,
 };
 use language::{Language, LanguageRegistry};
 use markdown::{Markdown, MarkdownElement, MarkdownStyle};
@@ -31,10 +31,14 @@ use ui::{
 use util::ResultExt as _;
 use workspace::{ModalView, Workspace};
 
+<<<<<<< HEAD
 use crate::AddContextServer;
 
 enum ConfigurationTarget {
     New,
+=======
+enum ConfigurationTarget {
+>>>>>>> upstream/main
     Existing {
         id: ContextServerId,
         command: ContextServerCommand,
@@ -53,7 +57,13 @@ enum ConfigurationTarget {
     },
 }
 
+enum ExistingServerType {
+    Local,
+    Remote,
+}
+
 enum ConfigurationSource {
+<<<<<<< HEAD
     New {
         editor: Entity<Editor>,
         is_http: bool,
@@ -61,6 +71,11 @@ enum ConfigurationSource {
     Existing {
         editor: Entity<Editor>,
         is_http: bool,
+=======
+    Existing {
+        editor: Entity<Editor>,
+        server_type: ExistingServerType,
+>>>>>>> upstream/main
     },
     Extension {
         id: ContextServerId,
@@ -74,10 +89,6 @@ enum ConfigurationSource {
 impl ConfigurationSource {
     fn has_configuration_options(&self) -> bool {
         !matches!(self, ConfigurationSource::Extension { editor: None, .. })
-    }
-
-    fn is_new(&self) -> bool {
-        matches!(self, ConfigurationSource::New { .. })
     }
 
     fn from_target(
@@ -106,10 +117,13 @@ impl ConfigurationSource {
         }
 
         match target {
+<<<<<<< HEAD
             ConfigurationTarget::New => ConfigurationSource::New {
                 editor: create_editor(context_server_input(None), jsonc_language, window, cx),
                 is_http: false,
             },
+=======
+>>>>>>> upstream/main
             ConfigurationTarget::Existing { id, command } => ConfigurationSource::Existing {
                 editor: create_editor(
                     context_server_input(Some((id, command))),
@@ -117,7 +131,11 @@ impl ConfigurationSource {
                     window,
                     cx,
                 ),
+<<<<<<< HEAD
                 is_http: false,
+=======
+                server_type: ExistingServerType::Local,
+>>>>>>> upstream/main
             },
             ConfigurationTarget::ExistingHttp {
                 id,
@@ -131,7 +149,11 @@ impl ConfigurationSource {
                     window,
                     cx,
                 ),
+<<<<<<< HEAD
                 is_http: true,
+=======
+                server_type: ExistingServerType::Remote,
+>>>>>>> upstream/main
             },
 
             ConfigurationTarget::Extension {
@@ -169,9 +191,17 @@ impl ConfigurationSource {
 
     fn output(&self, cx: &mut App) -> Result<(ContextServerId, ContextServerSettings)> {
         match self {
+<<<<<<< HEAD
             ConfigurationSource::New { editor, is_http }
             | ConfigurationSource::Existing { editor, is_http } => {
                 if *is_http {
+=======
+            ConfigurationSource::Existing {
+                editor,
+                server_type,
+            } => match *server_type {
+                ExistingServerType::Remote => {
+>>>>>>> upstream/main
                     parse_http_input(&editor.read(cx).text(cx)).map(|(id, url, auth, oauth)| {
                         (
                             id,
@@ -184,7 +214,12 @@ impl ConfigurationSource {
                             },
                         )
                     })
+<<<<<<< HEAD
                 } else {
+=======
+                }
+                ExistingServerType::Local => {
+>>>>>>> upstream/main
                     parse_input(&editor.read(cx).text(cx)).map(|(id, command)| {
                         (
                             id,
@@ -388,7 +423,12 @@ fn resolve_context_server_extension(
         return Task::ready(None);
     };
 
-    let extension = crate::agent_configuration::resolve_extension_for_context_server(&id, cx);
+    let extension = ExtensionStore::global(cx)
+        .read(cx)
+        .installed_extensions()
+        .iter()
+        .find(|(_, entry)| entry.manifest.context_servers.contains_key(&id.0))
+        .map(|(id, entry)| (id.clone(), entry.manifest.clone()));
     cx.spawn(async move |cx| {
         let installation = descriptor
             .configuration(worktree_store, cx)
@@ -439,13 +479,17 @@ impl ConfigureContextServerModal {
         target: &ConfigurationTarget,
         cx: &App,
     ) -> State {
-        let Some(server_id) = (match target {
+        let server_id = match target {
             ConfigurationTarget::Existing { id, .. }
             | ConfigurationTarget::ExistingHttp { id, .. }
+<<<<<<< HEAD
             | ConfigurationTarget::Extension { id, .. } => Some(id),
             ConfigurationTarget::New => None,
         }) else {
             return State::Idle;
+=======
+            | ConfigurationTarget::Extension { id, .. } => id,
+>>>>>>> upstream/main
         };
 
         match context_server_store.read(cx).status_for_server(server_id) {
@@ -470,6 +514,7 @@ impl ConfigureContextServerModal {
         }
     }
 
+<<<<<<< HEAD
     pub fn register(
         workspace: &mut Workspace,
         language_registry: Arc<LanguageRegistry>,
@@ -495,6 +540,8 @@ impl ConfigureContextServerModal {
         });
     }
 
+=======
+>>>>>>> upstream/main
     pub fn show_modal_for_existing_server(
         server_id: ContextServerId,
         language_registry: Arc<LanguageRegistry>,
@@ -579,12 +626,20 @@ impl ConfigureContextServerModal {
                     workspace: workspace_handle,
                     state: Self::initial_state(&context_server_store, &target, cx),
 
+<<<<<<< HEAD
                     original_server_id: match &target {
                         ConfigurationTarget::Existing { id, .. } => Some(id.clone()),
                         ConfigurationTarget::ExistingHttp { id, .. } => Some(id.clone()),
                         ConfigurationTarget::Extension { id, .. } => Some(id.clone()),
                         ConfigurationTarget::New => None,
                     },
+=======
+                    original_server_id: Some(match &target {
+                        ConfigurationTarget::Existing { id, .. }
+                        | ConfigurationTarget::ExistingHttp { id, .. }
+                        | ConfigurationTarget::Extension { id, .. } => id.clone(),
+                    }),
+>>>>>>> upstream/main
                     source: ConfigurationSource::from_target(
                         target,
                         language_registry,
@@ -818,7 +873,6 @@ impl ModalView for ConfigureContextServerModal {}
 impl Focusable for ConfigureContextServerModal {
     fn focus_handle(&self, cx: &App) -> FocusHandle {
         match &self.source {
-            ConfigurationSource::New { editor, .. } => editor.focus_handle(cx),
             ConfigurationSource::Existing { editor, .. } => editor.focus_handle(cx),
             ConfigurationSource::Extension { editor, .. } => editor
                 .as_ref()
@@ -833,11 +887,16 @@ impl EventEmitter<DismissEvent> for ConfigureContextServerModal {}
 impl ConfigureContextServerModal {
     fn render_modal_header(&self) -> ModalHeader {
         let text: SharedString = match &self.source {
+<<<<<<< HEAD
             ConfigurationSource::New { .. } => ama10_i18n::tr!("Add MCP Server"),
             ConfigurationSource::Existing { .. } => ama10_i18n::tr!("Configure MCP Server"),
             ConfigurationSource::Extension { id, .. } => {
                 ama10_i18n::tr_f!("Configure {}", &*id.0)
             }
+=======
+            ConfigurationSource::Existing { .. } => "Configure MCP Server".into(),
+            ConfigurationSource::Extension { id, .. } => format!("Configure {}", id.0).into(),
+>>>>>>> upstream/main
         };
         ModalHeader::new().headline(text)
     }
@@ -865,6 +924,7 @@ impl ConfigureContextServerModal {
         }
     }
 
+<<<<<<< HEAD
     fn render_tab_bar(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         let is_http = match &self.source {
             ConfigurationSource::New { is_http, .. } => *is_http,
@@ -931,9 +991,10 @@ impl ConfigureContextServerModal {
         )
     }
 
+=======
+>>>>>>> upstream/main
     fn render_modal_content(&self, cx: &App) -> AnyElement {
         let editor = match &self.source {
-            ConfigurationSource::New { editor, .. } => editor,
             ConfigurationSource::Existing { editor, .. } => editor,
             ConfigurationSource::Extension { editor, .. } => {
                 let Some(editor) = editor else {
@@ -1029,6 +1090,7 @@ impl ConfigureContextServerModal {
                         ),
                     )
                     .children(self.source.has_configuration_options().then(|| {
+<<<<<<< HEAD
                         Button::new(
                             "add-server",
                             if self.source.is_new() {
@@ -1044,9 +1106,17 @@ impl ConfigureContextServerModal {
                         )
                         .on_click(
                             cx.listener(|this, _event, _window, cx| {
+=======
+                        Button::new("configure-server", "Configure Server")
+                            .disabled(is_busy)
+                            .key_binding(
+                                KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
+                                    .map(|kb| kb.size(rems_from_px(12.))),
+                            )
+                            .on_click(cx.listener(|this, _event, _window, cx| {
+>>>>>>> upstream/main
                                 this.confirm(&menu::Confirm, cx)
-                            }),
-                        )
+                            }))
                     })),
             )
     }
@@ -1254,7 +1324,6 @@ impl Render for ConfigureContextServerModal {
                                         .overflow_y_scroll()
                                         .track_scroll(&self.scroll_handle)
                                         .child(self.render_modal_description(window, cx))
-                                        .children(self.render_tab_bar(cx))
                                         .child(self.render_modal_content(cx))
                                         .child(match &self.state {
                                             State::Idle => div(),

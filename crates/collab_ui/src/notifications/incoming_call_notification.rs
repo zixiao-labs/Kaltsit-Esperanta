@@ -126,9 +126,15 @@ impl Render for IncomingCallNotification {
                     move |_, _, cx| state.respond(false, cx)
                 }),
             )
+<<<<<<< HEAD
             .child(Label::new(tr_f!(
                 "{0} is sharing a project in Zed",
                 self.state.call.calling_user.github_login.clone()
+=======
+            .child(Label::new(format!(
+                "{} is sharing a project in Zed",
+                self.state.call.calling_user.username
+>>>>>>> upstream/main
             ))),
         )
     }

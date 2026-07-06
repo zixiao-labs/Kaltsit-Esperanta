@@ -611,7 +611,7 @@ impl CollabPanel {
                 if let Some(user) = self.user_store.read(cx).current_user() {
                     self.match_candidates.clear();
                     self.match_candidates
-                        .push(StringMatchCandidate::new(0, &user.github_login));
+                        .push(StringMatchCandidate::new(0, &user.username));
                     let matches = fg_executor.block_on(match_strings(
                         &self.match_candidates,
                         &query,
@@ -653,7 +653,7 @@ impl CollabPanel {
                     .extend(room.remote_participants().values().map(|participant| {
                         StringMatchCandidate::new(
                             participant.user.legacy_id as usize,
-                            &participant.user.github_login,
+                            &participant.user.username,
                         )
                     }));
                 let mut matches = fg_executor.block_on(match_strings(
@@ -702,12 +702,14 @@ impl CollabPanel {
 
                 // Populate pending participants.
                 self.match_candidates.clear();
-                self.match_candidates
-                    .extend(room.pending_participants().iter().enumerate().map(
-                        |(id, participant)| {
-                            StringMatchCandidate::new(id, &participant.github_login)
-                        },
-                    ));
+                self.match_candidates.extend(
+                    room.pending_participants()
+                        .iter()
+                        .enumerate()
+                        .map(|(id, participant)| {
+                            StringMatchCandidate::new(id, &participant.username)
+                        }),
+                );
                 let matches = fg_executor.block_on(match_strings(
                     &self.match_candidates,
                     &query,
@@ -941,7 +943,7 @@ impl CollabPanel {
                 incoming
                     .iter()
                     .enumerate()
-                    .map(|(ix, user)| StringMatchCandidate::new(ix, &user.github_login)),
+                    .map(|(ix, user)| StringMatchCandidate::new(ix, &user.username)),
             );
             let matches = fg_executor.block_on(match_strings(
                 &self.match_candidates,
@@ -966,7 +968,7 @@ impl CollabPanel {
                 outgoing
                     .iter()
                     .enumerate()
-                    .map(|(ix, user)| StringMatchCandidate::new(ix, &user.github_login)),
+                    .map(|(ix, user)| StringMatchCandidate::new(ix, &user.username)),
             );
             let matches = fg_executor.block_on(match_strings(
                 &self.match_candidates,
@@ -999,7 +1001,7 @@ impl CollabPanel {
                 contacts
                     .iter()
                     .enumerate()
-                    .map(|(ix, contact)| StringMatchCandidate::new(ix, &contact.user.github_login)),
+                    .map(|(ix, contact)| StringMatchCandidate::new(ix, &contact.user.username)),
             );
 
             let matches = fg_executor.block_on(match_strings(
@@ -1135,7 +1137,11 @@ impl CollabPanel {
             .current_user()
             .map(|user| user.legacy_id)
             == Some(user_id);
+<<<<<<< HEAD
         let tooltip = tr_f!("Follow {}", user.github_login);
+=======
+        let tooltip = format!("Follow {}", user.username);
+>>>>>>> upstream/main
 
         let is_call_admin = ActiveCall::global(cx).read(cx).room().is_some_and(|room| {
             room.read(cx).local_participant().role == proto::ChannelRole::Admin
@@ -1163,7 +1169,7 @@ impl CollabPanel {
             Empty.into_any_element()
         };
 
-        ListItem::new(user.github_login.clone())
+        ListItem::new(user.username.clone())
             .start_slot(Avatar::new(user.avatar_uri.clone()))
             .child(render_participant_name_and_handle(user))
             .toggle_state(is_selected)
@@ -1667,10 +1673,17 @@ impl CollabPanel {
             let user_id = contact.user.legacy_id;
 
             if contact.online && !contact.busy {
+<<<<<<< HEAD
                 let label: SharedString = if in_room {
                     tr_f!("Invite {} to join", contact.user.github_login.clone())
                 } else {
                     tr_f!("Call {}", contact.user.github_login.clone())
+=======
+                let label = if in_room {
+                    format!("Invite {} to join", contact.user.username)
+                } else {
+                    format!("Call {}", contact.user.username)
+>>>>>>> upstream/main
                 };
                 context_menu = context_menu.entry(label, None, {
                     let this = this.clone();
@@ -1688,7 +1701,7 @@ impl CollabPanel {
                     this.update(cx, |this, cx| {
                         this.remove_contact(
                             contact.user.legacy_id,
-                            &contact.user.github_login,
+                            &contact.user.username,
                             window,
                             cx,
                         );
@@ -3084,8 +3097,8 @@ impl CollabPanel {
     ) -> impl IntoElement {
         let online = contact.online;
         let busy = contact.busy || calling;
-        let github_login = contact.user.github_login.clone();
-        let item = ListItem::new(github_login.clone())
+        let username = contact.user.username.clone();
+        let item = ListItem::new(username.clone())
             .indent_level(1)
             .indent_step_size(px(20.))
             .toggle_state(is_selected)
@@ -3136,10 +3149,11 @@ impl CollabPanel {
             );
 
         div()
-            .id(github_login.clone())
+            .id(username.clone())
             .group("")
             .child(item)
             .tooltip(move |_, cx| {
+<<<<<<< HEAD
                 let text: SharedString = if !online {
                     tr_f!("{} is offline", github_login.clone())
                 } else if busy {
@@ -3150,6 +3164,18 @@ impl CollabPanel {
                         tr_f!("Invite {} to join call", github_login.clone())
                     } else {
                         tr_f!("Call {}", github_login.clone())
+=======
+                let text = if !online {
+                    format!(" {} is offline", &username)
+                } else if busy {
+                    format!(" {} is on a call", &username)
+                } else {
+                    let room = ActiveCall::global(cx).read(cx).room();
+                    if room.is_some() {
+                        format!("Invite {} to join call", &username)
+                    } else {
+                        format!("Call {}", &username)
+>>>>>>> upstream/main
                     }
                 };
                 Tooltip::simple(text, cx)
@@ -3163,7 +3189,7 @@ impl CollabPanel {
         is_selected: bool,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        let github_login = user.github_login.clone();
+        let username = user.username.clone();
         let user_id = user.legacy_id;
         let is_response_pending = self.user_store.read(cx).is_contact_request_pending(user);
         let color = if is_response_pending {
@@ -3188,7 +3214,7 @@ impl CollabPanel {
                     .tooltip(Tooltip::text(tr!("Accept invite"))),
             ]
         } else {
-            let github_login = github_login.clone();
+            let github_login = username.clone();
             vec![
                 IconButton::new("remove_contact", IconName::Close)
                     .on_click(cx.listener(move |this, _, window, cx| {
@@ -3199,7 +3225,7 @@ impl CollabPanel {
             ]
         };
 
-        ListItem::new(github_login.clone())
+        ListItem::new(username.clone())
             .indent_level(1)
             .indent_step_size(px(20.))
             .toggle_state(is_selected)
@@ -3207,7 +3233,7 @@ impl CollabPanel {
                 h_flex()
                     .w_full()
                     .justify_between()
-                    .child(Label::new(github_login))
+                    .child(Label::new(username))
                     .child(h_flex().children(controls)),
             )
             .start_slot(Avatar::new(user.avatar_uri.clone()))
@@ -3572,22 +3598,30 @@ impl CollabPanel {
                 let requester = user_store.get_cached_user(*sender_id)?;
                 Some((
                     Some(requester.clone()),
+<<<<<<< HEAD
                     tr_f!(
                         "{} wants to add you as a contact",
                         requester.github_login.clone()
                     )
                     .to_string(),
+=======
+                    format!("{} wants to add you as a contact", requester.username),
+>>>>>>> upstream/main
                 ))
             }
             Notification::ContactRequestAccepted { responder_id } => {
                 let responder = user_store.get_cached_user(*responder_id)?;
                 Some((
                     Some(responder.clone()),
+<<<<<<< HEAD
                     tr_f!(
                         "{} accepted your contact request",
                         responder.github_login.clone()
                     )
                     .to_string(),
+=======
+                    format!("{} accepted your contact request", responder.username),
+>>>>>>> upstream/main
                 ))
             }
             Notification::ChannelInvitation {
@@ -3598,12 +3632,19 @@ impl CollabPanel {
                 let inviter = user_store.get_cached_user(*inviter_id)?;
                 Some((
                     Some(inviter.clone()),
+<<<<<<< HEAD
                     tr_f!(
                         "{} invited you to join the #{} channel",
                         inviter.github_login.clone(),
                         channel_name.clone()
                     )
                     .to_string(),
+=======
+                    format!(
+                        "{} invited you to join the #{channel_name} channel",
+                        inviter.username
+                    ),
+>>>>>>> upstream/main
                 ))
             }
         }
@@ -3766,9 +3807,9 @@ fn render_tree_branch(
 
 fn render_participant_name_and_handle(user: &User) -> impl IntoElement {
     Label::new(if let Some(ref display_name) = user.name {
-        format!("{display_name} ({})", user.github_login)
+        format!("{display_name} ({})", user.username)
     } else {
-        user.github_login.to_string()
+        user.username.to_string()
     })
 }
 
@@ -4199,7 +4240,7 @@ impl CollabPanel {
                     string_entries.push(format!("  (invite) #{}{selected_marker}", channel.name));
                 }
                 ListEntry::CallParticipant { user, .. } => {
-                    string_entries.push(format!("  {}{selected_marker}", user.github_login));
+                    string_entries.push(format!("  {}{selected_marker}", user.username));
                 }
                 ListEntry::ParticipantProject {
                     worktree_root_names,
@@ -4214,20 +4255,13 @@ impl CollabPanel {
                     string_entries.push(format!("    (screen){selected_marker}"));
                 }
                 ListEntry::IncomingRequest(user) => {
-                    string_entries.push(format!(
-                        "  (incoming) {}{selected_marker}",
-                        user.github_login
-                    ));
+                    string_entries.push(format!("  (incoming) {}{selected_marker}", user.username));
                 }
                 ListEntry::OutgoingRequest(user) => {
-                    string_entries.push(format!(
-                        "  (outgoing) {}{selected_marker}",
-                        user.github_login
-                    ));
+                    string_entries.push(format!("  (outgoing) {}{selected_marker}", user.username));
                 }
                 ListEntry::Contact { contact, .. } => {
-                    string_entries
-                        .push(format!("  {}{selected_marker}", contact.user.github_login));
+                    string_entries.push(format!("  {}{selected_marker}", contact.user.username));
                 }
                 ListEntry::ContactPlaceholder => {}
             }

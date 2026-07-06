@@ -1,49 +1,10 @@
-mod add_llm_provider_modal;
 pub mod configure_context_server_modal;
-mod configure_context_server_tools_modal;
 mod manage_profiles_modal;
 mod tool_picker;
 
-use std::{ops::Range, rc::Rc, sync::Arc};
-
-use agent::ContextServerRegistry;
-use anyhow::Result;
-use cloud_api_types::Plan;
-use collections::HashMap;
-use context_server::ContextServerId;
-use editor::{Editor, MultiBufferOffset, SelectionEffects, scroll::Autoscroll};
-use extension::ExtensionManifest;
-use extension_host::ExtensionStore;
-use fs::Fs;
-use gpui::{
-    Action, Anchor, AnyView, App, AsyncWindowContext, Entity, EventEmitter, FocusHandle, Focusable,
-    ScrollHandle, Subscription, Task, TaskExt, WeakEntity,
-};
-use itertools::Itertools;
-use language::LanguageRegistry;
-use language_model::{
-    IconOrSvg, LanguageModelProvider, LanguageModelProviderId, LanguageModelRegistry,
-    ZED_CLOUD_PROVIDER_ID,
-};
-use language_models::AllLanguageModelSettings;
-use notifications::status_toast::StatusToast;
-use project::{
-    agent_server_store::{AgentId, AgentServerStore, ExternalAgentSource},
-    context_server_store::{ContextServerConfiguration, ContextServerStatus, ContextServerStore},
-};
-use settings::{Settings, SettingsContent, SettingsStore, update_settings_file};
-use ui::{
-    AiSettingItem, AiSettingItemSource, AiSettingItemStatus, ButtonStyle, Chip, ContextMenu,
-    ContextMenuEntry, Disclosure, Divider, DividerColor, ElevationIndex, LabelSize, PopoverMenu,
-    Switch, Tooltip, WithScrollbar, prelude::*,
-};
-use util::ResultExt as _;
-use workspace::{Workspace, create_and_open_local_file};
-use zed_actions::{ExtensionCategoryFilter, OpenBrowser};
-
 pub(crate) use configure_context_server_modal::ConfigureContextServerModal;
-pub(crate) use configure_context_server_tools_modal::ConfigureContextServerToolsModal;
 pub(crate) use manage_profiles_modal::ManageProfilesModal;
+<<<<<<< HEAD
 
 use crate::{
     Agent,
@@ -1695,3 +1656,5 @@ mod tests {
         assert_eq!(anthropic, vec!["initech"]);
     }
 }
+=======
+>>>>>>> upstream/main

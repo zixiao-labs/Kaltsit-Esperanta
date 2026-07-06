@@ -95,6 +95,7 @@ fn developer_page(cx: &App) -> SettingsPage {
             title: tr!("Feature Flags"),
             r#type: Default::default(),
             description: None,
+            search_aliases: &[],
             json_path: Some("feature_flags"),
             in_json: true,
             files: USER,
@@ -3403,6 +3404,7 @@ fn languages_and_tools_page(cx: &App) -> SettingsPage {
                     title: language_name,
                     r#type: crate::SubPageType::Language,
                     description: None,
+                    search_aliases: &[],
                     json_path: Some(link.leak()),
                     in_json: true,
                     files: USER | PROJECT,
@@ -8151,7 +8153,7 @@ fn collaboration_page() -> SettingsPage {
 }
 
 fn ai_page(cx: &App) -> SettingsPage {
-    fn general_section() -> [SettingsPageItem; 3] {
+    fn general_section() -> [SettingsPageItem; 6] {
         [
             SettingsPageItem::SectionHeader(tr!("General")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -8182,6 +8184,7 @@ fn ai_page(cx: &App) -> SettingsPage {
                 metadata: None,
                 files: USER,
             }),
+<<<<<<< HEAD
         ]
     }
 
@@ -8196,24 +8199,102 @@ fn ai_page(cx: &App) -> SettingsPage {
 
         if agent_settings_ui_enabled {
             items.push(SettingsPageItem::SubPageLink(SubPageLink {
+=======
+            SettingsPageItem::SubPageLink(SubPageLink {
+>>>>>>> upstream/main
                 title: "LLM Providers".into(),
                 r#type: Default::default(),
                 json_path: Some("llm_providers"),
-                description: Some("Configure API keys and settings for LLM providers.".into()),
+                description: Some("Configure natively-included model providers.".into()),
+                search_aliases: &[
+                    "ai",
+                    "amazon",
+                    "anthropic",
+                    "api key",
+                    "azure",
+                    "bedrock",
+                    "chat",
+                    "claude",
+                    "copilot",
+                    "gemini",
+                    "github",
+                    "google",
+                    "gpt",
+                    "grok",
+                    "llama",
+                    "llm",
+                    "lm studio",
+                    "mistral",
+                    "ollama",
+                    "openai",
+                    "opencode",
+                    "provider",
+                    "vercel",
+                    "xai",
+                ],
                 in_json: false,
                 files: USER,
                 render: render_llm_providers_page,
-            }));
-        }
+            }),
+            SettingsPageItem::SubPageLink(SubPageLink {
+                title: "External Agents".into(),
+                r#type: Default::default(),
+                json_path: Some("agent_servers"),
+                description: Some(
+                    "View, add, and remove agents connected through the Agent Client Protocol."
+                        .into(),
+                ),
+                search_aliases: &[
+                    "acp",
+                    "agent client protocol",
+                    "amp",
+                    "claude agent",
+                    "claude code",
+                    "codex",
+                    "copilot cli",
+                    "cursor",
+                    "external agent",
+                    "factory droid",
+                    "github copilot",
+                    "grok build",
+                    "junie",
+                    "opencode",
+                ],
+                in_json: false,
+                files: USER,
+                render: render_external_agents_page,
+            }),
+            SettingsPageItem::SubPageLink(SubPageLink {
+                title: "MCP Servers".into(),
+                r#type: Default::default(),
+                json_path: Some("context_servers"),
+                description: Some(
+                    "View, add, configure, and remove Model Context Protocol servers.".into(),
+                ),
+                search_aliases: &["context server", "mcp", "model context protocol"],
+                in_json: false,
+                files: USER,
+                render: render_mcp_servers_page,
+            }),
+        ]
+    }
+
+    fn agent_configuration_section(_cx: &App) -> Box<[SettingsPageItem]> {
+        let mut items = vec![SettingsPageItem::SectionHeader("Agent Configuration")];
 
         items.extend([
             SettingsPageItem::SubPageLink(SubPageLink {
                 title: tr!("Skills"),
                 r#type: Default::default(),
                 json_path: Some(zed_actions::AGENT_SKILLS_SETTINGS_PATH),
+<<<<<<< HEAD
                 description: Some(tr!(
                     "View and manage agent skills installed globally or in project worktrees."
                 )),
+=======
+                description: Some("View and manage agent skills installed globally or in project worktrees.".into()),
+                search_aliases: &["agent skill", "agent skills", "custom instructions", "skill", "skills"],
+>>>>>>> upstream/main
                 in_json: false,
                 files: USER | PROJECT,
                 render: render_skills_setup_page,
@@ -8226,6 +8307,15 @@ fn ai_page(cx: &App) -> SettingsPage {
                     "Review and change the elevated terminal sandbox permissions that are always allowed without prompting."
                         .into(),
                 ),
+                search_aliases: &[
+                    "allow",
+                    "domain",
+                    "filesystem",
+                    "network",
+                    "sandbox",
+                    "unsandboxed",
+                    "permissions",
+                ],
                 in_json: true,
                 files: USER,
                 render: render_sandbox_settings_page,
@@ -8234,40 +8324,19 @@ fn ai_page(cx: &App) -> SettingsPage {
                 title: tr!("Tool Permissions"),
                 r#type: Default::default(),
                 json_path: Some("agent.tool_permissions"),
+<<<<<<< HEAD
                 description: Some(tr!(
                     "Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs."
                 )),
+=======
+                description: Some("Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs.".into()),
+                search_aliases: &[],
+>>>>>>> upstream/main
                 in_json: true,
                 files: USER,
                 render: render_tool_permissions_setup_page,
             }),
         ]);
-
-        if agent_settings_ui_enabled {
-            items.push(SettingsPageItem::SubPageLink(SubPageLink {
-                title: "MCP Servers".into(),
-                r#type: Default::default(),
-                json_path: Some("context_servers"),
-                description: Some(
-                    "View, add, configure, and remove Model Context Protocol servers.".into(),
-                ),
-                in_json: false,
-                files: USER,
-                render: render_mcp_servers_page,
-            }));
-            items.push(SettingsPageItem::SubPageLink(SubPageLink {
-                title: "External Agents".into(),
-                r#type: Default::default(),
-                json_path: Some("agent_servers"),
-                description: Some(
-                    "View, add, and remove agents connected through the Agent Client Protocol."
-                        .into(),
-                ),
-                in_json: false,
-                files: USER,
-                render: render_external_agents_page,
-            }));
-        }
 
         items.extend([
             SettingsPageItem::SettingItem(SettingItem {
@@ -8625,6 +8694,7 @@ fn ai_page(cx: &App) -> SettingsPage {
         items.into_boxed_slice()
     }
 
+<<<<<<< HEAD
     fn context_servers_section() -> [SettingsPageItem; 2] {
         [
             SettingsPageItem::SectionHeader(tr!("Context Servers")),
@@ -8649,6 +8719,8 @@ fn ai_page(cx: &App) -> SettingsPage {
         ]
     }
 
+=======
+>>>>>>> upstream/main
     fn edit_prediction_display_sub_section() -> [SettingsPageItem; 1] {
         [SettingsPageItem::SettingItem(SettingItem {
             title: tr!("Display Mode"),
@@ -8682,14 +8754,20 @@ fn ai_page(cx: &App) -> SettingsPage {
     }
 
     SettingsPage {
+<<<<<<< HEAD
         title: tr!("AI"),
         items: concat_sections![
+=======
+        title: "AI",
+        items: concat_sections!(
+            @vec,
+>>>>>>> upstream/main
             general_section(),
             agent_configuration_section(cx),
-            context_servers_section(),
             edit_prediction_language_settings_section(),
-            edit_prediction_display_sub_section()
-        ],
+            edit_prediction_display_sub_section(),
+        )
+        .into(),
     }
 }
 
@@ -10057,7 +10135,7 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
         ]
     }
 
-    fn global_only_miscellaneous_sub_section() -> [SettingsPageItem; 4] {
+    fn global_only_miscellaneous_sub_section() -> [SettingsPageItem; 3] {
         [
             SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("Image Viewer"),
@@ -10142,6 +10220,7 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 ],
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Auto Replace Emoji Shortcode"),
                 description: tr!(
                     "Whether to automatically replace emoji shortcodes with emoji characters."
@@ -10172,6 +10251,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 description: tr!(
                     "Relative size of the drop target in the editor that will open dropped file as a split pane."
                 ),
+=======
+                title: "Drop Size Target",
+                description: "Relative size of the drop target in the editor that will open dropped file as a split pane.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("drop_target_size"),
@@ -10679,9 +10762,14 @@ fn edit_prediction_language_settings_section() -> [SettingsPageItem; 5] {
             title: tr!("Configure Providers"),
             r#type: Default::default(),
             json_path: Some("edit_predictions.providers"),
+<<<<<<< HEAD
             description: Some(tr!(
                 "Set up different edit prediction providers in complement to Zed's built-in Zeta model."
             )),
+=======
+            description: Some("Set up different edit prediction providers in complement to Zed's built-in Zeta model.".into()),
+            search_aliases: &[],
+>>>>>>> upstream/main
             in_json: false,
             files: USER,
             render: render_edit_prediction_setup_page,
