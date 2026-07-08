@@ -1404,6 +1404,7 @@ mod tests {
         const EXCLUDED_TOOLS: &[&str] = &[
             // Read-only / low-risk tools that don't call decide_permission_from_settings
             "apply_code_action",
+            "ask_user_question",
             "diagnostics",
             "find_path",
             "find_references",

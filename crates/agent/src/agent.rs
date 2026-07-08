@@ -2235,6 +2235,18 @@ impl NativeAgentConnection {
                                     thread.update_tool_call(update, cx)
                                 })??;
                             }
+                            ThreadEvent::ElicitationRequested { request, response } => {
+                                let response_task = acp_thread.update(cx, |thread, cx| {
+                                    thread.request_elicitation(request, cx)
+                                })??;
+                                cx.background_spawn(async move {
+                                    response
+                                        .send(response_task.await)
+                                        .map_err(|_| anyhow!("elicitation receiver was dropped"))
+                                        .log_err();
+                                })
+                                .detach();
+                            }
                             ThreadEvent::SubagentSpawned(session_id) => {
                                 acp_thread.update(cx, |thread, cx| {
                                     thread.subagent_spawned(session_id, cx);
