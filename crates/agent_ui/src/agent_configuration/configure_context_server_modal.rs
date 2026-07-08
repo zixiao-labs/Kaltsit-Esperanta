@@ -189,7 +189,7 @@ impl ConfigurationSource {
                         )
                     })
                 }
-            }
+            },
             ConfigurationSource::Extension {
                 id,
                 editor,

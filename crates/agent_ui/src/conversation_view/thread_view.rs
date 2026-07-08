@@ -14,8 +14,8 @@ use acp_thread::{
     SandboxAuthorizationDetails, SandboxFallbackAuthorizationDetails, SandboxNotAppliedReason,
 };
 use agent::{
-    SkillLoadingIssue, SkillLoadingIssueKind, SkillLoadingIssuesUpdated, SandboxStatusKey,
-    SandboxStatusRefresh, ThreadSandbox, VerifiedSandboxStatus,
+    SandboxStatusKey, SandboxStatusRefresh, SkillLoadingIssue, SkillLoadingIssueKind,
+    SkillLoadingIssuesUpdated, ThreadSandbox, VerifiedSandboxStatus,
 };
 use agent_settings::UserAgentsMd;
 use agent_skills::MAX_SKILL_DESCRIPTION_LEN;
@@ -11396,7 +11396,9 @@ impl ThreadView {
             ),
         };
 
-        let description = ama10_i18n::tr!("To continue, run /compact or start a new thread and @-mention this one");
+        let description = ama10_i18n::tr!(
+            "To continue, run /compact or start a new thread and @-mention this one"
+        );
 
         Some(
             Callout::new()

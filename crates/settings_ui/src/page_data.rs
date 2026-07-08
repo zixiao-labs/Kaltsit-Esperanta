@@ -8263,7 +8263,9 @@ fn ai_page(cx: &App) -> SettingsPage {
     }
 
     fn agent_configuration_section(_cx: &App) -> Box<[SettingsPageItem]> {
-        let mut items = vec![SettingsPageItem::SectionHeader("Agent Configuration".into())];
+        let mut items = vec![SettingsPageItem::SectionHeader(
+            "Agent Configuration".into(),
+        )];
 
         items.extend([
             SettingsPageItem::SubPageLink(SubPageLink {
@@ -8668,7 +8670,6 @@ fn ai_page(cx: &App) -> SettingsPage {
 
         items.into_boxed_slice()
     }
-
 
     fn edit_prediction_display_sub_section() -> [SettingsPageItem; 1] {
         [SettingsPageItem::SettingItem(SettingItem {

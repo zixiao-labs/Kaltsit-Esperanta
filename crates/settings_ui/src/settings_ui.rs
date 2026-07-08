@@ -2452,7 +2452,11 @@ impl SettingsWindow {
                     }
                     SettingsPageItem::SubPageLink(sub_page_link) => {
                         json_path = sub_page_link.json_path;
-                        let mut parts = vec![page.title.as_str(), header_str, sub_page_link.title.as_ref()];
+                        let mut parts = vec![
+                            page.title.as_str(),
+                            header_str,
+                            sub_page_link.title.as_ref(),
+                        ];
                         parts.extend(sub_page_link.search_aliases);
                         documents.push(SearchDocument {
                             id: key_index,

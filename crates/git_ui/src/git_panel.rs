@@ -7956,7 +7956,6 @@ mod tests {
         ));
     }
 
-
     fn entry_index_for_repo_path(panel: &GitPanel, repo_path: &RepoPath) -> Option<usize> {
         panel.entries.iter().position(|entry| {
             entry
