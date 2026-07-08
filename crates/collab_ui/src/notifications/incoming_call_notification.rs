@@ -128,7 +128,7 @@ impl Render for IncomingCallNotification {
             )
             .child(Label::new(tr_f!(
                 "{0} is sharing a project in Zed",
-                self.state.call.calling_user.github_login.clone()
+                self.state.call.calling_user.username.clone()
             ))),
         )
     }

@@ -241,7 +241,7 @@ impl TitleBar {
                                 })
                                 .occlude()
                                 .tooltip({
-                                    let login = collaborator.user.github_login.clone();
+                                    let login = collaborator.user.username.clone();
                                     Tooltip::text(tr_f!("Follow {}", login))
                                 }),
                         )
@@ -296,8 +296,8 @@ impl TitleBar {
                                     avatar.indicator(
                                         AvatarAudioStatusIndicator::new(ui::AudioStatus::Muted)
                                             .tooltip({
-                                                let github_login = user.github_login.clone();
-                                                Tooltip::text(tr_f!("{} is muted", github_login))
+                                                let username = user.username.clone();
+                                                Tooltip::text(tr_f!("{} is muted", username))
                                             }),
                                     )
                                 }),
