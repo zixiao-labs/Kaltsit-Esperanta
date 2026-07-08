@@ -8184,24 +8184,7 @@ fn ai_page(cx: &App) -> SettingsPage {
                 metadata: None,
                 files: USER,
             }),
-<<<<<<< HEAD
-        ]
-    }
-
-    fn agent_configuration_section(cx: &App) -> Box<[SettingsPageItem]> {
-        use feature_flags::FeatureFlagAppExt as _;
-
-        // The LLM provider and MCP server pages are gated behind a feature flag
-        // while their configuration is being moved out of the agent panel.
-        let agent_settings_ui_enabled = cx.has_flag::<feature_flags::AgentSettingsUiFeatureFlag>();
-
-        let mut items = vec![SettingsPageItem::SectionHeader(tr!("Agent Configuration"))];
-
-        if agent_settings_ui_enabled {
-            items.push(SettingsPageItem::SubPageLink(SubPageLink {
-=======
             SettingsPageItem::SubPageLink(SubPageLink {
->>>>>>> upstream/main
                 title: "LLM Providers".into(),
                 r#type: Default::default(),
                 json_path: Some("llm_providers"),
@@ -8280,21 +8263,17 @@ fn ai_page(cx: &App) -> SettingsPage {
     }
 
     fn agent_configuration_section(_cx: &App) -> Box<[SettingsPageItem]> {
-        let mut items = vec![SettingsPageItem::SectionHeader("Agent Configuration")];
+        let mut items = vec![SettingsPageItem::SectionHeader("Agent Configuration".into())];
 
         items.extend([
             SettingsPageItem::SubPageLink(SubPageLink {
                 title: tr!("Skills"),
                 r#type: Default::default(),
                 json_path: Some(zed_actions::AGENT_SKILLS_SETTINGS_PATH),
-<<<<<<< HEAD
                 description: Some(tr!(
                     "View and manage agent skills installed globally or in project worktrees."
                 )),
-=======
-                description: Some("View and manage agent skills installed globally or in project worktrees.".into()),
                 search_aliases: &["agent skill", "agent skills", "custom instructions", "skill", "skills"],
->>>>>>> upstream/main
                 in_json: false,
                 files: USER | PROJECT,
                 render: render_skills_setup_page,
@@ -8324,14 +8303,10 @@ fn ai_page(cx: &App) -> SettingsPage {
                 title: tr!("Tool Permissions"),
                 r#type: Default::default(),
                 json_path: Some("agent.tool_permissions"),
-<<<<<<< HEAD
                 description: Some(tr!(
                     "Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs."
                 )),
-=======
-                description: Some("Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs.".into()),
                 search_aliases: &[],
->>>>>>> upstream/main
                 in_json: true,
                 files: USER,
                 render: render_tool_permissions_setup_page,
@@ -8694,33 +8669,7 @@ fn ai_page(cx: &App) -> SettingsPage {
         items.into_boxed_slice()
     }
 
-<<<<<<< HEAD
-    fn context_servers_section() -> [SettingsPageItem; 2] {
-        [
-            SettingsPageItem::SectionHeader(tr!("Context Servers")),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: tr!("Context Server Timeout"),
-                description: tr!(
-                    "Default timeout in seconds for context server tool calls. Can be overridden per-server in context_servers configuration."
-                ),
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("context_server_timeout"),
-                    pick: |settings_content| {
-                        settings_content.project.context_server_timeout.as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content.project.context_server_timeout = value;
-                    },
-                }),
-                metadata: None,
-                files: USER | PROJECT,
-            }),
-        ]
-    }
 
-=======
->>>>>>> upstream/main
     fn edit_prediction_display_sub_section() -> [SettingsPageItem; 1] {
         [SettingsPageItem::SettingItem(SettingItem {
             title: tr!("Display Mode"),
@@ -8754,14 +8703,9 @@ fn ai_page(cx: &App) -> SettingsPage {
     }
 
     SettingsPage {
-<<<<<<< HEAD
         title: tr!("AI"),
-        items: concat_sections![
-=======
-        title: "AI",
         items: concat_sections!(
             @vec,
->>>>>>> upstream/main
             general_section(),
             agent_configuration_section(cx),
             edit_prediction_language_settings_section(),
@@ -10220,41 +10164,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
                 ],
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Auto Replace Emoji Shortcode"),
-                description: tr!(
-                    "Whether to automatically replace emoji shortcodes with emoji characters."
-                ),
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("message_editor.auto_replace_emoji_shortcode"),
-                    pick: |settings_content| {
-                        settings_content
-                            .message_editor
-                            .as_ref()
-                            .and_then(|message_editor| {
-                                message_editor.auto_replace_emoji_shortcode.as_ref()
-                            })
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .message_editor
-                            .get_or_insert_default()
-                            .auto_replace_emoji_shortcode = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("Drop Size Target"),
                 description: tr!(
                     "Relative size of the drop target in the editor that will open dropped file as a split pane."
                 ),
-=======
-                title: "Drop Size Target",
-                description: "Relative size of the drop target in the editor that will open dropped file as a split pane.",
->>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("drop_target_size"),
@@ -10762,14 +10675,10 @@ fn edit_prediction_language_settings_section() -> [SettingsPageItem; 5] {
             title: tr!("Configure Providers"),
             r#type: Default::default(),
             json_path: Some("edit_predictions.providers"),
-<<<<<<< HEAD
             description: Some(tr!(
                 "Set up different edit prediction providers in complement to Zed's built-in Zeta model."
             )),
-=======
-            description: Some("Set up different edit prediction providers in complement to Zed's built-in Zeta model.".into()),
             search_aliases: &[],
->>>>>>> upstream/main
             in_json: false,
             files: USER,
             render: render_edit_prediction_setup_page,

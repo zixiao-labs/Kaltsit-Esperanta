@@ -31,14 +31,7 @@ use ui::{
 use util::ResultExt as _;
 use workspace::{ModalView, Workspace};
 
-<<<<<<< HEAD
-use crate::AddContextServer;
-
 enum ConfigurationTarget {
-    New,
-=======
-enum ConfigurationTarget {
->>>>>>> upstream/main
     Existing {
         id: ContextServerId,
         command: ContextServerCommand,
@@ -63,19 +56,9 @@ enum ExistingServerType {
 }
 
 enum ConfigurationSource {
-<<<<<<< HEAD
-    New {
-        editor: Entity<Editor>,
-        is_http: bool,
-    },
-    Existing {
-        editor: Entity<Editor>,
-        is_http: bool,
-=======
     Existing {
         editor: Entity<Editor>,
         server_type: ExistingServerType,
->>>>>>> upstream/main
     },
     Extension {
         id: ContextServerId,
@@ -117,13 +100,6 @@ impl ConfigurationSource {
         }
 
         match target {
-<<<<<<< HEAD
-            ConfigurationTarget::New => ConfigurationSource::New {
-                editor: create_editor(context_server_input(None), jsonc_language, window, cx),
-                is_http: false,
-            },
-=======
->>>>>>> upstream/main
             ConfigurationTarget::Existing { id, command } => ConfigurationSource::Existing {
                 editor: create_editor(
                     context_server_input(Some((id, command))),
@@ -131,11 +107,7 @@ impl ConfigurationSource {
                     window,
                     cx,
                 ),
-<<<<<<< HEAD
-                is_http: false,
-=======
                 server_type: ExistingServerType::Local,
->>>>>>> upstream/main
             },
             ConfigurationTarget::ExistingHttp {
                 id,
@@ -149,11 +121,7 @@ impl ConfigurationSource {
                     window,
                     cx,
                 ),
-<<<<<<< HEAD
-                is_http: true,
-=======
                 server_type: ExistingServerType::Remote,
->>>>>>> upstream/main
             },
 
             ConfigurationTarget::Extension {
@@ -191,17 +159,11 @@ impl ConfigurationSource {
 
     fn output(&self, cx: &mut App) -> Result<(ContextServerId, ContextServerSettings)> {
         match self {
-<<<<<<< HEAD
-            ConfigurationSource::New { editor, is_http }
-            | ConfigurationSource::Existing { editor, is_http } => {
-                if *is_http {
-=======
             ConfigurationSource::Existing {
                 editor,
                 server_type,
             } => match *server_type {
                 ExistingServerType::Remote => {
->>>>>>> upstream/main
                     parse_http_input(&editor.read(cx).text(cx)).map(|(id, url, auth, oauth)| {
                         (
                             id,
@@ -214,12 +176,8 @@ impl ConfigurationSource {
                             },
                         )
                     })
-<<<<<<< HEAD
-                } else {
-=======
                 }
                 ExistingServerType::Local => {
->>>>>>> upstream/main
                     parse_input(&editor.read(cx).text(cx)).map(|(id, command)| {
                         (
                             id,
@@ -482,14 +440,7 @@ impl ConfigureContextServerModal {
         let server_id = match target {
             ConfigurationTarget::Existing { id, .. }
             | ConfigurationTarget::ExistingHttp { id, .. }
-<<<<<<< HEAD
-            | ConfigurationTarget::Extension { id, .. } => Some(id),
-            ConfigurationTarget::New => None,
-        }) else {
-            return State::Idle;
-=======
             | ConfigurationTarget::Extension { id, .. } => id,
->>>>>>> upstream/main
         };
 
         match context_server_store.read(cx).status_for_server(server_id) {
@@ -514,34 +465,6 @@ impl ConfigureContextServerModal {
         }
     }
 
-<<<<<<< HEAD
-    pub fn register(
-        workspace: &mut Workspace,
-        language_registry: Arc<LanguageRegistry>,
-        _window: Option<&mut Window>,
-        _cx: &mut Context<Workspace>,
-    ) {
-        workspace.register_action({
-            move |_workspace, _: &AddContextServer, window, cx| {
-                let workspace_handle = cx.weak_entity();
-                let language_registry = language_registry.clone();
-                window
-                    .spawn(cx, async move |cx| {
-                        Self::show_modal(
-                            ConfigurationTarget::New,
-                            language_registry,
-                            workspace_handle,
-                            cx,
-                        )
-                        .await
-                    })
-                    .detach_and_log_err(cx);
-            }
-        });
-    }
-
-=======
->>>>>>> upstream/main
     pub fn show_modal_for_existing_server(
         server_id: ContextServerId,
         language_registry: Arc<LanguageRegistry>,
@@ -626,20 +549,11 @@ impl ConfigureContextServerModal {
                     workspace: workspace_handle,
                     state: Self::initial_state(&context_server_store, &target, cx),
 
-<<<<<<< HEAD
-                    original_server_id: match &target {
-                        ConfigurationTarget::Existing { id, .. } => Some(id.clone()),
-                        ConfigurationTarget::ExistingHttp { id, .. } => Some(id.clone()),
-                        ConfigurationTarget::Extension { id, .. } => Some(id.clone()),
-                        ConfigurationTarget::New => None,
-                    },
-=======
                     original_server_id: Some(match &target {
                         ConfigurationTarget::Existing { id, .. }
                         | ConfigurationTarget::ExistingHttp { id, .. }
                         | ConfigurationTarget::Extension { id, .. } => id.clone(),
                     }),
->>>>>>> upstream/main
                     source: ConfigurationSource::from_target(
                         target,
                         language_registry,
@@ -887,16 +801,10 @@ impl EventEmitter<DismissEvent> for ConfigureContextServerModal {}
 impl ConfigureContextServerModal {
     fn render_modal_header(&self) -> ModalHeader {
         let text: SharedString = match &self.source {
-<<<<<<< HEAD
-            ConfigurationSource::New { .. } => ama10_i18n::tr!("Add MCP Server"),
             ConfigurationSource::Existing { .. } => ama10_i18n::tr!("Configure MCP Server"),
             ConfigurationSource::Extension { id, .. } => {
                 ama10_i18n::tr_f!("Configure {}", &*id.0)
             }
-=======
-            ConfigurationSource::Existing { .. } => "Configure MCP Server".into(),
-            ConfigurationSource::Extension { id, .. } => format!("Configure {}", id.0).into(),
->>>>>>> upstream/main
         };
         ModalHeader::new().headline(text)
     }
@@ -924,75 +832,6 @@ impl ConfigureContextServerModal {
         }
     }
 
-<<<<<<< HEAD
-    fn render_tab_bar(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
-        let is_http = match &self.source {
-            ConfigurationSource::New { is_http, .. } => *is_http,
-            _ => return None,
-        };
-
-        let border_focused = cx.theme().colors().border_focused;
-        let text_muted = cx.theme().colors().text_muted;
-        let text = cx.theme().colors().text;
-
-        let tab = |id: &'static str, label: SharedString, active: bool| {
-            div()
-                .id(id)
-                .cursor_pointer()
-                .p_1()
-                .text_sm()
-                .border_b_1()
-                .when(active, |this| this.border_color(border_focused))
-                .when(!active, |this| {
-                    this.border_color(gpui::transparent_black())
-                        .text_color(text_muted)
-                        .hover(|s| s.text_color(text))
-                })
-                .child(label)
-        };
-
-        let local_label = ama10_i18n::tr!("Local");
-        let remote_label = ama10_i18n::tr!("Remote");
-
-        Some(
-            h_flex()
-                .pt_1()
-                .mb_2p5()
-                .gap_1()
-                .border_b_1()
-                .border_color(cx.theme().colors().border.opacity(0.5))
-                .child(tab("Local", local_label, !is_http).on_click(cx.listener(
-                    |this, _, window, cx| {
-                        if let ConfigurationSource::New { editor, is_http } = &mut this.source {
-                            if *is_http {
-                                *is_http = false;
-                                let new_text = context_server_input(None);
-                                editor.update(cx, |editor, cx| {
-                                    editor.set_text(new_text, window, cx);
-                                });
-                            }
-                        }
-                    },
-                )))
-                .child(tab("Remote", remote_label, is_http).on_click(cx.listener(
-                    |this, _, window, cx| {
-                        if let ConfigurationSource::New { editor, is_http } = &mut this.source {
-                            if !*is_http {
-                                *is_http = true;
-                                let new_text = context_server_http_input(None);
-                                editor.update(cx, |editor, cx| {
-                                    editor.set_text(new_text, window, cx);
-                                });
-                            }
-                        }
-                    },
-                )))
-                .into_any_element(),
-        )
-    }
-
-=======
->>>>>>> upstream/main
     fn render_modal_content(&self, cx: &App) -> AnyElement {
         let editor = match &self.source {
             ConfigurationSource::Existing { editor, .. } => editor,
@@ -1090,31 +929,13 @@ impl ConfigureContextServerModal {
                         ),
                     )
                     .children(self.source.has_configuration_options().then(|| {
-<<<<<<< HEAD
-                        Button::new(
-                            "add-server",
-                            if self.source.is_new() {
-                                ama10_i18n::tr!("Add Server")
-                            } else {
-                                ama10_i18n::tr!("Configure Server")
-                            },
-                        )
-                        .disabled(is_busy)
-                        .key_binding(
-                            KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
-                                .map(|kb| kb.size(rems_from_px(12.))),
-                        )
-                        .on_click(
-                            cx.listener(|this, _event, _window, cx| {
-=======
-                        Button::new("configure-server", "Configure Server")
+                        Button::new("configure-server", ama10_i18n::tr!("Configure Server"))
                             .disabled(is_busy)
                             .key_binding(
                                 KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
                                     .map(|kb| kb.size(rems_from_px(12.))),
                             )
                             .on_click(cx.listener(|this, _event, _window, cx| {
->>>>>>> upstream/main
                                 this.confirm(&menu::Confirm, cx)
                             }))
                     })),

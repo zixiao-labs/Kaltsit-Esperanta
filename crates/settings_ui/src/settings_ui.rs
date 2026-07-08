@@ -1846,8 +1846,6 @@ impl SettingsWindow {
         })
         .detach();
 
-<<<<<<< HEAD
-        // Rebuild pages when the UI locale changes, so all `tr!()` labels are refreshed.
         cx.observe_global_in::<settings::settings_content::LocaleSettings>(
             window,
             |this, window, cx| {
@@ -1855,12 +1853,12 @@ impl SettingsWindow {
                 cx.notify();
             },
         )
-=======
+        .detach();
+
         let language_model_registry = language_model::LanguageModelRegistry::global(cx);
         cx.subscribe(&language_model_registry, |_, _, _event, cx| {
             cx.notify();
         })
->>>>>>> upstream/main
         .detach();
 
         cx.on_window_closed(|cx, _window_id| {
@@ -2454,19 +2452,11 @@ impl SettingsWindow {
                     }
                     SettingsPageItem::SubPageLink(sub_page_link) => {
                         json_path = sub_page_link.json_path;
-                        let mut parts = vec![page.title, header_str, sub_page_link.title.as_ref()];
+                        let mut parts = vec![page.title.as_str(), header_str, sub_page_link.title.as_ref()];
                         parts.extend(sub_page_link.search_aliases);
                         documents.push(SearchDocument {
                             id: key_index,
-<<<<<<< HEAD
-                            words: split_into_words(&[
-                                page.title.as_str(),
-                                header_str,
-                                sub_page_link.title.as_ref(),
-                            ]),
-=======
                             words: split_into_words(&parts),
->>>>>>> upstream/main
                         });
                         push_candidates(
                             &mut fuzzy_match_candidates,

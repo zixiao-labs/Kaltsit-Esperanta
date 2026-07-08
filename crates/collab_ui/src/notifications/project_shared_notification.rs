@@ -125,15 +125,9 @@ impl Render for ProjectSharedNotification {
         let no_worktree_root_names = self.worktree_root_names.is_empty();
 
         let punctuation = if no_worktree_root_names { "" } else { ":" };
-<<<<<<< HEAD
         let main_label = tr_f!(
             "{0} is sharing a project with you{1}",
-            self.owner.github_login.clone(),
-=======
-        let main_label = format!(
-            "{} is sharing a project with you{}",
             self.owner.username.clone(),
->>>>>>> upstream/main
             punctuation
         );
 

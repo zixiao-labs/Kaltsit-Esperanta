@@ -74,8 +74,8 @@ fn render_context_server_timeout(
     cx: &mut Context<SettingsWindow>,
 ) -> AnyElement {
     let item = SettingsPageItem::SettingItem(SettingItem {
-        title: "MCP Server Timeout",
-        description: "Default timeout in seconds for MCP server tool calls.",
+        title: "MCP Server Timeout".into(),
+        description: "Default timeout in seconds for MCP server tool calls.".into(),
         field: Box::new(SettingField {
             organization_override: None,
             json_path: Some("context_server_timeout"),

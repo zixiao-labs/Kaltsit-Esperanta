@@ -10,24 +10,19 @@ use rand::Rng;
 use std::cell::RefCell;
 
 use acp_thread::{
-<<<<<<< HEAD
-    ContentBlock, PlanEntry, SandboxAuthorizationDetails, SandboxFallbackAuthorizationDetails,
-    SandboxNotAppliedReason,
-=======
-    Elicitation, ElicitationEntryId, ElicitationStatus, PlanEntry, SandboxAuthorizationDetails,
-    SandboxFallbackAuthorizationDetails, SandboxNotAppliedReason,
->>>>>>> upstream/main
+    ContentBlock, Elicitation, ElicitationEntryId, ElicitationStatus, PlanEntry,
+    SandboxAuthorizationDetails, SandboxFallbackAuthorizationDetails, SandboxNotAppliedReason,
 };
-use agent::{SkillLoadingIssue, SkillLoadingIssueKind, SkillLoadingIssuesUpdated};
+use agent::{
+    SkillLoadingIssue, SkillLoadingIssueKind, SkillLoadingIssuesUpdated, SandboxStatusKey,
+    SandboxStatusRefresh, ThreadSandbox, VerifiedSandboxStatus,
+};
 use agent_settings::UserAgentsMd;
 use agent_skills::MAX_SKILL_DESCRIPTION_LEN;
 use cloud_api_types::{SubmitAgentThreadFeedbackBody, SubmitAgentThreadFeedbackCommentsBody};
 use editor::actions::OpenExcerpts;
-<<<<<<< HEAD
-=======
 use feature_flags::{AcpBetaFeatureFlag, FeatureFlagAppExt as _};
 use sandbox::{SandboxFsPolicy, SandboxNetPolicy, SandboxPolicy};
->>>>>>> upstream/main
 
 use crate::completion_provider::{AvailableSkill, PromptLocalCommand};
 use crate::message_editor::SharedSessionCapabilities;
@@ -661,6 +656,10 @@ pub struct ThreadView {
     dismissed_skill_loading_issues: HashSet<SkillLoadingIssue>,
     pub(crate) thread_search_bar: Option<Entity<super::thread_search_bar::ThreadSearchBar>>,
     pub(crate) thread_search_visible: bool,
+    sandbox_status_key: Option<SandboxStatusKey>,
+    sandbox_status: Option<VerifiedSandboxStatus>,
+    pending_sandbox_status_key: Option<SandboxStatusKey>,
+    _sandbox_status_refresh_task: Option<Task<()>>,
 }
 impl Focusable for ThreadView {
     fn focus_handle(&self, cx: &App) -> FocusHandle {
@@ -1044,6 +1043,10 @@ impl ThreadView {
             dismissed_skill_loading_issues: HashSet::default(),
             thread_search_bar: None,
             thread_search_visible: false,
+            sandbox_status_key: None,
+            sandbox_status: None,
+            pending_sandbox_status_key: None,
+            _sandbox_status_refresh_task: None,
         };
 
         this.sync_generating_indicator(cx);
@@ -4824,8 +4827,6 @@ impl ThreadView {
             .unwrap_or(false)
     }
 
-<<<<<<< HEAD
-=======
     fn refresh_sandbox_status(&mut self, cx: &mut Context<Self>) -> Option<VerifiedSandboxStatus> {
         let thread = self.as_native_thread(cx)?;
         let (key, refresh) =
@@ -4871,9 +4872,6 @@ impl ThreadView {
         let thread_sandbox = status.thread_sandbox.clone();
         let baseline = status.baseline_writable_paths;
 
-        // The lock is struck only when the *merged* result is unsandboxed (the
-        // agent runs with ambient permissions). A layer that is merely wide open
-        // but still sandboxed keeps the closed lock.
         let (icon, icon_color) = if settings_sandbox
             .clone()
             .merge(thread_sandbox.clone())
@@ -4885,11 +4883,7 @@ impl ThreadView {
         };
 
         let tooltip = match (settings_sandbox, thread_sandbox) {
-            // No sandbox at all because the user turned it off in settings: the
-            // per-thread layer is moot, so don't show it.
             (ThreadSandbox::Unsandboxed, _) => SandboxStatusTooltip::disabled_in_settings(),
-            // Sandboxed by settings, but disabled for this thread: show the
-            // settings scope (greyed) for context above the disabled status.
             (ThreadSandbox::Sandboxed(settings_policy), ThreadSandbox::Unsandboxed) => {
                 let settings = augment_settings_sandbox_policy(&settings_policy, baseline);
                 SandboxStatusTooltip::disabled_for_thread(sandbox_section(
@@ -4904,7 +4898,6 @@ impl ThreadView {
             ) => {
                 let settings = augment_settings_sandbox_policy(&settings_policy, baseline);
                 let thread = SandboxPolicyDisplay::from_policy(&thread_policy);
-                // Omit the per-thread section when it grants nothing extra.
                 let thread = (!sandbox_policy_grants_nothing(&thread))
                     .then(|| sandbox_section("Allowed for this thread:", &thread, false));
                 SandboxStatusTooltip::enabled(
@@ -4938,8 +4931,6 @@ impl ThreadView {
                 .into_any_element(),
         )
     }
-
->>>>>>> upstream/main
     fn render_fast_mode_control(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         if !self.fast_mode_available(cx) {
             return None;
@@ -5879,8 +5870,6 @@ impl Render for TokenUsageTooltip {
     }
 }
 
-<<<<<<< HEAD
-=======
 /// A display-ready snapshot of a sandbox policy for the status tooltip.
 ///
 /// The opaque `HostFilesystemLocation`s in a policy are stringified up front,
@@ -5892,29 +5881,20 @@ struct SandboxPolicyDisplay {
     network: SandboxNetPolicy,
 }
 
-/// The filesystem write-access portion of a [`SandboxPolicyDisplay`].
 #[derive(Clone)]
 enum SandboxFsDisplay {
     Unrestricted,
     Restricted(Vec<WritableEntryDisplay>),
 }
 
-/// A single writable entry to display in the sandbox tooltip: either a real host
-/// location (already stringified for display) or the Linux-only host-isolated
-/// `/tmp` overlay, which has no backing host path and is purely a label.
 #[derive(Clone)]
 enum WritableEntryDisplay {
     Path(String),
-    // Only ever constructed on Linux (the bwrap `--tmpfs /tmp` overlay), so the
-    // variant is gated to match and avoid dead-code warnings elsewhere.
     #[cfg(target_os = "linux")]
     IsolatedTmp,
 }
 
 impl SandboxPolicyDisplay {
-    /// Display a policy verbatim (used for the per-thread overrides, which carry
-    /// no implicit baseline grants). Takes the policy by reference and stringifies
-    /// its locations immediately, so no fd is retained past this call.
     fn from_policy(policy: &SandboxPolicy) -> Self {
         let fs = match &policy.fs {
             SandboxFsPolicy::Unrestricted { .. } => SandboxFsDisplay::Unrestricted,
@@ -5934,13 +5914,6 @@ impl SandboxPolicyDisplay {
     }
 }
 
-/// Fold the always-granted baseline writable paths (the project's worktree
-/// roots, derived from the same source the terminal tool uses) and, on Linux,
-/// the host-isolated `/tmp` overlay into a settings policy for display. These
-/// are part of what the sandbox grants whenever it's active but aren't
-/// persistent-settings entries, so they're shown in the "from your settings"
-/// section rather than stored. A no-op when the fs is unrestricted (rendered as
-/// "All paths"), since there's nothing to scope.
 fn augment_settings_sandbox_policy(
     policy: &SandboxPolicy,
     baseline: Vec<PathBuf>,
@@ -5948,14 +5921,6 @@ fn augment_settings_sandbox_policy(
     let fs = match &policy.fs {
         SandboxFsPolicy::Unrestricted { .. } => SandboxFsDisplay::Unrestricted,
         SandboxFsPolicy::Restricted { writable_paths, .. } => {
-            // Dedup by display string. We deliberately don't open the locations'
-            // fds to dedup by inode here: this is a display-only tooltip and the
-            // string is the location's identity for that purpose. The string can
-            // only diverge from the captured inode while a symlink-swap is
-            // actively in progress, and in that case the bind validator refuses
-            // to run the command at all (see the `sandbox` crate) — so showing the
-            // requested path is always safe, and not worth a blocking syscall on
-            // the render path.
             let mut merged: Vec<String> = Vec::new();
             let baseline_paths = baseline.iter().map(|path| path.display().to_string());
             let granted_paths = writable_paths
@@ -5966,14 +5931,9 @@ fn augment_settings_sandbox_policy(
                     merged.push(path);
                 }
             }
-            // `mut` is only needed on Linux, where the isolated `/tmp` entry is
-            // pushed below.
             #[cfg_attr(not(target_os = "linux"), allow(unused_mut))]
             let mut entries: Vec<WritableEntryDisplay> =
                 merged.into_iter().map(WritableEntryDisplay::Path).collect();
-            // The ephemeral, host-isolated tmpfs at /tmp is Linux-specific (the
-            // bwrap `--tmpfs /tmp` overlay). It's a display-only label, not a
-            // real host path, so it can't be a captured location.
             #[cfg(target_os = "linux")]
             entries.push(WritableEntryDisplay::IsolatedTmp);
             SandboxFsDisplay::Restricted(entries)
@@ -6003,8 +5963,6 @@ fn sandbox_section(title: &str, policy: &SandboxPolicyDisplay, show_empty: bool)
     section
 }
 
-/// Whether a policy grants nothing worth surfacing, used to decide whether to
-/// show the per-thread overrides section at all.
 fn sandbox_policy_grants_nothing(policy: &SandboxPolicyDisplay) -> bool {
     fs_grants_nothing(&policy.fs) && network_grants_nothing(&policy.network)
 }
@@ -6021,8 +5979,6 @@ fn network_grants_nothing(network: &SandboxNetPolicy) -> bool {
     }
 }
 
-/// Rows for the write-access group: a message for the "all"/"none" cases, or one
-/// row per granted path.
 fn sandbox_fs_rows(fs: &SandboxFsDisplay) -> Vec<SandboxRow> {
     match fs {
         SandboxFsDisplay::Unrestricted => vec![SandboxRow::message(
@@ -6034,7 +5990,6 @@ fn sandbox_fs_rows(fs: &SandboxFsDisplay) -> Vec<SandboxRow> {
         SandboxFsDisplay::Restricted(entries) => entries
             .iter()
             .map(|entry| match entry {
-                // The display string was captured up front.
                 WritableEntryDisplay::Path(path) => SandboxRow::path(PathBuf::from(path)),
                 #[cfg(target_os = "linux")]
                 WritableEntryDisplay::IsolatedTmp => {
@@ -6045,8 +6000,6 @@ fn sandbox_fs_rows(fs: &SandboxFsDisplay) -> Vec<SandboxRow> {
     }
 }
 
-/// Rows for the network-access group: a message for the "all"/"none" cases, or
-/// one row per allowed domain.
 fn sandbox_network_rows(network: &SandboxNetPolicy) -> Vec<SandboxRow> {
     match network {
         SandboxNetPolicy::Unrestricted => vec![SandboxRow::message("All domains (unrestricted)")],
@@ -6060,8 +6013,6 @@ fn sandbox_network_rows(network: &SandboxNetPolicy) -> Vec<SandboxRow> {
             .collect(),
     }
 }
-
->>>>>>> upstream/main
 impl ThreadView {
     fn render_entries(&mut self, cx: &mut Context<Self>) -> List {
         let max_content_width = AgentSettings::get_global(cx).max_content_width;
@@ -6697,11 +6648,10 @@ impl ThreadView {
             return Empty.into_any_element();
         }
 
-<<<<<<< HEAD
-        let open_as_markdown = IconButton::new("open-as-markdown", IconName::FileMarkdown)
+        let _open_as_markdown = IconButton::new("open-as-markdown", IconName::FileMarkdown)
             .shape(ui::IconButtonShape::Square)
             .icon_size(IconSize::Small)
-            .icon_color(Color::Ignored)
+            .icon_color(Color::Muted)
             .tooltip(Tooltip::text(ama10_i18n::tr!("Open Thread as Markdown")))
             .on_click(cx.listener(move |this, _, window, cx| {
                 if let Some(workspace) = this.workspace.upgrade() {
@@ -6709,7 +6659,7 @@ impl ThreadView {
                         .detach_and_log_err(cx);
                 }
             }));
-=======
+
         let last_response_index = thread
             .read(cx)
             .entries()
@@ -6720,7 +6670,7 @@ impl ThreadView {
             IconButton::new("copy_agent_response", IconName::Copy)
                 .icon_size(IconSize::Small)
                 .icon_color(Color::Muted)
-                .tooltip(Tooltip::text("Copy This Agent Response"))
+                .tooltip(Tooltip::text(ama10_i18n::tr!("Copy This Agent Response")))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     let entries = this.thread.read(cx).entries();
                     if let Some(text) = Self::get_agent_message_content(entries, response_index, cx)
@@ -6729,33 +6679,22 @@ impl ThreadView {
                     }
                 }))
         });
->>>>>>> upstream/main
 
         let scroll_to_recent_user_prompt =
             IconButton::new("scroll_to_recent_user_prompt", IconName::UserArrowUp)
                 .icon_size(IconSize::Small)
-<<<<<<< HEAD
-                .icon_color(Color::Ignored)
+                .icon_color(Color::Muted)
                 .tooltip(Tooltip::text(ama10_i18n::tr!(
                     "Scroll To Most Recent User Prompt"
                 )))
-=======
-                .icon_color(Color::Muted)
-                .tooltip(Tooltip::text("Scroll to Most Recent User Message"))
->>>>>>> upstream/main
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.scroll_to_most_recent_user_prompt(cx);
                 }));
 
         let scroll_to_top = IconButton::new("scroll_to_top", IconName::ArrowUp)
             .icon_size(IconSize::Small)
-<<<<<<< HEAD
-            .icon_color(Color::Ignored)
-            .tooltip(Tooltip::text(ama10_i18n::tr!("Scroll To Top")))
-=======
             .icon_color(Color::Muted)
-            .tooltip(Tooltip::text("Scroll to Top"))
->>>>>>> upstream/main
+            .tooltip(Tooltip::text(ama10_i18n::tr!("Scroll To Top")))
             .on_click(cx.listener(move |this, _, _, cx| {
                 this.scroll_to_top(cx);
             }));
@@ -6902,66 +6841,9 @@ impl ThreadView {
     fn available_local_commands(&self, cx: &App) -> Vec<PromptLocalCommand> {
         let mut commands = Vec::new();
 
-<<<<<<< HEAD
-            let tooltip_meta = || {
-                ama10_i18n::tr!(
-                    "Rating the thread sends all of your current conversation to the Zed team."
-                )
-            };
-
-            container = container
-                    .child(
-                        IconButton::new("feedback-thumbs-up", IconName::ThumbsUp)
-                            .shape(ui::IconButtonShape::Square)
-                            .icon_size(IconSize::Small)
-                            .icon_color(match feedback {
-                                Some(ThreadFeedback::Positive) => Color::Accent,
-                                _ => Color::Ignored,
-                            })
-                            .tooltip(move |window, cx| match feedback {
-                                Some(ThreadFeedback::Positive) => {
-                                    Tooltip::text(ama10_i18n::tr!("Thanks for your feedback!"))(window, cx)
-                                }
-                                _ => {
-                                    Tooltip::with_meta(ama10_i18n::tr!("Helpful Response"), None, tooltip_meta(), cx)
-                                }
-                            })
-                            .on_click(cx.listener(move |this, _, window, cx| {
-                                this.handle_feedback_click(ThreadFeedback::Positive, window, cx);
-                            })),
-                    )
-                    .child(
-                        IconButton::new("feedback-thumbs-down", IconName::ThumbsDown)
-                            .shape(ui::IconButtonShape::Square)
-                            .icon_size(IconSize::Small)
-                            .icon_color(match feedback {
-                                Some(ThreadFeedback::Negative) => Color::Accent,
-                                _ => Color::Ignored,
-                            })
-                            .tooltip(move |window, cx| match feedback {
-                                Some(ThreadFeedback::Negative) => {
-                                    Tooltip::text(
-                                    ama10_i18n::tr!("We appreciate your feedback and will use it to improve in the future."),
-                                )(window, cx)
-                                }
-                                _ => {
-                                    Tooltip::with_meta(
-                                        ama10_i18n::tr!("Not Helpful Response"),
-                                        None,
-                                        tooltip_meta(),
-                                        cx,
-                                    )
-                                }
-                            })
-                            .on_click(cx.listener(move |this, _, window, cx| {
-                                this.handle_feedback_click(ThreadFeedback::Negative, window, cx);
-                            })),
-                    );
-=======
         if self.is_thread_feedback_enabled(cx) {
             commands.push(PromptLocalCommand::ThumbsUp);
             commands.push(PromptLocalCommand::ThumbsDown);
->>>>>>> upstream/main
         }
 
         commands
@@ -8083,101 +7965,15 @@ impl ThreadView {
     fn render_sandbox_not_applied_warning(
         &self,
         reason: &SandboxNotAppliedReason,
-        terminal: &Entity<acp_thread::Terminal>,
+        _terminal: &Entity<acp_thread::Terminal>,
         cx: &Context<Self>,
     ) -> AnyElement {
-<<<<<<< HEAD
-        // (title, optional detail line, whether to offer the settings shortcut)
-        let (title, detail, show_settings_button): (SharedString, Option<SharedString>, bool) =
-            match reason {
-                SandboxNotAppliedReason::ErrorLinuxWsl(error) => (
-                    "Couldn't create a sandbox".into(),
-                    Some(error.user_facing_message().into()),
-                    false,
-                ),
-                SandboxNotAppliedReason::DisabledForThisThread => {
-                    // The grant only exists because an earlier command failed to
-                    // create a sandbox; surface that same explanation here.
-                    let detail = self
-                        .find_thread_sandbox_error(cx)
-                        .map(|error| {
-                            SharedString::from(format!(
-                                "Allowed for this thread after the sandbox failed: {}",
-                                error.user_facing_message()
-                            ))
-                        })
-                        .unwrap_or_else(|| {
-                            "Unsandboxed execution is allowed for the rest of this thread.".into()
-                        });
-                    ("Ran without sandbox".into(), Some(detail), false)
-                }
-            };
-
-        h_flex()
-            .px_2()
-            .py_1()
-            .gap_1()
-            .justify_between()
-            .border_t_1()
-            .border_color(cx.theme().status().warning_border)
-            .bg(cx.theme().status().warning_background.opacity(0.5))
-            .child(
-                h_flex()
-                    .min_w_0()
-                    .flex_1()
-                    .gap_1p5()
-                    .items_start()
-                    .child(
-                        Icon::new(IconName::Warning)
-                            .size(IconSize::XSmall)
-                            .color(Color::Warning),
-                    )
-                    .child(
-                        v_flex()
-                            .min_w_0()
-                            .gap_0p5()
-                            .child(Label::new(title).size(LabelSize::Small).color(Color::Muted))
-                            .when_some(detail, |this, detail| {
-                                this.child(
-                                    Label::new(detail)
-                                        .size(LabelSize::XSmall)
-                                        .color(Color::Muted),
-                                )
-                            }),
-                    ),
-            )
-            .when(show_settings_button, |this| {
-                this.child(
-                    IconButton::new(
-                        SharedString::from(format!(
-                            "open-sandbox-setting-{}",
-                            terminal.entity_id()
-                        )),
-                        IconName::Settings,
-                    )
-                    .icon_size(IconSize::XSmall)
-                    .icon_color(Color::Muted)
-                    .tooltip(Tooltip::text("Open the sandbox permission settings"))
-                    .on_click(|_event, window, cx| {
-                        window.dispatch_action(
-                            Box::new(zed_actions::OpenSettingsAt {
-                                path: zed_actions::AGENT_SANDBOX_SETTINGS_PATH.to_string(),
-                                target: None,
-                            }),
-                            cx,
-                        );
-                    }),
-                )
-            })
-=======
         let (title, detail): (SharedString, SharedString) = match reason {
             SandboxNotAppliedReason::ErrorLinuxWsl(error) => (
                 "Couldn't create a sandbox".into(),
                 error.user_facing_message().into(),
             ),
             SandboxNotAppliedReason::DisabledForThisThread => {
-                // The grant only exists because an earlier command failed to
-                // create a sandbox; surface that same explanation here.
                 let detail = self
                     .find_thread_sandbox_error(cx)
                     .map(|error| {
@@ -8198,7 +7994,6 @@ impl ThreadView {
             .icon(IconName::Warning)
             .title(title)
             .description(detail)
->>>>>>> upstream/main
             .into_any_element()
     }
 
@@ -8803,20 +8598,8 @@ impl ThreadView {
         cx: &Context<Self>,
     ) -> AnyElement {
         let has_network = details.network_all_hosts || !details.network_hosts.is_empty();
-<<<<<<< HEAD
-        let command = details
-            .command
-            .as_deref()
-            .filter(|command| !command.is_empty());
-        if details.write_paths.is_empty()
-            && !has_network
-            && command.is_none()
-            && details.reason.is_empty()
-        {
-=======
         let has_write = details.allow_fs_write_all || !details.write_paths.is_empty();
         if !has_network && !has_write && !details.unsandboxed && details.reason.is_empty() {
->>>>>>> upstream/main
             return Empty.into_any_element();
         }
 
@@ -8895,49 +8678,6 @@ impl ThreadView {
                         }),
                 )
                 .when(has_host_list && is_open, |this| {
-<<<<<<< HEAD
-                    this.child(
-                        v_flex()
-                            .id(("sandbox-network-hosts-list", entry_ix))
-                            .max_h_40()
-                            .overflow_y_scroll()
-                            .children(hosts.iter().enumerate().map(|(host_ix, host)| {
-                                h_flex()
-                                    .min_w_0()
-                                    .p_1p5()
-                                    .gap_2()
-                                    .bg(cx.theme().colors().editor_background)
-                                    .when(host_ix < hosts.len() - 1, |this| {
-                                        this.border_b_1().border_color(cx.theme().colors().border)
-                                    })
-                                    .child(
-                                        Icon::new(IconName::Public)
-                                            .color(Color::Muted)
-                                            .size(IconSize::Small),
-                                    )
-                                    .child(
-                                        Label::new(host.clone())
-                                            .size(LabelSize::XSmall)
-                                            .buffer_font(cx),
-                                    )
-                            })),
-                    )
-                })
-        });
-
-        if details.write_paths.is_empty() {
-            return v_flex()
-                .border_t_1()
-                .border_color(self.tool_card_border_color(cx))
-                .when_some(command, |this, command| {
-                    this.child(Self::render_sandbox_authorization_command(
-                        entry_ix, command, cx,
-                    ))
-                })
-                .children(network_section)
-                .into_any_element();
-        }
-=======
                     this.child(v_flex().children(hosts.iter().enumerate().map(
                         |(host_ix, host)| {
                             h_flex()
@@ -8978,100 +8718,33 @@ impl ThreadView {
                 .contains(tool_call_id);
             let mut paths = details.write_paths.clone();
             paths.sort();
->>>>>>> upstream/main
 
-        let is_open = !self
-            .collapsed_sandbox_authorization_details
-            .contains(tool_call_id);
-        let mut paths = details.write_paths.clone();
-        paths.sort();
-
-        v_flex()
-            .border_t_1()
-            .border_color(self.tool_card_border_color(cx))
-            .when_some(command, |this, command| {
-                this.child(Self::render_sandbox_authorization_command(
-                    entry_ix, command, cx,
-                ))
-            })
-            .children(network_section)
-            .child(
-                h_flex()
-                    .id(("sandbox-authorization-details-header", entry_ix))
-                    .p_1()
-                    .justify_between()
-                    .cursor_pointer()
-                    .hover(|style| style.bg(cx.theme().colors().element_hover))
-                    .child(
-                        h_flex()
-                            .gap_1()
-                            .child(
-                                Label::new(ama10_i18n::tr!("Write access"))
-                                    .size(LabelSize::Small)
-                                    .color(Color::Muted),
-                            )
-                            .child(
-                                Label::new("•")
-                                    .size(LabelSize::XSmall)
-                                    .color(Color::Disabled),
-                            )
-                            .child(
-                                Label::new(ama10_i18n::tr_f!(
-                                    "{} {}",
-                                    paths.len(),
-                                    if paths.len() == 1 {
-                                        ama10_i18n::tr!("path")
-                                    } else {
-                                        ama10_i18n::tr!("paths")
-                                    }
-                                ))
-                                .size(LabelSize::Small)
-                                .color(Color::Muted),
-                            ),
-                    )
-                    .child(
-                        Disclosure::new(("sandbox-authorization-details", entry_ix), is_open)
-                            .opened_icon(IconName::ChevronUp)
-                            .closed_icon(IconName::ChevronDown),
-                    )
-                    .on_click(cx.listener({
-                        let tool_call_id = tool_call_id.clone();
-                        move |this, _event, _window, cx| {
-                            if this
-                                .collapsed_sandbox_authorization_details
-                                .remove(&tool_call_id)
-                            {
-                                cx.notify();
-                                return;
-                            }
-
-                            this.collapsed_sandbox_authorization_details
-                                .insert(tool_call_id.clone());
-                            cx.notify();
-                        }
-                    })),
-            )
-            .when(is_open && !paths.is_empty(), |this| {
-                this.child(
-                    v_flex()
-                        .gap_0p5()
-                        .child(
-                            Label::new("Reason from agent")
-                                .size(LabelSize::XSmall)
-                                .color(Color::Muted)
-                                .buffer_font(cx),
-                        )
-                        .child(Label::new(details.reason.clone()).size(LabelSize::Small)),
-                )
-            })
-            .when(!paths.is_empty(), |this| {
-                this.child(
+            v_flex()
+                .child(
                     h_flex()
-                        .id(("sandbox-authorization-details-header", entry_ix))
+                        .id(("sandbox-write-details-header", entry_ix))
                         .p_1()
                         .justify_between()
-                        .cursor_pointer()
-                        .hover(|style| style.bg(cx.theme().colors().element_hover))
+                        .when(has_path_list, |this| {
+                            this.cursor_pointer()
+                                .hover(|style| style.bg(cx.theme().colors().element_hover))
+                                .on_click(cx.listener({
+                                    let tool_call_id = tool_call_id.clone();
+                                    move |this, _event, _window, cx| {
+                                        if this
+                                            .collapsed_sandbox_authorization_details
+                                            .remove(&tool_call_id)
+                                        {
+                                            cx.notify();
+                                            return;
+                                        }
+
+                                        this.collapsed_sandbox_authorization_details
+                                            .insert(tool_call_id.clone());
+                                        cx.notify();
+                                    }
+                                }))
+                        })
                         .child(
                             h_flex()
                                 .gap_1()
@@ -9086,57 +8759,19 @@ impl ThreadView {
                                         .color(Color::Disabled),
                                 )
                                 .child(
-                                    Label::new(format!(
-                                        "{} {}",
-                                        paths.len(),
-                                        if paths.len() == 1 { "path" } else { "paths" }
-                                    ))
-                                    .size(LabelSize::Small)
-                                    .color(Color::Muted),
+                                    Label::new(summary)
+                                        .size(LabelSize::Small)
+                                        .color(Color::Muted),
                                 ),
                         )
-                        .child(
-                            Disclosure::new(("sandbox-authorization-details", entry_ix), is_open)
-                                .opened_icon(IconName::ChevronUp)
-                                .closed_icon(IconName::ChevronDown),
-                        )
-                        .on_click(cx.listener({
-                            let tool_call_id = tool_call_id.clone();
-                            move |this, _event, _window, cx| {
-                                if this
-                                    .collapsed_sandbox_authorization_details
-                                    .remove(&tool_call_id)
-                                {
-                                    cx.notify();
-                                    return;
-                                }
-
-                                this.collapsed_sandbox_authorization_details
-                                    .insert(tool_call_id.clone());
-                                cx.notify();
-                            }
-                        })),
+                        .when(has_path_list, |this| {
+                            this.child(
+                                Disclosure::new(("sandbox-write-details", entry_ix), is_open)
+                                    .opened_icon(IconName::ChevronUp)
+                                    .closed_icon(IconName::ChevronDown),
+                            )
+                        }),
                 )
-<<<<<<< HEAD
-                .when(is_open, |this| {
-                    this.child(
-                        v_flex()
-                            .id(("sandbox-authorization-paths-list", entry_ix))
-                            .max_h_40()
-                            .overflow_y_scroll()
-                            .children(paths.iter().enumerate().map(|(path_ix, path)| {
-                                self.render_sandbox_authorization_path_row(
-                                    entry_ix,
-                                    path_ix,
-                                    path,
-                                    path_ix < paths.len() - 1,
-                                    cx,
-                                )
-                            })),
-                    )
-                })
-            })
-=======
                 .when(has_path_list && is_open, |this| {
                     this.child(v_flex().children(paths.iter().enumerate().map(
                         |(path_ix, path)| {
@@ -9183,8 +8818,6 @@ impl ThreadView {
                 .child(Label::new(details.reason.clone()).size(LabelSize::Small))
         });
 
-        // The command stays in the tool-call title above; here we show what the
-        // command is asking for (paths / domains) and the agent's reason.
         v_flex()
             .border_t_1()
             .border_color(self.tool_card_border_color(cx))
@@ -9192,7 +8825,6 @@ impl ThreadView {
             .children(write_section)
             .children(unsandboxed_section)
             .children(reason_section)
->>>>>>> upstream/main
             .into_any_element()
     }
 
@@ -9231,49 +8863,6 @@ impl ThreadView {
                     .child(Label::new(details.reason.clone()).size(LabelSize::Small)),
             )
             .into_any_element()
-    }
-
-    fn render_sandbox_authorization_command(entry_ix: usize, command: &str, cx: &App) -> Div {
-        let group = SharedString::from(format!("sandbox-authorization-command-{entry_ix}"));
-        let command = SharedString::from(command.to_string());
-
-        v_flex()
-            .group(group.clone())
-            .relative()
-            .p_1p5()
-            .gap_1()
-            .bg(cx.theme().colors().editor_background)
-            .child(
-                Label::new("Command")
-                    .size(LabelSize::XSmall)
-                    .color(Color::Muted),
-            )
-            .child(
-                div()
-                    .id(("sandbox-authorization-command-scroll", entry_ix))
-                    .flex()
-                    .flex_1()
-                    .w_full()
-                    .min_w_0()
-                    .overflow_x_scroll()
-                    .whitespace_nowrap()
-                    .rounded_sm()
-                    .border_1()
-                    .border_color(cx.theme().colors().border)
-                    .p_1()
-                    .child(
-                        Label::new(command.clone())
-                            .buffer_font(cx)
-                            .size(LabelSize::XSmall),
-                    ),
-            )
-            .child(
-                div().absolute().top_1().right_1().child(
-                    CopyButton::new("copy-sandbox-authorization-command", command)
-                        .tooltip_label("Copy Command")
-                        .visible_on_hover(group),
-                ),
-            )
     }
 
     fn render_sandbox_authorization_path_row(
@@ -11807,11 +11396,7 @@ impl ThreadView {
             ),
         };
 
-<<<<<<< HEAD
-        let description = ama10_i18n::tr!("To continue, start a new thread from a summary.");
-=======
-        let description = "To continue, run /compact or start a new thread and @-mention this one";
->>>>>>> upstream/main
+        let description = ama10_i18n::tr!("To continue, run /compact or start a new thread and @-mention this one");
 
         Some(
             Callout::new()

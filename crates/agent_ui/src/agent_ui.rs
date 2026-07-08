@@ -325,6 +325,8 @@ actions!(
         ImportThreadsFromOtherChannels,
         /// Starts a new terminal thread.
         NewTerminalThread,
+        /// Opens the dialog to add a new custom context server.
+        AddContextServer,
     ]
 );
 

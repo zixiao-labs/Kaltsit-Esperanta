@@ -4599,39 +4599,10 @@ impl GitPanel {
         } else {
             button.tooltip(move |_window, cx| {
                 if !can_commit {
-                    Tooltip::simple("No Changes to Commit", cx)
+                    Tooltip::simple(ama10_i18n::tr!("No changes to commit"), cx)
                 } else {
-<<<<<<< HEAD
-                    Color::Muted
-                })
-                .tooltip(move |_window, cx| {
-                    if !can_commit {
-                        Tooltip::simple(ama10_i18n::tr!("No changes to commit"), cx)
-                    } else if has_commit_model_configuration_error {
-                        Tooltip::simple(
-                            ama10_i18n::tr!(
-                                "Configure an LLM provider to generate commit messages"
-                            ),
-                            cx,
-                        )
-                    } else {
-                        Tooltip::for_action_in(
-                            ama10_i18n::tr!("Generate Commit Message"),
-                            &git::GenerateCommitMessage,
-                            &editor_focus_handle,
-                            cx,
-                        )
-                    }
-                })
-                .disabled(!can_commit || has_commit_model_configuration_error)
-                .on_click(cx.listener(move |this, _event, _window, cx| {
-                    this.generate_commit_message(cx);
-                }))
-                .into_any_element(),
-        )
-=======
                     Tooltip::for_action_in(
-                        "Generate Commit Message",
+                        ama10_i18n::tr!("Generate Commit Message"),
                         &git::GenerateCommitMessage,
                         &editor_focus_handle,
                         cx,
@@ -4641,7 +4612,6 @@ impl GitPanel {
         };
 
         Some(button.into_any_element())
->>>>>>> upstream/main
     }
 
     pub(crate) fn render_co_authors(&self, cx: &Context<Self>) -> Option<AnyElement> {
@@ -7931,8 +7901,6 @@ mod tests {
         });
     }
 
-<<<<<<< HEAD
-=======
     #[test]
     fn test_tree_view_directory_expansion_is_scoped_to_section() {
         let entry = |path, status| GitStatusEntry {
@@ -7988,19 +7956,7 @@ mod tests {
         ));
     }
 
-    fn register_git_commit_language(project: &Entity<Project>, cx: &mut VisualTestContext) {
-        project.read_with(cx, |project, _| {
-            project.languages().add(Arc::new(language::Language::new(
-                language::LanguageConfig {
-                    name: "Git Commit".into(),
-                    ..Default::default()
-                },
-                None,
-            )));
-        });
-    }
 
->>>>>>> upstream/main
     fn entry_index_for_repo_path(panel: &GitPanel, repo_path: &RepoPath) -> Option<usize> {
         panel.entries.iter().position(|entry| {
             entry

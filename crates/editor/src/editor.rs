@@ -4223,6 +4223,7 @@ impl Editor {
         };
 
         let bookmark = self.bookmark_at_row(row, window, cx);
+        let has_bookmark = bookmark.is_some();
 
         let set_bookmark_msg = if bookmark.as_ref().is_some() {
             tr!("Remove Bookmark")
@@ -4381,14 +4382,6 @@ impl Editor {
                     }
                 })
                 .separator()
-<<<<<<< HEAD
-                .entry(set_bookmark_msg, None, move |window, cx| {
-                    weak_editor
-                        .update(cx, |this, cx| {
-                            this.toggle_bookmark_at_anchor(anchor, window, cx);
-                        })
-                        .log_err();
-=======
                 .entry(set_bookmark_msg, Some(ToggleBookmark.boxed_clone()), {
                     let weak_editor = weak_editor.clone();
                     move |_window, cx| {
@@ -4411,7 +4404,6 @@ impl Editor {
                                 .log_err();
                         },
                     )
->>>>>>> upstream/main
                 })
         })
     }
@@ -4512,55 +4504,7 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> IconButton {
-<<<<<<< HEAD
-        #[derive(Clone, Copy)]
-        enum Intent {
-            SetBookmark,
-            SetBreakpoint,
-        }
 
-        impl Intent {
-            fn as_str(&self) -> SharedString {
-                match self {
-                    Intent::SetBookmark => tr!("Set bookmark"),
-                    Intent::SetBreakpoint => tr!("Set breakpoint"),
-                }
-            }
-
-            fn icon(&self) -> ui::IconName {
-                match self {
-                    Intent::SetBookmark => ui::IconName::Bookmark,
-                    Intent::SetBreakpoint => ui::IconName::DebugBreakpoint,
-                }
-            }
-
-            fn color(&self) -> Color {
-                match self {
-                    Intent::SetBookmark => Color::Info,
-                    Intent::SetBreakpoint => Color::Hint,
-                }
-            }
-
-            fn secondary_and_options(&self) -> SharedString {
-                let alt_as_text = gpui::Keystroke {
-                    modifiers: Modifiers::secondary_key(),
-                    ..Default::default()
-                };
-                match self {
-                    Intent::SetBookmark => tr_f!(
-                        "{}-click to add a bookmark\nright-click for more options",
-                        alt_as_text
-                    ),
-                    Intent::SetBreakpoint => tr_f!(
-                        "{}-click to add a breakpoint\nright-click for more options",
-                        alt_as_text
-                    ),
-                }
-            }
-        }
-
-=======
->>>>>>> upstream/main
         let gutter_settings = EditorSettings::get_global(cx).gutter;
         let show_bookmarks = self.show_bookmarks.unwrap_or(gutter_settings.bookmarks);
         let show_breakpoints = self.show_breakpoints.unwrap_or(gutter_settings.breakpoints);
@@ -4616,26 +4560,12 @@ impl Editor {
             }))
             .when(!has_context_menu, |button| {
                 button.tooltip(move |_window, cx| {
-<<<<<<< HEAD
-                    let action: &dyn Action = match intent {
-                        Intent::SetBookmark => &ToggleBookmark,
-                        Intent::SetBreakpoint => &ToggleBreakpoint,
-                    };
-                    Tooltip::with_meta_in(
-                        intent.as_str(),
-                        Some(action),
-                        intent.secondary_and_options(),
-                        &focus_handle,
-                        cx,
-                    )
-=======
                     cx.new(|_| GutterButtonTooltip {
                         primary,
                         secondary,
                         focus_handle: focus_handle.clone(),
                     })
                     .into()
->>>>>>> upstream/main
                 })
             })
     }

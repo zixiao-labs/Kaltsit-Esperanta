@@ -909,34 +909,6 @@ pub(crate) fn render_buffer_header(
                         ))
                         .when_some(diff_stat, |this, (added, removed)| {
                             this.child(
-<<<<<<< HEAD
-                                div()
-                                    .when(!is_selected, |this| {
-                                        this.visible_on_hover("buffer-header-group")
-                                    })
-                                    .child(
-                                        Button::new("open-file-button", tr!("Open File"))
-                                            .style(ButtonStyle::OutlinedGhost)
-                                            .when(is_selected, |this| {
-                                                this.key_binding(KeyBinding::for_action_in(
-                                                    &OpenExcerpts,
-                                                    &focus_handle,
-                                                    cx,
-                                                ))
-                                            })
-                                            .on_click(window.listener_for(editor, {
-                                                let jump_data = jump_data.clone();
-                                                move |editor, e: &ClickEvent, window, cx| {
-                                                    editor.open_excerpts_common(
-                                                        Some(jump_data.clone()),
-                                                        e.modifiers().secondary(),
-                                                        window,
-                                                        cx,
-                                                    );
-                                                }
-                                            })),
-                                    ),
-=======
                                 div().flex_shrink_0().child(
                                     DiffStat::new(
                                         ("buffer-header-diff-stat", buffer_id.to_proto()),
@@ -945,7 +917,6 @@ pub(crate) fn render_buffer_header(
                                     )
                                     .label_size(LabelSize::Small),
                                 ),
->>>>>>> upstream/main
                             )
                         })
                         .when(
@@ -954,7 +925,7 @@ pub(crate) fn render_buffer_header(
                                 && (is_selected || header_hovered),
                             |this| {
                                 this.child(
-                                    Button::new("open-file-button", "Open File")
+                                    Button::new("open-file-button", ama10_i18n::tr!("Open File"))
                                         .style(ButtonStyle::OutlinedGhost)
                                         .when(is_selected, |this| {
                                             this.key_binding(KeyBinding::for_action_in(

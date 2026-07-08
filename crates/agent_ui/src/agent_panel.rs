@@ -34,6 +34,7 @@ use zed_actions::{
     },
 };
 
+use crate::AddContextServer;
 use crate::ExpandMessageEditor;
 use crate::ManageProfiles;
 use crate::agent_connection_store::AgentConnectionStore;
@@ -5360,17 +5361,9 @@ impl AgentPanel {
                     Label::new(ama10_i18n::tr!("Terminal")).into_any_element()
                 }
             }
-<<<<<<< HEAD
-            VisibleSurface::Configuration(_) => Label::new(ama10_i18n::tr!("Settings"))
-                .truncate()
-                .into_any_element(),
             VisibleSurface::Uninitialized => Label::new(ama10_i18n::tr!("Agent"))
                 .truncate()
                 .into_any_element(),
-=======
-
-            VisibleSurface::Uninitialized => Label::new("Agent").truncate().into_any_element(),
->>>>>>> upstream/main
         };
 
         let toolbar_bg = cx.theme().colors().tab_bar_background;
@@ -5520,21 +5513,12 @@ impl AgentPanel {
                     Some(ContextMenu::build(window, cx, |mut menu, _window, cx| {
                         menu = menu.context(menu_action_context.clone());
 
-<<<<<<< HEAD
-                        if can_regenerate_thread_title {
+                        if has_thread_messages {
                             menu = menu.header(ama10_i18n::tr!("Current Thread"));
 
                             if let Some(conversation_view) = conversation_view.as_ref() {
-                                menu = menu
-                                    .entry(ama10_i18n::tr!("Regenerate Thread Title"), None, {
-=======
-                        if has_thread_messages {
-                            menu = menu.header("Current Thread");
-
-                            if let Some(conversation_view) = conversation_view.as_ref() {
                                 if can_regenerate_thread_title {
-                                    menu = menu.entry("Regenerate Thread Title", None, {
->>>>>>> upstream/main
+                                    menu = menu.entry(ama10_i18n::tr!("Regenerate Thread Title"), None, {
                                         let conversation_view = conversation_view.clone();
                                         let workspace = workspace.clone();
                                         move |_, cx| {
@@ -5572,21 +5556,17 @@ impl AgentPanel {
 
                         if !showing_terminal {
                             menu = menu
-<<<<<<< HEAD
                                 .header(ama10_i18n::tr!("MCP Servers"))
-=======
-                                .header("MCP Servers")
                                 .action(
-                                    "Add Server…",
+                                    ama10_i18n::tr!("Add Server…"),
                                     Box::new(zed_actions::OpenSettingsAt {
                                         path: "context_servers".to_string(),
                                         target: None,
                                     }),
                                 )
->>>>>>> upstream/main
                                 .action(
                                     ama10_i18n::tr!("Add Custom Server…"),
-                                    Box::new(AddContextServer::default()),
+                                    Box::new(AddContextServer),
                                 )
                                 .action(
                                     ama10_i18n::tr!("Install New Servers…"),
@@ -5658,34 +5638,10 @@ impl AgentPanel {
                                 }
                             }
 
-<<<<<<< HEAD
                             menu = menu.action(
                                 ama10_i18n::tr!("Profiles"),
                                 Box::new(ManageProfiles::default()),
                             );
-=======
-                            menu = menu
-                                .separator()
-                                .header("MCP Servers")
-                                .action(
-                                    "Add Server…",
-                                    Box::new(zed_actions::OpenSettingsAt {
-                                        path: "context_servers".to_string(),
-                                        target: None,
-                                    }),
-                                )
-                                .action(
-                                    "Install New Servers…",
-                                    Box::new(zed_actions::Extensions {
-                                        category_filter: Some(
-                                            zed_actions::ExtensionCategoryFilter::ContextServers,
-                                        ),
-                                        id: None,
-                                    }),
-                                )
-                                .separator()
-                                .action("Profiles", Box::new(ManageProfiles::default()));
->>>>>>> upstream/main
                         }
 
                         menu = menu
@@ -5715,29 +5671,6 @@ impl AgentPanel {
             })
     }
 
-<<<<<<< HEAD
-    fn render_toolbar_back_button(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let focus_handle = self.focus_handle(cx);
-
-        IconButton::new("go-back", IconName::ArrowLeft)
-            .icon_size(IconSize::Small)
-            .on_click(cx.listener(|this, _, window, cx| {
-                this.go_back(&workspace::GoBack, window, cx);
-            }))
-            .tooltip({
-                move |_window, cx| {
-                    Tooltip::for_action_in(
-                        ama10_i18n::tr!("Go Back"),
-                        &workspace::GoBack,
-                        &focus_handle,
-                        cx,
-                    )
-                }
-            })
-    }
-
-=======
->>>>>>> upstream/main
     fn render_no_project_state(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let focus_handle = self.focus_handle(cx);
 
@@ -5795,15 +5728,18 @@ impl AgentPanel {
             let focus_handle = focus_handle.clone();
             let agent_server_store = agent_server_store;
 
+            let active_thread = self
+                .active_conversation_view()
+                .and_then(|cv| cv.read(cx).root_thread_view());
+
             Rc::new(move |window, cx| {
                 Some(ContextMenu::build(window, cx, |menu, _window, cx| {
                     menu.context(focus_handle.clone())
-<<<<<<< HEAD
-                        .when_some(active_thread, |this, active_thread| {
-                            let thread = active_thread.read(cx);
+                        .when_some(active_thread.clone(), |this, active_thread| {
+                            let acp_thread = active_thread.read(cx).thread.read(cx);
 
-                            if !thread.is_empty() {
-                                let session_id = thread.id().clone();
+                            if !acp_thread.entries().is_empty() {
+                                let session_id = acp_thread.session_id().clone();
                                 this.item(
                                     ContextMenuEntry::new(ama10_i18n::tr!("New From Summary"))
                                         .icon(IconName::ThreadFromSummary)
@@ -5821,8 +5757,6 @@ impl AgentPanel {
                                 this
                             }
                         })
-=======
->>>>>>> upstream/main
                         .item(
                             ContextMenuEntry::new("Zed Agent")
                                 .when(

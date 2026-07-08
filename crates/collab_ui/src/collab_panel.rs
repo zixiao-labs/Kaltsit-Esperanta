@@ -1137,11 +1137,7 @@ impl CollabPanel {
             .current_user()
             .map(|user| user.legacy_id)
             == Some(user_id);
-<<<<<<< HEAD
-        let tooltip = tr_f!("Follow {}", user.github_login);
-=======
-        let tooltip = format!("Follow {}", user.username);
->>>>>>> upstream/main
+        let tooltip = tr_f!("Follow {}", user.username);
 
         let is_call_admin = ActiveCall::global(cx).read(cx).room().is_some_and(|room| {
             room.read(cx).local_participant().role == proto::ChannelRole::Admin
@@ -1673,17 +1669,10 @@ impl CollabPanel {
             let user_id = contact.user.legacy_id;
 
             if contact.online && !contact.busy {
-<<<<<<< HEAD
                 let label: SharedString = if in_room {
-                    tr_f!("Invite {} to join", contact.user.github_login.clone())
+                    tr_f!("Invite {} to join", contact.user.username.clone())
                 } else {
-                    tr_f!("Call {}", contact.user.github_login.clone())
-=======
-                let label = if in_room {
-                    format!("Invite {} to join", contact.user.username)
-                } else {
-                    format!("Call {}", contact.user.username)
->>>>>>> upstream/main
+                    tr_f!("Call {}", contact.user.username.clone())
                 };
                 context_menu = context_menu.entry(label, None, {
                     let this = this.clone();
@@ -3153,29 +3142,16 @@ impl CollabPanel {
             .group("")
             .child(item)
             .tooltip(move |_, cx| {
-<<<<<<< HEAD
                 let text: SharedString = if !online {
-                    tr_f!("{} is offline", github_login.clone())
+                    tr_f!("{} is offline", username.clone())
                 } else if busy {
-                    tr_f!("{} is on a call", github_login.clone())
+                    tr_f!("{} is on a call", username.clone())
                 } else {
                     let room = ActiveCall::global(cx).read(cx).room();
                     if room.is_some() {
-                        tr_f!("Invite {} to join call", github_login.clone())
+                        tr_f!("Invite {} to join call", username.clone())
                     } else {
-                        tr_f!("Call {}", github_login.clone())
-=======
-                let text = if !online {
-                    format!(" {} is offline", &username)
-                } else if busy {
-                    format!(" {} is on a call", &username)
-                } else {
-                    let room = ActiveCall::global(cx).read(cx).room();
-                    if room.is_some() {
-                        format!("Invite {} to join call", &username)
-                    } else {
-                        format!("Call {}", &username)
->>>>>>> upstream/main
+                        tr_f!("Call {}", username.clone())
                     }
                 };
                 Tooltip::simple(text, cx)
@@ -3598,30 +3574,22 @@ impl CollabPanel {
                 let requester = user_store.get_cached_user(*sender_id)?;
                 Some((
                     Some(requester.clone()),
-<<<<<<< HEAD
                     tr_f!(
                         "{} wants to add you as a contact",
-                        requester.github_login.clone()
+                        requester.username.clone()
                     )
                     .to_string(),
-=======
-                    format!("{} wants to add you as a contact", requester.username),
->>>>>>> upstream/main
                 ))
             }
             Notification::ContactRequestAccepted { responder_id } => {
                 let responder = user_store.get_cached_user(*responder_id)?;
                 Some((
                     Some(responder.clone()),
-<<<<<<< HEAD
                     tr_f!(
                         "{} accepted your contact request",
-                        responder.github_login.clone()
+                        responder.username.clone()
                     )
                     .to_string(),
-=======
-                    format!("{} accepted your contact request", responder.username),
->>>>>>> upstream/main
                 ))
             }
             Notification::ChannelInvitation {
@@ -3632,19 +3600,12 @@ impl CollabPanel {
                 let inviter = user_store.get_cached_user(*inviter_id)?;
                 Some((
                     Some(inviter.clone()),
-<<<<<<< HEAD
                     tr_f!(
                         "{} invited you to join the #{} channel",
-                        inviter.github_login.clone(),
+                        inviter.username.clone(),
                         channel_name.clone()
                     )
                     .to_string(),
-=======
-                    format!(
-                        "{} invited you to join the #{channel_name} channel",
-                        inviter.username
-                    ),
->>>>>>> upstream/main
                 ))
             }
         }

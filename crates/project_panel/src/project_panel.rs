@@ -2338,8 +2338,7 @@ impl ProjectPanel {
             let file_name = entry.path.file_name()?.to_string();
 
             let answer = if !action.skip_prompt {
-<<<<<<< HEAD
-                let prompt = tr_f!("Discard changes to {}?", file_name);
+                let prompt = tr_f!("Discard changes to {}?", MarkdownInlineCode(&file_name));
                 let restore = tr!("Restore");
                 let cancel = tr!("Cancel");
                 Some(window.prompt(
@@ -2349,10 +2348,6 @@ impl ProjectPanel {
                     &[restore.as_ref(), cancel.as_ref()],
                     cx,
                 ))
-=======
-                let prompt = format!("Discard changes to {}?", MarkdownInlineCode(&file_name));
-                Some(window.prompt(PromptLevel::Info, &prompt, None, &["Restore", "Cancel"], cx))
->>>>>>> upstream/main
             } else {
                 None
             };
@@ -4586,21 +4581,10 @@ impl ProjectPanel {
         cx.spawn_in(window, async move |this, cx| {
             async move {
                 for (filename, original_path) in &paths_to_replace {
-<<<<<<< HEAD
                     let prompt_message = tr_f!(
-                                            "A file or folder with name {} already exists in the destination folder. Do you want to replace it?",
-                                            filename
-                                        );
-=======
-                    let prompt_message = format!(
-                        concat!(
-                            "A file or folder with name {} ",
-                            "already exists in the destination folder. ",
-                            "Do you want to replace it?"
-                        ),
+                        "A file or folder with name {} already exists in the destination folder. Do you want to replace it?",
                         MarkdownInlineCode(filename)
                     );
->>>>>>> upstream/main
                     let answer = cx
                         .update(|window, cx| {
                             window.prompt(

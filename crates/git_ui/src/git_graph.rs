@@ -2905,16 +2905,11 @@ impl GitGraph {
                 data.author_email.clone(),
                 Some(data.commit_timestamp),
             ),
-<<<<<<< HEAD
             CommitDataState::Loading(_) => (
                 ama10_i18n::tr!("Loading…"),
                 "".into(),
                 None,
-                ama10_i18n::tr!("Loading…"),
             ),
-=======
-            CommitDataState::Loading(_) => ("Loading…".into(), "".into(), None),
->>>>>>> upstream/main
         };
 
         let date_string = commit_timestamp
