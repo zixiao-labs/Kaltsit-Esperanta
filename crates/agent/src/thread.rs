@@ -1,11 +1,11 @@
 use crate::{
-    ApplyCodeActionTool, CodeActionStore, ContextServerRegistry, CopyPathTool, CreateDirectoryTool,
-    CreateThreadTool, DbLanguageModel, DbThread, DeletePathTool, DiagnosticsTool, EditFileTool,
-    FetchTool, FindPathTool, FindReferencesTool, GetCodeActionsTool, GoToDefinitionTool, GrepTool,
-    ListAgentsAndModelsTool, ListDirectoryTool, MovePathTool, ProjectSnapshot, ReadFileTool,
-    RenameTool, SandboxedTerminalTool, SpawnAgentTool, SystemPromptTemplate, Template, Templates,
-    TerminalTool, ToolPermissionDecision, WebSearchTool, WriteFileTool,
-    decide_permission_from_settings,
+    ApplyCodeActionTool, AskUserQuestionTool, CodeActionStore, ContextServerRegistry, CopyPathTool,
+    CreateDirectoryTool, CreateThreadTool, DbLanguageModel, DbThread, DeletePathTool,
+    DiagnosticsTool, EditFileTool, FetchTool, FindPathTool, FindReferencesTool, GetCodeActionsTool,
+    GoToDefinitionTool, GrepTool, ListAgentsAndModelsTool, ListDirectoryTool, MovePathTool,
+    ProjectSnapshot, ReadFileTool, RenameTool, SandboxedTerminalTool, SpawnAgentTool,
+    SystemPromptTemplate, Template, Templates, TerminalTool, ToolPermissionDecision, WebSearchTool,
+    WriteFileTool, decide_permission_from_settings,
 };
 use acp_thread::{ClientUserMessageId, MentionUri};
 use action_log::ActionLog;
@@ -876,6 +876,10 @@ pub enum ThreadEvent {
     ToolCallAuthorizationResolved {
         tool_call_id: acp::ToolCallId,
         outcome: acp_thread::SelectedPermissionOutcome,
+    },
+    ElicitationRequested {
+        request: acp::CreateElicitationRequest,
+        response: oneshot::Sender<acp::CreateElicitationResponse>,
     },
     SubagentSpawned(acp::SessionId),
     Retry(acp_thread::RetryStatus),
@@ -2101,6 +2105,7 @@ impl Thread {
         let update_agent_location = self.parent_thread_id().is_none();
 
         let language_registry = self.project.read(cx).languages().clone();
+        self.add_tool(AskUserQuestionTool);
         self.add_tool(CopyPathTool::new(self.project.clone()));
         self.add_tool(CreateDirectoryTool::new(self.project.clone()));
         self.add_tool(DeletePathTool::new(
@@ -5481,6 +5486,47 @@ impl ToolCallEventStream {
             .0
             .unbounded_send(Ok(ThreadEvent::SubagentSpawned(id)))
             .ok();
+    }
+
+    pub fn request_elicitation(
+        &self,
+        schema: acp::ElicitationSchema,
+        message: String,
+        cx: &mut App,
+    ) -> Task<Result<acp::CreateElicitationResponse>> {
+        let Some(thread) = self.thread.as_ref().and_then(|thread| thread.upgrade()) else {
+            return Task::ready(Err(anyhow!(
+                "Cannot ask the user a question without an owning agent thread"
+            )));
+        };
+
+        let session_id = thread.read(cx).id().clone();
+        let tool_call_id = acp::ToolCallId::new(self.tool_use_id.to_string());
+        let request = acp::CreateElicitationRequest::new(
+            acp::ElicitationFormMode::new(
+                acp::ElicitationSessionScope::new(session_id).tool_call_id(tool_call_id),
+                schema,
+            ),
+            message,
+        );
+        let (response_tx, response_rx) = oneshot::channel();
+
+        if let Err(error) = self
+            .stream
+            .0
+            .unbounded_send(Ok(ThreadEvent::ElicitationRequested {
+                request,
+                response: response_tx,
+            }))
+        {
+            return Task::ready(Err(anyhow!(error.to_string())));
+        }
+
+        cx.background_spawn(async move {
+            response_rx
+                .await
+                .map_err(|_| anyhow!("elicitation response receiver was dropped"))
+        })
     }
 
     /// Authorize a third-party tool (e.g., MCP tool from a context server).

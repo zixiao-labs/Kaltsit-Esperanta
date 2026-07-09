@@ -1014,6 +1014,193 @@ async fn test_tool_authorization(cx: &mut TestAppContext) {
 }
 
 #[gpui::test]
+async fn test_ask_user_question_tool_submits_answer(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(AskUserQuestionTool);
+            thread.send(ClientUserMessageId::new(), ["ask the user a question"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    let tool_input = json!({
+        "question": "Which branch should I target?",
+        "context": "This controls the release branch.",
+        "default_answer": "preview",
+    });
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "ask_user_question_1".into(),
+            name: AskUserQuestionTool::NAME.into(),
+            raw_input: tool_input.to_string(),
+            input: tool_input,
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let (request, response) = next_elicitation_request(&mut events).await;
+    assert_eq!(
+        request.message,
+        "Which branch should I target?\n\nThis controls the release branch."
+    );
+    let acp::ElicitationMode::Form(form) = &request.mode else {
+        panic!("expected ask_user_question to request a form elicitation");
+    };
+    assert_eq!(
+        form.requested_schema.required,
+        Some(vec!["answer".to_string()])
+    );
+    let answer_property = form
+        .requested_schema
+        .properties
+        .get("answer")
+        .expect("expected answer field in elicitation schema");
+    let acp::ElicitationPropertySchema::String(answer_schema) = answer_property else {
+        panic!("expected answer field to be a string");
+    };
+    assert_eq!(answer_schema.title.as_deref(), Some("Answer"));
+    assert_eq!(
+        answer_schema.description.as_deref(),
+        Some("Your response to the agent")
+    );
+    assert_eq!(answer_schema.default.as_deref(), Some("preview"));
+
+    let mut content = std::collections::BTreeMap::new();
+    content.insert("answer".to_string(), "Use preview".into());
+    response
+        .send(acp::CreateElicitationResponse::new(
+            acp::ElicitationAction::Accept(acp::ElicitationAcceptAction::new().content(content)),
+        ))
+        .unwrap();
+    cx.run_until_parked();
+
+    let completion = fake_model.pending_completions().pop().unwrap();
+    let message = completion.messages.last().unwrap();
+    assert_eq!(
+        message.content,
+        vec![language_model::MessageContent::ToolResult(
+            LanguageModelToolResult {
+                tool_use_id: "ask_user_question_1".into(),
+                tool_name: AskUserQuestionTool::NAME.into(),
+                is_error: false,
+                content: vec![json!({ "answer": "Use preview" }).to_string().into()],
+                output: Some(json!({ "answer": "Use preview" }))
+            }
+        )]
+    );
+}
+
+#[gpui::test]
+async fn test_ask_user_question_tool_reports_missing_answer(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(AskUserQuestionTool);
+            thread.send(ClientUserMessageId::new(), ["ask the user a question"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "ask_user_question_1".into(),
+            name: AskUserQuestionTool::NAME.into(),
+            raw_input: json!({ "question": "Which branch should I target?" }).to_string(),
+            input: json!({ "question": "Which branch should I target?" }),
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let (_request, response) = next_elicitation_request(&mut events).await;
+    response
+        .send(acp::CreateElicitationResponse::new(
+            acp::ElicitationAction::Accept(
+                acp::ElicitationAcceptAction::new().content(std::collections::BTreeMap::new()),
+            ),
+        ))
+        .unwrap();
+    cx.run_until_parked();
+
+    let expected_output = json!({ "error": "User response did not include an answer" });
+    let completion = fake_model.pending_completions().pop().unwrap();
+    let message = completion.messages.last().unwrap();
+    assert_eq!(
+        message.content,
+        vec![language_model::MessageContent::ToolResult(
+            LanguageModelToolResult {
+                tool_use_id: "ask_user_question_1".into(),
+                tool_name: AskUserQuestionTool::NAME.into(),
+                is_error: true,
+                content: vec![expected_output.to_string().into()],
+                output: Some(expected_output)
+            }
+        )]
+    );
+}
+
+#[gpui::test]
+async fn test_ask_user_question_tool_cancels_with_thread(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(AskUserQuestionTool);
+            thread.send(ClientUserMessageId::new(), ["ask the user a question"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "ask_user_question_1".into(),
+            name: AskUserQuestionTool::NAME.into(),
+            raw_input: json!({ "question": "Which branch should I target?" }).to_string(),
+            input: json!({ "question": "Which branch should I target?" }),
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let (_request, _response) = next_elicitation_request(&mut events).await;
+    thread.update(cx, |thread, cx| thread.cancel(cx)).detach();
+
+    let remaining_events = collect_events_until_stop(&mut events, cx).await;
+    assert_eq!(
+        stop_events(remaining_events),
+        vec![acp::StopReason::Cancelled],
+    );
+
+    thread.update(cx, |thread, _cx| {
+        let message = thread.last_received_or_pending_message().unwrap();
+        let agent_message = message.as_agent_message().unwrap();
+        let tool_use_id: language_model::LanguageModelToolUseId = "ask_user_question_1".into();
+        let tool_result = agent_message
+            .tool_results
+            .get(&tool_use_id)
+            .expect("expected ask_user_question tool result");
+        let expected_output = json!({ "canceled": true });
+        assert_eq!(tool_result.tool_name.as_ref(), AskUserQuestionTool::NAME);
+        assert!(tool_result.is_error);
+        assert_eq!(
+            tool_result.content,
+            vec![expected_output.to_string().into()]
+        );
+        assert_eq!(tool_result.output, Some(expected_output));
+    });
+}
+
+#[gpui::test]
 async fn test_tool_hallucination(cx: &mut TestAppContext) {
     let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
     let fake_model = model.as_fake();
@@ -1069,6 +1256,24 @@ async fn expect_tool_call_update_fields(
         ThreadEvent::ToolCallUpdate(acp_thread::ToolCallUpdate::UpdateFields(update)) => update,
         event => {
             panic!("Unexpected event {event:?}");
+        }
+    }
+}
+
+async fn next_elicitation_request(
+    events: &mut UnboundedReceiver<Result<ThreadEvent>>,
+) -> (
+    acp::CreateElicitationRequest,
+    oneshot::Sender<acp::CreateElicitationResponse>,
+) {
+    loop {
+        let event = events
+            .next()
+            .await
+            .expect("no elicitation request event received")
+            .unwrap();
+        if let ThreadEvent::ElicitationRequested { request, response } = event {
+            return (request, response);
         }
     }
 }
@@ -4561,6 +4766,7 @@ async fn setup(cx: &mut TestAppContext, model: TestModel) -> ThreadTest {
                             WordListTool::NAME: true,
                             ToolRequiringPermission::NAME: true,
                             ToolRequiringPermission2::NAME: true,
+                            AskUserQuestionTool::NAME: true,
                             InfiniteTool::NAME: true,
                             CancellationAwareTool::NAME: true,
                             StreamingEchoTool::NAME: true,
