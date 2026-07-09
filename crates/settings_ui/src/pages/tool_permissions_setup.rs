@@ -1417,6 +1417,7 @@ mod tests {
             "read_file",
             "rename_symbol",
             "thinking",
+            "update_plan",
             // streaming_edit_file uses "edit_file" for permission lookups,
             // so its rules are configured under the edit_file entry.
             "streaming_edit_file",
