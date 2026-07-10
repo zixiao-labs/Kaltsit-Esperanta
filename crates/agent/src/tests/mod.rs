@@ -1096,6 +1096,267 @@ async fn test_ask_user_question_tool_submits_answer(cx: &mut TestAppContext) {
 }
 
 #[gpui::test]
+async fn test_ask_user_question_tool_submits_single_choice(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(AskUserQuestionTool);
+            thread.send(ClientUserMessageId::new(), ["ask the user a question"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    let tool_input = json!({
+        "question": "Which branch should I target?",
+        "default_answer": "preview",
+        "options": [
+            { "label": "Preview", "value": "preview", "description": "Use the preview release branch" },
+            { "label": "Stable", "value": "stable", "description": "Use the stable release branch" }
+        ]
+    });
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "ask_user_question_1".into(),
+            name: AskUserQuestionTool::NAME.into(),
+            raw_input: tool_input.to_string(),
+            input: tool_input,
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let (request, response) = next_elicitation_request(&mut events).await;
+    let acp::ElicitationMode::Form(form) = &request.mode else {
+        panic!("expected ask_user_question to request a form elicitation");
+    };
+    assert_eq!(
+        form.requested_schema.required,
+        Some(vec!["answer".to_string()])
+    );
+    let answer_property = form
+        .requested_schema
+        .properties
+        .get("answer")
+        .expect("expected answer field in elicitation schema");
+    let acp::ElicitationPropertySchema::String(answer_schema) = answer_property else {
+        panic!("expected answer field to be a string");
+    };
+    assert_eq!(answer_schema.default.as_deref(), Some("preview"));
+    assert_eq!(
+        answer_schema.one_of.as_ref().unwrap(),
+        &vec![
+            acp::EnumOption::new("preview", "Preview"),
+            acp::EnumOption::new("stable", "Stable"),
+        ]
+    );
+
+    let mut content = std::collections::BTreeMap::new();
+    content.insert("answer".to_string(), "stable".into());
+    response
+        .send(acp::CreateElicitationResponse::new(
+            acp::ElicitationAction::Accept(acp::ElicitationAcceptAction::new().content(content)),
+        ))
+        .unwrap();
+    cx.run_until_parked();
+
+    let expected_output = json!({ "answer": "stable", "answers": ["stable"] });
+    let completion = fake_model.pending_completions().pop().unwrap();
+    let message = completion.messages.last().unwrap();
+    assert_eq!(
+        message.content,
+        vec![language_model::MessageContent::ToolResult(
+            LanguageModelToolResult {
+                tool_use_id: "ask_user_question_1".into(),
+                tool_name: AskUserQuestionTool::NAME.into(),
+                is_error: false,
+                content: vec![expected_output.to_string().into()],
+                output: Some(expected_output)
+            }
+        )]
+    );
+}
+
+#[gpui::test]
+async fn test_ask_user_question_tool_submits_multiple_choices(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(AskUserQuestionTool);
+            thread.send(ClientUserMessageId::new(), ["ask the user a question"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    let tool_input = json!({
+        "question": "Which checks should I run?",
+        "allow_multiple": true,
+        "default_answers": ["fmt"],
+        "options": [
+            { "label": "Format", "value": "fmt" },
+            { "label": "Tests", "value": "test" }
+        ]
+    });
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "ask_user_question_1".into(),
+            name: AskUserQuestionTool::NAME.into(),
+            raw_input: tool_input.to_string(),
+            input: tool_input,
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let (request, response) = next_elicitation_request(&mut events).await;
+    let acp::ElicitationMode::Form(form) = &request.mode else {
+        panic!("expected ask_user_question to request a form elicitation");
+    };
+    assert_eq!(
+        form.requested_schema.required,
+        Some(vec!["answers".to_string()])
+    );
+    let answers_property = form
+        .requested_schema
+        .properties
+        .get("answers")
+        .expect("expected answers field in elicitation schema");
+    let acp::ElicitationPropertySchema::Array(answers_schema) = answers_property else {
+        panic!("expected answers field to be an array");
+    };
+    assert_eq!(answers_schema.min_items, Some(1));
+    assert_eq!(answers_schema.default, Some(vec!["fmt".to_string()]));
+
+    let mut content = std::collections::BTreeMap::new();
+    content.insert(
+        "answers".to_string(),
+        vec!["fmt".to_string(), "test".to_string()].into(),
+    );
+    response
+        .send(acp::CreateElicitationResponse::new(
+            acp::ElicitationAction::Accept(acp::ElicitationAcceptAction::new().content(content)),
+        ))
+        .unwrap();
+    cx.run_until_parked();
+
+    let expected_output = json!({ "answer": "fmt, test", "answers": ["fmt", "test"] });
+    let completion = fake_model.pending_completions().pop().unwrap();
+    let message = completion.messages.last().unwrap();
+    assert_eq!(
+        message.content,
+        vec![language_model::MessageContent::ToolResult(
+            LanguageModelToolResult {
+                tool_use_id: "ask_user_question_1".into(),
+                tool_name: AskUserQuestionTool::NAME.into(),
+                is_error: false,
+                content: vec![expected_output.to_string().into()],
+                output: Some(expected_output)
+            }
+        )]
+    );
+}
+
+#[gpui::test]
+async fn test_plan_mode_switches_profile_and_limits_edits(cx: &mut TestAppContext) {
+    let ThreadTest { thread, .. } = setup(cx, TestModel::Fake).await;
+
+    let plan_file = thread
+        .update(cx, |thread, cx| thread.enter_plan_mode(cx))
+        .unwrap();
+    let (profile, plan_file_allowed, other_file_denied) = cx.update(|cx| {
+        let thread = thread.read(cx);
+        (
+            thread.profile().clone(),
+            thread
+                .plan_mode_file_edit_error(Path::new(&plan_file.display_path), cx)
+                .is_none(),
+            thread
+                .plan_mode_file_edit_error(Path::new("test/src/main.rs"), cx)
+                .is_some(),
+        )
+    });
+    assert_eq!(profile.as_str(), agent_settings::builtin_profiles::PLAN);
+    assert!(plan_file.display_path.contains(".zed/plans/"));
+    assert!(plan_file_allowed);
+    assert!(other_file_denied);
+
+    thread
+        .update(cx, |thread, cx| thread.exit_plan_mode(cx))
+        .unwrap();
+    let profile = cx.update(|cx| thread.read(cx).profile().clone());
+    assert_eq!(profile.as_str(), agent_settings::builtin_profiles::WRITE);
+}
+
+#[gpui::test]
+async fn test_update_todos_tool_emits_todo_update(cx: &mut TestAppContext) {
+    let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
+    let fake_model = model.as_fake();
+
+    let mut events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(UpdatePlanTool);
+            thread.send(ClientUserMessageId::new(), ["make a todo list"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    let tool_input = json!({
+        "entries": [
+            { "content": "Inspect current implementation", "status": "in_progress", "priority": "high" },
+            { "content": "Implement the change", "status": "pending", "priority": "medium" }
+        ]
+    });
+    fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
+        LanguageModelToolUse {
+            id: "update_todos_1".into(),
+            name: UpdatePlanTool::NAME.into(),
+            raw_input: tool_input.to_string(),
+            input: tool_input,
+            is_input_complete: true,
+            thought_signature: None,
+        },
+    ));
+    fake_model.end_last_completion_stream();
+
+    let plan = next_plan_update(&mut events).await;
+    assert_eq!(plan.entries.len(), 2);
+    assert_eq!(plan.entries[0].content, "Inspect current implementation");
+    assert_eq!(plan.entries[0].status, acp::PlanEntryStatus::InProgress);
+    assert_eq!(plan.entries[0].priority, acp::PlanEntryPriority::High);
+    assert_eq!(plan.entries[1].content, "Implement the change");
+    assert_eq!(plan.entries[1].status, acp::PlanEntryStatus::Pending);
+    assert_eq!(plan.entries[1].priority, acp::PlanEntryPriority::Medium);
+
+    cx.run_until_parked();
+
+    let expected_output = json!({
+        "entries": [
+            { "content": "Inspect current implementation", "status": "in_progress", "priority": "high" },
+            { "content": "Implement the change", "status": "pending", "priority": "medium" }
+        ]
+    });
+    let completion = fake_model.pending_completions().pop().unwrap();
+    let message = completion.messages.last().unwrap();
+    assert_eq!(
+        message.content,
+        vec![language_model::MessageContent::ToolResult(
+            LanguageModelToolResult {
+                tool_use_id: "update_todos_1".into(),
+                tool_name: UpdatePlanTool::NAME.into(),
+                is_error: false,
+                content: vec![expected_output.to_string().into()],
+                output: Some(expected_output)
+            }
+        )]
+    );
+}
+
+#[gpui::test]
 async fn test_ask_user_question_tool_reports_missing_answer(cx: &mut TestAppContext) {
     let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
     let fake_model = model.as_fake();
@@ -1274,6 +1535,19 @@ async fn next_elicitation_request(
             .unwrap();
         if let ThreadEvent::ElicitationRequested { request, response } = event {
             return (request, response);
+        }
+    }
+}
+
+async fn next_plan_update(events: &mut UnboundedReceiver<Result<ThreadEvent>>) -> acp::Plan {
+    loop {
+        let event = events
+            .next()
+            .await
+            .expect("no plan update event received")
+            .unwrap();
+        if let ThreadEvent::Plan(plan) = event {
+            return plan;
         }
     }
 }
@@ -4769,6 +5043,7 @@ async fn setup(cx: &mut TestAppContext, model: TestModel) -> ThreadTest {
                             AskUserQuestionTool::NAME: true,
                             InfiniteTool::NAME: true,
                             CancellationAwareTool::NAME: true,
+                            UpdatePlanTool::NAME: true,
                             StreamingEchoTool::NAME: true,
                             StreamingJsonErrorContextTool::NAME: true,
                             StreamingFailingEchoTool::NAME: true,

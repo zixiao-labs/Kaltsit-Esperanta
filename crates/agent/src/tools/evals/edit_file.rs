@@ -371,6 +371,8 @@ impl EditToolTest {
                 available_tools: tool_names,
                 model_name: None,
                 date: chrono::Local::now().format("%Y-%m-%d").to_string(),
+                plan_mode: false,
+                plan_file: None,
                 user_agents_md: None,
                 sandboxing: false,
                 is_linux: cfg!(target_os = "linux"),

@@ -1406,6 +1406,8 @@ mod tests {
             "apply_code_action",
             "ask_user_question",
             "diagnostics",
+            "enter_plan_mode",
+            "exit_plan_mode",
             "find_path",
             "find_references",
             "get_code_actions",
@@ -1417,6 +1419,7 @@ mod tests {
             "read_file",
             "rename_symbol",
             "thinking",
+            "update_todos",
             // streaming_edit_file uses "edit_file" for permission lookups,
             // so its rules are configured under the edit_file entry.
             "streaming_edit_file",

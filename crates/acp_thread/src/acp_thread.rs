@@ -430,16 +430,7 @@ impl ElicitationStore {
         &self.elicitations
     }
 
-    fn validate_request(
-        request: &acp::CreateElicitationRequest,
-        cx: &App,
-    ) -> Result<(), acp::Error> {
-        if !cx.has_flag::<AcpBetaFeatureFlag>() {
-            return Err(
-                acp::Error::invalid_params().data("elicitation support requires the ACP beta flag")
-            );
-        }
-
+    fn validate_request(request: &acp::CreateElicitationRequest) -> Result<(), acp::Error> {
         if let acp::ElicitationMode::Url(mode) = &request.mode {
             url::Url::parse(&mode.url)
                 .map_err(|_| acp::Error::invalid_params().data("invalid elicitation URL"))?;
@@ -590,7 +581,7 @@ impl ElicitationStore {
         request: acp::CreateElicitationRequest,
         cx: &mut Context<Self>,
     ) -> Result<(ElicitationEntryId, Task<acp::CreateElicitationResponse>), acp::Error> {
-        Self::validate_request(&request, cx)?;
+        Self::validate_request(&request)?;
         let (id, response_rx) = self.insert_pending_elicitation(request);
         cx.emit(ElicitationStoreEvent::ElicitationRequested(id.clone()));
         cx.notify();
@@ -799,7 +790,7 @@ impl AgentThreadEntry {
             Self::ToolCall(tool_call) => tool_call.to_markdown(cx),
             Self::Elicitation(_) => "## Input Requested\n\n".to_string(),
             Self::CompletedPlan(entries) => {
-                let mut md = String::from("## Plan\n\n");
+                let mut md = String::from("## Todos\n\n");
                 for entry in entries {
                     let source = entry.content.read(cx).source().to_string();
                     md.push_str(&format!("- [x] {}\n", source));
@@ -1986,6 +1977,13 @@ impl Plan {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct PlanFileOpenRequest {
+    pub display_path: String,
+    pub absolute_path: PathBuf,
+    pub markdown: String,
+}
+
 #[derive(Debug)]
 pub struct PlanEntry {
     pub content: Entity<Markdown>,
@@ -2168,6 +2166,7 @@ pub enum AcpThreadEvent {
     ModeUpdated(acp::SessionModeId),
     ConfigOptionsUpdated(Vec<acp::SessionConfigOption>),
     WorkingDirectoriesUpdated,
+    OpenPlanFile(PlanFileOpenRequest),
 }
 
 impl EventEmitter<AcpThreadEvent> for AcpThread {}
@@ -3485,7 +3484,7 @@ impl AcpThread {
         request: acp::CreateElicitationRequest,
         cx: &mut Context<Self>,
     ) -> Result<(ElicitationEntryId, Task<acp::CreateElicitationResponse>), acp::Error> {
-        ElicitationStore::validate_request(&request, cx)?;
+        ElicitationStore::validate_request(&request)?;
 
         let (id, response_rx) = self.elicitations.insert_pending_elicitation(request);
         self.push_entry(AgentThreadEntry::Elicitation(id.clone()), cx);
@@ -3566,6 +3565,10 @@ impl AcpThread {
 
     pub fn plan(&self) -> &Plan {
         &self.plan
+    }
+
+    pub fn open_plan_file(&mut self, request: PlanFileOpenRequest, cx: &mut Context<Self>) {
+        cx.emit(AcpThreadEvent::OpenPlanFile(request));
     }
 
     pub fn update_plan(&mut self, request: acp::Plan, cx: &mut Context<Self>) {
@@ -7412,7 +7415,7 @@ mod tests {
     }
 
     #[gpui::test]
-    async fn test_elicitation_requires_acp_beta_flag(cx: &mut TestAppContext) {
+    async fn test_form_elicitation_does_not_require_acp_beta_flag(cx: &mut TestAppContext) {
         init_test(cx);
         cx.update(|cx| {
             cx.update_flags(false, vec![]);
@@ -7434,8 +7437,8 @@ mod tests {
             )
         });
 
-        assert!(result.is_err());
-        thread.read_with(cx, |thread, _| assert!(thread.entries().is_empty()));
+        assert!(result.is_ok());
+        thread.read_with(cx, |thread, _| assert_eq!(thread.entries().len(), 1));
     }
 
     #[gpui::test]

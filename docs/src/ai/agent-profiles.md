@@ -11,10 +11,12 @@ Profiles do not decide whether a tool call is allowed automatically. Use [Tool P
 
 ## Built-in Profiles {#built-in-profiles}
 
-Zed includes three built-in profiles:
+Zed includes four built-in profiles:
 
-- `Write`: enables tools for reading, editing, and running commands.
-- `Ask`: focuses on read-only codebase questions.
+- `Write`: enables tools for reading, editing, running commands, and maintaining a visible plan.
+- `Ask`: focuses on read-only codebase questions and can maintain a visible plan.
+- `Plan`: focuses on read-only investigation and structured planning, and is
+  typically used alongside tools or permissions that require confirmation.
 - `Minimal`: uses no project tools.
 
 ## Configure Profiles {#configure-profiles}
@@ -66,7 +68,7 @@ The exact model IDs and provider IDs depend on your configured [LLM Providers](.
 
 | Setting          | Controls                                                              | Example                                   |
 | ---------------- | --------------------------------------------------------------------- | ----------------------------------------- |
-| Agent profile    | Whether a tool is available in a profile                              | Disable `terminal` in a read-only profile |
+| Agent profile    | Whether a tool is available in a profile                              | Use `Plan` to allow investigation and planning without edit tools |
 | Tool permissions | Whether a permission-gated tool call is allowed, denied, or confirmed | Always confirm `terminal` commands        |
 
 If a tool is not available in the active profile, the Zed Agent cannot use it. If the tool is available and permission-gated, [Tool Permissions](./tool-permissions.md) still controls whether the tool call requires approval.

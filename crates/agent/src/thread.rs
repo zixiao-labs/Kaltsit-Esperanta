@@ -1,11 +1,12 @@
 use crate::{
     ApplyCodeActionTool, AskUserQuestionTool, CodeActionStore, ContextServerRegistry, CopyPathTool,
     CreateDirectoryTool, CreateThreadTool, DbLanguageModel, DbThread, DeletePathTool,
-    DiagnosticsTool, EditFileTool, FetchTool, FindPathTool, FindReferencesTool, GetCodeActionsTool,
-    GoToDefinitionTool, GrepTool, ListAgentsAndModelsTool, ListDirectoryTool, MovePathTool,
-    ProjectSnapshot, ReadFileTool, RenameTool, SandboxedTerminalTool, SpawnAgentTool,
-    SystemPromptTemplate, Template, Templates, TerminalTool, ToolPermissionDecision, WebSearchTool,
-    WriteFileTool, decide_permission_from_settings,
+    DiagnosticsTool, EditFileTool, EnterPlanModeTool, ExitPlanModeTool, FetchTool, FindPathTool,
+    FindReferencesTool, GetCodeActionsTool, GoToDefinitionTool, GrepTool, ListAgentsAndModelsTool,
+    ListDirectoryTool, MovePathTool, ProjectSnapshot, ReadFileTool, RenameTool,
+    SandboxedTerminalTool, SpawnAgentTool, SystemPromptTemplate, Template, Templates, TerminalTool,
+    ToolPermissionDecision, UpdatePlanTool, WebSearchTool, WriteFileTool,
+    decide_permission_from_settings,
 };
 use acp_thread::{ClientUserMessageId, MentionUri};
 use action_log::ActionLog;
@@ -47,7 +48,7 @@ use language_model::{
     LanguageModelToolUse, LanguageModelToolUseId, MessageContent, Role, SelectedModel, Speed,
     StopReason, TokenUsage, ZED_CLOUD_PROVIDER_ID,
 };
-use project::{Project, trusted_worktrees::TrustedWorktrees};
+use project::{Project, ProjectPath, trusted_worktrees::TrustedWorktrees};
 use prompt_store::ProjectContext;
 use schemars::{JsonSchema, Schema};
 use serde::de::DeserializeOwned;
@@ -66,7 +67,9 @@ use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
-use util::{ResultExt, debug_panic, markdown::MarkdownCodeBlock, paths::PathStyle};
+use util::{
+    ResultExt, debug_panic, markdown::MarkdownCodeBlock, paths::PathStyle, rel_path::RelPath,
+};
 use uuid::Uuid;
 
 const TOOL_CANCELED_MESSAGE: &str = "Tool canceled by user";
@@ -836,6 +839,13 @@ pub struct SiblingThreadInfo {
     pub warning: Option<String>,
 }
 
+#[derive(Clone, Debug)]
+pub struct PlanFile {
+    pub absolute_path: PathBuf,
+    pub display_path: String,
+    project_path: ProjectPath,
+}
+
 /// A list of agents and, for each, the models available for use.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AvailableAgents {
@@ -881,6 +891,8 @@ pub enum ThreadEvent {
         request: acp::CreateElicitationRequest,
         response: oneshot::Sender<acp::CreateElicitationResponse>,
     },
+    OpenPlanFile(acp_thread::PlanFileOpenRequest),
+    Plan(acp::Plan),
     SubagentSpawned(acp::SessionId),
     Retry(acp_thread::RetryStatus),
     ContextCompaction(acp_thread::ContextCompaction),
@@ -1249,6 +1261,7 @@ pub struct Thread {
     initial_project_snapshot: Shared<Task<Option<Arc<ProjectSnapshot>>>>,
     pub(crate) context_server_registry: Entity<ContextServerRegistry>,
     profile_id: AgentProfileId,
+    plan_file: Option<PlanFile>,
     /// Whether `profile_id` was downgraded to `minimal` at thread start because
     /// the workspace is restricted. Used purely to surface a warning in the UI.
     profile_downgraded_for_restricted_workspace: bool,
@@ -1394,6 +1407,7 @@ impl Thread {
             },
             context_server_registry,
             profile_id,
+            plan_file: None,
             profile_downgraded_for_restricted_workspace,
             project_context,
             templates,
@@ -1772,6 +1786,7 @@ impl Thread {
             initial_project_snapshot: Task::ready(db_thread.initial_project_snapshot).shared(),
             context_server_registry,
             profile_id,
+            plan_file: None,
             profile_downgraded_for_restricted_workspace: false,
             project_context,
             templates,
@@ -2141,6 +2156,9 @@ impl Thread {
             self.project.clone(),
             environment.clone(),
         ));
+        self.add_tool(EnterPlanModeTool);
+        self.add_tool(ExitPlanModeTool);
+        self.add_tool(UpdatePlanTool);
         self.add_tool(WebSearchTool);
 
         self.add_tool(DiagnosticsTool::new(self.project.clone()));
@@ -2189,6 +2207,140 @@ impl Thread {
         &self.profile_id
     }
 
+    pub fn enter_plan_mode(&mut self, cx: &mut Context<Self>) -> Result<PlanFile> {
+        let plan_file = self.plan_mode_file(cx)?;
+        self.set_profile(AgentProfileId(builtin_profiles::PLAN.into()), cx);
+        Ok(plan_file)
+    }
+
+    pub fn exit_plan_mode(&mut self, cx: &mut Context<Self>) -> Result<()> {
+        self.set_profile(AgentProfileId(builtin_profiles::WRITE.into()), cx);
+        Ok(())
+    }
+
+    pub fn plan_mode_file(&mut self, cx: &mut Context<Self>) -> Result<PlanFile> {
+        if let Some(plan_file) = &self.plan_file {
+            return Ok(plan_file.clone());
+        }
+
+        let plan_file = self.default_plan_file(cx)?;
+        self.plan_file = Some(plan_file.clone());
+        Ok(plan_file)
+    }
+
+    pub fn ensure_plan_file_directory(&mut self, cx: &mut Context<Self>) -> Task<Result<()>> {
+        let plan_file = match self.plan_mode_file(cx) {
+            Ok(plan_file) => plan_file,
+            Err(error) => return Task::ready(Err(error)),
+        };
+        let Some(parent_path) = plan_file.project_path.path.parent() else {
+            return Task::ready(Err(anyhow!(
+                "Plan file path has no parent directory: {}",
+                plan_file.display_path
+            )));
+        };
+        let directory_path = ProjectPath {
+            worktree_id: plan_file.project_path.worktree_id,
+            path: parent_path.into_arc(),
+        };
+
+        let directory_status = self
+            .project
+            .read(cx)
+            .entry_for_path(&directory_path, cx)
+            .map(|entry| entry.is_dir());
+        match directory_status {
+            Some(true) => Task::ready(Ok(())),
+            Some(false) => Task::ready(Err(anyhow!(
+                "Plan directory path is not a directory: {}",
+                parent_path.display(self.project.read(cx).path_style(cx))
+            ))),
+            None => {
+                let create_directory = self.project.update(cx, |project, cx| {
+                    project.create_entry(directory_path, true, cx)
+                });
+                cx.spawn(async move |_this, _cx| {
+                    create_directory
+                        .await
+                        .context("failed to create plan file directory")?;
+                    Ok(())
+                })
+            }
+        }
+    }
+
+    pub(crate) fn plan_mode_file_edit_error(&self, path: &Path, cx: &App) -> Option<String> {
+        if self.profile_id.as_str() != builtin_profiles::PLAN {
+            return None;
+        }
+
+        let Some(plan_file) = &self.plan_file else {
+            return Some(
+                "Plan mode is active, but no plan file has been created yet. Call `enter_plan_mode` before editing files."
+                    .to_string(),
+            );
+        };
+
+        if self.is_plan_file_path(path, plan_file, cx) {
+            return None;
+        }
+
+        Some(format!(
+            "Plan mode only allows editing the plan file `{}`. Call `exit_plan_mode` and get user approval before editing implementation files.",
+            plan_file.display_path
+        ))
+    }
+
+    fn is_plan_file_path(&self, path: &Path, plan_file: &PlanFile, cx: &App) -> bool {
+        self.project
+            .read(cx)
+            .find_project_path(path, cx)
+            .is_some_and(|path| path == plan_file.project_path)
+    }
+
+    fn default_plan_file(&self, cx: &App) -> Result<PlanFile> {
+        let project = self.project.read(cx);
+        let Some(worktree) = project.visible_worktrees(cx).next() else {
+            return Err(anyhow!("Cannot enter plan mode without a visible worktree"));
+        };
+        let worktree = worktree.read(cx);
+        let plan_file_name = self.plan_file_name();
+        let relative_path_string = format!(".zed/plans/{plan_file_name}");
+        let relative_path = RelPath::unix(&relative_path_string)?.into_arc();
+        let project_path = ProjectPath {
+            worktree_id: worktree.id(),
+            path: relative_path,
+        };
+        let absolute_path = worktree.absolutize(&project_path.path);
+        let display_path = worktree
+            .root_name()
+            .join(&project_path.path)
+            .display(project.path_style(cx))
+            .to_string();
+
+        Ok(PlanFile {
+            absolute_path,
+            display_path,
+            project_path,
+        })
+    }
+
+    fn plan_file_name(&self) -> String {
+        let mut file_name = String::new();
+        for character in self.id.to_string().chars() {
+            if character.is_ascii_alphanumeric() || character == '-' || character == '_' {
+                file_name.push(character);
+            } else {
+                file_name.push('_');
+            }
+        }
+        if file_name.is_empty() {
+            file_name.push_str("plan");
+        }
+        file_name.push_str(".md");
+        file_name
+    }
+
     /// Whether this thread's profile was downgraded to `minimal` at thread start
     /// because the workspace is restricted.
     pub fn profile_was_downgraded(&self) -> bool {
@@ -2208,10 +2360,11 @@ impl Thread {
         project: &Entity<Project>,
         cx: &App,
     ) -> (AgentProfileId, bool) {
-        let is_write_or_ask = profile_id.as_str() == builtin_profiles::WRITE
-            || profile_id.as_str() == builtin_profiles::ASK;
+        let is_default_agent_profile = profile_id.as_str() == builtin_profiles::WRITE
+            || profile_id.as_str() == builtin_profiles::ASK
+            || profile_id.as_str() == builtin_profiles::PLAN;
         let minimal = AgentProfileId(builtin_profiles::MINIMAL.into());
-        if is_write_or_ask
+        if is_default_agent_profile
             && TrustedWorktrees::has_restricted_worktrees(&project.read(cx).worktree_store(), cx)
             && AgentProfileSettings::is_unmodified_default(&profile_id, cx)
             && AgentProfileSettings::is_unmodified_default(&minimal, cx)
@@ -4166,11 +4319,21 @@ impl Thread {
         log::trace!("Building request messages from {} thread messages", end_ix);
 
         let user_agents_md = UserAgentsMd::global(cx).and_then(|s| s.content().cloned());
+        let plan_mode = self.profile_id.as_str() == builtin_profiles::PLAN;
+        let plan_file = plan_mode
+            .then(|| {
+                self.plan_file
+                    .as_ref()
+                    .map(|plan_file| plan_file.display_path.clone())
+            })
+            .flatten();
         let system_prompt = SystemPromptTemplate {
             project: self.project_context.read(cx),
             available_tools,
             model_name: self.model().map(|m| m.name().0.to_string()),
             date: Local::now().format("%Y-%m-%d").to_string(),
+            plan_mode,
+            plan_file,
             user_agents_md,
             sandboxing: crate::sandboxing::sandboxing_enabled_for_project(
                 self.project.read(cx),
@@ -5231,6 +5394,16 @@ impl ThreadEventStream {
             .ok();
     }
 
+    fn open_plan_file(&self, request: acp_thread::PlanFileOpenRequest) {
+        self.0
+            .unbounded_send(Ok(ThreadEvent::OpenPlanFile(request)))
+            .ok();
+    }
+
+    fn update_plan(&self, plan: acp::Plan) {
+        self.0.unbounded_send(Ok(ThreadEvent::Plan(plan))).ok();
+    }
+
     fn send_retry(&self, status: acp_thread::RetryStatus) {
         self.0.unbounded_send(Ok(ThreadEvent::Retry(status))).ok();
     }
@@ -5486,6 +5659,54 @@ impl ToolCallEventStream {
             .0
             .unbounded_send(Ok(ThreadEvent::SubagentSpawned(id)))
             .ok();
+    }
+
+    pub fn update_plan(&self, plan: acp::Plan) {
+        self.stream.update_plan(plan);
+    }
+
+    pub fn fs(&self) -> Option<Arc<dyn Fs>> {
+        self.fs.clone()
+    }
+
+    pub fn enter_plan_mode(&self, cx: &mut App) -> Result<PlanFile> {
+        let Some(thread) = self.thread.as_ref().and_then(|thread| thread.upgrade()) else {
+            return Err(anyhow!(
+                "Cannot enter plan mode without an owning agent thread"
+            ));
+        };
+        thread.update(cx, |thread, cx| thread.enter_plan_mode(cx))
+    }
+
+    pub fn ensure_plan_file_directory(&self, cx: &mut App) -> Task<Result<()>> {
+        let Some(thread) = self.thread.as_ref().and_then(|thread| thread.upgrade()) else {
+            return Task::ready(Err(anyhow!(
+                "Cannot create a plan file directory without an owning agent thread"
+            )));
+        };
+        thread.update(cx, |thread, cx| thread.ensure_plan_file_directory(cx))
+    }
+
+    pub fn plan_mode_file(&self, cx: &mut App) -> Result<PlanFile> {
+        let Some(thread) = self.thread.as_ref().and_then(|thread| thread.upgrade()) else {
+            return Err(anyhow!(
+                "Cannot read plan mode file without an owning agent thread"
+            ));
+        };
+        thread.update(cx, |thread, cx| thread.plan_mode_file(cx))
+    }
+
+    pub fn open_plan_file(&self, request: acp_thread::PlanFileOpenRequest) {
+        self.stream.open_plan_file(request);
+    }
+
+    pub fn exit_plan_mode(&self, cx: &mut App) -> Result<()> {
+        let Some(thread) = self.thread.as_ref().and_then(|thread| thread.upgrade()) else {
+            return Err(anyhow!(
+                "Cannot exit plan mode without an owning agent thread"
+            ));
+        };
+        thread.update(cx, |thread, cx| thread.exit_plan_mode(cx))
     }
 
     pub fn request_elicitation(

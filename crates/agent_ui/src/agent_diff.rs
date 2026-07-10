@@ -1453,6 +1453,7 @@ impl AgentDiff {
             | AcpThreadEvent::ModeUpdated(_)
             | AcpThreadEvent::ConfigOptionsUpdated(_)
             | AcpThreadEvent::WorkingDirectoriesUpdated
+            | AcpThreadEvent::OpenPlanFile(_)
             | AcpThreadEvent::PromptUpdated => {}
         }
     }

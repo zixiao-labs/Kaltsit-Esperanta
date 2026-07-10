@@ -723,6 +723,7 @@ pub fn open_markdown_in_workspace(
     title: String,
     markdown: String,
     workspace: Entity<Workspace>,
+    read_only: bool,
     window: &mut Window,
     cx: &mut App,
 ) -> Task<Result<()>> {
@@ -744,7 +745,14 @@ pub fn open_markdown_in_workspace(
 
         buffer.update(cx, |buffer, cx| {
             buffer.set_text(markdown, cx);
-            buffer.set_capability(language::Capability::ReadWrite, cx);
+            buffer.set_capability(
+                if read_only {
+                    language::Capability::ReadOnly
+                } else {
+                    language::Capability::ReadWrite
+                },
+                cx,
+            );
         });
 
         workspace.update_in(cx, |workspace, window, cx| {
@@ -756,6 +764,7 @@ pub fn open_markdown_in_workspace(
                         Editor::for_multibuffer(buffer, Some(project.clone()), window, cx);
                     editor.set_breadcrumb_header(title);
                     editor.disable_mouse_wheel_zoom();
+                    editor.set_read_only(read_only);
                     editor
                 })),
                 None,
@@ -3757,7 +3766,7 @@ impl ThreadView {
                 .gap_1()
                 .justify_between()
                 .child(
-                    Label::new(ama10_i18n::tr!("Plan"))
+                    Label::new(ama10_i18n::tr!("Todos"))
                         .size(LabelSize::Small)
                         .color(Color::Muted),
                 )
@@ -3783,7 +3792,7 @@ impl ThreadView {
                 IconButton::new("dismiss-plan", IconName::Close)
                     .icon_size(IconSize::XSmall)
                     .shape(ui::IconButtonShape::Square)
-                    .tooltip(Tooltip::text(ama10_i18n::tr!("Clear Plan")))
+                    .tooltip(Tooltip::text(ama10_i18n::tr!("Clear Todos")))
                     .on_click(cx.listener(|this, _, _, cx| {
                         this.thread.update(cx, |thread, cx| thread.clear_plan(cx));
                         cx.stop_propagation();
@@ -3897,7 +3906,7 @@ impl ThreadView {
                             .border_b_1()
                             .border_color(self.tool_card_border_color(cx))
                             .child(
-                                Label::new(ama10_i18n::tr!("Completed Plan"))
+                                Label::new(ama10_i18n::tr!("Completed Todos"))
                                     .size(LabelSize::Small)
                                     .color(Color::Muted),
                             )
@@ -7109,7 +7118,7 @@ impl ThreadView {
             .to_string();
         let markdown = thread.to_markdown(cx);
 
-        open_markdown_in_workspace(thread_title, markdown, workspace, window, cx)
+        open_markdown_in_workspace(thread_title, markdown, workspace, false, window, cx)
     }
 
     pub(crate) fn sync_editor_mode_for_empty_state(&mut self, cx: &mut Context<Self>) {

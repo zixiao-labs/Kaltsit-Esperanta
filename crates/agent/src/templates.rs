@@ -40,6 +40,8 @@ pub struct SystemPromptTemplate<'a> {
     pub available_tools: Vec<SharedString>,
     pub model_name: Option<String>,
     pub date: String,
+    pub plan_mode: bool,
+    pub plan_file: Option<String>,
     /// Contents of the user-global `~/.config/zed/AGENTS.md` file (or the
     /// platform equivalent), if present and non-empty.
     pub user_agents_md: Option<SharedString>,
@@ -100,6 +102,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: false,
             is_linux: false,
@@ -111,6 +115,36 @@ mod tests {
         assert!(rendered.contains("Today's Date: 2026-01-01"));
         assert!(rendered.contains("## Fixing Diagnostics"));
         assert!(rendered.contains("test-model"));
+    }
+
+    #[test]
+    fn test_system_prompt_renders_plan_mode() {
+        let project = prompt_store::ProjectContext::default();
+        let template = SystemPromptTemplate {
+            project: &project,
+            available_tools: vec!["enter_plan_mode".into()],
+            model_name: Some("test-model".to_string()),
+            date: "2026-01-01".to_string(),
+            plan_mode: true,
+            plan_file: Some("project/.zed/agent/plans/test-plan.md".to_string()),
+            user_agents_md: None,
+            sandboxing: false,
+            is_linux: false,
+            is_windows: false,
+        };
+        let templates = Templates::new();
+        let rendered = template.render(&templates).unwrap();
+
+        assert!(rendered.contains("Plan Mode is active"));
+        assert!(rendered.contains("project/.zed/agent/plans/test-plan.md"));
+
+        let experimental_rendered = templates
+            .0
+            .render("experimental_system_prompt.hbs", &template)
+            .unwrap();
+        assert!(experimental_rendered.contains("Plan Mode is active"));
+        assert!(experimental_rendered.contains("project/.zed/agent/plans/test-plan.md"));
+        assert!(!experimental_rendered.contains("## Entering Plan Mode"));
     }
 
     #[test]
@@ -133,6 +167,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: Some("always be concise".into()),
             sandboxing: false,
             is_linux: false,
@@ -162,6 +198,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: false,
             is_linux: false,
@@ -195,6 +233,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: true,
             is_linux: false,
@@ -233,6 +273,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: true,
             is_linux: true,
@@ -263,6 +305,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: true,
             is_linux: false,
@@ -287,6 +331,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: true,
             is_linux: false,
@@ -307,6 +353,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: false,
             is_linux: false,
@@ -325,6 +373,8 @@ mod tests {
             available_tools: vec!["echo".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: false,
             is_linux: false,
