@@ -15,7 +15,8 @@ Zed includes four built-in profiles:
 
 - `Write`: enables tools for reading, editing, running commands, and maintaining a visible plan.
 - `Ask`: focuses on read-only codebase questions and can maintain a visible plan.
-- `Plan`: focuses on read-only investigation, structured planning, and user confirmation before execution.
+- `Plan`: focuses on read-only investigation and structured planning, and is
+  typically used alongside tools or permissions that require confirmation.
 - `Minimal`: uses no project tools.
 
 ## Configure Profiles {#configure-profiles}

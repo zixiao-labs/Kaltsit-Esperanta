@@ -118,6 +118,36 @@ mod tests {
     }
 
     #[test]
+    fn test_system_prompt_renders_plan_mode() {
+        let project = prompt_store::ProjectContext::default();
+        let template = SystemPromptTemplate {
+            project: &project,
+            available_tools: vec!["enter_plan_mode".into()],
+            model_name: Some("test-model".to_string()),
+            date: "2026-01-01".to_string(),
+            plan_mode: true,
+            plan_file: Some("project/.zed/agent/plans/test-plan.md".to_string()),
+            user_agents_md: None,
+            sandboxing: false,
+            is_linux: false,
+            is_windows: false,
+        };
+        let templates = Templates::new();
+        let rendered = template.render(&templates).unwrap();
+
+        assert!(rendered.contains("Plan Mode is active"));
+        assert!(rendered.contains("project/.zed/agent/plans/test-plan.md"));
+
+        let experimental_rendered = templates
+            .0
+            .render("experimental_system_prompt.hbs", &template)
+            .unwrap();
+        assert!(experimental_rendered.contains("Plan Mode is active"));
+        assert!(experimental_rendered.contains("project/.zed/agent/plans/test-plan.md"));
+        assert!(!experimental_rendered.contains("## Entering Plan Mode"));
+    }
+
+    #[test]
     fn test_system_prompt_renders_user_agents_md_before_project_rules() {
         use prompt_store::{ProjectContext, RulesFileContext, WorktreeContext};
         use util::rel_path::RelPath;

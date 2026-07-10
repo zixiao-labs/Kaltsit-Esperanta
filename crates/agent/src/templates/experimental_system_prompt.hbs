@@ -41,11 +41,13 @@ You are the Zed coding agent running inside the Zed editor. You help users compl
 
 {{/if}}
 {{#if (contains available_tools 'enter_plan_mode') }}
+{{#unless plan_mode}}
 ## Entering Plan Mode
 
 - When the user asks you to make a plan before implementation, or when the task is complex enough that implementation should wait for approval, call `enter_plan_mode` before making implementation changes.
 - After entering Plan Mode, research and design the approach, write the final plan to the plan file, and call `exit_plan_mode` to request user approval.
 
+{{/unless}}
 {{/if}}
 {{#if plan_mode}}
 ## Plan Mode

@@ -101,15 +101,21 @@ Executes shell commands and returns the combined output, creating a new shell pr
 
 ### `ask_user_question`
 
-Asks you for information, approval, or a decision the agent cannot safely infer. The agent can ask for a free-form answer or present a set of single-choice or multi-choice options.
+Asks you for information, approval, or a decision the agent cannot safely infer.
+The agent can ask for a free-form answer or present a set of single-choice or
+multi-choice options.
 
-**Example:** Before applying a risky migration, the agent asks whether to target `preview` or `stable`, then waits for your response before continuing.
+**Example:** Before applying a risky migration, the agent asks whether to target
+`preview` or `stable`, then waits for your response before continuing.
 
 ### `update_plan`
 
-Updates the visible plan for the current thread. The agent uses it during multi-step tasks to show pending, in-progress, and completed work.
+Updates the visible plan for the current thread. The agent uses it during
+multi-step tasks to show pending, in-progress, and completed work.
 
-**Example:** During a refactor, the agent creates a plan with investigation, implementation, and validation steps, then marks each step complete as it progresses.
+**Example:** During a refactor, the agent creates a plan with investigation,
+implementation, and validation steps, then marks each step complete as it
+progresses.
 
 ## Other Tools
 
