@@ -3726,6 +3726,7 @@ impl Sidebar {
                         thread_title,
                         markdown,
                         workspace,
+                        false,
                         window,
                         cx,
                     )

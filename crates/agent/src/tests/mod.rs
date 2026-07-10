@@ -1262,14 +1262,45 @@ async fn test_ask_user_question_tool_submits_multiple_choices(cx: &mut TestAppCo
 }
 
 #[gpui::test]
-async fn test_update_plan_tool_emits_plan_update(cx: &mut TestAppContext) {
+async fn test_plan_mode_switches_profile_and_limits_edits(cx: &mut TestAppContext) {
+    let ThreadTest { thread, .. } = setup(cx, TestModel::Fake).await;
+
+    let plan_file = thread
+        .update(cx, |thread, cx| thread.enter_plan_mode(cx))
+        .unwrap();
+    let (profile, plan_file_allowed, other_file_denied) = cx.update(|cx| {
+        let thread = thread.read(cx);
+        (
+            thread.profile().clone(),
+            thread
+                .plan_mode_file_edit_error(Path::new(&plan_file.display_path), cx)
+                .is_none(),
+            thread
+                .plan_mode_file_edit_error(Path::new("test/src/main.rs"), cx)
+                .is_some(),
+        )
+    });
+    assert_eq!(profile.as_str(), agent_settings::builtin_profiles::PLAN);
+    assert!(plan_file.display_path.contains(".zed/plans/"));
+    assert!(plan_file_allowed);
+    assert!(other_file_denied);
+
+    thread
+        .update(cx, |thread, cx| thread.exit_plan_mode(cx))
+        .unwrap();
+    let profile = cx.update(|cx| thread.read(cx).profile().clone());
+    assert_eq!(profile.as_str(), agent_settings::builtin_profiles::WRITE);
+}
+
+#[gpui::test]
+async fn test_update_todos_tool_emits_todo_update(cx: &mut TestAppContext) {
     let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
     let fake_model = model.as_fake();
 
     let mut events = thread
         .update(cx, |thread, cx| {
             thread.add_tool(UpdatePlanTool);
-            thread.send(ClientUserMessageId::new(), ["make a plan"], cx)
+            thread.send(ClientUserMessageId::new(), ["make a todo list"], cx)
         })
         .unwrap();
     cx.run_until_parked();
@@ -1282,7 +1313,7 @@ async fn test_update_plan_tool_emits_plan_update(cx: &mut TestAppContext) {
     });
     fake_model.send_last_completion_stream_event(LanguageModelCompletionEvent::ToolUse(
         LanguageModelToolUse {
-            id: "update_plan_1".into(),
+            id: "update_todos_1".into(),
             name: UpdatePlanTool::NAME.into(),
             raw_input: tool_input.to_string(),
             input: tool_input,
@@ -1315,7 +1346,7 @@ async fn test_update_plan_tool_emits_plan_update(cx: &mut TestAppContext) {
         message.content,
         vec![language_model::MessageContent::ToolResult(
             LanguageModelToolResult {
-                tool_use_id: "update_plan_1".into(),
+                tool_use_id: "update_todos_1".into(),
                 tool_name: UpdatePlanTool::NAME.into(),
                 is_error: false,
                 content: vec![expected_output.to_string().into()],

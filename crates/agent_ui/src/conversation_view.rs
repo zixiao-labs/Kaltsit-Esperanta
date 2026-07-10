@@ -324,6 +324,7 @@ impl Conversation {
                     | AcpThreadEvent::ModeUpdated(_)
                     | AcpThreadEvent::ConfigOptionsUpdated(_)
                     | AcpThreadEvent::WorkingDirectoriesUpdated
+                    | AcpThreadEvent::OpenPlanFile(_)
                     | AcpThreadEvent::PromptUpdated => {}
                 }
             }
@@ -568,6 +569,7 @@ fn affects_thread_metadata(event: &AcpThreadEvent) -> bool {
         | AcpThreadEvent::Refusal
         | AcpThreadEvent::WorkingDirectoriesUpdated => true,
         // --
+        AcpThreadEvent::OpenPlanFile(_) => false,
         AcpThreadEvent::EntryUpdated(_)
         | AcpThreadEvent::StatusChanged
         | AcpThreadEvent::EntriesRemoved(_)
@@ -1648,6 +1650,19 @@ impl ConversationView {
                 self.notify_with_sound("Waiting for input", IconName::Info, window, cx);
             }
             AcpThreadEvent::ElicitationResponded(_) => {}
+            AcpThreadEvent::OpenPlanFile(request) => {
+                if let Some(workspace) = self.workspace.upgrade() {
+                    open_markdown_in_workspace(
+                        ama10_i18n::tr_f!("Plan: {}", request.display_path).to_string(),
+                        request.markdown.clone(),
+                        workspace,
+                        true,
+                        window,
+                        cx,
+                    )
+                    .detach_and_log_err(cx);
+                }
+            }
             AcpThreadEvent::Retry(retry) => {
                 if let Some(active) = self.thread_view(&session_id) {
                     active.update(cx, |active, _cx| {

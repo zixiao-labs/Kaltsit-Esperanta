@@ -790,7 +790,7 @@ impl AgentThreadEntry {
             Self::ToolCall(tool_call) => tool_call.to_markdown(cx),
             Self::Elicitation(_) => "## Input Requested\n\n".to_string(),
             Self::CompletedPlan(entries) => {
-                let mut md = String::from("## Plan\n\n");
+                let mut md = String::from("## Todos\n\n");
                 for entry in entries {
                     let source = entry.content.read(cx).source().to_string();
                     md.push_str(&format!("- [x] {}\n", source));
@@ -1977,6 +1977,13 @@ impl Plan {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct PlanFileOpenRequest {
+    pub display_path: String,
+    pub absolute_path: PathBuf,
+    pub markdown: String,
+}
+
 #[derive(Debug)]
 pub struct PlanEntry {
     pub content: Entity<Markdown>,
@@ -2159,6 +2166,7 @@ pub enum AcpThreadEvent {
     ModeUpdated(acp::SessionModeId),
     ConfigOptionsUpdated(Vec<acp::SessionConfigOption>),
     WorkingDirectoriesUpdated,
+    OpenPlanFile(PlanFileOpenRequest),
 }
 
 impl EventEmitter<AcpThreadEvent> for AcpThread {}
@@ -3557,6 +3565,10 @@ impl AcpThread {
 
     pub fn plan(&self) -> &Plan {
         &self.plan
+    }
+
+    pub fn open_plan_file(&mut self, request: PlanFileOpenRequest, cx: &mut Context<Self>) {
+        cx.emit(AcpThreadEvent::OpenPlanFile(request));
     }
 
     pub fn update_plan(&mut self, request: acp::Plan, cx: &mut Context<Self>) {

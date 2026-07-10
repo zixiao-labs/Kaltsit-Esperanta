@@ -8,15 +8,15 @@ use std::sync::Arc;
 
 use crate::{AgentTool, ToolCallEventStream, ToolInput};
 
-/// Replace the current visible plan for the agent thread.
+/// Replace the current visible todo list for the agent thread.
 ///
 /// Use this for multi-step tasks to show the user what is being worked on and
-/// keep step status current as work progresses. Always send the complete list of
-/// plan entries; the previous plan is replaced by each update.
+/// keep task status current as work progresses. Always send the complete list of
+/// todo entries; the previous list is replaced by each update.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct UpdatePlanToolInput {
-    /// Complete ordered list of plan entries to display.
+    /// Complete ordered list of todo entries to display.
     pub entries: Vec<UpdatePlanEntry>,
 }
 
@@ -43,7 +43,7 @@ pub enum UpdatePlanEntryStatus {
     /// The task has been completed successfully.
     Completed,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for UpdatePlanEntryStatus {
     fn default() -> Self {
         Self::Pending
@@ -70,7 +70,7 @@ pub enum UpdatePlanEntryPriority {
     /// Nice to have or supporting work.
     Low,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for UpdatePlanEntryPriority {
     fn default() -> Self {
         Self::Medium
@@ -97,7 +97,7 @@ pub enum UpdatePlanToolOutput {
 impl From<UpdatePlanToolOutput> for LanguageModelToolResultContent {
     fn from(output: UpdatePlanToolOutput) -> Self {
         serde_json::to_string(&output)
-            .unwrap_or_else(|e| format!("Failed to serialize update_plan output: {e}"))
+            .unwrap_or_else(|e| format!("Failed to serialize update_todos output: {e}"))
             .into()
     }
 }
@@ -108,7 +108,7 @@ impl AgentTool for UpdatePlanTool {
     type Input = UpdatePlanToolInput;
     type Output = UpdatePlanToolOutput;
 
-    const NAME: &'static str = "update_plan";
+    const NAME: &'static str = "update_todos";
 
     fn kind() -> acp::ToolKind {
         acp::ToolKind::Other
@@ -120,8 +120,8 @@ impl AgentTool for UpdatePlanTool {
         _cx: &mut App,
     ) -> SharedString {
         match input {
-            Ok(input) => format!("Update plan ({} steps)", input.entries.len()).into(),
-            Err(_) => "Update plan".into(),
+            Ok(input) => format!("Update todos ({} tasks)", input.entries.len()).into(),
+            Err(_) => "Update todos".into(),
         }
     }
 

@@ -2235,6 +2235,11 @@ impl NativeAgentConnection {
                                     thread.update_tool_call(update, cx)
                                 })??;
                             }
+                            ThreadEvent::OpenPlanFile(request) => {
+                                acp_thread.update(cx, |thread, cx| {
+                                    thread.open_plan_file(request, cx);
+                                })?;
+                            }
                             ThreadEvent::Plan(plan) => {
                                 acp_thread.update(cx, |thread, cx| {
                                     thread.update_plan(plan, cx);

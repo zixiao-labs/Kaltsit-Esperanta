@@ -633,8 +633,27 @@ pub fn authorize_file_edit(
 ) -> Task<Result<()>> {
     let path_str = path.to_string_lossy();
 
+    let plan_mode_allows_plan_file =
+        match thread.read_with(cx, |thread, cx| thread.plan_mode_file_edit_error(path, cx)) {
+            Ok(None)
+                if thread
+                    .read_with(cx, |thread, _cx| {
+                        thread.profile().as_str() == agent_settings::builtin_profiles::PLAN
+                    })
+                    .unwrap_or(false) =>
+            {
+                true
+            }
+            Ok(Some(reason)) => return Task::ready(Err(anyhow!("{}", reason))),
+            Ok(None) | Err(_) => false,
+        };
+
     let settings = agent_settings::AgentSettings::get_global(cx);
-    let decision = decide_permission_for_path(tool_name, &path_str, settings);
+    let decision = if plan_mode_allows_plan_file {
+        ToolPermissionDecision::Allow
+    } else {
+        decide_permission_for_path(tool_name, &path_str, settings)
+    };
 
     if let ToolPermissionDecision::Deny(reason) = decision {
         return Task::ready(Err(anyhow!("{}", reason)));
@@ -720,7 +739,9 @@ pub fn authorize_file_edit(
         // `sensitive_settings_kind`; the slow path still runs for paths
         // that don't trivially look sensitive, so `..` traversal and
         // intra-project-symlink bypasses are still caught there.
-        let settings_kind = if is_local_settings {
+        let settings_kind = if plan_mode_allows_plan_file {
+            None
+        } else if is_local_settings {
             Some(SensitiveSettingsKind::Local)
         } else if is_agents_skills {
             Some(SensitiveSettingsKind::AgentSkills)

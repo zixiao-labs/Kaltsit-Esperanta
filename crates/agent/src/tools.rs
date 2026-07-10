@@ -19,6 +19,7 @@ mod grep_tool;
 mod list_agents_and_models_tool;
 mod list_directory_tool;
 mod move_path_tool;
+mod plan_mode_tool;
 mod read_file_tool;
 mod rename_tool;
 mod skill_tool;
@@ -82,6 +83,7 @@ pub use grep_tool::*;
 pub use list_agents_and_models_tool::*;
 pub use list_directory_tool::*;
 pub use move_path_tool::*;
+pub use plan_mode_tool::*;
 pub use read_file_tool::*;
 pub use rename_tool::*;
 pub use skill_tool::*;
@@ -207,6 +209,8 @@ tools! {
     ListAgentsAndModelsTool,
     ListDirectoryTool,
     MovePathTool,
+    EnterPlanModeTool,
+    ExitPlanModeTool,
     ReadFileTool,
     RenameTool,
     SkillTool,
