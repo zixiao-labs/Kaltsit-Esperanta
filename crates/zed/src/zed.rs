@@ -32,10 +32,13 @@ use feature_flags::{FeatureFlagAppExt as _, PanicFeatureFlag};
 use fs::Fs;
 use futures::FutureExt as _;
 use futures::{StreamExt, channel::mpsc, select_biased};
+use git_ui::branch_diff::BranchDiffToolbar;
 use git_ui::commit_view::CommitViewToolbar;
 use git_ui::git_panel::GitPanel;
-use git_ui::project_diff::{BranchDiffToolbar, ProjectDiffToolbar};
+use git_ui::project_diff::ProjectDiffToolbar;
 use git_ui::solo_diff_view::{SoloDiffGitToolbar, SoloDiffStyleToolbar};
+use git_ui::staged_diff::StagedDiffToolbar;
+use git_ui::unstaged_diff::UnstagedDiffToolbar;
 use gpui::{
     Action, App, AppContext as _, AsyncWindowContext, ClipboardItem, Context, DismissEvent,
     Element, Entity, FocusHandle, Focusable, Image, ImageFormat, KeyBinding, ParentElement,
@@ -379,10 +382,13 @@ pub fn build_window_options(display_uuid: Option<Uuid>, cx: &mut App) -> WindowO
         focus: false,
         show: false,
         kind: WindowKind::Normal,
-        // On macOS, Zed handles window movement itself, so disable AppKit's titlebar dragging.
-        // On other platforms, `is_movable` gates native window dragging (e.g. Windows'
-        // `HTCAPTION` hit test), so it must remain `true`.
-        is_movable: cfg!(not(target_os = "macos")),
+        is_movable: true,
+        // Zed draws its own titlebar and moves the window via [`Window::start_window_move`],
+        // so on macOS AppKit should not own titlebar dragging. This avoids the titlebar
+        // click delay from AppKit's drag disambiguation (first observed on macOS 27) while
+        // keeping the window movable and the Window-menu tiling items enabled. No-op on
+        // other platforms.
+        app_owns_titlebar_drag: true,
         display_id: display.map(|display| display.id()),
         window_background: cx.theme().window_background_appearance(),
         app_id: Some(app_id.to_owned()),
@@ -1416,6 +1422,10 @@ fn initialize_pane(
             toolbar.add_item(highlights_tree_item, window, cx);
             let project_diff_toolbar = cx.new(|cx| ProjectDiffToolbar::new(workspace, cx));
             toolbar.add_item(project_diff_toolbar, window, cx);
+            let staged_diff_toolbar = cx.new(|cx| StagedDiffToolbar::new(workspace, cx));
+            toolbar.add_item(staged_diff_toolbar, window, cx);
+            let unstaged_diff_toolbar = cx.new(|cx| UnstagedDiffToolbar::new(workspace, cx));
+            toolbar.add_item(unstaged_diff_toolbar, window, cx);
             let branch_diff_toolbar = cx.new(BranchDiffToolbar::new);
             toolbar.add_item(branch_diff_toolbar, window, cx);
             let solo_diff_git_toolbar = cx.new(SoloDiffGitToolbar::new);

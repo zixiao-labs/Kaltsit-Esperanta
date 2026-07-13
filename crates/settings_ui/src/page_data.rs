@@ -7338,7 +7338,7 @@ fn terminal_page() -> SettingsPage {
         ]
     }
 
-    fn behavior_settings_section() -> [SettingsPageItem; 5] {
+    fn behavior_settings_section() -> [SettingsPageItem; 6] {
         [
             SettingsPageItem::SectionHeader(tr!("Behavior Settings")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -7401,6 +7401,31 @@ fn terminal_page() -> SettingsPage {
                             .terminal
                             .get_or_insert_default()
                             .keep_selection_on_copy = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Open Links In Mouse Mode"),
+                description: tr!(
+                    "Whether cmd-click (ctrl-click on Linux and Windows) opens hyperlinks even when the terminal application has enabled mouse reporting. When disabled, these clicks are forwarded to the application; links can still be opened with shift-cmd-click."
+                ),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("terminal.open_links_in_mouse_mode"),
+                    pick: |settings_content| {
+                        settings_content
+                            .terminal
+                            .as_ref()?
+                            .open_links_in_mouse_mode
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .terminal
+                            .get_or_insert_default()
+                            .open_links_in_mouse_mode = value;
                     },
                 }),
                 metadata: None,
@@ -9160,7 +9185,9 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
             SettingsPageItem::SectionHeader(tr!("Formatting")),
             SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("Format On Save"),
-                description: tr!("Whether or not to perform a buffer format before saving."),
+                description: tr!(
+                    "On: format the whole buffer.\nOff: do not format.\nModifications: format only lines with unstaged changes; skips formatting when a git diff or LSP range formatting is unavailable.\nModifications If Available: same, but falls back to formatting the whole buffer."
+                ),
                 field: Box::new(
                     // TODO(settings_ui): this setting should just be a bool
                     SettingField {

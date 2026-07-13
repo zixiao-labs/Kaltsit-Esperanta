@@ -2297,7 +2297,7 @@ impl Editor {
         let file_name = snapshot
             .file()
             .map(|file| SharedString::new(file.file_name(cx)))
-            .unwrap_or(SharedString::new_static("untitled"));
+            .unwrap_or(SharedString::new_static(MultiBuffer::DEFAULT_TITLE));
 
         h_flex()
             .id("ep-jump-outside-popover")
@@ -2431,7 +2431,9 @@ impl Editor {
                 let file_name = snapshot
                     .file()
                     .map(|file| file.file_name(cx).to_string())
-                    .unwrap_or_else(|| tr!("untitled").to_string());
+                    .unwrap_or_else(|| {
+                        ama10_i18n::translate(MultiBuffer::DEFAULT_TITLE).to_string()
+                    });
                 Some(
                     h_flex()
                         .px_2()

@@ -3,7 +3,10 @@ use indoc::indoc;
 
 use crate::tasks::workflows::{
     runners,
-    steps::{self, CommonJobConditions, NamedJob, RepositoryTarget, generate_token, named},
+    steps::{
+        self, CommonJobConditions, CommonPermissionSets, NamedJob, RepositoryTarget,
+        generate_token, named,
+    },
     vars::{self, StepOutput},
 };
 
@@ -13,6 +16,7 @@ pub fn publish_extension_cli() -> Workflow {
     let update_sha_in_extensions = update_sha_in_extensions(&publish);
 
     named::workflow()
+        .with_minimal_permissions()
         .on(Event::default().push(Push::default().tags(vec!["extension-cli".to_string()])))
         .add_env(("CARGO_TERM_COLOR", "always"))
         .add_env(("CARGO_INCREMENTAL", 0))

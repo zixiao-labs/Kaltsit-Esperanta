@@ -359,6 +359,16 @@ impl CommonJobConditions for Job {
     }
 }
 
+pub trait CommonPermissionSets: Sized {
+    fn with_minimal_permissions(self) -> Self;
+}
+
+impl CommonPermissionSets for Workflow {
+    fn with_minimal_permissions(self) -> Self {
+        self.permissions(Permissions::default().contents(Level::Read))
+    }
+}
+
 pub(crate) fn release_job(deps: &[&NamedJob]) -> Job {
     dependant_job(deps)
         .with_repository_owner_guard()
@@ -486,6 +496,7 @@ pub mod named {
                     .collect::<Vec<_>>()
                     .join("::"),
             )
+            .permissions(Permissions::default())
             .defaults(Defaults::default().run(RunDefaults::default().shell(BASH_SHELL)))
     }
 
@@ -931,12 +942,24 @@ impl GitRef {
         }
     }
 
+    fn update_ref_path(&self) -> String {
+        match self {
+            Self::Tag(name) => format!("tags/{name}"),
+            Self::Branch(name) => format!("heads/{name}"),
+        }
+    }
+
     fn kind(&self) -> &'static str {
         match self {
             Self::Tag(_) => "tag",
             Self::Branch(_) => "branch",
         }
     }
+}
+
+enum RefOperation {
+    Create,
+    Update { force: bool },
 }
 
 pub(crate) enum RefSha {
@@ -946,6 +969,7 @@ pub(crate) enum RefSha {
 
 struct RefOp {
     git_ref: GitRef,
+    operation: RefOperation,
     sha: RefSha,
     token: String,
 }
@@ -958,14 +982,24 @@ impl<T: ToString> From<T> for RefSha {
 
 impl From<RefOp> for Step<Use> {
     fn from(op: RefOp) -> Self {
-        let ref_path = op.git_ref.create_ref_path();
-        let step_name = format!("steps::create_{}", op.git_ref.kind());
+        let (api_method, ref_path, force_line) = match &op.operation {
+            RefOperation::Create => ("createRef", op.git_ref.create_ref_path(), String::new()),
+            RefOperation::Update { force } => (
+                "updateRef",
+                op.git_ref.update_ref_path(),
+                format!(",\n    force: {force}"),
+            ),
+        };
+        let step_name = match &op.operation {
+            RefOperation::Create => format!("steps::create_{}", op.git_ref.kind()),
+            RefOperation::Update { .. } => format!("steps::update_{}", op.git_ref.kind()),
+        };
         let script = indoc::formatdoc! {r#"
-            github.rest.git.createRef({{
+            github.rest.git.{api_method}({{
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: '{ref_path}',
-                sha: {sha}
+                sha: {sha}{force_line}
             }})
             "#,
             sha = match &op.sha {
@@ -987,6 +1021,21 @@ pub(crate) fn create_ref(
 ) -> impl Into<Step<Use>> {
     RefOp {
         git_ref,
+        operation: RefOperation::Create,
+        sha: sha.into(),
+        token: token.to_string(),
+    }
+}
+
+pub(crate) fn update_ref(
+    git_ref: GitRef,
+    sha: impl Into<RefSha>,
+    token: &StepOutput,
+    force: bool,
+) -> impl Into<Step<Use>> {
+    RefOp {
+        git_ref,
+        operation: RefOperation::Update { force },
         sha: sha.into(),
         token: token.to_string(),
     }

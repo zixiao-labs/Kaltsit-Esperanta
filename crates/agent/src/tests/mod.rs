@@ -689,7 +689,7 @@ async fn test_prompt_caching(cx: &mut TestAppContext) {
         id: "tool_1".into(),
         name: EchoTool::NAME.into(),
         raw_input: json!({"text": "test"}).to_string(),
-        input: json!({"text": "test"}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({"text": "test"})),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -840,17 +840,25 @@ async fn test_streaming_tool_calls(cx: &mut TestAppContext) {
                     assert_eq!(last_tool_use.name.as_ref(), "word_list");
                     if tool_call.status == acp::ToolCallStatus::Pending {
                         if !last_tool_use.is_input_complete
-                            && last_tool_use.input.get("g").is_none()
+                            && last_tool_use
+                                .input
+                                .as_json()
+                                .and_then(|input| input.get("g"))
+                                .is_none()
                         {
                             saw_partial_tool_use = true;
                         }
                     } else {
                         last_tool_use
                             .input
+                            .as_json()
+                            .expect("tool input should be JSON")
                             .get("a")
                             .expect("'a' has streamed because input is now complete");
                         last_tool_use
                             .input
+                            .as_json()
+                            .expect("tool input should be JSON")
                             .get("g")
                             .expect("'g' has streamed because input is now complete");
                     }
@@ -884,7 +892,7 @@ async fn test_tool_authorization(cx: &mut TestAppContext) {
             id: "tool_id_1".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -894,7 +902,7 @@ async fn test_tool_authorization(cx: &mut TestAppContext) {
             id: "tool_id_2".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -951,7 +959,7 @@ async fn test_tool_authorization(cx: &mut TestAppContext) {
             id: "tool_id_3".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -990,7 +998,7 @@ async fn test_tool_authorization(cx: &mut TestAppContext) {
             id: "tool_id_4".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1477,7 +1485,7 @@ async fn test_tool_hallucination(cx: &mut TestAppContext) {
             id: "tool_id_1".into(),
             name: "nonexistent_tool".into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2012,7 +2020,7 @@ async fn test_mcp_tools(cx: &mut TestAppContext) {
             id: "tool_1".into(),
             name: "echo".into(),
             raw_input: json!({"text": "test"}).to_string(),
-            input: json!({"text": "test"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "test"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2056,7 +2064,7 @@ async fn test_mcp_tools(cx: &mut TestAppContext) {
             id: "tool_2".into(),
             name: "test_server_echo".into(),
             raw_input: json!({"text": "mcp"}).to_string(),
-            input: json!({"text": "mcp"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "mcp"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2066,7 +2074,7 @@ async fn test_mcp_tools(cx: &mut TestAppContext) {
             id: "tool_3".into(),
             name: "echo".into(),
             raw_input: json!({"text": "native"}).to_string(),
-            input: json!({"text": "native"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "native"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2176,7 +2184,7 @@ async fn test_mcp_tool_names_are_sanitized_for_providers(cx: &mut TestAppContext
             id: "tool_1".into(),
             name: "snake_case_PascalCase".into(),
             raw_input: json!({}).to_string(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2265,7 +2273,7 @@ async fn test_mcp_tool_multi_content_response(cx: &mut TestAppContext) {
             id: "tool_1".into(),
             name: "screenshot".into(),
             raw_input: json!({}).to_string(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2415,7 +2423,9 @@ async fn test_mcp_tool_result_displayed_when_server_disconnected(cx: &mut TestAp
             name: "issue_read".into(),
             raw_input: json!({"issue_url": "https://github.com/zed-industries/zed/issues/47404"})
                 .to_string(),
-            input: json!({"issue_url": "https://github.com/zed-industries/zed/issues/47404"}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"issue_url": "https://github.com/zed-industries/zed/issues/47404"}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2830,7 +2840,9 @@ async fn test_terminal_tool_cancellation_captures_output(cx: &mut TestAppContext
             id: "terminal_tool_1".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 1000", "cd": "."}"#.into(),
-            input: json!({"command": "sleep 1000", "cd": "."}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 1000", "cd": "."}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -2925,7 +2937,7 @@ async fn test_cancellation_aware_tool_responds_to_cancellation(cx: &mut TestAppC
             id: "cancellation_aware_1".into(),
             name: "cancellation_aware".into(),
             raw_input: r#"{}"#.into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3111,7 +3123,9 @@ async fn test_truncate_while_terminal_tool_running(cx: &mut TestAppContext) {
             id: "terminal_tool_1".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 1000", "cd": "."}"#.into(),
-            input: json!({"command": "sleep 1000", "cd": "."}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 1000", "cd": "."}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3176,7 +3190,9 @@ async fn test_cancel_multiple_concurrent_terminal_tools(cx: &mut TestAppContext)
             id: "terminal_tool_1".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 1000", "cd": "."}"#.into(),
-            input: json!({"command": "sleep 1000", "cd": "."}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 1000", "cd": "."}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3186,7 +3202,9 @@ async fn test_cancel_multiple_concurrent_terminal_tools(cx: &mut TestAppContext)
             id: "terminal_tool_2".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 2000", "cd": "."}"#.into(),
-            input: json!({"command": "sleep 2000", "cd": "."}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 2000", "cd": "."}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3290,7 +3308,9 @@ async fn test_terminal_tool_stopped_via_terminal_card_button(cx: &mut TestAppCon
             id: "terminal_tool_1".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 1000", "cd": "."}"#.into(),
-            input: json!({"command": "sleep 1000", "cd": "."}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 1000", "cd": "."}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3386,7 +3406,9 @@ async fn test_terminal_tool_timeout_expires(cx: &mut TestAppContext) {
             id: "terminal_tool_1".into(),
             name: TerminalTool::NAME.into(),
             raw_input: r#"{"command": "sleep 1000", "cd": ".", "timeout_ms": 100}"#.into(),
-            input: json!({"command": "sleep 1000", "cd": ".", "timeout_ms": 100}),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({"command": "sleep 1000", "cd": ".", "timeout_ms": 100}),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -3855,7 +3877,7 @@ async fn test_cumulative_token_usage(cx: &mut TestAppContext) {
             id: "tool_1".into(),
             name: EchoTool::NAME.into(),
             raw_input: json!({"text": "hello"}).to_string(),
-            input: json!({"text": "hello"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "hello"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -4265,7 +4287,7 @@ async fn test_building_request_with_pending_tools(cx: &mut TestAppContext) {
         id: "tool_id_1".into(),
         name: ToolRequiringPermission::NAME.into(),
         raw_input: "{}".into(),
-        input: json!({}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({})),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -4273,7 +4295,7 @@ async fn test_building_request_with_pending_tools(cx: &mut TestAppContext) {
         id: "tool_id_2".into(),
         name: EchoTool::NAME.into(),
         raw_input: json!({"text": "test"}).to_string(),
-        input: json!({"text": "test"}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({"text": "test"})),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -4471,7 +4493,7 @@ async fn test_tool_updates_to_completion(cx: &mut TestAppContext) {
             id: "1".into(),
             name: EchoTool::NAME.into(),
             raw_input: input.to_string(),
-            input,
+            input: language_model::LanguageModelToolUseInput::Json(input),
             is_input_complete: false,
             thought_signature: None,
         },
@@ -4484,7 +4506,7 @@ async fn test_tool_updates_to_completion(cx: &mut TestAppContext) {
             id: "1".into(),
             name: "echo".into(),
             raw_input: input.to_string(),
-            input,
+            input: language_model::LanguageModelToolUseInput::Json(input),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -4654,7 +4676,7 @@ async fn test_send_retry_finishes_tool_calls_on_error(cx: &mut TestAppContext) {
         id: "tool_1".into(),
         name: EchoTool::NAME.into(),
         raw_input: json!({"text": "test"}).to_string(),
-        input: json!({"text": "test"}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({"text": "test"})),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -4802,7 +4824,7 @@ async fn test_streaming_tool_completes_when_llm_stream_ends_without_final_input(
         id: "tool_1".into(),
         name: "streaming_echo".into(),
         raw_input: r#"{"text": "partial"}"#.into(),
-        input: json!({"text": "partial"}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({"text": "partial"})),
         is_input_complete: false,
         thought_signature: None,
     };
@@ -4907,7 +4929,7 @@ async fn test_streaming_tool_json_parse_error_is_forwarded_to_running_tool(
         id: "tool_1".into(),
         name: StreamingJsonErrorContextTool::NAME.into(),
         raw_input: r#"{"text": "partial"#.into(),
-        input: json!({"text": "partial"}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({"text": "partial"})),
         is_input_complete: false,
         thought_signature: None,
     };
@@ -5709,7 +5731,9 @@ async fn test_subagent_tool_call_end_to_end(cx: &mut TestAppContext) {
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -5843,7 +5867,9 @@ async fn test_subagent_tool_output_does_not_include_thinking(cx: &mut TestAppCon
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -5990,7 +6016,9 @@ async fn test_subagent_tool_call_cancellation_during_task_prompt(cx: &mut TestAp
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -6119,7 +6147,9 @@ async fn test_subagent_tool_resume_session(cx: &mut TestAppContext) {
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -6180,7 +6210,9 @@ async fn test_subagent_tool_resume_session(cx: &mut TestAppContext) {
         id: "subagent_2".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&resume_tool_input).unwrap(),
-        input: serde_json::to_value(&resume_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&resume_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -6766,7 +6798,9 @@ async fn test_subagent_context_window_warning(cx: &mut TestAppContext) {
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -6891,7 +6925,9 @@ async fn test_subagent_no_context_window_warning_when_already_at_warning(cx: &mu
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -6957,7 +6993,9 @@ async fn test_subagent_no_context_window_warning_when_already_at_warning(cx: &mu
         id: "subagent_2".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&resume_tool_input).unwrap(),
-        input: serde_json::to_value(&resume_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&resume_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -7064,7 +7102,9 @@ async fn test_subagent_error_propagation(cx: &mut TestAppContext) {
         id: "subagent_1".into(),
         name: SpawnAgentTool::NAME.into(),
         raw_input: serde_json::to_string(&subagent_tool_input).unwrap(),
-        input: serde_json::to_value(&subagent_tool_input).unwrap(),
+        input: language_model::LanguageModelToolUseInput::Json(
+            serde_json::to_value(&subagent_tool_input).unwrap(),
+        ),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -7831,6 +7871,194 @@ async fn test_fetch_tool_unsandboxed_lifts_restrictions(cx: &mut TestAppContext)
     );
 }
 
+/// A granted host that redirects to a loopback target must not have that
+/// redirect followed: loopback hosts can't be granted individually, so the hop
+/// is refused just like a direct loopback fetch. This is the redirect variant of
+/// the SSRF protection — the approved domain can't be used to bounce the request
+/// onto the local machine.
+#[gpui::test]
+async fn test_fetch_tool_refuses_redirect_to_loopback(cx: &mut TestAppContext) {
+    init_test(cx);
+
+    cx.update(|cx| {
+        let mut settings = agent_settings::AgentSettings::get_global(cx).clone();
+        settings.tool_permissions.tools.insert(
+            FetchTool::NAME.into(),
+            agent_settings::ToolRules {
+                default: Some(settings::ToolPermissionMode::Allow),
+                always_allow: vec![],
+                always_deny: vec![],
+                always_confirm: vec![],
+                invalid_patterns: vec![],
+            },
+        );
+        settings
+            .sandbox_permissions
+            .network_hosts
+            .push("example.com".into());
+        agent_settings::AgentSettings::override_global(settings, cx);
+    });
+
+    let http_client = gpui::http_client::FakeHttpClient::create(|req| async move {
+        let uri = req.uri().to_string();
+        assert!(
+            uri.contains("example.com"),
+            "the loopback redirect target must never be requested, but saw {uri}"
+        );
+        Ok(gpui::http_client::Response::builder()
+            .status(302)
+            .header("location", "http://localhost:3000/internal")
+            .body("".into())
+            .unwrap())
+    });
+
+    #[allow(clippy::arc_with_non_send_sync)]
+    let tool = Arc::new(crate::FetchTool::new(http_client));
+    let (event_stream, _rx) = crate::ToolCallEventStream::test();
+
+    let input: crate::FetchToolInput =
+        serde_json::from_value(json!({"url": "https://example.com/start"})).unwrap();
+
+    let task = cx.update(|cx| tool.run(ToolInput::resolved(input), event_stream, cx));
+    let result = task.await;
+    assert!(
+        result.is_err(),
+        "expected a redirect to a loopback host to be refused"
+    );
+    assert!(
+        result.unwrap_err().contains("unsandboxed"),
+        "error should point at unsandboxed access as the way to reach loopback hosts"
+    );
+}
+
+/// A granted host that redirects to a *different*, ungranted host triggers a
+/// fresh per-host authorization prompt for the redirect target — the redirect is
+/// not silently followed to a host the user never approved.
+#[gpui::test]
+async fn test_fetch_tool_reauthorizes_redirect_to_new_host(cx: &mut TestAppContext) {
+    init_test(cx);
+
+    cx.update(|cx| {
+        let mut settings = agent_settings::AgentSettings::get_global(cx).clone();
+        settings.tool_permissions.tools.insert(
+            FetchTool::NAME.into(),
+            agent_settings::ToolRules {
+                default: Some(settings::ToolPermissionMode::Allow),
+                always_allow: vec![],
+                always_deny: vec![],
+                always_confirm: vec![],
+                invalid_patterns: vec![],
+            },
+        );
+        settings
+            .sandbox_permissions
+            .network_hosts
+            .push("example.com".into());
+        agent_settings::AgentSettings::override_global(settings, cx);
+    });
+
+    let http_client = gpui::http_client::FakeHttpClient::create(|req| async move {
+        let uri = req.uri().to_string();
+        assert!(
+            uri.contains("example.com"),
+            "the ungranted redirect target must not be requested before authorization, \
+             but saw {uri}"
+        );
+        Ok(gpui::http_client::Response::builder()
+            .status(302)
+            .header("location", "https://redirect-target.example/landing")
+            .body("".into())
+            .unwrap())
+    });
+
+    #[allow(clippy::arc_with_non_send_sync)]
+    let tool = Arc::new(crate::FetchTool::new(http_client));
+    let (event_stream, mut rx) = crate::ToolCallEventStream::test();
+
+    let input: crate::FetchToolInput =
+        serde_json::from_value(json!({"url": "https://example.com/start"})).unwrap();
+
+    let _task = cx.update(|cx| tool.run(ToolInput::resolved(input), event_stream, cx));
+
+    cx.run_until_parked();
+
+    let authorization = rx.expect_authorization().await;
+    let details =
+        acp_thread::sandbox_authorization_details_from_meta(&authorization.tool_call.meta)
+            .expect("a redirect to an ungranted host should request a sandbox network grant");
+    assert_eq!(
+        details.network_hosts,
+        vec!["redirect-target.example".to_string()]
+    );
+    assert!(!details.network_all_hosts);
+}
+
+/// Redirects between paths on an already-granted host are followed without any
+/// additional prompt, so ordinary redirects (http→https upgrades, trailing-slash
+/// canonicalization, etc.) keep working after the per-hop authorization change.
+#[gpui::test]
+async fn test_fetch_tool_follows_same_host_redirect(cx: &mut TestAppContext) {
+    init_test(cx);
+
+    cx.update(|cx| {
+        let mut settings = agent_settings::AgentSettings::get_global(cx).clone();
+        settings.tool_permissions.tools.insert(
+            FetchTool::NAME.into(),
+            agent_settings::ToolRules {
+                default: Some(settings::ToolPermissionMode::Allow),
+                always_allow: vec![],
+                always_deny: vec![],
+                always_confirm: vec![],
+                invalid_patterns: vec![],
+            },
+        );
+        settings
+            .sandbox_permissions
+            .network_hosts
+            .push("example.com".into());
+        agent_settings::AgentSettings::override_global(settings, cx);
+    });
+
+    let http_client = gpui::http_client::FakeHttpClient::create(|req| async move {
+        let uri = req.uri().to_string();
+        if uri.ends_with("/start") {
+            Ok(gpui::http_client::Response::builder()
+                .status(302)
+                .header("location", "https://example.com/final")
+                .body("".into())
+                .unwrap())
+        } else if uri.ends_with("/final") {
+            Ok(gpui::http_client::Response::builder()
+                .status(200)
+                .header("content-type", "text/plain")
+                .body("final content".into())
+                .unwrap())
+        } else {
+            panic!("unexpected request to {uri}");
+        }
+    });
+
+    #[allow(clippy::arc_with_non_send_sync)]
+    let tool = Arc::new(crate::FetchTool::new(http_client));
+    let (event_stream, mut rx) = crate::ToolCallEventStream::test();
+
+    let input: crate::FetchToolInput =
+        serde_json::from_value(json!({"url": "https://example.com/start"})).unwrap();
+
+    let task = cx.update(|cx| tool.run(ToolInput::resolved(input), event_stream, cx));
+    let result = task.await;
+    assert_eq!(
+        result.expect("same-host redirect should succeed"),
+        "final content"
+    );
+
+    let event = rx.try_recv();
+    assert!(
+        !matches!(event, Ok(Ok(ThreadEvent::ToolCallAuthorization(_)))),
+        "expected no authorization prompt for a redirect to an already-granted host"
+    );
+}
+
 /// Approving one pending tool call with "Always for <tool>" auto-resolves
 /// sibling pending authorizations for the same tool in the same turn.
 #[gpui::test]
@@ -7853,7 +8081,7 @@ async fn test_always_allow_resolves_pending_authorizations(cx: &mut TestAppConte
                 id: id.into(),
                 name: ToolRequiringPermission::NAME.into(),
                 raw_input: "{}".into(),
-                input: json!({}),
+                input: language_model::LanguageModelToolUseInput::Json(json!({})),
                 is_input_complete: true,
                 thought_signature: None,
             },
@@ -7932,7 +8160,7 @@ async fn test_external_settings_edit_resolves_pending_authorization(cx: &mut Tes
             id: "tool_id_1".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -8003,7 +8231,7 @@ async fn test_external_deny_rule_resolves_pending_authorization(cx: &mut TestApp
             id: "tool_id_1".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -8079,7 +8307,7 @@ async fn test_unrelated_settings_change_does_not_resolve_pending_authorization(
             id: "tool_id_1".into(),
             name: ToolRequiringPermission::NAME.into(),
             raw_input: "{}".into(),
-            input: json!({}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -8149,7 +8377,7 @@ async fn test_always_allow_does_not_resolve_unrelated_tool_authorization(cx: &mu
                 id: id.into(),
                 name: name.into(),
                 raw_input: "{}".into(),
-                input: json!({}),
+                input: language_model::LanguageModelToolUseInput::Json(json!({})),
                 is_input_complete: true,
                 thought_signature: None,
             },
@@ -8246,7 +8474,7 @@ async fn test_queued_message_ends_turn_at_boundary(cx: &mut TestAppContext) {
             id: "tool_1".into(),
             name: "echo".into(),
             raw_input: r#"{"text": "hello"}"#.into(),
-            input: json!({"text": "hello"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "hello"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -8328,7 +8556,7 @@ async fn test_queued_message_does_not_end_turn_without_boundary_flag(cx: &mut Te
             id: "tool_1".into(),
             name: "echo".into(),
             raw_input: r#"{"text": "hello"}"#.into(),
-            input: json!({"text": "hello"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "hello"})),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -8395,7 +8623,7 @@ async fn test_streaming_tool_error_breaks_stream_loop_immediately(cx: &mut TestA
         id: "call_1".into(),
         name: StreamingFailingEchoTool::NAME.into(),
         raw_input: "hello".into(),
-        input: json!({}),
+        input: language_model::LanguageModelToolUseInput::Json(json!({})),
         is_input_complete: false,
         thought_signature: None,
     };
@@ -8477,7 +8705,7 @@ async fn test_streaming_tool_error_waits_for_prior_tools_to_complete(cx: &mut Te
             id: "call_1".into(),
             name: StreamingEchoTool::NAME.into(),
             raw_input: "hello".into(),
-            input: json!({ "text": "hello" }),
+            input: language_model::LanguageModelToolUseInput::Json(json!({ "text": "hello" })),
             is_input_complete: false,
             thought_signature: None,
         },
@@ -8486,7 +8714,7 @@ async fn test_streaming_tool_error_waits_for_prior_tools_to_complete(cx: &mut Te
         id: "call_1".into(),
         name: StreamingEchoTool::NAME.into(),
         raw_input: "hello world".into(),
-        input: json!({ "text": "hello world" }),
+        input: language_model::LanguageModelToolUseInput::Json(json!({ "text": "hello world" })),
         is_input_complete: true,
         thought_signature: None,
     };
@@ -8496,7 +8724,7 @@ async fn test_streaming_tool_error_waits_for_prior_tools_to_complete(cx: &mut Te
     let second_tool_use = LanguageModelToolUse {
         name: StreamingFailingEchoTool::NAME.into(),
         raw_input: "hello".into(),
-        input: json!({ "text": "hello" }),
+        input: language_model::LanguageModelToolUseInput::Json(json!({ "text": "hello" })),
         is_input_complete: false,
         thought_signature: None,
         id: "call_2".into(),
@@ -8625,7 +8853,7 @@ async fn test_mid_turn_model_and_settings_refresh(cx: &mut TestAppContext) {
             id: "tool_1".into(),
             name: "echo".into(),
             raw_input: r#"{"text":"hello"}"#.into(),
-            input: json!({"text": "hello"}),
+            input: language_model::LanguageModelToolUseInput::Json(json!({"text": "hello"})),
             is_input_complete: true,
             thought_signature: None,
         },

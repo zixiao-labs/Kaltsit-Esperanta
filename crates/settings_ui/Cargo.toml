@@ -23,6 +23,7 @@ ama10-i18n.workspace = true
 ama10-ui.workspace = true
 anyhow.workspace = true
 audio.workspace = true
+client.workspace = true
 cloud_api_types.workspace = true
 component.workspace = true
 codestral.workspace = true
