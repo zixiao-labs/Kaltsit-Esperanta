@@ -1,12 +1,22 @@
-use gh_workflow::{Event, Expression, Level, Push, Run, Step, Use, Workflow, ctx::Context};
+use gh_workflow::{
+    Event, Expression, Level, Permissions, Push, Run, Step, Use, Workflow, ctx::Context,
+};
 use indoc::formatdoc;
 
 use crate::tasks::workflows::{
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests,
     runners::{self, Arch, Platform},
+<<<<<<< HEAD
     steps::{self, NamedJob, TokenPermissions, dependant_job, named, release_job},
     vars::{self, StepOutput, assets},
+=======
+    steps::{
+        self, CommonPermissionSets, DownloadArtifactStep, FluentBuilder, NamedJob,
+        TokenPermissions, dependant_job, named, release_job,
+    },
+    vars::{self, JobOutput, StepOutput, assets},
+>>>>>>> upstream/main
 };
 
 pub(crate) fn release() -> Workflow {
@@ -60,6 +70,7 @@ pub(crate) fn release() -> Workflow {
     named::workflow()
         .on(Event::default().push(Push::default().tags(vec!["v*".to_string()])))
         .concurrency(vars::one_workflow_per_non_main_branch())
+        .with_minimal_permissions()
         .add_env(("CARGO_TERM_COLOR", "always"))
         .add_env(("RUST_BACKTRACE", "1"))
         .add_job(macos_tests.name, macos_tests.job)
@@ -141,9 +152,14 @@ fn validate_release_assets(deps: &[&NamedJob]) -> NamedJob {
     };
 
     named::job(
-        dependant_job(deps).runs_on(runners::LINUX_SMALL).add_step(
-            named::bash(&validation_script).add_env(("GITHUB_TOKEN", vars::GITHUB_TOKEN)),
-        ),
+        dependant_job(deps)
+            .runs_on(runners::LINUX_SMALL)
+            // The release is still a draft at this point, and draft releases are
+            // only visible to tokens with write access to repository contents.
+            .permissions(Permissions::default().contents(Level::Write))
+            .add_step(
+                named::bash(&validation_script).add_env(("GITHUB_TOKEN", vars::GITHUB_TOKEN)),
+            ),
     )
 }
 
@@ -228,6 +244,7 @@ fn upload_release_assets(deps: &[&NamedJob], bundle: &ReleaseBundleJobs) -> Name
     named::job(
         dependant_job(&deps)
             .runs_on(runners::LINUX_MEDIUM)
+            .permissions(Permissions::default().contents(Level::Write))
             .add_step(download_workflow_artifacts())
             .add_step(steps::script("ls -lR ./artifacts"))
             .add_step(prep_release_artifacts())

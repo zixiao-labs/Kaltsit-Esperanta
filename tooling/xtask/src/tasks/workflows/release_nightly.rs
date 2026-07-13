@@ -4,7 +4,14 @@ use crate::tasks::workflows::{
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests::{clippy, run_platform_tests_no_filter},
     runners::{Arch, Platform, ReleaseChannel},
+<<<<<<< HEAD
     steps::{CommonJobConditions, FluentBuilder, NamedJob},
+=======
+    steps::{
+        CommonJobConditions, CommonPermissionSets, DEFAULT_REPOSITORY_OWNER_GUARD, FluentBuilder,
+        GitRef, NamedJob, RefSha, RepositoryTarget, TokenPermissions,
+    },
+>>>>>>> upstream/main
 };
 
 use super::{runners, steps, steps::named, vars};
@@ -44,6 +51,7 @@ pub fn release_nightly() -> Workflow {
     let publish_nightly = publish_nightly_release_job(&bundle);
 
     named::workflow()
+        .with_minimal_permissions()
         .on(Event::default()
             // Fire every day at 7:00am UTC (Roughly before EU workday and after US workday)
             .schedule([Schedule::new("0 7 * * *")])

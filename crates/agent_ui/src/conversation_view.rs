@@ -1607,7 +1607,7 @@ impl ConversationView {
                     });
                     active.update(cx, |active, cx| {
                         active.sync_elicitation_state_for_entry(index, window, cx);
-                        active.sync_editor_mode_for_empty_state(cx);
+                        active.sync_editor_mode(cx);
                         active.sync_generating_indicator(cx);
                     });
                 }
@@ -1634,7 +1634,7 @@ impl ConversationView {
                     entry_view_state.update(cx, |view_state, _cx| view_state.remove(range.clone()));
                     list_state.splice(range.clone(), 0);
                     active.update(cx, |active, cx| {
-                        active.sync_editor_mode_for_empty_state(cx);
+                        active.sync_editor_mode(cx);
                     });
                 }
             }
@@ -3618,7 +3618,11 @@ pub(crate) mod tests {
     use agent_servers::FakeAcpAgentServer;
     use editor::MultiBufferOffset;
     use editor::actions::Paste;
+<<<<<<< HEAD
     use feature_flags::FeatureFlagAppExt as _;
+=======
+    use feature_flags::{AcpBetaFeatureFlag, FeatureFlag as _, FeatureFlagAppExt as _};
+>>>>>>> upstream/main
     use fs::FakeFs;
     use gpui::{ClipboardItem, EventEmitter, TestAppContext, VisualTestContext, point, size};
     use parking_lot::Mutex;

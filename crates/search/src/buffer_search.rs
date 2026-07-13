@@ -15,15 +15,15 @@ use ama10_i18n::tr;
 use any_vec::AnyVec;
 use collections::HashMap;
 use editor::{
-    Editor, EditorSettings, MultiBufferOffset, SplittableEditor, ToggleSplitDiff,
+    DiffStyleControls, Editor, EditorSettings, MultiBufferOffset, SplittableEditor,
     actions::{Backtab, FoldAll, Tab, ToggleFoldAll, UnfoldAll},
     scroll::Autoscroll,
 };
 use futures::channel::oneshot;
 use gpui::{
-    Action as _, App, ClickEvent, Context, Entity, EventEmitter, Focusable,
-    InteractiveElement as _, IntoElement, KeyContext, ParentElement as _, Render, ScrollHandle,
-    Styled, Subscription, Task, TaskExt, WeakEntity, Window, div,
+    App, ClickEvent, Context, Entity, EventEmitter, Focusable, InteractiveElement as _,
+    IntoElement, KeyContext, ParentElement as _, Render, ScrollHandle, Styled, Subscription, Task,
+    TaskExt, WeakEntity, Window, div,
 };
 use language::{Language, LanguageRegistry};
 use project::{
@@ -31,17 +31,11 @@ use project::{
     search_history::{SearchHistory, SearchHistoryCursor},
 };
 
-use fs::Fs;
-use settings::{DiffViewStyle, SeedQuerySetting, Settings, update_settings_file};
+use settings::{SeedQuerySetting, Settings};
 use std::{any::TypeId, sync::Arc};
-use zed_actions::{
-    OpenSettingsAt, outline::ToggleOutline, workspace::CopyPath, workspace::CopyRelativePath,
-};
+use zed_actions::{outline::ToggleOutline, workspace::CopyPath, workspace::CopyRelativePath};
 
-use ui::{
-    BASE_REM_SIZE_IN_PX, IconButtonShape, PlatformStyle, TextSize, Tooltip, prelude::*,
-    render_modifiers, utils::SearchInputWidth,
-};
+use ui::{BASE_REM_SIZE_IN_PX, IconButtonShape, Tooltip, prelude::*, utils::SearchInputWidth};
 use util::{ResultExt, paths::PathMatcher};
 use workspace::{
     ToolbarItemEvent, ToolbarItemLocation, ToolbarItemView, Workspace,
@@ -108,8 +102,8 @@ impl EventEmitter<workspace::ToolbarItemEvent> for BufferSearchBar {}
 impl Render for BufferSearchBar {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let focus_handle = self.focus_handle(cx);
-
         let has_splittable_editor = self.splittable_editor.is_some();
+<<<<<<< HEAD
         let split_buttons = if has_splittable_editor {
             self.splittable_editor
                 .as_ref()
@@ -231,6 +225,13 @@ impl Render for BufferSearchBar {
         } else {
             None
         };
+=======
+        let split_buttons = self
+            .splittable_editor
+            .as_ref()
+            .and_then(|weak| weak.upgrade())
+            .map(DiffStyleControls::new);
+>>>>>>> upstream/main
 
         let collapse_expand_button = if self.needs_expand_collapse_option(cx) {
             let query_editor_focus = self.query_editor.focus_handle(cx);
@@ -663,7 +664,9 @@ impl ToolbarItemView for BufferSearchBar {
             .and_then(|entity| entity.downcast::<SplittableEditor>().ok())
         {
             self._splittable_editor_subscription =
-                Some(cx.observe(&splittable_editor, |_, _, cx| cx.notify()));
+                Some(cx.observe(&splittable_editor, |_, _, cx| {
+                    cx.notify();
+                }));
             self.splittable_editor = Some(splittable_editor.downgrade());
         }
 
