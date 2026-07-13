@@ -4227,11 +4227,7 @@ fn default_render_tab_bar_buttons(
             PopoverMenu::new("pane-tab-bar-popover-menu")
                 .trigger_with_tooltip(
                     IconButton::new("plus", IconName::Plus).icon_size(IconSize::Small),
-<<<<<<< HEAD
-                    Tooltip::text(tr!("New...")),
-=======
-                    Tooltip::text("New…"),
->>>>>>> upstream/main
+                    Tooltip::text(tr!("New…")),
                 )
                 .anchor(Anchor::TopRight)
                 .with_handle(pane.new_item_context_menu_handle.clone())

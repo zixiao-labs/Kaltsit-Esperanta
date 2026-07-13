@@ -3,16 +3,11 @@ use indoc::indoc;
 
 use crate::tasks::workflows::{
     runners,
-<<<<<<< HEAD
-    steps::{self, CommonJobConditions, NamedJob, RepositoryTarget, generate_token, named},
-    vars::{self, StepOutput},
-=======
     steps::{
-        self, CommonPermissionSets, DEFAULT_REPOSITORY_OWNER_GUARD, GitRef, NamedJob, RefSha,
-        RepositoryTarget, TokenPermissions, generate_token, named,
+        self, CommonJobConditions, CommonPermissionSets, NamedJob, RepositoryTarget,
+        generate_token, named,
     },
-    vars::{self, StepOutput, WorkflowInput},
->>>>>>> upstream/main
+    vars::{self, StepOutput},
 };
 
 pub fn publish_extension_cli() -> Workflow {
@@ -21,14 +16,8 @@ pub fn publish_extension_cli() -> Workflow {
     let update_sha_in_extensions = update_sha_in_extensions(&publish);
 
     named::workflow()
-<<<<<<< HEAD
-        .on(Event::default().push(Push::default().tags(vec!["extension-cli".to_string()])))
-=======
         .with_minimal_permissions()
-        .on(Event::default().workflow_dispatch(
-            WorkflowDispatch::default().add_input(message.name, message.input()),
-        ))
->>>>>>> upstream/main
+        .on(Event::default().push(Push::default().tags(vec!["extension-cli".to_string()])))
         .add_env(("CARGO_TERM_COLOR", "always"))
         .add_env(("CARGO_INCREMENTAL", 0))
         .add_job(publish.name, publish.job)

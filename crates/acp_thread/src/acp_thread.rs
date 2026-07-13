@@ -7424,11 +7424,7 @@ mod tests {
     }
 
     #[gpui::test]
-<<<<<<< HEAD
-    async fn test_form_elicitation_does_not_require_acp_beta_flag(cx: &mut TestAppContext) {
-=======
     async fn test_elicitation_is_available_without_acp_beta_flag(cx: &mut TestAppContext) {
->>>>>>> upstream/main
         init_test(cx);
         cx.update(|cx| {
             cx.update_flags(false, vec![]);
@@ -7451,16 +7447,12 @@ mod tests {
         });
 
         assert!(result.is_ok());
-<<<<<<< HEAD
-        thread.read_with(cx, |thread, _| assert_eq!(thread.entries().len(), 1));
-=======
         thread.read_with(cx, |thread, _| {
             assert!(matches!(
                 thread.entries(),
                 [AgentThreadEntry::Elicitation(_)]
             ));
         });
->>>>>>> upstream/main
     }
 
     #[gpui::test]

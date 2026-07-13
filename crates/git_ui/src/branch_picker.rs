@@ -1,4 +1,3 @@
-use ama10_i18n::translate;
 use anyhow::Context as _;
 use editor::Editor;
 use fuzzy_nucleo::StringMatchCandidate;
@@ -587,21 +586,21 @@ fn branch_filter_menu(
 ) -> Entity<ContextMenu> {
     let picker_for_menu = picker.clone();
     let menu = ContextMenu::build(window, cx, |menu, _, _| {
-        menu.header("Show")
+        menu.header(ama10_i18n::tr!("Show"))
             .item(branch_filter_menu_entry(
-                "All Branches",
+                ama10_i18n::tr!("All Branches"),
                 BranchFilter::All,
                 branch_filter,
                 picker_for_menu.clone(),
             ))
             .item(branch_filter_menu_entry(
-                "Local Branches",
+                ama10_i18n::tr!("Local Branches"),
                 BranchFilter::Local,
                 branch_filter,
                 picker_for_menu.clone(),
             ))
             .item(branch_filter_menu_entry(
-                "Remote Branches",
+                ama10_i18n::tr!("Remote Branches"),
                 BranchFilter::Remote,
                 branch_filter,
                 picker_for_menu,
@@ -623,7 +622,7 @@ fn branch_filter_menu(
 }
 
 fn branch_filter_menu_entry(
-    label: &'static str,
+    label: SharedString,
     branch_filter: BranchFilter,
     current_branch_filter: BranchFilter,
     picker: WeakEntity<Picker<BranchListDelegate>>,
@@ -1250,22 +1249,6 @@ impl PickerDelegate for BranchListDelegate {
                     .px_2p5()
                     .child(editor.clone())
                     .when(show_inline_filter, |this| {
-<<<<<<< HEAD
-                        let tooltip_label = match self.branch_filter {
-                            BranchFilter::All => ama10_i18n::tr!("Filter Remote Branches"),
-                            BranchFilter::Remote => ama10_i18n::tr!("Show All Branches"),
-                        };
-
-                        this.gap_1().justify_between().child({
-                            IconButton::new("filter-remotes", IconName::Filter)
-                                .toggle_state(self.branch_filter == BranchFilter::Remote)
-                                .icon_size(IconSize::Small)
-                                .tooltip(move |_, cx| {
-                                    Tooltip::for_action_in(
-                                        tooltip_label.clone(),
-                                        &branch_picker::FilterRemotes,
-                                        &focus_handle,
-=======
                         let branch_filter = self.branch_filter;
                         let picker_for_menu_open = picker.clone();
                         this.gap_1().justify_between().child(
@@ -1285,14 +1268,13 @@ impl PickerDelegate for BranchListDelegate {
                                             this.indicator(Indicator::dot().color(Color::Info))
                                         })
                                         .icon_size(IconSize::Small)
-                                        .tooltip(Tooltip::text("Filter branches")),
+                                        .tooltip(Tooltip::text(ama10_i18n::tr!("Filter branches"))),
                                 )
                                 .menu(move |window, cx| {
                                     Some(branch_filter_menu(
                                         branch_filter,
                                         picker.clone(),
                                         window,
->>>>>>> upstream/main
                                         cx,
                                     ))
                                 }),
@@ -1996,37 +1978,6 @@ impl PickerDelegate for BranchListDelegate {
                             } else {
                                 this.justify_between()
                                     .child({
-<<<<<<< HEAD
-                                        let focus_handle = focus_handle.clone();
-                                        let filter_label = match self.branch_filter {
-                                            BranchFilter::All => ama10_i18n::tr!("Filter Remote"),
-                                            BranchFilter::Remote => ama10_i18n::tr!("Show All"),
-                                        };
-                                        Button::new(
-                                            "filter-remotes",
-                                            translate(filter_label.as_ref()),
-                                        )
-                                        .toggle_state(matches!(
-                                            self.branch_filter,
-                                            BranchFilter::Remote
-                                        ))
-                                        .key_binding(
-                                            KeyBinding::for_action_in(
-                                                &branch_picker::FilterRemotes,
-                                                &focus_handle,
-                                                cx,
-                                            )
-                                            .map(|kb| kb.size(rems_from_px(12.))),
-                                        )
-                                        .on_click(
-                                            |_click, window, cx| {
-                                                window.dispatch_action(
-                                                    branch_picker::FilterRemotes.boxed_clone(),
-                                                    cx,
-                                                );
-                                            },
-                                        )
-=======
                                         let branch_filter = self.branch_filter;
                                         let picker_for_menu_open = picker.clone();
                                         PopoverMenu::new("branch-filter-footer-menu")
@@ -2040,10 +1991,11 @@ impl PickerDelegate for BranchListDelegate {
                                                     .log_err();
                                             }))
                                             .trigger(
-                                                Button::new("branch-filter", "Filter…")
-                                                    .toggle_state(
-                                                        branch_filter != BranchFilter::All,
-                                                    ),
+                                                Button::new(
+                                                    "branch-filter",
+                                                    ama10_i18n::tr!("Filter…"),
+                                                )
+                                                .toggle_state(branch_filter != BranchFilter::All),
                                             )
                                             .menu(move |window, cx| {
                                                 Some(branch_filter_menu(
@@ -2053,7 +2005,6 @@ impl PickerDelegate for BranchListDelegate {
                                                     cx,
                                                 ))
                                             })
->>>>>>> upstream/main
                                     })
                                     .child(delete_and_select_btns)
                             }

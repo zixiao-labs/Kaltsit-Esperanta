@@ -2430,13 +2430,10 @@ impl Editor {
             EditPrediction::MoveOutside { snapshot, .. } => {
                 let file_name = snapshot
                     .file()
-<<<<<<< HEAD
                     .map(|file| file.file_name(cx).to_string())
-                    .unwrap_or_else(|| tr!("untitled").to_string());
-=======
-                    .map(|file| file.file_name(cx))
-                    .unwrap_or(MultiBuffer::DEFAULT_TITLE);
->>>>>>> upstream/main
+                    .unwrap_or_else(|| {
+                        ama10_i18n::translate(MultiBuffer::DEFAULT_TITLE).to_string()
+                    });
                 Some(
                     h_flex()
                         .px_2()

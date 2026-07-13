@@ -7,16 +7,10 @@ use crate::tasks::workflows::{
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests,
     runners::{self, Arch, Platform},
-<<<<<<< HEAD
-    steps::{self, NamedJob, TokenPermissions, dependant_job, named, release_job},
-    vars::{self, StepOutput, assets},
-=======
     steps::{
-        self, CommonPermissionSets, DownloadArtifactStep, FluentBuilder, NamedJob,
-        TokenPermissions, dependant_job, named, release_job,
+        self, CommonPermissionSets, NamedJob, TokenPermissions, dependant_job, named, release_job,
     },
-    vars::{self, JobOutput, StepOutput, assets},
->>>>>>> upstream/main
+    vars::{self, StepOutput, assets},
 };
 
 pub(crate) fn release() -> Workflow {

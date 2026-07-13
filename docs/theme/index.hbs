@@ -204,7 +204,7 @@
                             <span class="footer-separator">•</span>
                             <a
                                 class="footer-link"
-                                href="https://github.com/zed-industries/zed"
+                                href="https://github.com/zixiao-labs/Kaltsit-Esperanta"
                                 >GitHub</a
                             >
                             <span class="footer-separator">•</span>
@@ -384,98 +384,6 @@
                     }
                 }
             </script>
-<<<<<<< HEAD
-
-            <div class="page">
-                <div id="content" class="content">
-                    <main>
-                      {{{ content }}}
-                        <div class="footer-buttons">
-                            {{#previous}}
-                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="footer-button" title="{{title}}">
-                                <i class="fa fa-angle-left"></i>
-                                {{title}}
-                            </a>
-                            {{/previous}}
-                            {{#next}}
-                            <a rel="next" href="{{ path_to_root }}{{link}}" class="footer-button" title="{{title}}">
-                                {{title}}
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                            {{/next}}
-                        </div>
-                        <footer class="footer">
-                            <a href="/" class="logo-nav">
-                                <img
-                                    src="https://zed.dev/logo_icon.webp"
-                                    class="footer-logo"
-                                    alt="Zed Industries"
-                                />
-                            </a>
-                            <span class="footer-separator">•</span>
-                            <a class="footer-link" href="https://zed.dev"
-                                >Back to Site</a
-                            >
-                            <span class="footer-separator">•</span>
-                            <a
-                                class="footer-link"
-                                href="https://zed.dev/releases"
-                                >Releases</a
-                            >
-                            <span class="footer-separator">•</span>
-                            <a
-                                class="footer-link"
-                                href="https://zed.dev/roadmap"
-                                >Roadmap</a
-                            >
-                            <span class="footer-separator">•</span>
-                            <a
-                                class="footer-link"
-                                href="https://github.com/zixiao-labs/Kaltsit-Esperanta"
-                                >GitHub</a
-                            >
-                            <span class="footer-separator">•</span>
-                            <a
-                                class="footer-link"
-                                href="https://zed.dev/blog"
-                                >Blog</a
-                            >
-                            <span class="footer-separator">•</span>
-                            <button
-                                id="c15t-manage-consent-btn"
-                                class="footer-link"
-                            >
-                                Manage Site Cookies
-                            </button>
-                        </footer>
-                    </main>
-                    <div class="toc-container">
-                        <nav class="pagetoc"></nav>
-                    </div>
-                    <!-- Immediately detect if page has headins that are not h1 to prevent flicker -->
-                    <script>
-                        (function() {
-                            var tocContainer = document.querySelector('.toc-container');
-                            var headers = document.querySelectorAll('.header');
-                            var hasNonH1Headers = false;
-                            for (var i = 0; i < headers.length; i++) {
-                                var parent = headers[i].parentElement;
-                                if (parent && !parent.tagName.toLowerCase().startsWith('h1')) {
-                                    hasNonH1Headers = true;
-                                    break;
-                                }
-                            }
-                            if (hasNonH1Headers) {
-                                tocContainer.classList.add('has-toc');
-                            } else {
-                                tocContainer.classList.add('no-toc');
-                            }
-                        })();
-                    </script>
-                </div>
-            </div>
-=======
->>>>>>> upstream/main
         </div>
 
         {{#if live_reload_endpoint}}

@@ -4,14 +4,7 @@ use crate::tasks::workflows::{
     run_bundling::{bundle_linux, bundle_mac, bundle_windows},
     run_tests::{clippy, run_platform_tests_no_filter},
     runners::{Arch, Platform, ReleaseChannel},
-<<<<<<< HEAD
-    steps::{CommonJobConditions, FluentBuilder, NamedJob},
-=======
-    steps::{
-        CommonJobConditions, CommonPermissionSets, DEFAULT_REPOSITORY_OWNER_GUARD, FluentBuilder,
-        GitRef, NamedJob, RefSha, RepositoryTarget, TokenPermissions,
-    },
->>>>>>> upstream/main
+    steps::{CommonJobConditions, CommonPermissionSets, FluentBuilder, NamedJob},
 };
 
 use super::{runners, steps, steps::named, vars};

@@ -4040,55 +4040,6 @@ impl Render for GitGraph {
                         .size_full()
                         .flex()
                         .flex_col()
-<<<<<<< HEAD
-                        .child(render_table_header(
-                            if !is_path_history {
-                                TableRow::from_vec(
-                                    vec![
-                                        Label::new(ama10_i18n::tr!("Graph"))
-                                            .color(Color::Muted)
-                                            .truncate()
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Description"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Date"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Author"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Commit"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                    ],
-                                    5,
-                                )
-                            } else {
-                                TableRow::from_vec(
-                                    vec![
-                                        Label::new(ama10_i18n::tr!("Description"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Date"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Author"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                        Label::new(ama10_i18n::tr!("Commit"))
-                                            .color(Color::Muted)
-                                            .into_any_element(),
-                                    ],
-                                    4,
-                                )
-                            },
-                            header_context,
-                            Some(header_resize_info),
-                            Some(self.column_widths.entity_id()),
-                            cx,
-                        ))
-=======
                         .child(
                             div()
                                 .on_mouse_down(
@@ -4102,20 +4053,20 @@ impl Render for GitGraph {
                                     if !is_path_history {
                                         TableRow::from_vec(
                                             vec![
-                                                Label::new("Graph")
+                                                Label::new(ama10_i18n::tr!("Graph"))
                                                     .color(Color::Muted)
                                                     .truncate()
                                                     .into_any_element(),
-                                                Label::new("Description")
+                                                Label::new(ama10_i18n::tr!("Description"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Date")
+                                                Label::new(ama10_i18n::tr!("Date"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Author")
+                                                Label::new(ama10_i18n::tr!("Author"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Commit")
+                                                Label::new(ama10_i18n::tr!("Commit"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
                                             ],
@@ -4124,16 +4075,16 @@ impl Render for GitGraph {
                                     } else {
                                         TableRow::from_vec(
                                             vec![
-                                                Label::new("Description")
+                                                Label::new(ama10_i18n::tr!("Description"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Date")
+                                                Label::new(ama10_i18n::tr!("Date"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Author")
+                                                Label::new(ama10_i18n::tr!("Author"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
-                                                Label::new("Commit")
+                                                Label::new(ama10_i18n::tr!("Commit"))
                                                     .color(Color::Muted)
                                                     .into_any_element(),
                                             ],
@@ -4146,7 +4097,6 @@ impl Render for GitGraph {
                                     cx,
                                 )),
                         )
->>>>>>> upstream/main
                         .child({
                             let row_height = Self::row_height(window, cx);
                             let selected_entry_idx = self.selected_entry_idx;

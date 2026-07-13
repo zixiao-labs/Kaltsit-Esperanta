@@ -72,9 +72,11 @@ use settings::{
     update_settings_file,
 };
 use smallvec::SmallVec;
+use std::cell::Cell;
 use std::future::Future;
 use std::ops::Range;
 use std::path::Path;
+use std::rc::Rc;
 use std::{sync::Arc, time::Duration, usize};
 use strum::{IntoEnumIterator, VariantNames};
 use theme_settings::ThemeSettings;
@@ -97,17 +99,10 @@ use zed_actions::{
     DecreaseBufferFontSize, IncreaseBufferFontSize, ResetBufferFontSize, git_panel::ToggleFocus,
 };
 
-<<<<<<< HEAD
-=======
-const GIT_PANEL_KEY: &str = "GitPanel";
-const UPDATE_DEBOUNCE: Duration = Duration::from_millis(50);
-// TODO: We should revise this part. It seems the indentation width is not aligned with the one in project panel
-const TREE_INDENT: f32 = 16.0;
 const MAX_HISTORY_TAG_CHIPS: usize = 3;
 // Horizontal offset that aligns the tree indent guides with the row icon column.
 const INDENT_GUIDE_LEFT_OFFSET: gpui::Pixels = gpui::px(19.);
 
->>>>>>> upstream/main
 actions!(
     git_panel,
     [
@@ -186,7 +181,8 @@ enum TrashCancel {
     Cancel,
 }
 
-struct GitMenuState {
+#[derive(Clone, Copy)]
+struct GitPanelViewOptionsMenuState {
     sort_by: GitPanelSortBy,
     group_by: GitPanelGroupBy,
     tree_view: bool,
@@ -236,75 +232,114 @@ fn git_panel_context_menu(
 
 fn git_panel_view_options_menu(
     focus_handle: FocusHandle,
-    state: GitMenuState,
     window: &mut Window,
     cx: &mut App,
 ) -> Entity<ContextMenu> {
-    ContextMenu::build(window, cx, move |context_menu, _, _| {
+    let view_options_menu_state = Rc::new(Cell::new(GitPanelViewOptionsMenuState {
+        sort_by: GitPanelSettings::get_global(cx).sort_by,
+        group_by: GitPanelSettings::get_global(cx).group_by,
+        tree_view: GitPanelSettings::get_global(cx).tree_view,
+    }));
+
+    ContextMenu::build_persistent(window, cx, move |context_menu, _, _| {
+        let state = view_options_menu_state.get();
+
         context_menu
-            .context(focus_handle)
+            .context(focus_handle.clone())
             .header(ama10_i18n::tr!("View"))
-            .item(
-                ContextMenuEntry::new(if state.tree_view {
-                    ama10_i18n::tr!("Flat View")
-                } else {
-                    ama10_i18n::tr!("Tree View")
-                })
-                .handler(move |window, cx| {
-                    window.dispatch_action(ToggleTreeView.boxed_clone(), cx)
-                }),
-            )
-            .when(!state.tree_view, |this| {
-                this.separator()
-                    .header(ama10_i18n::tr!("Sort By"))
-                    .item(
-                        ContextMenuEntry::new(ama10_i18n::tr!("Path"))
-                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Path)
-                            .disabled(state.tree_view)
-                            .handler(move |window, cx| {
-                                if !state.tree_view {
-                                    window.dispatch_action(SetSortByPath.boxed_clone(), cx);
-                                }
-                            }),
-                    )
-                    .item(
-                        ContextMenuEntry::new(ama10_i18n::tr!("Name"))
-                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Name)
-                            .disabled(state.tree_view)
-                            .handler(move |window, cx| {
-                                if !state.tree_view {
-                                    window.dispatch_action(SetSortByName.boxed_clone(), cx);
-                                }
-                            }),
-                    )
-            })
-            .separator()
-            .header(ama10_i18n::tr!("Group By"))
-            .item(
-                ContextMenuEntry::new(ama10_i18n::tr!("None"))
-                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::None)
+            .item({
+                let view_options_menu_state = view_options_menu_state.clone();
+                ContextMenuEntry::new(ama10_i18n::tr!("List"))
+                    .toggle(IconPosition::End, !state.tree_view)
                     .handler(move |window, cx| {
-                        if state.group_by != GitPanelGroupBy::None {
-                            window.dispatch_action(SetGroupByNone.boxed_clone(), cx);
+                        if state.tree_view {
+                            view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                tree_view: false,
+                                ..state
+                            });
+                            window.dispatch_action(Box::new(ToggleTreeView), cx);
                         }
-                    }),
-            )
-            .item(
-                ContextMenuEntry::new(ama10_i18n::tr!("Status"))
-                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::Status)
-                    .handler(move |window, cx| {
-                        if state.group_by != GitPanelGroupBy::Status {
-                            window.dispatch_action(SetGroupByStatus.boxed_clone(), cx);
-                        }
-<<<<<<< HEAD
-                    }),
-            )
-=======
                     })
             })
             .item({
                 let view_options_menu_state = view_options_menu_state.clone();
-                ContextMenuEntry::new("Staging")
+                ContextMenuEntry::new(ama10_i18n::tr!("Tree"))
+                    .toggle(IconPosition::End, state.tree_view)
+                    .handler(move |window, cx| {
+                        if !state.tree_view {
+                            view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                tree_view: true,
+                                ..state
+                            });
+                            window.dispatch_action(Box::new(ToggleTreeView), cx);
+                        }
+                    })
+            })
+            .when(!state.tree_view, |this| {
+                this.separator()
+                    .header(ama10_i18n::tr!("Sort By"))
+                    .item({
+                        let view_options_menu_state = view_options_menu_state.clone();
+                        ContextMenuEntry::new(ama10_i18n::tr!("Path"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Path)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                        sort_by: GitPanelSortBy::Path,
+                                        ..state
+                                    });
+                                    window.dispatch_action(Box::new(SetSortByPath), cx);
+                                }
+                            })
+                    })
+                    .item({
+                        let view_options_menu_state = view_options_menu_state.clone();
+                        ContextMenuEntry::new(ama10_i18n::tr!("Name"))
+                            .toggle(IconPosition::End, state.sort_by == GitPanelSortBy::Name)
+                            .handler(move |window, cx| {
+                                if !state.tree_view {
+                                    view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                        sort_by: GitPanelSortBy::Name,
+                                        ..state
+                                    });
+                                    window.dispatch_action(Box::new(SetSortByName), cx);
+                                }
+                            })
+                    })
+            })
+            .separator()
+            .header(ama10_i18n::tr!("Group By"))
+            .item({
+                let view_options_menu_state = view_options_menu_state.clone();
+                ContextMenuEntry::new(ama10_i18n::tr!("None"))
+                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::None)
+                    .handler(move |window, cx| {
+                        if state.group_by != GitPanelGroupBy::None {
+                            view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                group_by: GitPanelGroupBy::None,
+                                ..state
+                            });
+                            window.dispatch_action(Box::new(SetGroupByNone), cx);
+                        }
+                    })
+            })
+            .item({
+                let view_options_menu_state = view_options_menu_state.clone();
+                ContextMenuEntry::new(ama10_i18n::tr!("Status"))
+                    .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::Status)
+                    .handler(move |window, cx| {
+                        if state.group_by != GitPanelGroupBy::Status {
+                            view_options_menu_state.set(GitPanelViewOptionsMenuState {
+                                group_by: GitPanelGroupBy::Status,
+                                ..state
+                            });
+                            window.dispatch_action(Box::new(SetGroupByStatus), cx);
+                        }
+                    })
+            })
+            .item({
+                let view_options_menu_state = view_options_menu_state.clone();
+                ContextMenuEntry::new(ama10_i18n::tr!("Staging"))
                     .toggle(
                         IconPosition::End,
                         state.group_by == GitPanelGroupBy::Staging,
@@ -319,7 +354,6 @@ fn git_panel_view_options_menu(
                         }
                     })
             })
->>>>>>> upstream/main
     })
 }
 
@@ -4099,8 +4133,6 @@ impl GitPanel {
 
     fn schedule_update(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let handle = cx.entity().downgrade();
-<<<<<<< HEAD
-=======
         let new_active_repository = self.project.read(cx).active_repository(cx);
         let active_repository_changed = self.active_repository.as_ref().map(Entity::entity_id)
             != new_active_repository.as_ref().map(Entity::entity_id);
@@ -4120,7 +4152,6 @@ impl GitPanel {
             }
         }
         self.active_repository = new_active_repository;
->>>>>>> upstream/main
         self.reopen_commit_buffer(window, cx);
         self.preload_commit_history(cx);
         if self.active_tab == GitPanelTab::History {
@@ -4907,19 +4938,14 @@ impl GitPanel {
         let focus_handle = self.focus_handle.clone();
 
         PopoverMenu::new(id.into())
-            .trigger(
+            .trigger_with_tooltip(
                 IconButton::new("view-options-menu-trigger", IconName::Sliders)
-                    .icon_size(IconSize::Small)
-                    .tooltip(Tooltip::text("View Options")),
+                    .icon_size(IconSize::Small),
+                Tooltip::text(ama10_i18n::tr!("View Options")),
             )
             .menu(move |window, cx| {
                 Some(git_panel_view_options_menu(
                     focus_handle.clone(),
-                    GitMenuState {
-                        sort_by: GitPanelSettings::get_global(cx).sort_by,
-                        group_by: GitPanelSettings::get_global(cx).group_by,
-                        tree_view: GitPanelSettings::get_global(cx).tree_view,
-                    },
                     window,
                     cx,
                 ))
@@ -5336,12 +5362,8 @@ impl GitPanel {
                         &branch,
                         focus_handle,
                         true,
-<<<<<<< HEAD
                         None,
-=======
-                        self.pending_remote_operation,
                         self.remote_action_menu_handle.clone(),
->>>>>>> upstream/main
                     ))
                 })
                 .into_any_element(),
@@ -5551,56 +5573,6 @@ impl GitPanel {
                 cx.notify()
             }))
             .child(SplitButton::new(
-<<<<<<< HEAD
-                ButtonLike::new_rounded_left(ElementId::Name(
-                    format!("split-button-left-{}", title).into(),
-                ))
-                .layer(ElevationIndex::ModalSurface)
-                .size(ButtonSize::Compact)
-                .child(
-                    Label::new(title)
-                        .size(LabelSize::Small)
-                        .color(label_color)
-                        .mr_0p5(),
-                )
-                .on_click({
-                    let git_panel = cx.weak_entity();
-                    move |_, window, cx| {
-                        telemetry::event!("Git Committed", source = "Git Panel");
-                        git_panel
-                            .update(cx, |git_panel, cx| {
-                                git_panel.commit_changes(
-                                    CommitOptions {
-                                        amend,
-                                        signoff,
-                                        allow_empty: false,
-                                    },
-                                    window,
-                                    cx,
-                                );
-                            })
-                            .ok();
-                    }
-                })
-                .disabled(!can_commit || self.modal_open)
-                .tooltip({
-                    let handle = commit_tooltip_focus_handle.clone();
-                    move |_window, cx| {
-                        if can_commit {
-                            Tooltip::with_meta_in(
-                                tooltip,
-                                Some(&git::Commit),
-                                ama10_i18n::tr_f!(
-                                    "git commit{}{}",
-                                    if amend { " --amend" } else { "" },
-                                    if signoff { " --signoff" } else { "" }
-                                ),
-                                &handle.clone(),
-                                cx,
-                            )
-                        } else {
-                            Tooltip::simple(tooltip, cx)
-=======
                 ButtonLike::new_rounded_left(format!("split-button-left-{}", title))
                     .layer(ElevationIndex::ModalSurface)
                     .size(ButtonSize::Compact)
@@ -5628,7 +5600,6 @@ impl GitPanel {
                                     );
                                 })
                                 .ok();
->>>>>>> upstream/main
                         }
                     })
                     .tooltip({
@@ -5638,7 +5609,7 @@ impl GitPanel {
                                 Tooltip::with_meta_in(
                                     tooltip,
                                     Some(&git::Commit),
-                                    format!(
+                                    ama10_i18n::tr_f!(
                                         "git commit{}{}",
                                         if amend { " --amend" } else { "" },
                                         if signoff { " --signoff" } else { "" }
@@ -5866,53 +5837,30 @@ impl GitPanel {
     fn render_history_tab(&self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex().flex_1().size_full().overflow_hidden().map(|this| {
             let has_repo = self.active_repository.is_some();
-<<<<<<< HEAD
-            let has_commits = self
-                .commit_history_shas
-                .as_ref()
-                .map_or(false, |shas| !shas.is_empty());
-            let is_loading = self.commit_history_shas.is_none() && has_repo;
-            if is_loading {
-                this.child(h_flex().flex_1().justify_center().child(
-                    Label::new(ama10_i18n::tr!("Loading Commit History…")).color(Color::Muted),
-                ))
-            } else if !has_repo || !has_commits {
-                this.child(
-                    h_flex()
-                        .flex_1()
-                        .justify_center()
-                        .child(Label::new(ama10_i18n::tr!("No commits yet")).color(Color::Muted)),
-                )
-            } else {
-                match self.render_commit_history(window, cx) {
-                    Some(history) => this.child(history),
-                    None => this.child(h_flex().flex_1().justify_center().child(
-                        Label::new(ama10_i18n::tr!("Failed to load commits")).color(Color::Muted),
-                    )),
-=======
             match &self.commit_history {
-                _ if !has_repo => {
-                    this.child(Self::render_history_placeholder("No repository found"))
->>>>>>> upstream/main
-                }
+                _ if !has_repo => this.child(Self::render_history_placeholder(ama10_i18n::tr!(
+                    "No repository found"
+                ))),
                 CommitHistory::Error(_) => this.child(Self::render_history_placeholder(
-                    "Failed to load commit history",
+                    ama10_i18n::tr!("Failed to load commit history"),
                 )),
-                CommitHistory::Loading => {
-                    this.child(Self::render_history_placeholder("Loading Commit History…"))
-                }
-                CommitHistory::Loaded(entries) if entries.is_empty() => {
-                    this.child(Self::render_history_placeholder("No commits yet"))
-                }
+                CommitHistory::Loading => this.child(Self::render_history_placeholder(
+                    ama10_i18n::tr!("Loading Commit History…"),
+                )),
+                CommitHistory::Loaded(entries) if entries.is_empty() => this.child(
+                    Self::render_history_placeholder(ama10_i18n::tr!("No commits yet")),
+                ),
                 CommitHistory::Loaded(_) => match self.render_commit_history(window, cx) {
                     Some(history) => this.child(history),
-                    None => this.child(Self::render_history_placeholder("Failed to load commits")),
+                    None => this.child(Self::render_history_placeholder(ama10_i18n::tr!(
+                        "Failed to load commits"
+                    ))),
                 },
             }
         })
     }
 
-    fn render_history_placeholder(message: &'static str) -> impl IntoElement {
+    fn render_history_placeholder(message: SharedString) -> impl IntoElement {
         h_flex()
             .flex_1()
             .justify_center()
@@ -7166,16 +7114,10 @@ impl GitPanel {
                                     }
                                 };
 
-<<<<<<< HEAD
                                 Tooltip::for_action(action, &ToggleStaged, cx)
-                            }),
-                    ),
-=======
-                                Tooltip::for_action(tooltip_name, &ToggleStaged, cx)
                             })
                             .into_any_element()
                     }),
->>>>>>> upstream/main
             )
             .on_click({
                 cx.listener(move |this, event: &ClickEvent, window, cx| {
@@ -7385,16 +7327,10 @@ impl GitPanel {
                                         ama10_i18n::tr!("Stage")
                                     }
                                 };
-<<<<<<< HEAD
                                 Tooltip::simple(ama10_i18n::tr_f!("{} folder", action), cx)
-                            }),
-                    ),
-=======
-                                Tooltip::simple(format!("{action} folder"), cx)
                             })
                             .into_any_element()
                     }),
->>>>>>> upstream/main
             )
             .on_click({
                 let key = entry.key.clone();

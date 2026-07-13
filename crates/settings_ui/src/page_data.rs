@@ -7407,14 +7407,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Audible Bell"),
+                title: tr!("Open Links In Mouse Mode"),
                 description: tr!(
-                    "Whether to play a sound when the BEL character (`\\a`, `0x07`) is printed"
+                    "Whether cmd-click (ctrl-click on Linux and Windows) opens hyperlinks even when the terminal application has enabled mouse reporting. When disabled, these clicks are forwarded to the application; links can still be opened with shift-cmd-click."
                 ),
-=======
-                title: "Open Links In Mouse Mode",
-                description: "Whether cmd-click (ctrl-click on Linux and Windows) opens hyperlinks even when the terminal application has enabled mouse reporting. When disabled, these clicks are forwarded to the application; links can still be opened with shift-cmd-click.",
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.open_links_in_mouse_mode"),
@@ -7436,9 +7432,10 @@ fn terminal_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Audible Bell",
-                description: "Whether to play a sound when the BEL character (`\\a`, `0x07`) is printed",
->>>>>>> upstream/main
+                title: tr!("Audible Bell"),
+                description: tr!(
+                    "Whether to play a sound when the BEL character (`\\a`, `0x07`) is printed"
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.bell"),
@@ -9187,13 +9184,10 @@ fn language_settings_data() -> Box<[SettingsPageItem]> {
         [
             SettingsPageItem::SectionHeader(tr!("Formatting")),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
                 title: tr!("Format On Save"),
-                description: tr!("Whether or not to perform a buffer format before saving."),
-=======
-                title: "Format On Save",
-                description: "On: format the whole buffer.\nOff: do not format.\nModifications: format only lines with unstaged changes; skips formatting when a git diff or LSP range formatting is unavailable.\nModifications If Available: same, but falls back to formatting the whole buffer.",
->>>>>>> upstream/main
+                description: tr!(
+                    "On: format the whole buffer.\nOff: do not format.\nModifications: format only lines with unstaged changes; skips formatting when a git diff or LSP range formatting is unavailable.\nModifications If Available: same, but falls back to formatting the whole buffer."
+                ),
                 field: Box::new(
                     // TODO(settings_ui): this setting should just be a bool
                     SettingField {

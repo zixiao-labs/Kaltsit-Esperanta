@@ -217,15 +217,10 @@ const copyPageActions = () => {
       isLoading = true;
       changeButtonIcon(button, "fa fa-spinner fa-spin", 0); // Don't auto-restore spinner
 
-<<<<<<< HEAD
-      const pagePath = getCurrentPagePath();
-      const rawUrl = `https://raw.githubusercontent.com/zixiao-labs/Kaltsit-Esperanta/main/docs/src/${pagePath}`;
-=======
       const url = markdownUrl();
       if (!url) {
         throw new Error("Markdown alternate link not found");
       }
->>>>>>> upstream/main
 
       const response = await fetch(url);
       if (!response.ok) {

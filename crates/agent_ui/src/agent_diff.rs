@@ -528,34 +528,16 @@ impl Item for AgentDiffPane {
             .update(cx, |editor, cx| editor.navigate(data, window, cx))
     }
 
-<<<<<<< HEAD
-    fn tab_tooltip_text(&self, _: &App) -> Option<SharedString> {
-        Some(ama10_i18n::tr!("Agent Diff"))
-=======
     fn tab_content(&self, params: TabContentParams, _window: &Window, cx: &App) -> AnyElement {
         let label_content = self.tab_content_text(params.detail.unwrap_or_default(), cx);
 
         Label::new(label_content)
             .when(!params.selected, |this| this.color(Color::Muted))
             .into_any_element()
->>>>>>> upstream/main
     }
 
     fn tab_tooltip_content(&self, cx: &App) -> Option<TabTooltipContent> {
         let title = self.thread.read(cx).title();
-<<<<<<< HEAD
-        Label::new(if let Some(title) = title {
-            ama10_i18n::tr_f!("Review: {}", title)
-        } else {
-            ama10_i18n::tr!("Review")
-        })
-        .color(if params.selected {
-            Color::Default
-        } else {
-            Color::Muted
-        })
-        .into_any_element()
-=======
 
         Some(TabTooltipContent::Custom(Box::new(Tooltip::element({
             let title = title.map(|title| title.to_string());
@@ -563,17 +545,18 @@ impl Item for AgentDiffPane {
             move |_, _| {
                 v_flex()
                     .child(Label::new(
-                        title.clone().unwrap_or_else(|| "Review".to_string()),
+                        title
+                            .clone()
+                            .unwrap_or_else(|| ama10_i18n::tr!("Review").to_string()),
                     ))
                     .child(
-                        Label::new("Agent Diff")
+                        Label::new(ama10_i18n::tr!("Agent Diff"))
                             .color(Color::Muted)
                             .size(LabelSize::Small),
                     )
                     .into_any_element()
             }
         }))))
->>>>>>> upstream/main
     }
 
     fn telemetry_event_text(&self) -> Option<&'static str> {
@@ -695,16 +678,13 @@ impl Item for AgentDiffPane {
         });
     }
 
-<<<<<<< HEAD
-    fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
-        ama10_i18n::tr!("Agent Diff")
-=======
     fn tab_content_text(&self, _detail: usize, cx: &App) -> SharedString {
         match self.thread.read(cx).title() {
-            Some(title) => format!("Review: {}", truncate_and_trailoff(&title, 20)).into(),
-            None => "Review".into(),
+            Some(title) => {
+                ama10_i18n::tr_f!("Review: {}", truncate_and_trailoff(&title, 20))
+            }
+            None => ama10_i18n::tr!("Review"),
         }
->>>>>>> upstream/main
     }
 }
 

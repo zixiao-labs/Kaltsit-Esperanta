@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-use crate::{git_panel::GitStatusEntry, git_status_icon};
-
-=======
 use crate::{git_panel::GitStatusEntry, git_panel_settings::GitPanelSettings, git_status_icon};
->>>>>>> upstream/main
 use anyhow::{Context as _, Result};
 use buffer_diff::DiffHunkSecondaryStatus;
 use editor::{
@@ -20,8 +15,8 @@ use gpui::{
     Action, AnyElement, App, AppContext as _, Context, Empty, Entity, EventEmitter, FocusHandle,
     Focusable, HighlightStyle, IntoElement, Render, Subscription, Task, WeakEntity, Window,
 };
-use language::{Buffer, HighlightedText};
-use multi_buffer::MultiBuffer;
+use language::{Anchor, Buffer, HighlightedText, OffsetRangeExt as _, Point};
+use multi_buffer::{MultiBuffer, PathKey, excerpt_context_lines};
 use project::{
     Project,
     git_store::{Repository, RepositoryId},
@@ -29,6 +24,7 @@ use project::{
 use settings::{Settings, SettingsStore, StatusStyle};
 use std::{
     any::{Any, TypeId},
+    ops::Range,
     sync::Arc,
 };
 use ui::{DiffStat, Divider, Tooltip, prelude::*};
@@ -46,8 +42,10 @@ pub struct SoloDiffView {
     repository_id: RepositoryId,
     repo_path: RepoPath,
     buffer: Entity<Buffer>,
+    diff: Entity<buffer_diff::BufferDiff>,
     editor: Entity<SplittableEditor>,
     workspace: WeakEntity<Workspace>,
+    showing_full_file: bool,
     _settings_subscription: Subscription,
 }
 
@@ -132,9 +130,15 @@ impl SoloDiffView {
     ) -> Self {
         let repository_id = repository.read(cx).id;
         let multibuffer = cx.new(|cx| {
-            let mut multibuffer = MultiBuffer::singleton(buffer.clone(), cx);
-            multibuffer.add_diff(diff, cx);
-            multibuffer.set_all_diff_hunks_expanded(cx);
+            let mut multibuffer = MultiBuffer::without_headers(buffer.read(cx).capability());
+            multibuffer.set_excerpts_for_path(
+                PathKey::for_buffer(&buffer, cx),
+                buffer.clone(),
+                Self::hunk_ranges(&buffer, &diff, cx),
+                excerpt_context_lines(cx),
+                cx,
+            );
+            multibuffer.add_diff(diff.clone(), cx);
             multibuffer
         });
         let editor = cx.new(|cx| {
@@ -181,10 +185,63 @@ impl SoloDiffView {
             repository_id,
             repo_path,
             buffer,
+            diff,
             editor,
             workspace: workspace.downgrade(),
+            showing_full_file: false,
             _settings_subscription: settings_subscription,
         }
+    }
+
+    fn hunk_ranges(
+        buffer: &Entity<Buffer>,
+        diff: &Entity<buffer_diff::BufferDiff>,
+        cx: &App,
+    ) -> Vec<Range<Point>> {
+        let buffer = buffer.read(cx);
+        diff.read(cx)
+            .snapshot(cx)
+            .hunks_intersecting_range(
+                Anchor::min_for_buffer(buffer.remote_id())
+                    ..Anchor::max_for_buffer(buffer.remote_id()),
+                buffer,
+            )
+            .map(|diff_hunk| diff_hunk.buffer_range.to_point(buffer))
+            .collect()
+    }
+
+    fn set_showing_full_file(&mut self, showing_full_file: bool, cx: &mut Context<Self>) {
+        if self.showing_full_file == showing_full_file {
+            return;
+        }
+
+        let ranges = if showing_full_file {
+            let buffer = self.buffer.read(cx);
+            vec![Point::zero()..buffer.max_point()]
+        } else {
+            Self::hunk_ranges(&self.buffer, &self.diff, cx)
+        };
+        let context_line_count = if showing_full_file {
+            0
+        } else {
+            excerpt_context_lines(cx)
+        };
+
+        self.editor.update(cx, |editor, cx| {
+            let path = PathKey::for_buffer(&self.buffer, cx);
+            editor.remove_excerpts_for_path(path.clone(), cx);
+            editor.update_excerpts_for_path(
+                path,
+                self.buffer.clone(),
+                ranges,
+                context_line_count,
+                self.diff.clone(),
+                cx,
+            );
+        });
+
+        self.showing_full_file = showing_full_file;
+        cx.notify();
     }
 
     fn matches(&self, repository: &Entity<Repository>, repo_path: &RepoPath, cx: &App) -> bool {
@@ -370,13 +427,15 @@ impl Item for SoloDiffView {
     ) -> Option<gpui::AnyEntity> {
         if type_id == TypeId::of::<Self>() {
             Some(self_handle.clone().into())
+        } else if type_id == TypeId::of::<SplittableEditor>() {
+            None
         } else {
             self.editor.act_as_type(type_id, cx)
         }
     }
 
     fn as_searchable(&self, _: &Entity<Self>, _: &App) -> Option<Box<dyn SearchableItemHandle>> {
-        Some(Box::new(self.editor.clone()))
+        None
     }
 
     fn for_each_project_item(
@@ -418,9 +477,6 @@ impl Item for SoloDiffView {
     }
 
     fn breadcrumbs(&self, cx: &App) -> Option<(Vec<HighlightedText>, Option<gpui::Font>)> {
-<<<<<<< HEAD
-        self.editor.breadcrumbs(cx)
-=======
         let text: SharedString = self
             .repo_path
             .as_ref()
@@ -452,7 +508,6 @@ impl Item for SoloDiffView {
                     .clone(),
             ),
         ))
->>>>>>> upstream/main
     }
 
     fn added_to_workspace(
@@ -506,50 +561,12 @@ impl SoloDiffStyleToolbar {
         self.solo_diff.as_ref()?.upgrade()
     }
 
-<<<<<<< HEAD
-    fn set_diff_view_style(
-        &mut self,
-        diff_view_style: DiffViewStyle,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let Some(solo_diff) = self.solo_diff() else {
-            return;
-        };
-        let workspace = solo_diff.read(cx).workspace.clone();
-
-        update_settings_file(<dyn Fs>::global(cx), cx, move |settings, _| {
-            settings.editor.diff_view_style = Some(diff_view_style);
-        });
-
-        if let Some(workspace) = workspace.upgrade() {
-            let splittable_editors = {
-                workspace
-                    .read(cx)
-                    .items(cx)
-                    .filter_map(|item| item.act_as_type(TypeId::of::<SplittableEditor>(), cx))
-                    .filter_map(|item| item.downcast::<SplittableEditor>().ok())
-                    .collect::<Vec<_>>()
-            };
-
-            for editor in splittable_editors {
-                editor.update(cx, |editor, cx| {
-                    if editor.diff_view_style() != diff_view_style {
-                        editor.toggle_split(&ToggleSplitDiff, window, cx);
-                    }
-                });
-            }
-        }
-
-        cx.notify();
-=======
     fn toggle_showing_full_file(&mut self, cx: &mut Context<Self>) {
         if let Some(solo_diff) = self.solo_diff() {
             solo_diff.update(cx, |solo_diff, cx| {
                 solo_diff.set_showing_full_file(!solo_diff.showing_full_file, cx);
             });
         }
->>>>>>> upstream/main
     }
 }
 
@@ -578,14 +595,6 @@ impl Render for SoloDiffStyleToolbar {
         let Some(solo_diff) = self.solo_diff() else {
             return Empty.into_any_element();
         };
-<<<<<<< HEAD
-        let editor_entity = solo_diff.read(cx).editor.clone();
-        let editor = editor_entity.read(cx);
-        let diff_view_style = editor.diff_view_style();
-        let is_split_set = diff_view_style == DiffViewStyle::Split;
-        let split_icon = if is_split_set && !editor.is_split() {
-            IconName::DiffSplitAuto
-=======
 
         let (editor_entity, showing_full_file, status) = {
             let solo_diff = solo_diff.read(cx);
@@ -604,34 +613,18 @@ impl Render for SoloDiffStyleToolbar {
             GitPanelSettings::get_global(cx).status_style != StatusStyle::LabelColor;
 
         let (expand_icon, expand_tooltip) = if showing_full_file {
-            (IconName::ChevronDownUp, "Show Changes Only")
->>>>>>> upstream/main
+            (
+                IconName::ChevronDownUp,
+                ama10_i18n::tr!("Show Changes Only"),
+            )
         } else {
-            (IconName::ChevronUpDown, "Show Full File")
+            (IconName::ChevronUpDown, ama10_i18n::tr!("Show Full File"))
         };
 
         h_flex()
             .pl_0p5()
             .gap_1()
             .child(
-<<<<<<< HEAD
-                IconButton::new("solo-diff-unified", IconName::DiffUnified)
-                    .icon_size(IconSize::Small)
-                    .toggle_state(diff_view_style == DiffViewStyle::Unified)
-                    .tooltip(Tooltip::text(ama10_i18n::tr!("Unified")))
-                    .on_click(cx.listener(|this, _, window, cx| {
-                        this.set_diff_view_style(DiffViewStyle::Unified, window, cx);
-                    })),
-            )
-            .child(
-                IconButton::new("solo-diff-split", split_icon)
-                    .icon_size(IconSize::Small)
-                    .toggle_state(diff_view_style == DiffViewStyle::Split)
-                    .tooltip(Tooltip::text(ama10_i18n::tr!("Split")))
-                    .on_click(cx.listener(|this, _, window, cx| {
-                        this.set_diff_view_style(DiffViewStyle::Split, window, cx);
-                    })),
-=======
                 IconButton::new("solo-diff-toggle-excerpts", expand_icon)
                     .icon_size(IconSize::Small)
                     .tooltip(Tooltip::text(expand_tooltip))
@@ -644,7 +637,6 @@ impl Render for SoloDiffStyleToolbar {
             .when_some(
                 show_status_icon.then_some(status).flatten(),
                 |this, status| this.child(git_status_icon(status)),
->>>>>>> upstream/main
             )
             .into_any_element()
     }
@@ -738,8 +730,6 @@ impl Render for SoloDiffGitToolbar {
             .children(diff_stat.map(|stat| {
                 DiffStat::new("solo-diff-stat", stat.added as usize, stat.deleted as usize)
             }))
-<<<<<<< HEAD
-=======
             .child(Divider::vertical().ml_1())
             .child(
                 h_group_sm()
@@ -748,7 +738,7 @@ impl Render for SoloDiffGitToolbar {
                             .icon_size(IconSize::Small)
                             .disabled(!button_states.prev_next)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to Previous Hunk",
+                                ama10_i18n::tr!("Go to Previous Hunk"),
                                 &GoToPreviousHunk,
                                 &focus_handle,
                             ))
@@ -761,7 +751,7 @@ impl Render for SoloDiffGitToolbar {
                             .icon_size(IconSize::Small)
                             .disabled(!button_states.prev_next)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to Next Hunk",
+                                ama10_i18n::tr!("Go to Next Hunk"),
                                 &GoToHunk,
                                 &focus_handle,
                             ))
@@ -771,17 +761,12 @@ impl Render for SoloDiffGitToolbar {
                     ),
             )
             .child(Divider::vertical())
->>>>>>> upstream/main
             .child(
                 h_group_sm()
                     .when(button_states.selection, |el| {
                         el.child(
-<<<<<<< HEAD
                             Button::new("stage", ama10_i18n::tr!("Toggle Staged"))
-=======
-                            Button::new("stage", "Toggle Staged")
                                 .disabled(!button_states.stage && !button_states.unstage)
->>>>>>> upstream/main
                                 .tooltip(Tooltip::for_action_title_in(
                                     ama10_i18n::tr!("Toggle Staged"),
                                     &ToggleStaged,
@@ -794,16 +779,10 @@ impl Render for SoloDiffGitToolbar {
                     })
                     .when(!button_states.selection, |el| {
                         el.child(
-<<<<<<< HEAD
                             Button::new("stage", ama10_i18n::tr!("Stage"))
-                                .tooltip(Tooltip::for_action_title_in(
-                                    ama10_i18n::tr!("Stage and go to next hunk"),
-=======
-                            Button::new("stage", "Stage")
                                 .disabled(!button_states.stage)
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Stage and Go to Next Hunk",
->>>>>>> upstream/main
+                                    ama10_i18n::tr!("Stage and Go to Next Hunk"),
                                     &StageAndNext,
                                     &focus_handle,
                                 ))
@@ -812,16 +791,10 @@ impl Render for SoloDiffGitToolbar {
                                 })),
                         )
                         .child(
-<<<<<<< HEAD
                             Button::new("unstage", ama10_i18n::tr!("Unstage"))
-                                .tooltip(Tooltip::for_action_title_in(
-                                    ama10_i18n::tr!("Unstage and go to next hunk"),
-=======
-                            Button::new("unstage", "Unstage")
                                 .disabled(!button_states.unstage)
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Unstage and Go to Next Hunk",
->>>>>>> upstream/main
+                                    ama10_i18n::tr!("Unstage and Go to Next Hunk"),
                                     &UnstageAndNext,
                                     &focus_handle,
                                 ))
@@ -845,21 +818,21 @@ impl Render for SoloDiffGitToolbar {
             )
             .child(Divider::vertical())
             .child(h_group_sm().child(if button_states.stage_file {
-                Button::new("stage-file", "Stage All")
+                Button::new("stage-file", ama10_i18n::tr!("Stage All"))
                     .width(rems_from_px(80.))
                     .disabled(!button_states.stage_file)
                     .tooltip(Tooltip::for_action_title_in(
-                        "Stage All",
+                        ama10_i18n::tr!("Stage All"),
                         &StageFile,
                         &focus_handle,
                     ))
                     .on_click(cx.listener(|this, _, window, cx| this.stage_file(window, cx)))
             } else {
-                Button::new("unstage-file", "Unstage All")
+                Button::new("unstage-file", ama10_i18n::tr!("Unstage All"))
                     .width(rems_from_px(80.))
                     .disabled(!button_states.unstage_file)
                     .tooltip(Tooltip::for_action_title_in(
-                        "Unstage All",
+                        ama10_i18n::tr!("Unstage All"),
                         &UnstageFile,
                         &focus_handle,
                     ))
@@ -867,85 +840,15 @@ impl Render for SoloDiffGitToolbar {
             }))
             .child(Divider::vertical())
             .child(
-<<<<<<< HEAD
-                h_group_sm()
-                    .child(
-                        IconButton::new("up", IconName::ArrowUp)
-                            .shape(IconButtonShape::Square)
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Go to previous hunk"),
-                                &GoToPreviousHunk,
-                                &focus_handle,
-                            ))
-                            .disabled(!button_states.prev_next)
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.dispatch_action(&GoToPreviousHunk, window, cx)
-                            })),
-                    )
-                    .child(
-                        IconButton::new("down", IconName::ArrowDown)
-                            .shape(IconButtonShape::Square)
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Go to next hunk"),
-                                &GoToHunk,
-                                &focus_handle,
-                            ))
-                            .disabled(!button_states.prev_next)
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.dispatch_action(&GoToHunk, window, cx)
-                            })),
-                    ),
-            )
-            .child(vertical_divider())
-            .child(
-                h_group_sm()
-                    .child(
-                        Button::new("stage-file", ama10_i18n::tr!("Stage File"))
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Stage file"),
-                                &StageFile,
-                                &focus_handle,
-                            ))
-                            .disabled(!button_states.stage_file)
-                            .on_click(
-                                cx.listener(|this, _, window, cx| this.stage_file(window, cx)),
-                            ),
-                    )
-                    .child(
-                        Button::new("unstage-file", ama10_i18n::tr!("Unstage File"))
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Unstage file"),
-                                &UnstageFile,
-                                &focus_handle,
-                            ))
-                            .disabled(!button_states.unstage_file)
-                            .on_click(
-                                cx.listener(|this, _, window, cx| this.unstage_file(window, cx)),
-                            ),
-                    )
-                    .child(Divider::vertical())
-                    .child(
-                        Button::new("commit", ama10_i18n::tr!("Commit"))
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Commit"),
-                                &Commit,
-                                &focus_handle,
-                            ))
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.dispatch_action(&Commit, window, cx);
-                            })),
-                    ),
-=======
-                Button::new("commit", "Commit")
+                Button::new("commit", ama10_i18n::tr!("Commit"))
                     .tooltip(Tooltip::for_action_title_in(
-                        "Commit",
+                        ama10_i18n::tr!("Commit"),
                         &Commit,
                         &focus_handle,
                     ))
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.dispatch_action(&Commit, window, cx);
                     })),
->>>>>>> upstream/main
             )
             .into_any_element()
     }

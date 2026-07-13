@@ -5665,16 +5665,10 @@ impl AgentPanel {
                                 }
                             }
 
-<<<<<<< HEAD
-                            menu = menu.action(
+                            menu = menu.separator().action(
                                 ama10_i18n::tr!("Profiles"),
                                 Box::new(ManageProfiles::default()),
                             );
-=======
-                            menu = menu
-                                .separator()
-                                .action("Profiles", Box::new(ManageProfiles::default()));
->>>>>>> upstream/main
                         }
 
                         menu = menu

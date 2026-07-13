@@ -7975,28 +7975,6 @@ impl ThreadView {
         _terminal: &Entity<acp_thread::Terminal>,
         cx: &Context<Self>,
     ) -> AnyElement {
-<<<<<<< HEAD
-        let (title, detail): (SharedString, SharedString) = match reason {
-            SandboxNotAppliedReason::ErrorLinuxWsl(error) => (
-                "Couldn't create a sandbox".into(),
-                error.user_facing_message().into(),
-            ),
-            SandboxNotAppliedReason::DisabledForThisThread => {
-                let detail = self
-                    .find_thread_sandbox_error(cx)
-                    .map(|error| {
-                        SharedString::from(format!(
-                            "Allowed for this thread after the sandbox failed: {}",
-                            error.user_facing_message()
-                        ))
-                    })
-                    .unwrap_or_else(|| {
-                        "Unsandboxed execution is allowed for the rest of this thread.".into()
-                    });
-                ("Ran without sandbox".into(), detail)
-            }
-        };
-=======
         // (title, detail line, docs section slug)
         let (title, detail, docs_section): (SharedString, SharedString, Option<&'static str>) =
             match reason {
@@ -8024,7 +8002,6 @@ impl ThreadView {
                     ("Ran without sandbox".into(), detail, docs_section)
                 }
             };
->>>>>>> upstream/main
 
         Callout::new()
             .severity(Severity::Warning)

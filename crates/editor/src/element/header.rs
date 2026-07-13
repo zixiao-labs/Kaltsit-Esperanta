@@ -820,13 +820,10 @@ pub(crate) fn render_buffer_header(
                         .overflow_hidden()
                         .child(h_flex().min_w_0().flex_1().gap_0p5().overflow_hidden().map(
                             |path_header| {
-                                let filename = filename
-                                    .map(SharedString::from)
-<<<<<<< HEAD
-                                    .unwrap_or_else(|| tr!("untitled"));
-=======
-                                    .unwrap_or_else(|| MultiBuffer::DEFAULT_TITLE.into());
->>>>>>> upstream/main
+                                let filename =
+                                    filename.map(SharedString::from).unwrap_or_else(|| {
+                                        ama10_i18n::translate(MultiBuffer::DEFAULT_TITLE)
+                                    });
 
                                 let full_path = match parent_path.as_deref() {
                                     Some(parent) if !parent.is_empty() => {
@@ -923,44 +920,27 @@ pub(crate) fn render_buffer_header(
                                         ("buffer-header-diff-stat", buffer_id.to_proto()),
                                         added as usize,
                                         removed as usize,
-<<<<<<< HEAD
-                                    )
-                                    .label_size(LabelSize::Small),
-                                ),
-                            )
-                        })
-                        .when(
-                            can_open_excerpts
-                                && relative_path.is_some()
-                                && (is_selected || header_hovered),
-                            |this| {
-                                this.child(
-                                    Button::new("open-file-button", ama10_i18n::tr!("Open File"))
-                                        .style(ButtonStyle::OutlinedGhost)
+                                    )))
+                                })
+                                .when(show_open_file_button, |this| {
+                                    this.child(
+                                        Button::new(
+                                            "open-file-button",
+                                            ama10_i18n::tr!("Open File"),
+                                        )
+                                        .style(ButtonStyle::OutlinedCustom(
+                                            cx.theme().colors().border.opacity(0.6),
+                                        ))
+                                        .layer(ui::ElevationIndex::ElevatedSurface)
                                         .when(is_selected, |this| {
                                             this.key_binding(KeyBinding::for_action_in(
                                                 &OpenExcerpts,
                                                 &focus_handle,
                                                 cx,
-=======
-                                    )))
-                                })
-                                .when(show_open_file_button, |this| {
-                                    this.child(
-                                        Button::new("open-file-button", "Open File")
-                                            .style(ButtonStyle::OutlinedCustom(
-                                                cx.theme().colors().border.opacity(0.6),
->>>>>>> upstream/main
                                             ))
-                                            .layer(ui::ElevationIndex::ElevatedSurface)
-                                            .when(is_selected, |this| {
-                                                this.key_binding(KeyBinding::for_action_in(
-                                                    &OpenExcerpts,
-                                                    &focus_handle,
-                                                    cx,
-                                                ))
-                                            })
-                                            .on_click(window.listener_for(editor, {
+                                        })
+                                        .on_click(
+                                            window.listener_for(editor, {
                                                 let jump_data = jump_data.clone();
                                                 move |editor, e: &ClickEvent, window, cx| {
                                                     editor.open_excerpts_common(
@@ -970,7 +950,8 @@ pub(crate) fn render_buffer_header(
                                                         cx,
                                                     );
                                                 }
-                                            })),
+                                            }),
+                                        ),
                                     )
                                 }),
                         )

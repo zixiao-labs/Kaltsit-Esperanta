@@ -4,16 +4,8 @@ use crate::{
     staged_diff::StagedDiff,
     unstaged_diff::UnstagedDiff,
 };
-<<<<<<< HEAD
-use agent_settings::AgentSettings;
-
-use anyhow::{Context as _, Result, anyhow};
-use buffer_diff::{BufferDiff, DiffHunkSecondaryStatus};
-use collections::HashMap;
-=======
 use anyhow::{Context as _, Result};
 use buffer_diff::DiffHunkSecondaryStatus;
->>>>>>> upstream/main
 use editor::{
     Editor, EditorEvent, SplittableEditor, UncommittedDiffHunkDelegate,
     actions::{GoToHunk, GoToPreviousHunk, SendReviewToAgent},
@@ -565,86 +557,8 @@ impl Item for ProjectDiff {
 }
 
 impl Render for ProjectDiff {
-<<<<<<< HEAD
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let is_empty = self.multibuffer.read(cx).is_empty();
-        let is_loading = self.branch_diff.read(cx).is_tree_base_loading() || !self._task.is_ready();
-
-        let is_branch_diff_view = matches!(self.diff_base(cx), DiffBase::Merge { .. });
-
-        div()
-            .track_focus(&self.focus_handle)
-            .key_context(if is_empty { "EmptyPane" } else { "GitDiff" })
-            .when(is_branch_diff_view, |this| {
-                this.on_action(cx.listener(Self::review_diff))
-            })
-            .bg(cx.theme().colors().editor_background)
-            .flex()
-            .items_center()
-            .justify_center()
-            .size_full()
-            .when(is_empty && is_loading, |el| {
-                let rems = TextSize::Large.rems(cx);
-                el.child(
-                    Icon::new(IconName::LoadCircle)
-                        .size(IconSize::Custom(rems))
-                        .color(Color::Accent)
-                        .with_rotate_animation(3)
-                        .into_any_element(),
-                )
-            })
-            .when(is_empty && !is_loading, |el| {
-                let remote_button = if let Some(panel) = self
-                    .workspace
-                    .upgrade()
-                    .and_then(|workspace| workspace.read(cx).panel::<GitPanel>(cx))
-                {
-                    panel.update(cx, |panel, cx| panel.render_remote_button(cx))
-                } else {
-                    None
-                };
-                let keybinding_focus_handle = self.focus_handle(cx);
-                el.child(
-                    v_flex()
-                        .gap_1()
-                        .child(
-                            h_flex()
-                                .justify_around()
-                                .child(Label::new(ama10_i18n::tr!("No uncommitted changes"))),
-                        )
-                        .map(|el| match remote_button {
-                            Some(button) => el.child(h_flex().justify_around().child(button)),
-                            None => el.child(
-                                h_flex()
-                                    .justify_around()
-                                    .child(Label::new(ama10_i18n::tr!("Remote up to date"))),
-                            ),
-                        })
-                        .child(
-                            h_flex().justify_around().mt_1().child(
-                                Button::new("project-diff-close-button", ama10_i18n::tr!("Close"))
-                                    // .style(ButtonStyle::Transparent)
-                                    .key_binding(KeyBinding::for_action_in(
-                                        &CloseActiveItem::default(),
-                                        &keybinding_focus_handle,
-                                        cx,
-                                    ))
-                                    .on_click(move |_, window, cx| {
-                                        window.focus(&keybinding_focus_handle, cx);
-                                        window.dispatch_action(
-                                            Box::new(CloseActiveItem::default()),
-                                            cx,
-                                        );
-                                    }),
-                            ),
-                        ),
-                )
-            })
-            .when(!is_empty, |el| el.child(self.editor.clone()))
-=======
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div().size_full().child(self.diff.clone())
->>>>>>> upstream/main
     }
 }
 
@@ -905,17 +819,12 @@ impl Render for ProjectDiffToolbar {
             // support "undo" for staging so we need a way to go back.
             .child(
                 h_group_sm()
-<<<<<<< HEAD
-                    .when(button_states.selection, |el| {
-                        el.child(
-                            Button::new("stage", ama10_i18n::tr!("Toggle Staged"))
-=======
                     .child(
                         IconButton::new("up", IconName::ArrowUp)
                             .icon_size(IconSize::Small)
                             .disabled(!button_states.prev_next)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to Previous Hunk",
+                                ama10_i18n::tr!("Go to Previous Hunk"),
                                 &GoToPreviousHunk,
                                 &focus_handle,
                             ))
@@ -928,7 +837,7 @@ impl Render for ProjectDiffToolbar {
                             .icon_size(IconSize::Small)
                             .disabled(!button_states.prev_next)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Go to Next Hunk",
+                                ama10_i18n::tr!("Go to Next Hunk"),
                                 &GoToHunk,
                                 &focus_handle,
                             ))
@@ -942,8 +851,7 @@ impl Render for ProjectDiffToolbar {
                 h_group_sm()
                     .when(button_states.selection, |this| {
                         this.child(
-                            Button::new("stage", "Toggle Staged")
->>>>>>> upstream/main
+                            Button::new("stage", ama10_i18n::tr!("Toggle Staged"))
                                 .tooltip(Tooltip::for_action_title_in(
                                     ama10_i18n::tr!("Toggle Staged"),
                                     &ToggleStaged,
@@ -955,20 +863,12 @@ impl Render for ProjectDiffToolbar {
                                 })),
                         )
                     })
-<<<<<<< HEAD
-                    .when(!button_states.selection, |el| {
-                        el.child(
-                            Button::new("stage", ama10_i18n::tr!("Stage"))
-                                .tooltip(Tooltip::for_action_title_in(
-                                    ama10_i18n::tr!("Stage and go to next hunk"),
-=======
                     .when(!button_states.selection, |this| {
                         this.child(
-                            Button::new("stage", "Stage")
+                            Button::new("stage", ama10_i18n::tr!("Stage"))
                                 .disabled(!button_states.stage)
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Stage and Go to Next Hunk",
->>>>>>> upstream/main
+                                    ama10_i18n::tr!("Stage and Go to Next Hunk"),
                                     &StageAndNext,
                                     &focus_handle,
                                 ))
@@ -977,16 +877,10 @@ impl Render for ProjectDiffToolbar {
                                 })),
                         )
                         .child(
-<<<<<<< HEAD
                             Button::new("unstage", ama10_i18n::tr!("Unstage"))
-                                .tooltip(Tooltip::for_action_title_in(
-                                    ama10_i18n::tr!("Unstage and go to next hunk"),
-=======
-                            Button::new("unstage", "Unstage")
                                 .disabled(!button_states.unstage)
                                 .tooltip(Tooltip::for_action_title_in(
-                                    "Unstage and Go to Next Hunk",
->>>>>>> upstream/main
+                                    ama10_i18n::tr!("Unstage and Go to Next Hunk"),
                                     &UnstageAndNext,
                                     &focus_handle,
                                 ))
@@ -1001,96 +895,29 @@ impl Render for ProjectDiffToolbar {
                 button_states.unstage_all && !button_states.stage_all,
                 |this| {
                     this.child(
-                        Button::new("unstage-all", "Unstage All")
+                        Button::new("unstage-all", ama10_i18n::tr!("Unstage All"))
                             .width(stage_all_button_width)
                             .tooltip(Tooltip::for_action_title_in(
-<<<<<<< HEAD
-                                ama10_i18n::tr!("Go to previous hunk"),
-                                &GoToPreviousHunk,
-=======
-                                "Unstage All Changes",
+                                ama10_i18n::tr!("Unstage All Changes"),
                                 &UnstageAll,
->>>>>>> upstream/main
                                 &focus_handle,
                             ))
                             .on_click(
                                 cx.listener(|this, _, window, cx| this.unstage_all(window, cx)),
                             ),
                     )
-<<<<<<< HEAD
-                    .child(
-                        IconButton::new("down", IconName::ArrowDown)
-                            .shape(ui::IconButtonShape::Square)
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Go to next hunk"),
-                                &GoToHunk,
-                                &focus_handle,
-                            ))
-                            .disabled(!button_states.prev_next)
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.dispatch_action(&GoToHunk, window, cx)
-                            })),
-                    ),
-            )
-            .child(vertical_divider())
-            .child(
-                h_group_sm()
-                    .when(
-                        button_states.unstage_all && !button_states.stage_all,
-                        |el| {
-                            el.child(
-                                Button::new("unstage-all", ama10_i18n::tr!("Unstage All"))
-                                    .tooltip(Tooltip::for_action_title_in(
-                                        ama10_i18n::tr!("Unstage all changes"),
-                                        &UnstageAll,
-                                        &focus_handle,
-                                    ))
-                                    .on_click(cx.listener(|this, _, window, cx| {
-                                        this.unstage_all(window, cx)
-                                    })),
-                            )
-                        },
-                    )
-                    .when(
-                        !button_states.unstage_all || button_states.stage_all,
-                        |el| {
-                            el.child(
-                                // todo make it so that changing to say "Unstaged"
-                                // doesn't change the position.
-                                div().child(
-                                    Button::new("stage-all", ama10_i18n::tr!("Stage All"))
-                                        .disabled(!button_states.stage_all)
-                                        .tooltip(Tooltip::for_action_title_in(
-                                            ama10_i18n::tr!("Stage all changes"),
-                                            &StageAll,
-                                            &focus_handle,
-                                        ))
-                                        .on_click(cx.listener(|this, _, window, cx| {
-                                            this.stage_all(window, cx)
-                                        })),
-                                ),
-                            )
-                        },
-                    )
-                    .child(
-                        Button::new("commit", ama10_i18n::tr!("Commit"))
-                            .tooltip(Tooltip::for_action_title_in(
-                                ama10_i18n::tr!("Commit"),
-                                &Commit,
-=======
                 },
             )
             .when(
                 !button_states.unstage_all || button_states.stage_all,
                 |this| {
                     this.child(
-                        Button::new("stage-all", "Stage All")
+                        Button::new("stage-all", ama10_i18n::tr!("Stage All"))
                             .width(stage_all_button_width)
                             .disabled(!button_states.stage_all)
                             .tooltip(Tooltip::for_action_title_in(
-                                "Stage All Changes",
+                                ama10_i18n::tr!("Stage All Changes"),
                                 &StageAll,
->>>>>>> upstream/main
                                 &focus_handle,
                             ))
                             .on_click(
@@ -1101,9 +928,9 @@ impl Render for ProjectDiffToolbar {
             )
             .child(Divider::vertical())
             .child(
-                Button::new("commit", "Commit")
+                Button::new("commit", ama10_i18n::tr!("Commit"))
                     .tooltip(Tooltip::for_action_title_in(
-                        "Commit",
+                        ama10_i18n::tr!("Commit"),
                         &Commit,
                         &focus_handle,
                     ))
@@ -1143,196 +970,6 @@ pub(crate) fn render_send_review_to_agent_button(
     ))
 }
 
-<<<<<<< HEAD
-pub struct BranchDiffToolbar {
-    project_diff: Option<WeakEntity<ProjectDiff>>,
-}
-
-impl BranchDiffToolbar {
-    pub fn new(_cx: &mut Context<Self>) -> Self {
-        Self { project_diff: None }
-    }
-
-    fn project_diff(&self, _: &App) -> Option<Entity<ProjectDiff>> {
-        self.project_diff.as_ref()?.upgrade()
-    }
-
-    fn dispatch_action(&self, action: &dyn Action, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(project_diff) = self.project_diff(cx) {
-            project_diff.focus_handle(cx).focus(window, cx);
-        }
-        let action = action.boxed_clone();
-        cx.defer(move |cx| {
-            cx.dispatch_action(action.as_ref());
-        })
-    }
-}
-
-impl EventEmitter<ToolbarItemEvent> for BranchDiffToolbar {}
-
-impl ToolbarItemView for BranchDiffToolbar {
-    fn set_active_pane_item(
-        &mut self,
-        active_pane_item: Option<&dyn ItemHandle>,
-        _: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> ToolbarItemLocation {
-        self.project_diff = active_pane_item
-            .and_then(|item| item.act_as::<ProjectDiff>(cx))
-            .filter(|item| matches!(item.read(cx).diff_base(cx), DiffBase::Merge { .. }))
-            .map(|entity| entity.downgrade());
-        if self.project_diff.is_some() {
-            ToolbarItemLocation::PrimaryRight
-        } else {
-            ToolbarItemLocation::Hidden
-        }
-    }
-
-    fn pane_focus_update(
-        &mut self,
-        _pane_focused: bool,
-        _window: &mut Window,
-        _cx: &mut Context<Self>,
-    ) {
-    }
-}
-
-impl Render for BranchDiffToolbar {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let Some(project_diff) = self.project_diff(cx) else {
-            return div();
-        };
-        let focus_handle = project_diff.focus_handle(cx);
-        let review_count = project_diff.read(cx).total_review_comment_count();
-        let (additions, deletions) = project_diff.read(cx).calculate_changed_lines(cx);
-        let diff_base = project_diff.read(cx).diff_base(cx).clone();
-        let DiffBase::Merge { base_ref } = diff_base else {
-            return div();
-        };
-        let selected_base_ref = base_ref.clone();
-        let base_ref_label = ama10_i18n::tr_f!("Base: {}", base_ref).to_string();
-        let repository = project_diff.read(cx).branch_diff.read(cx).repo().cloned();
-        let workspace = project_diff.read(cx).workspace.clone();
-        let project_diff_for_picker = project_diff.downgrade();
-
-        let is_multibuffer_empty = project_diff.read(cx).multibuffer.read(cx).is_empty();
-        let is_ai_enabled = AgentSettings::get_global(cx).enabled(cx);
-
-        let show_review_button = !is_multibuffer_empty && is_ai_enabled;
-
-        h_group_xl()
-            .my_neg_1()
-            .py_1()
-            .items_center()
-            .flex_wrap()
-            .justify_end()
-            .gap_2()
-            .child(
-                PopoverMenu::new("branch-diff-base-branch-picker")
-                    .menu(move |window, cx| {
-                        let project_diff = project_diff_for_picker.clone();
-                        let on_select = Arc::new(
-                            move |branch: git::repository::Branch,
-                                  _window: &mut Window,
-                                  cx: &mut App| {
-                                let base_ref: SharedString = branch.name().to_owned().into();
-                                project_diff
-                                    .update(cx, |project_diff, cx| {
-                                        let branch_diff = &mut project_diff.branch_diff;
-                                        branch_diff.update(cx, |branch_diff, cx| {
-                                            branch_diff
-                                                .set_diff_base(DiffBase::Merge { base_ref }, cx);
-                                        });
-                                        cx.notify();
-                                    })
-                                    .ok();
-                            },
-                        );
-                        Some(branch_picker::select_popover(
-                            workspace.clone(),
-                            repository.clone(),
-                            Some(selected_base_ref.clone()),
-                            on_select,
-                            window,
-                            cx,
-                        ))
-                    })
-                    .trigger_with_tooltip(
-                        Button::new("branch-diff-base-branch", base_ref_label)
-                            .color(Color::Muted)
-                            .end_icon(
-                                Icon::new(IconName::ChevronDown)
-                                    .size(IconSize::XSmall)
-                                    .color(Color::Muted),
-                            ),
-                        Tooltip::text(ama10_i18n::tr!("Select base branch")),
-                    ),
-            )
-            .when(!is_multibuffer_empty, |this| {
-                this.child(DiffStat::new(
-                    "branch-diff-stat",
-                    additions as usize,
-                    deletions as usize,
-                ))
-            })
-            .when(show_review_button, |this| {
-                let focus_handle = focus_handle.clone();
-                this.child(Divider::vertical()).child(
-                    Button::new("review-diff", ama10_i18n::tr!("Review Diff"))
-                        .start_icon(
-                            Icon::new(IconName::ZedAssistant)
-                                .size(IconSize::Small)
-                                .color(Color::Muted),
-                        )
-                        .key_binding(KeyBinding::for_action_in(&ReviewDiff, &focus_handle, cx))
-                        .tooltip(move |_, cx| {
-                            Tooltip::with_meta_in(
-                                ama10_i18n::tr!("Review Diff"),
-                                Some(&ReviewDiff),
-                                ama10_i18n::tr!("Send this diff for your last agent to review."),
-                                &focus_handle,
-                                cx,
-                            )
-                        })
-                        .on_click(cx.listener(|this, _, window, cx| {
-                            this.dispatch_action(&ReviewDiff, window, cx);
-                        })),
-                )
-            })
-            .when(review_count > 0, |this| {
-                this.child(vertical_divider()).child(
-                    render_send_review_to_agent_button(review_count, &focus_handle).on_click(
-                        cx.listener(|this, _, window, cx| {
-                            this.dispatch_action(&SendReviewToAgent, window, cx)
-                        }),
-                    ),
-                )
-            })
-    }
-}
-
-struct BranchDiffAddon {
-    branch_diff: Entity<branch_diff::BranchDiff>,
-}
-
-impl Addon for BranchDiffAddon {
-    fn to_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn override_status_for_buffer_id(
-        &self,
-        buffer_id: language::BufferId,
-        cx: &App,
-    ) -> Option<FileStatus> {
-        self.branch_diff
-            .read(cx)
-            .status_for_buffer_id(buffer_id, cx)
-    }
-}
-
-=======
->>>>>>> upstream/main
 #[cfg(test)]
 mod tests {
     use buffer_diff::DiffHunkSecondaryStatus;

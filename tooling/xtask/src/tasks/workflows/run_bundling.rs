@@ -3,16 +3,11 @@ use std::path::Path;
 use crate::tasks::workflows::{
     release::ReleaseBundleJobs,
     runners::{Arch, Platform, ReleaseChannel},
-<<<<<<< HEAD
-    steps::{FluentBuilder, IfNoFilesFound, NamedJob, UploadArtifactStep, dependant_job, named},
-    vars::{assets, bundle_envs},
-=======
     steps::{
         CommonPermissionSets, FluentBuilder, IfNoFilesFound, NamedJob, UploadArtifactStep,
         dependant_job, named,
     },
-    vars::{self, assets, bundle_envs},
->>>>>>> upstream/main
+    vars::{assets, bundle_envs},
 };
 
 use super::{runners, steps};
