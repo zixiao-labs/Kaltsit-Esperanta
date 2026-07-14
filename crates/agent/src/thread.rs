@@ -4249,13 +4249,20 @@ impl Thread {
     }
 
     fn tool(&self, name: &str) -> Option<Arc<dyn AnyAgentTool>> {
-        self.running_turn.as_ref()?.tools.get(name).cloned()
+        let tools = &self.running_turn.as_ref()?.tools;
+        tools
+            .get(name)
+            // Some models use Claude Code's PascalCase name despite being
+            // provided Zed's canonical snake_case tool name.
+            .or_else(|| match name {
+                "ExitPlanMode" => tools.get(ExitPlanModeTool::NAME),
+                _ => None,
+            })
+            .cloned()
     }
 
     pub fn has_tool(&self, name: &str) -> bool {
-        self.running_turn
-            .as_ref()
-            .is_some_and(|turn| turn.tools.contains_key(name))
+        self.tool(name).is_some()
     }
 
     #[cfg(any(test, feature = "test-support"))]

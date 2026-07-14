@@ -1044,7 +1044,7 @@ async fn test_ask_user_question_tool_submits_answer(cx: &mut TestAppContext) {
             id: "ask_user_question_1".into(),
             name: AskUserQuestionTool::NAME.into(),
             raw_input: tool_input.to_string(),
-            input: tool_input,
+            input: language_model::LanguageModelToolUseInput::Json(tool_input),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1129,7 +1129,7 @@ async fn test_ask_user_question_tool_submits_single_choice(cx: &mut TestAppConte
             id: "ask_user_question_1".into(),
             name: AskUserQuestionTool::NAME.into(),
             raw_input: tool_input.to_string(),
-            input: tool_input,
+            input: language_model::LanguageModelToolUseInput::Json(tool_input),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1214,7 +1214,7 @@ async fn test_ask_user_question_tool_submits_multiple_choices(cx: &mut TestAppCo
             id: "ask_user_question_1".into(),
             name: AskUserQuestionTool::NAME.into(),
             raw_input: tool_input.to_string(),
-            input: tool_input,
+            input: language_model::LanguageModelToolUseInput::Json(tool_input),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1301,6 +1301,24 @@ async fn test_plan_mode_switches_profile_and_limits_edits(cx: &mut TestAppContex
 }
 
 #[gpui::test]
+async fn test_exit_plan_mode_tool_pascal_case_alias(cx: &mut TestAppContext) {
+    let ThreadTest { thread, .. } = setup(cx, TestModel::Fake).await;
+
+    let _events = thread
+        .update(cx, |thread, cx| {
+            thread.add_tool(ExitPlanModeTool);
+            thread.send(ClientUserMessageId::new(), ["make a plan"], cx)
+        })
+        .unwrap();
+    cx.run_until_parked();
+
+    assert!(thread.read_with(cx, |thread, _cx| {
+        thread.has_tool(ExitPlanModeTool::NAME) && thread.has_tool("ExitPlanMode")
+    }));
+    thread.update(cx, |thread, cx| thread.cancel(cx)).detach();
+}
+
+#[gpui::test]
 async fn test_update_todos_tool_emits_todo_update(cx: &mut TestAppContext) {
     let ThreadTest { model, thread, .. } = setup(cx, TestModel::Fake).await;
     let fake_model = model.as_fake();
@@ -1324,7 +1342,7 @@ async fn test_update_todos_tool_emits_todo_update(cx: &mut TestAppContext) {
             id: "update_todos_1".into(),
             name: UpdatePlanTool::NAME.into(),
             raw_input: tool_input.to_string(),
-            input: tool_input,
+            input: language_model::LanguageModelToolUseInput::Json(tool_input),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1382,7 +1400,9 @@ async fn test_ask_user_question_tool_reports_missing_answer(cx: &mut TestAppCont
             id: "ask_user_question_1".into(),
             name: AskUserQuestionTool::NAME.into(),
             raw_input: json!({ "question": "Which branch should I target?" }).to_string(),
-            input: json!({ "question": "Which branch should I target?" }),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({ "question": "Which branch should I target?" }),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -1434,7 +1454,9 @@ async fn test_ask_user_question_tool_cancels_with_thread(cx: &mut TestAppContext
             id: "ask_user_question_1".into(),
             name: AskUserQuestionTool::NAME.into(),
             raw_input: json!({ "question": "Which branch should I target?" }).to_string(),
-            input: json!({ "question": "Which branch should I target?" }),
+            input: language_model::LanguageModelToolUseInput::Json(
+                json!({ "question": "Which branch should I target?" }),
+            ),
             is_input_complete: true,
             thought_signature: None,
         },
@@ -5065,6 +5087,7 @@ async fn setup(cx: &mut TestAppContext, model: TestModel) -> ThreadTest {
                             AskUserQuestionTool::NAME: true,
                             InfiniteTool::NAME: true,
                             CancellationAwareTool::NAME: true,
+                            ExitPlanModeTool::NAME: true,
                             UpdatePlanTool::NAME: true,
                             StreamingEchoTool::NAME: true,
                             StreamingJsonErrorContextTool::NAME: true,
