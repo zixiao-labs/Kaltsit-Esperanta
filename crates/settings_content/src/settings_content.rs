@@ -111,9 +111,16 @@ pub enum HideMouseMode {
     OnTypingAndAction,
 }
 
+<<<<<<< HEAD
 /// The UI language (locale) setting.
 ///
 /// Default: English
+=======
+/// Determines whether to reduce non-essential motion in the UI, such as
+/// loading spinners and pulsating labels, by rendering them in a static state.
+///
+/// Default: off
+>>>>>>> upstream/main
 #[derive(
     Copy,
     Clone,
@@ -129,6 +136,7 @@ pub enum HideMouseMode {
     strum::VariantNames,
 )]
 #[serde(rename_all = "snake_case")]
+<<<<<<< HEAD
 pub enum Locale {
     /// English
     #[default]
@@ -145,6 +153,16 @@ pub struct LocaleSettings(pub Locale);
 
 impl gpui::Global for LocaleSettings {}
 
+=======
+pub enum ReduceMotionMode {
+    /// Always reduce motion
+    On,
+    /// Never reduce motion
+    #[default]
+    Off,
+}
+
+>>>>>>> upstream/main
 #[with_fallible_options]
 #[derive(Debug, PartialEq, Default, Clone, Serialize, Deserialize, JsonSchema, MergeFrom)]
 pub struct SettingsContent {
@@ -254,6 +272,12 @@ pub struct SettingsContent {
     pub node: Option<NodeBinarySettings>,
 
     pub proxy: Option<String>,
+
+    /// Whether to reduce non-essential motion in the UI, such as loading
+    /// spinners and pulsating labels, by rendering them in a static state.
+    ///
+    /// Default: off
+    pub reduce_motion: Option<ReduceMotionMode>,
 
     /// The URL of the Zed server to connect to.
     pub server_url: Option<String>,
