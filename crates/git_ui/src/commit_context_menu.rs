@@ -104,7 +104,7 @@ pub(crate) fn commit_context_menu(
 
                     match tag_names.as_slice() {
                         [] => menu.item(
-                            ContextMenuEntry::new(copy_tag_label.clone())
+                            ContextMenuEntry::new(copy_tag_label)
                                 .action(CopyCommitTag.boxed_clone())
                                 .disabled(true),
                         ),
