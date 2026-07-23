@@ -23,7 +23,7 @@ use cloud_api_types::{SubmitAgentThreadFeedbackBody, SubmitAgentThreadFeedbackCo
 use editor::actions::OpenExcerpts;
 use sandbox::{SandboxFsPolicy, SandboxNetPolicy, SandboxPolicy};
 
-use crate::completion_provider::{AvailableSkill, PromptLocalCommand, pluralize};
+use crate::completion_provider::{AvailableSkill, PromptLocalCommand};
 use crate::message_editor::SharedSessionCapabilities;
 use crate::ui::{
     SandboxGroup, SandboxRow, SandboxSection, SandboxStatusTooltip, TerminalSandboxWarning,
@@ -5828,20 +5828,14 @@ impl Render for TokenUsageTooltip {
                                             this.child(
                                                 Button::new(
                                                     "open-project-rules",
-<<<<<<< HEAD
-                                                    ama10_i18n::tr_f!(
-                                                        "{} project rules",
-                                                        project_rules_count
-=======
-                                                    format!(
-                                                        "{} {}",
-                                                        project_rules_count,
-                                                        pluralize(
-                                                            "project rule",
+                                                    if project_rules_count == 1 {
+                                                        ama10_i18n::tr!("1 project rule")
+                                                    } else {
+                                                        ama10_i18n::tr_f!(
+                                                            "{} project rules",
                                                             project_rules_count
                                                         )
->>>>>>> upstream/main
-                                                    ),
+                                                    },
                                                 )
                                                 .end_icon(
                                                     Icon::new(IconName::ArrowUpRight)
@@ -6704,31 +6698,8 @@ impl ThreadView {
             return Empty.into_any_element();
         }
 
-<<<<<<< HEAD
-        let _open_as_markdown = IconButton::new("open-as-markdown", IconName::FileMarkdown)
-            .shape(ui::IconButtonShape::Square)
-            .icon_size(IconSize::Small)
-            .icon_color(Color::Muted)
-            .tooltip(Tooltip::text(ama10_i18n::tr!("Open Thread as Markdown")))
-            .on_click(cx.listener(move |this, _, window, cx| {
-                if let Some(workspace) = this.workspace.upgrade() {
-                    this.open_thread_as_markdown(workspace, window, cx)
-                        .detach_and_log_err(cx);
-                }
-            }));
-
-        let last_response_index = thread
-            .read(cx)
-            .entries()
-            .iter()
-            .rposition(|entry| matches!(entry, AgentThreadEntry::AssistantMessage(_)));
-
-        let copy_response_button = last_response_index.map(|response_index| {
-            IconButton::new("copy_agent_response", IconName::Copy)
-=======
         let copy_response_button = copy_response_index.map(|response_index| {
             IconButton::new(("copy_agent_response", entry_ix), IconName::Copy)
->>>>>>> upstream/main
                 .icon_size(IconSize::Small)
                 .icon_color(Color::Muted)
                 .tooltip(Tooltip::text(ama10_i18n::tr!("Copy This Agent Response")))
@@ -6741,29 +6712,16 @@ impl ThreadView {
                 }))
         });
 
-<<<<<<< HEAD
-        let scroll_to_recent_user_prompt =
-            IconButton::new("scroll_to_recent_user_prompt", IconName::UserArrowUp)
-                .icon_size(IconSize::Small)
-                .icon_color(Color::Muted)
-                .tooltip(Tooltip::text(ama10_i18n::tr!(
-                    "Scroll To Most Recent User Prompt"
-                )))
-                .on_click(cx.listener(move |this, _, _, cx| {
-                    this.scroll_to_most_recent_user_prompt(cx);
-                }));
-=======
         let scroll_to_recent_user_prompt = IconButton::new(
             ("scroll_to_recent_user_prompt", entry_ix),
             IconName::UserArrowUp,
         )
         .icon_size(IconSize::Small)
         .icon_color(Color::Muted)
-        .tooltip(Tooltip::text("Scroll to User Message"))
+        .tooltip(Tooltip::text(ama10_i18n::tr!("Scroll to User Message")))
         .on_click(cx.listener(move |this, _, _, cx| {
             this.scroll_to_user_message_index(user_message_index, cx);
         }));
->>>>>>> upstream/main
 
         let scroll_to_top = IconButton::new(("scroll_to_top", entry_ix), IconName::ArrowUp)
             .icon_size(IconSize::Small)
@@ -7832,83 +7790,19 @@ impl ThreadView {
         let truncated_tooltip = truncated_output.then(|| {
             if let Some(output) = output {
                 if output_line_count + 10 > terminal::MAX_SCROLL_HISTORY_LINES {
-                    format!(
-                        "Output exceeded terminal max lines and was \
-                         truncated, the model received the first {}.",
+                    ama10_i18n::tr_f!(
+                        "Output exceeded terminal max lines and was truncated, the model received the first {}.",
                         format_file_size(output.content.len() as u64, true)
                     )
-<<<<<<< HEAD
-                    .child(div().h(relative(0.6)).ml_1p5().child(Divider::vertical().color(DividerColor::Border)))
-                    .child(
-                        IconButton::new(
-                            SharedString::from(format!("stop-terminal-{}", terminal.entity_id())),
-                            IconName::Stop
-                        )
-                        .icon_size(IconSize::Small)
-                        .icon_color(Color::Error)
-                        .tooltip(move |_window, cx| {
-                            Tooltip::with_meta(
-                                ama10_i18n::tr!("Stop This Command"),
-                                None,
-                                ama10_i18n::tr!("Also possible by placing your cursor inside the terminal and using regular terminal bindings."),
-                                cx,
-                            )
-                        })
-                        .on_click({
-                            let terminal = terminal.clone();
-                            cx.listener(move |this, _event, _window, cx| {
-                                terminal.update(cx, |terminal, cx| {
-                                    terminal.stop_by_user(cx);
-                                });
-                                if AgentSettings::get_global(cx).cancel_generation_on_terminal_stop {
-                                    this.cancel_generation(cx);
-                                }
-                            })
-                        }),
-                    )
-            })
-            .when(truncated_output, |header| {
-                let tooltip: SharedString = if let Some(output) = output {
-                    if output_line_count + 10 > terminal::MAX_SCROLL_HISTORY_LINES {
-                       ama10_i18n::tr_f!("Output exceeded terminal max lines and was truncated, the model received the first {}.", format_file_size(output.content.len() as u64, true))
-                    } else {
-                        ama10_i18n::tr_f!(
-                            "Output is {} long, and to avoid unexpected token usage, only {} was sent back to the agent.",
-                            format_file_size(output.original_content_len as u64, true),
-                             format_file_size(output.content.len() as u64, true)
-                        )
-                    }
                 } else {
-                    ama10_i18n::tr!("Output was truncated")
-                };
-
-                header.child(
-                    h_flex()
-                        .id(("terminal-tool-truncated-label", terminal.entity_id()))
-                        .gap_1()
-                        .child(
-                            Icon::new(IconName::Info)
-                                .size(IconSize::XSmall)
-                                .color(Color::Ignored),
-                        )
-                        .child(
-                            Label::new(ama10_i18n::tr!("Truncated"))
-                                .color(Color::Muted)
-                                .size(LabelSize::XSmall),
-                        )
-                        .tooltip(Tooltip::text(tooltip)),
-                )
-=======
-                } else {
-                    format!(
-                        "Output is {} long, and to avoid unexpected token usage, \
-                         only {} was sent back to the agent.",
+                    ama10_i18n::tr_f!(
+                        "Output is {} long, and to avoid unexpected token usage, only {} was sent back to the agent.",
                         format_file_size(output.original_content_len as u64, true),
                         format_file_size(output.content.len() as u64, true)
                     )
                 }
             } else {
-                "Output was truncated".to_string()
+                ama10_i18n::tr!("Output was truncated")
             }
         });
 
@@ -7939,7 +7833,6 @@ impl ThreadView {
                 if AgentSettings::get_global(cx).cancel_generation_on_terminal_stop {
                     this.cancel_generation(cx);
                 }
->>>>>>> upstream/main
             })
         })
         .when_some(truncated_tooltip, |header, tooltip| {
@@ -7973,21 +7866,7 @@ impl ThreadView {
                     .rounded_md()
             })
             .overflow_hidden()
-<<<<<<< HEAD
-            .child(
-                v_flex()
-                    .group(&header_group)
-                    .bg(header_bg)
-                    .text_xs()
-                    .child(header)
-                    .child(command_element),
-            )
-            .when_some(tool_call.sandbox_not_applied.as_ref(), |this, reason| {
-                this.child(self.render_sandbox_not_applied_warning(reason, terminal, cx))
-            })
-=======
             .child(header)
->>>>>>> upstream/main
             .when(is_expanded && terminal_view.is_some(), |this| {
                 this.child(
                     div()
@@ -8040,7 +7919,6 @@ impl ThreadView {
     fn sandbox_not_applied_warning(
         &self,
         reason: &SandboxNotAppliedReason,
-        _terminal: &Entity<acp_thread::Terminal>,
         cx: &Context<Self>,
     ) -> TerminalSandboxWarning {
         // (title, detail line, docs section slug)

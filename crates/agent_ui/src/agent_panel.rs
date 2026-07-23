@@ -5317,20 +5317,14 @@ impl AgentPanel {
                                     IconButton::new("retry-thread-title", IconName::XCircle)
                                         .icon_color(Color::Error)
                                         .icon_size(IconSize::Small)
-<<<<<<< HEAD
-                                        .tooltip(Tooltip::text(ama10_i18n::tr!(
-                                            "Title generation failed. Retry"
-                                        )))
-=======
                                         .tooltip(move |_window, cx| {
                                             Tooltip::with_meta(
-                                                "Title generation failed. Click to retry.",
+                                                ama10_i18n::tr!("Title generation failed. Retry"),
                                                 None,
                                                 title_generation_error.clone(),
                                                 cx,
                                             )
                                         })
->>>>>>> upstream/main
                                         .on_click({
                                             let conversation_view = conversation_view.clone();
                                             let workspace = self.workspace.clone();

@@ -327,11 +327,7 @@ fn git_panel_view_options_menu(
             })
             .item({
                 let view_options_menu_state = view_options_menu_state.clone();
-<<<<<<< HEAD
-                ContextMenuEntry::new(ama10_i18n::tr!("Status"))
-=======
-                ContextMenuEntry::new("Tracked & Untracked")
->>>>>>> upstream/main
+                ContextMenuEntry::new(ama10_i18n::tr!("Tracked & Untracked"))
                     .toggle(IconPosition::End, state.group_by == GitPanelGroupBy::Status)
                     .handler(move |window, cx| {
                         if state.group_by != GitPanelGroupBy::Status {
@@ -345,11 +341,7 @@ fn git_panel_view_options_menu(
             })
             .item({
                 let view_options_menu_state = view_options_menu_state.clone();
-<<<<<<< HEAD
-                ContextMenuEntry::new(ama10_i18n::tr!("Staging"))
-=======
-                ContextMenuEntry::new("Staged & Unstaged")
->>>>>>> upstream/main
+                ContextMenuEntry::new(ama10_i18n::tr!("Staged & Unstaged"))
                     .toggle(
                         IconPosition::End,
                         state.group_by == GitPanelGroupBy::Staging,
@@ -512,11 +504,11 @@ impl StageIntent {
         }
     }
 
-    fn label(self, stage_status: impl FnOnce() -> StageStatus) -> &'static str {
+    fn label(self, stage_status: impl FnOnce() -> StageStatus) -> SharedString {
         if self.resolve_with(stage_status) {
-            "Stage"
+            ama10_i18n::tr!("Stage")
         } else {
-            "Unstage"
+            ama10_i18n::tr!("Unstage")
         }
     }
 }
@@ -7308,28 +7300,17 @@ impl GitPanel {
                                 }
                             })
                             .tooltip(move |_window, cx| {
-<<<<<<< HEAD
-                                let action = match stage_status {
-                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
-                                        ama10_i18n::tr!("Stage")
-                                    }
-                                };
-
-                                Tooltip::for_action(action, &ToggleStaged, cx)
-                            })
-                            .into_any_element()
-                    }),
-=======
                                 if resolved_conflict {
-                                    Tooltip::simple("Conflict marked as resolved", cx)
+                                    Tooltip::simple(
+                                        ama10_i18n::tr!("Conflict marked as resolved"),
+                                        cx,
+                                    )
                                 } else {
                                     let action = stage_intent.label(|| stage_status);
                                     Tooltip::for_action(action, &ToggleStaged, cx)
                                 }
                             }),
                     ),
->>>>>>> upstream/main
             )
             .on_click({
                 cx.listener(move |this, event: &ClickEvent, window, cx| {
@@ -7501,27 +7482,17 @@ impl GitPanel {
                                 }
                             })
                             .tooltip(move |_window, cx| {
-<<<<<<< HEAD
-                                let action = match stage_status {
-                                    StageStatus::Staged => ama10_i18n::tr!("Unstage"),
-                                    StageStatus::Unstaged | StageStatus::PartiallyStaged => {
-                                        ama10_i18n::tr!("Stage")
-                                    }
-                                };
-                                Tooltip::simple(ama10_i18n::tr_f!("{} folder", action), cx)
-                            })
-                            .into_any_element()
-                    }),
-=======
                                 if resolved_conflict {
-                                    Tooltip::simple("Conflicts marked as resolved", cx)
+                                    Tooltip::simple(
+                                        ama10_i18n::tr!("Conflicts marked as resolved"),
+                                        cx,
+                                    )
                                 } else {
                                     let action = stage_intent.label(|| stage_status);
-                                    Tooltip::simple(format!("{action} Folder"), cx)
+                                    Tooltip::simple(ama10_i18n::tr_f!("{} folder", action), cx)
                                 }
                             }),
                     ),
->>>>>>> upstream/main
             )
             .on_click({
                 let key = entry.key.clone();

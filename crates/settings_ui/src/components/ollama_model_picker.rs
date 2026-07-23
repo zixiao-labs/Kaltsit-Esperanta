@@ -161,8 +161,8 @@ pub fn render_ollama_model_picker(
     field: SettingField<settings::OllamaModelName>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -171,31 +171,21 @@ pub fn render_ollama_model_picker(
         .map(|m| m.0.clone().into())
         .unwrap_or_else(|| "".into());
 
-    let trigger_value: SharedString = if current_value.is_empty() {
-        "Select a model…".into()
-    } else {
-        current_value.clone()
-    };
-
     PopoverMenu::new("ollama-model-picker")
-<<<<<<< HEAD
-        .trigger(render_picker_trigger_button(
-            "ollama_model_picker_trigger".into(),
-            if current_value.is_empty() {
-                tr!("Select a model…")
-            } else {
-                current_value.clone()
-            },
-        ))
-=======
         .trigger(
-            render_picker_trigger_button("ollama_model_picker_trigger".into(), trigger_value)
-                .aria_label(title)
-                .when(!description.is_empty(), |this| {
-                    this.aria_description(description)
-                }),
+            render_picker_trigger_button(
+                "ollama_model_picker_trigger".into(),
+                if current_value.is_empty() {
+                    tr!("Select a model…")
+                } else {
+                    current_value.clone()
+                },
+            )
+            .aria_label(title)
+            .when(!description.is_empty(), |this| {
+                this.aria_description(description)
+            }),
         )
->>>>>>> upstream/main
         .menu(move |window, cx| {
             Some(cx.new(|cx| {
                 let file = file.clone();

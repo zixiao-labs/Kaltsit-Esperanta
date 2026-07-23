@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-use agent_skills::{Skill, SkillIndex, encode_skill_share_link};
-use ama10_i18n::tr;
-=======
 use agent_skills::{Skill, SkillIndex, SkillSource, encode_skill_share_link};
->>>>>>> upstream/main
+use ama10_i18n::tr;
 use fs::RemoveOptions;
 use gpui::{App, ClipboardItem, PromptLevel, ScrollHandle, SharedString, prelude::*};
 

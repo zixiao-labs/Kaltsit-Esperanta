@@ -141,7 +141,6 @@ fn general_page(cx: &App) -> SettingsPage {
         vec![
             SettingsPageItem::SectionHeader(tr!("General Settings")),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
                 title: tr!("Language"),
                 description: tr!("The display language for the interface."),
                 field: Box::new(SettingField {
@@ -150,31 +149,32 @@ fn general_page(cx: &App) -> SettingsPage {
                     pick: |settings_content| settings_content.locale.as_ref(),
                     write: |settings_content, value, _| {
                         settings_content.locale = value;
-=======
-                title: "Accessible Mode",
-                description: "Optimize Zed's interface for assistive technology such as screen readers. When enabled, otherwise-collapsed controls stay expanded and keyboard-reachable.",
-                field: Box::new(SettingField {
-                    organization_override: None,
-                    json_path: Some("accessible_mode"),
-                    pick: |settings_content| settings_content.workspace.accessible_mode.as_ref(),
-                    write: |settings_content, value, _| {
-                        settings_content.workspace.accessible_mode = value;
->>>>>>> upstream/main
                     },
                 }),
                 metadata: None,
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
+                title: tr!("Accessible Mode"),
+                description: tr!(
+                    "Optimize Zed's interface for assistive technology such as screen readers. When enabled, otherwise-collapsed controls stay expanded and keyboard-reachable."
+                ),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("accessible_mode"),
+                    pick: |settings_content| settings_content.workspace.accessible_mode.as_ref(),
+                    write: |settings_content, value, _| {
+                        settings_content.workspace.accessible_mode = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("When Closing With No Tabs"),
                 description: tr!(
                     "What to do when using the 'close active item' action with no tabs."
                 ),
-=======
-                title: "When Closing With No Tabs",
-                description: "What to do when using the 'close active item' action with no tabs.",
->>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("when_closing_with_no_tabs"),
@@ -1291,8 +1291,10 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Reduce Motion",
-                description: "Whether to reduce non-essential motion, such as loading spinners, by rendering them in a static state.",
+                title: tr!("Reduce Motion"),
+                description: tr!(
+                    "Whether to reduce non-essential motion, such as loading spinners, by rendering them in a static state."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("reduce_motion"),
@@ -10422,11 +10424,10 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Semantic Tokens"),
-=======
-                title: "LSP Results Location",
-                description: "Where to show LSP results that can contain multiple locations (Go to Definition, Go to Implementation, Find All References).",
+                title: tr!("LSP Results Location"),
+                description: tr!(
+                    "Where to show LSP results that can contain multiple locations (Go to Definition, Go to Implementation, Find All References)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("lsp_results_location"),
@@ -10439,8 +10440,7 @@ fn non_editor_language_settings_data() -> Box<[SettingsPageItem]> {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Semantic Tokens",
->>>>>>> upstream/main
+                title: tr!("Semantic Tokens"),
                 description: {
                     static DESCRIPTION: OnceLock<SharedString> = OnceLock::new();
                     DESCRIPTION

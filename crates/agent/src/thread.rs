@@ -2302,7 +2302,7 @@ impl Thread {
         let worktree = worktree.read(cx);
         let plan_file_name = self.plan_file_name();
         let relative_path_string = format!(".zed/plans/{plan_file_name}");
-        let relative_path = RelPath::unix(&relative_path_string)?.into_arc();
+        let relative_path = RelPath::from_unix_str(&relative_path_string)?.into_arc();
         let project_path = ProjectPath {
             worktree_id: worktree.id(),
             path: relative_path,

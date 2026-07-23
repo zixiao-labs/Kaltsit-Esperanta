@@ -1181,7 +1181,6 @@ impl ProjectPanel {
                                 )
                             })
                             .separator()
-<<<<<<< HEAD
                             .action(tr!("Cut"), Box::new(Cut))
                             .action(tr!("Copy"), Box::new(Copy))
                             .action(tr!("Duplicate"), Box::new(Duplicate))
@@ -1190,34 +1189,24 @@ impl ProjectPanel {
                                 tr!("Paste"),
                                 Box::new(Paste),
                             )
-                            .when(cx.has_flag::<ProjectPanelUndoRedoFeatureFlag>(), |menu| {
-                                menu.action_disabled_when(
-                                    !self.undo_manager.can_undo(),
-                                    tr!("Undo"),
-                                    Box::new(Undo),
-                                )
-                                .action_disabled_when(
-                                    !self.undo_manager.can_redo(),
-                                    tr!("Redo"),
-                                    Box::new(Redo),
-                                )
-                            })
-=======
-                            .action("Cut", Box::new(Cut))
-                            .action("Copy", Box::new(Copy))
-                            .action("Duplicate", Box::new(Duplicate))
-                            .action_disabled_when(!has_pasteable_content, "Paste", Box::new(Paste))
                             .when(
                                 !is_collab && cx.has_flag::<ProjectPanelUndoRedoFeatureFlag>(),
                                 |menu| {
                                     let can_undo = self.undo_manager.can_undo();
                                     let can_redo = self.undo_manager.can_redo();
 
-                                    menu.action_disabled_when(!can_undo, "Undo", Box::new(Undo))
-                                        .action_disabled_when(!can_redo, "Redo", Box::new(Redo))
+                                    menu.action_disabled_when(
+                                        !can_undo,
+                                        tr!("Undo"),
+                                        Box::new(Undo),
+                                    )
+                                    .action_disabled_when(
+                                        !can_redo,
+                                        tr!("Redo"),
+                                        Box::new(Redo),
+                                    )
                                 },
                             )
->>>>>>> upstream/main
                             .when(is_remote, |menu| {
                                 menu.separator()
                                     .action(tr!("Download..."), Box::new(DownloadFromRemote))
@@ -1248,13 +1237,8 @@ impl ProjectPanel {
                             .when(!should_hide_rename, |menu| {
                                 menu.separator().action(tr!("Rename"), Box::new(Rename))
                             })
-<<<<<<< HEAD
-                            .when(!is_root && !is_remote, |menu| {
-                                menu.action(tr!("Trash"), Box::new(Trash { skip_prompt: false }))
-=======
                             .when(!is_root && !is_collab, |menu| {
-                                menu.action("Trash", Box::new(Trash { skip_prompt: false }))
->>>>>>> upstream/main
+                                menu.action(tr!("Trash"), Box::new(Trash { skip_prompt: false }))
                             })
                             .when(!is_root, |menu| {
                                 menu.action(tr!("Delete"), Box::new(Delete { skip_prompt: false }))

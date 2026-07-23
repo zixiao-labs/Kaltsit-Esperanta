@@ -257,20 +257,13 @@ pub fn deploy_context_menu(
                     run_to_cursor || (evaluate_selection && has_selections),
                     |builder| builder.separator(),
                 )
-<<<<<<< HEAD
-                .action(tr!("Go to Definition"), Box::new(GoToDefinition))
+                .action(tr!("Go to Definition"), Box::new(GoToDefinition::default()))
                 .action(tr!("Go to Declaration"), Box::new(GoToDeclaration))
                 .action(tr!("Go to Type Definition"), Box::new(GoToTypeDefinition))
-                .action(tr!("Go to Implementation"), Box::new(GoToImplementation))
-=======
-                .action("Go to Definition", Box::new(GoToDefinition::default()))
-                .action("Go to Declaration", Box::new(GoToDeclaration))
-                .action("Go to Type Definition", Box::new(GoToTypeDefinition))
                 .action(
-                    "Go to Implementation",
+                    tr!("Go to Implementation"),
                     Box::new(GoToImplementation::default()),
                 )
->>>>>>> upstream/main
                 .action(
                     tr!("Find All References"),
                     Box::new(FindAllReferences::default()),

@@ -1257,19 +1257,14 @@ impl TitleBar {
     pub fn render_sign_in_button(&mut self, _: &mut Context<Self>) -> impl IntoElement {
         let client = self.client.clone();
         let workspace = self.workspace.clone();
-<<<<<<< HEAD
 
-        let trigger = Button::new("sign_in", tr!("Sign In")).label_size(LabelSize::Small);
+        let trigger = Button::new("sign_in", tr!("Sign In"))
+            .label_size(LabelSize::Small)
+            .tab_index(0isize);
 
         PopoverMenu::new("sign-in-picker")
             .trigger(trigger)
             .menu(move |window, cx| {
-=======
-        Button::new("sign_in", "Sign In")
-            .label_size(LabelSize::Small)
-            .tab_index(0isize)
-            .on_click(move |_, window, cx| {
->>>>>>> upstream/main
                 let client = client.clone();
                 let workspace = workspace.clone();
                 Some(ContextMenu::build(window, cx, move |menu, _, _| {

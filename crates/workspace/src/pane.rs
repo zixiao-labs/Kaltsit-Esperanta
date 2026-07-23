@@ -2348,11 +2348,11 @@ impl Pane {
                         PromptLevel::Warning,
                         tr!("This file has changed on disk since you started editing it. Do you want to overwrite it?").as_ref(),
                         None,
-<<<<<<< HEAD
-                        &[PromptButton::new(tr!("Overwrite")), PromptButton::new(tr!("Discard")), PromptButton::new(tr!("Cancel"))],
-=======
-                        &["Overwrite", "Discard Edits", "Cancel"],
->>>>>>> upstream/main
+                        &[
+                            PromptButton::new(tr!("Overwrite")),
+                            PromptButton::new(tr!("Discard Edits")),
+                            PromptButton::new(tr!("Cancel")),
+                        ],
                         cx,
                     )
                 })?;

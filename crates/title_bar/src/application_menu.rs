@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 use ama10_i18n::tr;
-use gpui::{Action, Entity, OwnedMenu, OwnedMenuItem, actions};
-use settings::Settings;
-=======
 use gpui::{Action, Entity, OwnedMenu, OwnedMenuItem, Subscription, actions};
 use settings::{Settings, SettingsStore};
 use workspace::AccessibleMode;
->>>>>>> upstream/main
 
 use schemars::JsonSchema;
 use serde::Deserialize;

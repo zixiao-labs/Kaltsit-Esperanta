@@ -311,8 +311,8 @@ impl SettingFieldRenderer {
             SettingField<T>,
             SettingsUiFile,
             Option<&SettingsFieldMetadata>,
-            &'static str,
-            &'static str,
+            SharedString,
+            SharedString,
             &mut Window,
             &mut App,
         ) -> AnyElement
@@ -331,8 +331,8 @@ impl SettingFieldRenderer {
                     field,
                     settings_file.clone(),
                     metadata,
-                    item.title,
-                    item.description,
+                    item.title.clone(),
+                    item.description.clone(),
                     window,
                     cx,
                 );
@@ -1385,19 +1385,11 @@ fn render_settings_item_layout(
     sub_field: bool,
     cx: &mut Context<'_, SettingsWindow>,
 ) -> Stateful<Div> {
-<<<<<<< HEAD
     let (found_in_file, _) = setting_item.field.file_set_in(file.clone(), cx);
     let file_set_in = SettingsUiFile::from_settings(found_in_file.clone());
+    // Each control already exposes the setting title and description to screen readers.
     h_flex()
         .id(setting_item.title.clone())
-=======
-    // Note: the row itself is intentionally not exposed as a labeled group.
-    // Each control names and describes itself (via the setting title and
-    // description), so adding a group with the same label here would make
-    // screen readers announce the setting name twice.
-    h_flex()
-        .id(title)
->>>>>>> upstream/main
         .min_w_0()
         .justify_between()
         .child(
@@ -4888,8 +4880,8 @@ fn render_text_field<T: From<String> + Into<String> + AsRef<str> + Clone>(
     field: SettingField<T>,
     file: SettingsUiFile,
     metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -4953,8 +4945,8 @@ fn render_toggle_button<B: Into<bool> + From<bool> + Copy>(
     field: SettingField<B>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -4994,8 +4986,8 @@ fn render_editable_number_field<T: NumberFieldType + Send + Sync>(
     field: SettingField<T>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -5036,8 +5028,8 @@ fn render_dropdown<T>(
     field: SettingField<T>,
     file: SettingsUiFile,
     metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement
@@ -5117,8 +5109,8 @@ fn render_font_picker(
     field: SettingField<settings::FontFamilyName>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -5178,8 +5170,8 @@ fn render_theme_picker(
     field: SettingField<settings::ThemeName>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
@@ -5239,8 +5231,8 @@ fn render_icon_theme_picker(
     field: SettingField<settings::IconThemeName>,
     file: SettingsUiFile,
     _metadata: Option<&SettingsFieldMetadata>,
-    title: &'static str,
-    description: &'static str,
+    title: SharedString,
+    description: SharedString,
     _window: &mut Window,
     cx: &mut App,
 ) -> AnyElement {

@@ -704,15 +704,10 @@ fn main() {
         // pointed at our own infra.
         // auto_update::init(client.clone(), cx);
         dap_adapters::init(cx);
-<<<<<<< HEAD
         // ESPERANTA: paired with the disable above — `auto_update_ui::init`
         // only registers UI surfaces for the auto-updater, so we drop it too.
         // auto_update_ui::init(cx);
-        reliability::init(client.clone(), cx);
-=======
-        auto_update_ui::init(cx);
         reliability::init(client.clone(), app_state.workspace_store.clone(), cx);
->>>>>>> upstream/main
         extension_host::init(
             extension_host_proxy.clone(),
             app_state.fs.clone(),
