@@ -6,8 +6,7 @@ use editor::SearchSettings;
 use gpui::{Action, App, ClickEvent, Entity, FocusHandle, IntoElement, actions};
 use project::search::SearchQuery;
 pub use project_search::ProjectSearchView;
-use ui::{ButtonStyle, IconButton, IconButtonShape};
-use ui::{Tooltip, prelude::*};
+use ui::{IconButtonShape, Tooltip, prelude::*};
 use util::paths::PathMatcher;
 use workspace::notifications::NotificationId;
 use workspace::{Toast, Workspace};
@@ -116,10 +115,10 @@ impl SearchOption {
 
     pub fn icon(&self) -> ui::IconName {
         match self {
-            SearchOption::WholeWord => ui::IconName::WholeWord,
-            SearchOption::CaseSensitive => ui::IconName::CaseSensitive,
-            SearchOption::IncludeIgnored => ui::IconName::Sliders,
-            SearchOption::Regex => ui::IconName::Regex,
+            SearchOption::WholeWord => IconName::WholeWord,
+            SearchOption::CaseSensitive => IconName::CaseSensitive,
+            SearchOption::IncludeIgnored => IconName::FileIgnored,
+            SearchOption::Regex => IconName::Regex,
             _ => panic!("{self:?} is not a named SearchOption"),
         }
     }
@@ -142,6 +141,7 @@ impl SearchOption {
     ) -> impl IntoElement {
         let action = self.to_toggle_action();
         let label = self.label();
+
         IconButton::new(
             (label, matches!(search_source, SearchSource::Buffer) as u32),
             self.icon(),
@@ -163,7 +163,6 @@ impl SearchOption {
                 }))
             }
         })
-        .style(ButtonStyle::Subtle)
         .shape(IconButtonShape::Square)
         .toggle_state(active.contains(self.as_options()))
         .tooltip(move |_window, cx| {

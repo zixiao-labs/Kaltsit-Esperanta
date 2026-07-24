@@ -2348,7 +2348,11 @@ impl Pane {
                         PromptLevel::Warning,
                         tr!("This file has changed on disk since you started editing it. Do you want to overwrite it?").as_ref(),
                         None,
-                        &[PromptButton::new(tr!("Overwrite")), PromptButton::new(tr!("Discard")), PromptButton::new(tr!("Cancel"))],
+                        &[
+                            PromptButton::new(tr!("Overwrite")),
+                            PromptButton::new(tr!("Discard Edits")),
+                            PromptButton::new(tr!("Cancel")),
+                        ],
                         cx,
                     )
                 })?;
@@ -9129,11 +9133,11 @@ mod tests {
             path: util::rel_path::rel_path("dir/__init__.py").into(),
         };
         assert_eq!(
-            dirty_message_for(Some(project_path), PathStyle::Posix),
+            dirty_message_for(Some(project_path), PathStyle::Unix),
             "`dir/__init__.py` contains unsaved edits. Do you want to save it?"
         );
         assert_eq!(
-            dirty_message_for(None, PathStyle::Posix),
+            dirty_message_for(None, PathStyle::Unix),
             "This buffer contains unsaved edits. Do you want to save it?"
         );
     }

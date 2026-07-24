@@ -1,6 +1,7 @@
 use ama10_i18n::tr;
-use gpui::{Action, Entity, OwnedMenu, OwnedMenuItem, actions};
-use settings::Settings;
+use gpui::{Action, Entity, OwnedMenu, OwnedMenuItem, Subscription, actions};
+use settings::{Settings, SettingsStore};
+use workspace::AccessibleMode;
 
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -46,11 +47,15 @@ struct MenuEntry {
 pub struct ApplicationMenu {
     entries: SmallVec<[MenuEntry; 8]>,
     pending_menu_open: Option<String>,
+    _settings_subscription: Subscription,
 }
 
 impl ApplicationMenu {
     pub fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
         let menus = cx.get_menus().unwrap_or_default();
+        // Re-render when settings change so toggling "accessible mode" expands or
+        // collapses the menu bar (see `all_menus_shown`).
+        let settings_subscription = cx.observe_global::<SettingsStore>(|_, cx| cx.notify());
         Self {
             entries: menus
                 .into_iter()
@@ -60,6 +65,7 @@ impl ApplicationMenu {
                 })
                 .collect(),
             pending_menu_open: None,
+            _settings_subscription: settings_subscription,
         }
     }
 
@@ -169,6 +175,7 @@ impl ApplicationMenu {
                         )
                         .style(ButtonStyle::Subtle)
                         .icon_size(IconSize::Small)
+                        .tab_index(0isize)
                         .aria_label("Application menu"),
                         Tooltip::text(tr!("Open Application Menu")),
                     )
@@ -202,7 +209,8 @@ impl ApplicationMenu {
                             menu_name,
                         )
                         .style(ButtonStyle::Subtle)
-                        .label_size(LabelSize::Small),
+                        .label_size(LabelSize::Small)
+                        .tab_index(0isize),
                     )
                     .with_handle(current_handle.clone()),
             )
@@ -239,6 +247,12 @@ impl ApplicationMenu {
             .iter()
             .position(|entry| entry.handle.is_deployed());
         let Some(current_index) = current_index else {
+            // No menu is open, so there is nothing to switch between. Let the
+            // arrow key continue to the title bar's toolbar navigation so it
+            // can move focus between title bar controls. Without this, the
+            // `left`/`right` bindings in the `ApplicationMenu` context would
+            // silently swallow the key as a no-op.
+            cx.propagate();
             return;
         };
 
@@ -270,6 +284,9 @@ impl ApplicationMenu {
         show_menus(cx)
             || self.entries.iter().any(|entry| entry.handle.is_deployed())
             || self.pending_menu_open.is_some()
+            // In accessible mode, keep the full menu bar expanded so every menu
+            // is individually reachable and labeled for assistive technology.
+            || cx.accessible_mode()
     }
 }
 

@@ -75,6 +75,7 @@ impl Render for DiagnosticIndicator {
                 Button::new("diagnostic_message", SharedString::new(message))
                     .label_size(LabelSize::Small)
                     .truncate(true)
+                    .tab_index(0isize)
                     .tooltip(move |_window, cx| {
                         Tooltip::for_action(
                             tooltip.clone(),
@@ -90,10 +91,32 @@ impl Render for DiagnosticIndicator {
             None
         };
 
+        let diagnostics_label = match (self.summary.error_count, self.summary.warning_count) {
+            (0, 0) => "Project diagnostics: no problems".to_string(),
+            (errors, warnings) => {
+                let mut parts = Vec::new();
+                if errors > 0 {
+                    parts.push(format!(
+                        "{errors} error{}",
+                        if errors == 1 { "" } else { "s" }
+                    ));
+                }
+                if warnings > 0 {
+                    parts.push(format!(
+                        "{warnings} warning{}",
+                        if warnings == 1 { "" } else { "s" }
+                    ));
+                }
+                format!("Project diagnostics: {}", parts.join(", "))
+            }
+        };
+
         indicator
             .child(
                 ButtonLike::new("diagnostic-indicator")
                     .child(diagnostic_indicator)
+                    .tab_index(0isize)
+                    .aria_label(diagnostics_label)
                     .tooltip(move |_window, cx| {
                         Tooltip::for_action(tr!("Project Diagnostics"), &Deploy, cx)
                     })
