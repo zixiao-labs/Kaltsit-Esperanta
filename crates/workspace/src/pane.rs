@@ -2889,28 +2889,18 @@ impl Pane {
                 .tooltip(move |_, cx| {
                     if toggleable {
                         Tooltip::with_meta(
-<<<<<<< HEAD
-                            tr!("Unlock File"),
+                            tr!("Unlock Tab"),
                             None,
-                            tr!("This will make this file editable"),
+                            tr!("This will make this tab editable"),
                             cx,
                         )
                     } else {
                         Tooltip::with_meta(
-                            tr!("Locked File"),
+                            tr!("Locked Tab"),
                             None,
-                            tr!("This file is read-only"),
+                            tr!("This tab is read-only"),
                             cx,
                         )
-=======
-                            "Unlock Tab",
-                            None,
-                            "This will make this tab editable",
-                            cx,
-                        )
-                    } else {
-                        Tooltip::with_meta("Locked Tab", None, "This tab is read-only", cx)
->>>>>>> upstream/main
                     }
                 })
                 .on_click(cx.listener(move |pane, _, window, cx| {
@@ -3088,11 +3078,7 @@ impl Pane {
                             } else {
                                 this.tooltip(move |_, cx| {
                                     let text = text.clone();
-<<<<<<< HEAD
-                                    Tooltip::with_meta(text, None, tr!("Read-Only File"), cx)
-=======
-                                    Tooltip::with_meta(text, None, "Read-Only Tab", cx)
->>>>>>> upstream/main
+                                    Tooltip::with_meta(text, None, tr!("Read-Only Tab"), cx)
                                 })
                             }
                         }
@@ -3274,15 +3260,9 @@ impl Pane {
 
                         if capability != Capability::ReadOnly {
                             let read_only_label = if capability.editable() {
-<<<<<<< HEAD
-                                tr!("Make File Read-Only")
+                                tr!("Make Tab Read-Only")
                             } else {
-                                tr!("Make File Editable")
-=======
-                                "Make Tab Read-Only"
-                            } else {
-                                "Make Tab Editable"
->>>>>>> upstream/main
+                                tr!("Make Tab Editable")
                             };
                             menu = menu.separator().entry(
                                 read_only_label,

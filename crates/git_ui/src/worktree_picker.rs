@@ -1466,60 +1466,12 @@ impl PickerDelegate for WorktreePickerDelegate {
         } else if is_existing_worktree {
             Some(
                 footer
-<<<<<<< HEAD
-                    .when(is_deleting, |this| {
-                        this.child(
-                            Button::new("delete-worktree", ama10_i18n::tr!("Deleting…"))
-                                .loading(true)
-                                .disabled(true),
-                        )
-                    })
-                    .when(!is_deleting && can_delete, |this| {
-                        let focus_handle = focus_handle.clone();
-                        this.child(
-                            Button::new("delete-worktree", ama10_i18n::tr!("Delete"))
-                                .key_binding(
-                                    KeyBinding::for_action_in(&DeleteWorktree, &focus_handle, cx)
-                                        .map(|kb| kb.size(rems_from_px(12.))),
-                                )
-                                .on_click(|_, window, cx| {
-                                    window.dispatch_action(DeleteWorktree.boxed_clone(), cx)
-                                }),
-                        )
-                    })
-                    .when(!is_deleting && !is_current, |this| {
-                        let focus_handle = focus_handle.clone();
-                        this.child(
-                            Button::new(
-                                "open-in-new-window",
-                                ama10_i18n::tr!("Open in New Window"),
-                            )
-                            .key_binding(
-                                KeyBinding::for_action_in(
-                                    &menu::SecondaryConfirm,
-                                    &focus_handle,
-                                    cx,
-                                )
-                                .map(|kb| kb.size(rems_from_px(12.))),
-                            )
-                            .on_click(|_, window, cx| {
-                                window.dispatch_action(menu::SecondaryConfirm.boxed_clone(), cx)
-                            }),
-                        )
-                    })
-                    .when(!is_deleting, |this| {
-                        this.child(
-                            Button::new("open-worktree", ama10_i18n::tr!("Open"))
-                                .key_binding(
-                                    KeyBinding::for_action_in(&menu::Confirm, &focus_handle, cx)
-                                        .map(|kb| kb.size(rems_from_px(12.))),
-=======
                     .child(
                         h_flex()
                             .gap_0p5()
                             .when(is_deleting, |this| {
                                 this.child(
-                                    Button::new("delete-worktree", "Deleting…")
+                                    Button::new("delete-worktree", ama10_i18n::tr!("Deleting…"))
                                         .loading(true)
                                         .disabled(true),
                                 )
@@ -1527,7 +1479,7 @@ impl PickerDelegate for WorktreePickerDelegate {
                             .when(!is_deleting && can_delete, |this| {
                                 let focus_handle = focus_handle.clone();
                                 this.child(
-                                    Button::new("delete-worktree", "Delete")
+                                    Button::new("delete-worktree", ama10_i18n::tr!("Delete"))
                                         .key_binding(
                                             KeyBinding::for_action_in(
                                                 &DeleteWorktree,
@@ -1544,27 +1496,31 @@ impl PickerDelegate for WorktreePickerDelegate {
                             .when(!is_deleting && !is_current, |this| {
                                 let focus_handle = focus_handle.clone();
                                 this.child(
-                                    Button::new("open-in-new-window", "Open in New Window")
-                                        .key_binding(
-                                            KeyBinding::for_action_in(
-                                                &menu::SecondaryConfirm,
-                                                &focus_handle,
-                                                cx,
-                                            )
-                                            .map(|kb| kb.size(rems_from_px(12.))),
+                                    Button::new(
+                                        "open-in-new-window",
+                                        ama10_i18n::tr!("Open in New Window"),
+                                    )
+                                    .key_binding(
+                                        KeyBinding::for_action_in(
+                                            &menu::SecondaryConfirm,
+                                            &focus_handle,
+                                            cx,
                                         )
-                                        .on_click(|_, window, cx| {
+                                        .map(|kb| kb.size(rems_from_px(12.))),
+                                    )
+                                    .on_click(
+                                        |_, window, cx| {
                                             window.dispatch_action(
                                                 menu::SecondaryConfirm.boxed_clone(),
                                                 cx,
                                             )
-                                        }),
->>>>>>> upstream/main
+                                        },
+                                    ),
                                 )
                             })
                             .when(!is_deleting, |this| {
                                 this.child(
-                                    Button::new("open-worktree", "Open")
+                                    Button::new("open-worktree", ama10_i18n::tr!("Open"))
                                         .key_binding(
                                             KeyBinding::for_action_in(
                                                 &menu::Confirm,

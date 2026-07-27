@@ -3083,11 +3083,7 @@ impl CollabPanel {
                     .on_click(
                         cx.listener(|this, _, window, cx| this.toggle_contact_finder(window, cx)),
                     )
-<<<<<<< HEAD
                     .tooltip(Tooltip::text(tr!("Search for new contact")))
-=======
-                    .tooltip(Tooltip::text("Search for New Contact"))
->>>>>>> upstream/main
                     .into_any_element(),
             ),
             Section::Channels => {
@@ -3206,11 +3202,7 @@ impl CollabPanel {
                             .child(render_participant_name_and_handle(&contact.user)),
                     )
                     .when(calling, |el| {
-<<<<<<< HEAD
-                        el.child(Label::new(tr!("Calling")).color(Color::Muted))
-=======
-                        el.child(Label::new("Calling…").color(Color::Muted))
->>>>>>> upstream/main
+                        el.child(Label::new(tr!("Calling…")).color(Color::Muted))
                     })
                     .when(!calling, |el| {
                         el.child(
@@ -3252,39 +3244,22 @@ impl CollabPanel {
             .id(username.clone())
             .group("")
             .child(item)
-<<<<<<< HEAD
-            .tooltip(move |_, cx| {
-                let text: SharedString = if !online {
-                    tr_f!("{} is offline", username.clone())
-                } else if busy {
-                    tr_f!("{} is on a call", username.clone())
-                } else {
-                    let room = ActiveCall::global(cx).read(cx).room();
-                    if room.is_some() {
-                        tr_f!("Invite {} to join call", username.clone())
-                    } else {
-                        tr_f!("Call {}", username.clone())
-                    }
-                };
-                Tooltip::simple(text, cx)
-=======
             .when(open_context_menu.is_none(), |this| {
                 this.tooltip(move |_, cx| {
-                    let text = if !online {
-                        format!(" {} is Offline", &username)
+                    let text: SharedString = if !online {
+                        tr_f!("{} is offline", username.clone())
                     } else if busy {
-                        format!(" {} is on a Call", &username)
+                        tr_f!("{} is on a call", username.clone())
                     } else {
                         let room = ActiveCall::global(cx).read(cx).room();
                         if room.is_some() {
-                            format!("Invite {} to Join Call", &username)
+                            tr_f!("Invite {} to join call", username.clone())
                         } else {
-                            format!("Call {}", &username)
+                            tr_f!("Call {}", username.clone())
                         }
                     };
                     Tooltip::simple(text, cx)
                 })
->>>>>>> upstream/main
             })
     }
 

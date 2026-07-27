@@ -1972,15 +1972,9 @@ impl PickerDelegate for BranchListDelegate {
                         });
                 starts_section.then(|| {
                     if branch.is_remote() {
-<<<<<<< HEAD
-                        ama10_i18n::tr!("Remote Branches")
+                        (ama10_i18n::tr!("Remote Branches"), ix != 0)
                     } else {
-                        ama10_i18n::tr!("Local Branches")
-=======
-                        ("Remote Branches", ix != 0)
-                    } else {
-                        ("Local Branches", false)
->>>>>>> upstream/main
+                        (ama10_i18n::tr!("Local Branches"), false)
                     }
                 })
             });

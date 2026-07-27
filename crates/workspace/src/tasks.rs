@@ -154,21 +154,16 @@ impl Workspace {
                             log::error!("Task spawn failed: {e:#}");
                             _ = workspace.update(cx, |w, cx| {
                                 let id = NotificationId::unique::<ResolvedTask>();
-<<<<<<< HEAD
                                 w.show_toast(
                                     Toast::new(id, tr_f!("Task spawn failed: {}", e).to_string()),
                                     cx,
                                 );
-                            })
-=======
-                                w.show_toast(Toast::new(id, format!("Task spawn failed: {e}")), cx);
                             });
                             ScheduledTaskResult::SpawnFailed
                         }
                         None => {
                             log::debug!("Task spawn got cancelled");
                             ScheduledTaskResult::Cancelled
->>>>>>> upstream/main
                         }
                     };
                     if let Some(on_complete) = on_complete {

@@ -804,20 +804,6 @@ impl<'a, Permissions> GenerateAppToken<'a, Unset, Permissions> {
     }
 }
 
-<<<<<<< HEAD
-impl<'a> From<GenerateAppToken<'a>> for (Step<Run>, StepOutput) {
-    fn from(token: GenerateAppToken<'a>) -> Self {
-        // The Esperanta fork has no GitHub App; the helper used to call
-        // `actions/create-github-app-token` to mint a short-lived install
-        // token. Both `app_id` and `app_secret` are now redirected to
-        // `secrets.SYNC_PAT` (see `vars::ZED_ZIPPY_APP_ID` /
-        // `ZED_ZIPPY_APP_PRIVATE_KEY`), so we simply expose that PAT as the
-        // `token` step output and ignore the requested `repository_target` /
-        // `permissions` (a PAT inherits whatever the owning user has access
-        // to). All call sites that destructure `(step, token)` and reference
-        // `token` keep working because the StepOutput contract is unchanged.
-        let _ = (token.repository_target, token.permissions);
-=======
 impl<'a, Target> GenerateAppToken<'a, Target, Unset> {
     pub fn with_permissions(
         self,
@@ -833,24 +819,20 @@ impl<'a, Target> GenerateAppToken<'a, Target, Unset> {
     }
 }
 
-impl<'a> From<GenerateAppToken<'a, RepositoryTarget, Vec<(TokenPermissions, Level)>>>
-    for (Step<Use>, StepOutput)
+impl<'a, Target, Permissions> From<GenerateAppToken<'a, Target, Permissions>>
+    for (Step<Run>, StepOutput)
 {
-    fn from(token: GenerateAppToken<'a, RepositoryTarget, Vec<(TokenPermissions, Level)>>) -> Self {
-        let input = token.permissions.into_iter().fold(
-            Input::default()
-                .add("app-id", token.app_id)
-                .add("private-key", token.app_secret)
-                .add("owner", token.repository_target.owner)
-                .add("repositories", token.repository_target.repositories),
-            |input, (permission, level)| {
-                input.add(
-                    permission.environment_name(),
-                    serde_json::to_value(&level).unwrap_or_default(),
-                )
-            },
-        );
->>>>>>> upstream/main
+    fn from(token: GenerateAppToken<'a, Target, Permissions>) -> Self {
+        // The Esperanta fork has no GitHub App; the helper used to call
+        // `actions/create-github-app-token` to mint a short-lived install
+        // token. Both `app_id` and `app_secret` are now redirected to
+        // `secrets.SYNC_PAT` (see `vars::ZED_ZIPPY_APP_ID` /
+        // `ZED_ZIPPY_APP_PRIVATE_KEY`), so we simply expose that PAT as the
+        // `token` step output and ignore the requested `repository_target` /
+        // `permissions` (a PAT inherits whatever the owning user has access
+        // to). All call sites that destructure `(step, token)` and reference
+        // `token` keep working because the StepOutput contract is unchanged.
+        drop((token.repository_target, token.permissions));
         let step = Step::new(token.job_name)
             .run(indoc::indoc! {r#"
                 if [ -z "$ESPERANTA_BOT_TOKEN" ]; then
@@ -861,11 +843,7 @@ impl<'a> From<GenerateAppToken<'a, RepositoryTarget, Vec<(TokenPermissions, Leve
                 echo "token=$ESPERANTA_BOT_TOKEN" >> "$GITHUB_OUTPUT"
             "#})
             .id("generate-token")
-<<<<<<< HEAD
             .add_env(("ESPERANTA_BOT_TOKEN", token.app_secret));
-=======
-            .add_with(input);
->>>>>>> upstream/main
 
         let generated_token = StepOutput::new(&step, "token");
         (step, generated_token)
@@ -873,15 +851,10 @@ impl<'a> From<GenerateAppToken<'a, RepositoryTarget, Vec<(TokenPermissions, Leve
 }
 
 pub(crate) struct RepositoryTarget {
-<<<<<<< HEAD
     #[allow(dead_code, reason = "PAT-mode ignores explicit repo targeting")]
-    owner: Option<String>,
-    #[allow(dead_code, reason = "PAT-mode ignores explicit repo targeting")]
-    repositories: Option<String>,
-=======
     owner: String,
+    #[allow(dead_code, reason = "PAT-mode ignores explicit repo targeting")]
     repositories: String,
->>>>>>> upstream/main
 }
 
 impl RepositoryTarget {

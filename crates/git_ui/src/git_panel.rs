@@ -882,7 +882,6 @@ impl TruncatedPatch {
     }
 }
 
-<<<<<<< HEAD
 // We only allow a single remote operation at a time to avoid concurrent
 // credential prompts and competing ref/working-tree updates.
 #[derive(Clone, Copy)]
@@ -891,13 +890,13 @@ pub(crate) enum RemoteOperationKind {
     Fetch,
     Pull,
     Push,
-=======
+}
+
 struct GitPanelContextMenu {
     menu: Entity<ContextMenu>,
     position: Point<Pixels>,
     target_entry_index: Option<usize>,
     _subscription: Subscription,
->>>>>>> upstream/main
 }
 
 pub struct GitPanel {
@@ -1181,18 +1180,10 @@ impl GitPanel {
                 changes_count: 0,
                 diff_stat_total: DiffStat::default(),
                 pending_commit: None,
-<<<<<<< HEAD
                 amend_pending: false,
                 original_commit_message: None,
                 signoff_enabled: false,
-=======
-                pending_remote_operation: None,
-                amend_pending,
-                original_commit_message,
-                pending_commit_message_restores,
-                signoff_enabled,
                 skip_hooks_enabled: false,
->>>>>>> upstream/main
                 pending_serialization: Task::ready(()),
                 single_staged_entry: None,
                 single_tracked_entry: None,
@@ -4293,45 +4284,10 @@ impl GitPanel {
         });
         let load_template = self.load_commit_template(cx);
 
-<<<<<<< HEAD
         cx.spawn_in(window, async move |git_panel, cx| {
             let buffer = load_buffer.await?;
-            let template = load_template.await?;
 
             git_panel.update_in(cx, |git_panel, window, cx| {
-                git_panel.commit_template = template;
-                if buffer.read(cx).text().trim().is_empty() {
-                    let template_text = git_panel
-                        .commit_template
-=======
-        self.reopen_commit_buffer_task = cx.spawn_in(window, async move |git_panel, cx| {
-            let result = async {
-                // Set up the buffer before awaiting the commit template as the
-                // request may never resolve (for example, a collab host that
-                // doesn't know about `LoadCommitTemplate`) and must not block the
-                // commit editor from attaching to the shared buffer.
-                let buffer = load_buffer.await?;
-                git_panel.update_in(cx, |git_panel, window, cx| {
-                    if git_panel
-                        .commit_editor
-                        .read(cx)
-                        .buffer()
-                        .read(cx)
-                        .as_singleton()
->>>>>>> upstream/main
-                        .as_ref()
-                        .map(|t| t.template.clone())
-                        .unwrap_or_default();
-                    if !template_text.is_empty() {
-                        buffer.update(cx, |buffer, cx| {
-                            let start = buffer.anchor_before(0);
-                            let end = buffer.anchor_after(buffer.len());
-                            buffer.edit([(start..end, template_text)], None, cx);
-                        });
-                    }
-                }
-
-<<<<<<< HEAD
                 if git_panel
                     .commit_editor
                     .read(cx)
@@ -4343,7 +4299,7 @@ impl GitPanel {
                 {
                     git_panel.commit_editor = cx.new(|cx| {
                         commit_message_editor(
-                            buffer,
+                            buffer.clone(),
                             git_panel.suggest_commit_message(cx).map(SharedString::from),
                             git_panel.project.clone(),
                             true,
@@ -4352,69 +4308,30 @@ impl GitPanel {
                         )
                     });
                 }
-            })
-        })
-        .detach_and_log_err(cx);
-=======
-                    // Create subscription such that, any edit on the commit
-                    // editor's buffer will be serialized and saved to the database
-                    // in order to be able to restore it in case there's a
-                    // disconnect.
-                    git_panel._commit_message_buffer_subscription =
-                        Some(cx.subscribe(&buffer, |git_panel, _, event, cx| {
-                            if matches!(event, BufferEvent::Edited { .. }) {
-                                git_panel.serialize(cx);
-                            }
-                        }));
-                })?;
+            })?;
 
-                // Check whether there's a pending commit message for this
-                // repository and, if that's the case, update the buffer's
-                // text.
-                git_panel.update(cx, |git_panel, cx| {
-                    if let Some(restored_commit_message) = git_panel
-                        .pending_commit_message_restores
-                        .remove(&active_repository_abs_path)
-                    {
-                        git_panel.amend_pending = restored_commit_message.amend_pending;
-                        git_panel.original_commit_message =
-                            restored_commit_message.original_message;
-                        cx.notify();
-
-                        if let Some(message) = restored_commit_message.message
-                            && buffer.read(cx).text().trim().is_empty()
-                        {
-                            buffer.update(cx, |buffer, cx| {
-                                buffer.set_text(message, cx);
-                            });
-                        }
-                    }
-                })?;
-
-                // Only apply the template if it's non-empty and the buffer has no
-                // content, so we never override a commit message that was already
-                // in progress.
-                let commit_template = load_template.await?;
-                git_panel.update(cx, |git_panel, cx| {
-                    git_panel.commit_template = commit_template;
-
-                    if let Some(commit_template) = git_panel.commit_template.as_ref()
-                        && !commit_template.template.is_empty()
-                        && buffer.read(cx).text().trim().is_empty()
-                    {
+            let template = load_template.await?;
+            git_panel.update(cx, |git_panel, cx| {
+                git_panel.commit_template = template;
+                if buffer.read(cx).text().trim().is_empty() {
+                    let template_text = git_panel
+                        .commit_template
+                        .as_ref()
+                        .map(|t| t.template.clone())
+                        .unwrap_or_default();
+                    if !template_text.is_empty() {
                         buffer.update(cx, |buffer, cx| {
-                            buffer.set_text(commit_template.template.clone(), cx);
+                            let start = buffer.anchor_before(0);
+                            let end = buffer.anchor_after(buffer.len());
+                            buffer.edit([(start..end, template_text)], None, cx);
                         });
                     }
-                })?;
+                }
+            })?;
 
-                anyhow::Ok(())
-            }
-            .await;
-
-            result.log_err();
-        });
->>>>>>> upstream/main
+            anyhow::Ok(())
+        })
+        .detach_and_log_err(cx);
     }
 
     fn update_visible_entries(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -5844,13 +5761,8 @@ impl GitPanel {
                                 Tooltip::with_meta_in(
                                     tooltip,
                                     Some(&git::Commit),
-<<<<<<< HEAD
                                     ama10_i18n::tr_f!(
-                                        "git commit{}{}",
-=======
-                                    format!(
                                         "git commit{}{}{}",
->>>>>>> upstream/main
                                         if amend { " --amend" } else { "" },
                                         if signoff { " --signoff" } else { "" },
                                         if no_verify { " --no-verify" } else { "" }
@@ -8100,7 +8012,7 @@ impl Render for GitPanel {
 
 impl Focusable for GitPanel {
     fn focus_handle(&self, cx: &App) -> gpui::FocusHandle {
-        if self.entries.is_empty() {
+        if self.entries.is_empty() || self.commit_editor_expanded {
             self.commit_editor.focus_handle(cx)
         } else {
             self.focus_handle.clone()
@@ -11061,289 +10973,6 @@ mod tests {
     }
 
     #[gpui::test]
-<<<<<<< HEAD
-=======
-    async fn test_commit_message_restored_after_reconnect(cx: &mut TestAppContext) {
-        init_test(cx);
-        let fs = FakeFs::new(cx.background_executor.clone());
-        fs.insert_tree(
-            "/root",
-            json!({
-                "project-a": {
-                    ".git": {},
-                    "src": {
-                        "main.rs": "fn main() {}"
-                    }
-                },
-                "project-b": {
-                    ".git": {},
-                    "src": {
-                        "main.rs": "fn main() {}"
-                    }
-                }
-            }),
-        )
-        .await;
-
-        fs.set_status_for_repo(
-            Path::new(path!("/root/project-a/.git")),
-            &[("src/main.rs", StatusCode::Modified.worktree())],
-        );
-        fs.set_status_for_repo(
-            Path::new(path!("/root/project-b/.git")),
-            &[("src/main.rs", StatusCode::Modified.worktree())],
-        );
-
-        let project = Project::test(
-            fs.clone(),
-            [
-                Path::new(path!("/root/project-a")),
-                Path::new(path!("/root/project-b")),
-            ],
-            cx,
-        )
-        .await;
-        let (repository_a, repository_b) = project.read_with(cx, |project, cx| {
-            let git_store = project.git_store().clone();
-            let mut repository_a = None;
-            let mut repository_b = None;
-            for repository in git_store.read(cx).repositories().values() {
-                let work_directory_abs_path = &repository.read(cx).work_directory_abs_path;
-                if work_directory_abs_path.as_ref() == Path::new(path!("/root/project-a")) {
-                    repository_a = Some(repository.clone());
-                } else if work_directory_abs_path.as_ref() == Path::new(path!("/root/project-b")) {
-                    repository_b = Some(repository.clone());
-                }
-            }
-            (
-                repository_a.expect("should have repository for project-a"),
-                repository_b.expect("should have repository for project-b"),
-            )
-        });
-        repository_a.update(cx, |repository, cx| repository.set_as_active_repository(cx));
-
-        let window_handle =
-            cx.add_window(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = window_handle
-            .read_with(cx, |mw, _| mw.workspace().clone())
-            .unwrap();
-        let cx = &mut VisualTestContext::from_window(window_handle.into(), cx);
-
-        register_git_commit_language(&project, cx);
-        let panel = workspace.update_in(cx, GitPanel::new);
-        cx.run_until_parked();
-
-        let message_a = "Restore repository A message";
-        panel.update(cx, |panel, cx| {
-            panel.commit_message_buffer(cx).update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, message_a)], None, cx);
-            });
-        });
-
-        repository_b.update(cx, |repository, cx| repository.set_as_active_repository(cx));
-        cx.run_until_parked();
-
-        let message_b = "Restore repository B message";
-        let serialized_panel = panel.update(cx, |panel, cx| {
-            panel.commit_message_buffer(cx).update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, message_b)], None, cx);
-            });
-
-            SerializedGitPanel {
-                signoff_enabled: false,
-                commit_messages: panel.serialized_commit_messages(cx),
-            }
-        });
-
-        for repository in [&repository_a, &repository_b] {
-            let buffer = repository.read_with(cx, |repository, _| {
-                repository
-                    .commit_message_buffer()
-                    .expect("repository commit message buffer should be open")
-                    .clone()
-            });
-            buffer.update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, "")], None, cx);
-            });
-        }
-
-        let restored_panel = workspace.update_in(cx, |workspace, window, cx| {
-            GitPanel::new_with_serialized_panel(workspace, Some(serialized_panel), window, cx)
-        });
-        cx.run_until_parked();
-
-        restored_panel.read_with(cx, |panel, cx| {
-            assert_eq!(panel.commit_message_buffer(cx).read(cx).text(), message_b);
-        });
-
-        repository_a.update(cx, |repository, cx| repository.set_as_active_repository(cx));
-        cx.run_until_parked();
-
-        restored_panel.read_with(cx, |panel, cx| {
-            assert_eq!(panel.commit_message_buffer(cx).read(cx).text(), message_a);
-        });
-
-        restored_panel.update(cx, |panel, cx| {
-            panel.commit_message_buffer(cx).update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, "")], None, cx);
-            });
-        });
-
-        let mismatched_serialized_panel = SerializedGitPanel {
-            signoff_enabled: false,
-            commit_messages: BTreeMap::from_iter([(
-                path!("/root/other-project").to_string(),
-                SerializedCommitMessage {
-                    message: Some(message_a.to_string()),
-                    original_message: None,
-                    ..Default::default()
-                },
-            )]),
-        };
-        let mismatched_panel = workspace.update_in(cx, |workspace, window, cx| {
-            GitPanel::new_with_serialized_panel(
-                workspace,
-                Some(mismatched_serialized_panel),
-                window,
-                cx,
-            )
-        });
-        cx.run_until_parked();
-
-        mismatched_panel.read_with(cx, |panel, cx| {
-            // The draft is not restored because the serialized work directory
-            // does not match the active repository, so it cannot leak across
-            // repositories.
-            assert_eq!(panel.commit_message_buffer(cx).read(cx).text(), "");
-        });
-    }
-
-    #[gpui::test]
-    async fn test_pending_commit_state_is_per_repository(cx: &mut TestAppContext) {
-        init_test(cx);
-        let fs = FakeFs::new(cx.background_executor.clone());
-        fs.insert_tree(
-            "/root",
-            json!({
-                "project-a": {
-                    ".git": {},
-                    "src": {
-                        "main.rs": "fn main() {}"
-                    }
-                },
-                "project-b": {
-                    ".git": {},
-                    "src": {
-                        "main.rs": "fn main() {}"
-                    }
-                }
-            }),
-        )
-        .await;
-
-        fs.set_status_for_repo(
-            Path::new(path!("/root/project-a/.git")),
-            &[("src/main.rs", StatusCode::Modified.worktree())],
-        );
-        fs.set_status_for_repo(
-            Path::new(path!("/root/project-b/.git")),
-            &[("src/main.rs", StatusCode::Modified.worktree())],
-        );
-
-        let project = Project::test(
-            fs.clone(),
-            [
-                Path::new(path!("/root/project-a")),
-                Path::new(path!("/root/project-b")),
-            ],
-            cx,
-        )
-        .await;
-        let (repository_a, repository_b) = project.read_with(cx, |project, cx| {
-            let git_store = project.git_store().clone();
-            let mut repository_a = None;
-            let mut repository_b = None;
-            for repository in git_store.read(cx).repositories().values() {
-                let work_directory_abs_path = &repository.read(cx).work_directory_abs_path;
-                if work_directory_abs_path.as_ref() == Path::new(path!("/root/project-a")) {
-                    repository_a = Some(repository.clone());
-                } else if work_directory_abs_path.as_ref() == Path::new(path!("/root/project-b")) {
-                    repository_b = Some(repository.clone());
-                }
-            }
-            (
-                repository_a.expect("should have repository for project-a"),
-                repository_b.expect("should have repository for project-b"),
-            )
-        });
-        repository_a.update(cx, |repository, cx| repository.set_as_active_repository(cx));
-
-        let window_handle =
-            cx.add_window(|window, cx| MultiWorkspace::test_new(project.clone(), window, cx));
-        let workspace = window_handle
-            .read_with(cx, |mw, _| mw.workspace().clone())
-            .unwrap();
-        let cx = &mut VisualTestContext::from_window(window_handle.into(), cx);
-
-        register_git_commit_language(&project, cx);
-        let panel = workspace.update_in(cx, GitPanel::new);
-        cx.run_until_parked();
-
-        // Enter an amend on repository A, then simulate the amend flow loading
-        // the last commit message into the editor.
-        panel.update(cx, |panel, cx| {
-            panel.commit_message_buffer(cx).update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, "Draft for A")], None, cx);
-            });
-            panel.set_amend_pending(true, cx);
-            panel.commit_message_buffer(cx).update(cx, |buffer, cx| {
-                let start = buffer.anchor_before(0);
-                let end = buffer.anchor_after(buffer.len());
-                buffer.edit([(start..end, "Amended message")], None, cx);
-            });
-            assert!(panel.amend_pending());
-            panel.set_skip_hooks_enabled(true, cx);
-            assert!(panel.skip_hooks_enabled());
-        });
-
-        // Switching the active repository away exits the amend state instead of
-        // carrying it over to repository B.
-        repository_b.update(cx, |repository, cx| repository.set_as_active_repository(cx));
-        cx.run_until_parked();
-
-        panel.update(cx, |panel, cx| {
-            assert!(!panel.amend_pending());
-            assert!(!panel.skip_hooks_enabled());
-            // Only the active repository may serialize a pending amend, and we
-            // just left repository A's amend, so nothing is left pending.
-            let serialized = panel.serialized_commit_messages(cx);
-            assert!(serialized.values().all(|message| !message.amend_pending));
-        });
-
-        // Repository A's pre-amend draft is restored, discarding the amend edit.
-        let buffer_a = repository_a.read_with(cx, |repository, _| {
-            repository
-                .commit_message_buffer()
-                .expect("repository commit message buffer should be open")
-                .clone()
-        });
-        buffer_a.read_with(cx, |buffer, _| {
-            assert_eq!(buffer.text(), "Draft for A");
-        });
-    }
-
-    #[gpui::test]
->>>>>>> upstream/main
     async fn test_amend(cx: &mut TestAppContext) {
         init_test(cx);
         let fs = FakeFs::new(cx.background_executor.clone());
@@ -12419,9 +12048,6 @@ mod tests {
             ));
         });
     }
-<<<<<<< HEAD
-=======
-
     #[gpui::test]
     async fn test_focus_handle(cx: &mut TestAppContext) {
         init_test(cx);
@@ -12462,5 +12088,4 @@ mod tests {
             assert!(panel.commit_editor.focus_handle(cx).is_focused(window));
         });
     }
->>>>>>> upstream/main
 }

@@ -5,7 +5,7 @@ use crate::tasks::workflows::{
     runners,
     steps::{
         self, CommonJobConditions, CommonPermissionSets, NamedJob, RepositoryTarget,
-        generate_token, named,
+        TokenPermissions, generate_token, named,
     },
     vars::{self, StepOutput},
 };

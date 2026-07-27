@@ -346,7 +346,6 @@ fn render_base_keymap_section(tab_index: &mut isize, cx: &mut App) -> impl IntoE
         BaseKeymap::None => None,
     };
 
-<<<<<<< HEAD
     return v_flex()
         .gap_2()
         .child(Label::new(tr!("Base Keymap")))
@@ -354,6 +353,9 @@ fn render_base_keymap_section(tab_index: &mut isize, cx: &mut App) -> impl IntoE
             ToggleButtonGroup::two_rows(
                 "base_keymap_selection",
                 [
+                    ToggleButtonWithIcon::new("Zed", IconName::AiZed, |_, _, cx| {
+                        write_keymap_base(BaseKeymap::Zed, cx);
+                    }),
                     ToggleButtonWithIcon::new("VS Code", IconName::EditorVsCode, |_, _, cx| {
                         write_keymap_base(BaseKeymap::VSCode, cx);
                     }),
@@ -382,6 +384,9 @@ fn render_base_keymap_section(tab_index: &mut isize, cx: &mut App) -> impl IntoE
                     ToggleButtonWithIcon::new("Cursor", IconName::EditorCursor, |_, _, cx| {
                         write_keymap_base(BaseKeymap::Cursor, cx);
                     }),
+                    ToggleButtonWithIcon::new("TextMate", IconName::Keyboard, |_, _, cx| {
+                        write_keymap_base(BaseKeymap::TextMate, cx);
+                    }),
                 ],
             )
             .when_some(base_keymap, |this, base_keymap| {
@@ -392,48 +397,6 @@ fn render_base_keymap_section(tab_index: &mut isize, cx: &mut App) -> impl IntoE
             .size(ui::ToggleButtonGroupSize::Medium)
             .style(ui::ToggleButtonGroupStyle::Outlined),
         );
-=======
-    return v_flex().gap_2().child(Label::new("Base Keymap")).child(
-        ToggleButtonGroup::two_rows(
-            "base_keymap_selection",
-            [
-                ToggleButtonWithIcon::new("Zed", IconName::AiZed, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::Zed, cx);
-                }),
-                ToggleButtonWithIcon::new("VS Code", IconName::EditorVsCode, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::VSCode, cx);
-                }),
-                ToggleButtonWithIcon::new("JetBrains", IconName::EditorJetBrains, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::JetBrains, cx);
-                }),
-                ToggleButtonWithIcon::new("Sublime Text", IconName::EditorSublime, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::SublimeText, cx);
-                }),
-            ],
-            [
-                ToggleButtonWithIcon::new("Atom", IconName::EditorAtom, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::Atom, cx);
-                }),
-                ToggleButtonWithIcon::new("Emacs", IconName::EditorEmacs, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::Emacs, cx);
-                }),
-                ToggleButtonWithIcon::new("Cursor", IconName::EditorCursor, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::Cursor, cx);
-                }),
-                ToggleButtonWithIcon::new("TextMate", IconName::Keyboard, |_, _, cx| {
-                    write_keymap_base(BaseKeymap::TextMate, cx);
-                }),
-            ],
-        )
-        .when_some(base_keymap, |this, base_keymap| {
-            this.selected_index(base_keymap)
-        })
-        .full_width()
-        .tab_index(tab_index)
-        .size(ui::ToggleButtonGroupSize::Medium)
-        .style(ui::ToggleButtonGroupStyle::Outlined),
-    );
->>>>>>> upstream/main
 
     fn write_keymap_base(keymap_base: BaseKeymap, cx: &App) {
         let fs = <dyn Fs>::global(cx);

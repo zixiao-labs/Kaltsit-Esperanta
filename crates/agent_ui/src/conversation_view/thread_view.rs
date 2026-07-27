@@ -10,13 +10,9 @@ use rand::Rng;
 use std::cell::RefCell;
 
 use acp_thread::{
-<<<<<<< HEAD
     ContentBlock, Elicitation, ElicitationEntryId, ElicitationStatus, PlanEntry,
     SandboxAuthorizationDetails, SandboxFallbackAuthorizationDetails, SandboxNotAppliedReason,
-=======
-    Elicitation, ElicitationEntryId, ElicitationStatus, PlanEntry, SandboxAuthorizationDetails,
-    SandboxFallbackAuthorizationDetails, SandboxNotAppliedReason, decode_path_escapes,
->>>>>>> upstream/main
+    decode_path_escapes,
 };
 use agent::{
     SandboxStatusKey, SandboxStatusRefresh, SkillLoadingIssue, SkillLoadingIssueKind,
@@ -6761,25 +6757,15 @@ impl ThreadView {
             this.scroll_to_user_message_index(user_message_index, cx);
         }));
 
-<<<<<<< HEAD
-        let scroll_to_top = IconButton::new(("scroll_to_top", entry_ix), IconName::ArrowUp)
-            .icon_size(IconSize::Small)
-            .icon_color(Color::Muted)
-            .tooltip(Tooltip::text(ama10_i18n::tr!("Scroll To Top")))
-            .on_click(cx.listener(move |this, _, _, cx| {
-                this.scroll_to_top(cx);
-            }));
-=======
         let scroll_to_top = is_thread_bottom.then(|| {
             IconButton::new(("scroll_to_top", entry_ix), IconName::ArrowUp)
                 .icon_size(IconSize::Small)
                 .icon_color(Color::Muted)
-                .tooltip(Tooltip::text("Scroll to Top"))
+                .tooltip(Tooltip::text(ama10_i18n::tr!("Scroll To Top")))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.scroll_to_top(cx);
                 }))
         });
->>>>>>> upstream/main
 
         let show_stats = is_thread_bottom && AgentSettings::get_global(cx).show_turn_stats;
 

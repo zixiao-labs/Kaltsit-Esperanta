@@ -4105,12 +4105,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Show Project Items"),
-                description: tr!("Show the project host and name in the titlebar."),
-=======
-                title: "Show Worktree Name",
-                description: "Show the worktree name button in the titlebar.",
+                title: tr!("Show Worktree Name"),
+                description: tr!("Show the worktree name button in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_worktree_name"),
@@ -4132,9 +4128,8 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Project Items",
-                description: "Show the project host and name in the titlebar.",
->>>>>>> upstream/main
+                title: tr!("Show Project Items"),
+                description: tr!("Show the project host and name in the titlebar."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_project_items"),
@@ -8117,10 +8112,12 @@ fn version_control_page() -> SettingsPage {
 
     fn file_diff_section() -> [SettingsPageItem; 2] {
         [
-            SettingsPageItem::SectionHeader("File Diff"),
+            SettingsPageItem::SectionHeader(tr!("File Diff")),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Full File by Default",
-                description: "Whether newly opened file diffs show the full file instead of changes only.",
+                title: tr!("Show Full File by Default"),
+                description: tr!(
+                    "Whether newly opened file diffs show the full file instead of changes only."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.file_diff.show_full_file"),

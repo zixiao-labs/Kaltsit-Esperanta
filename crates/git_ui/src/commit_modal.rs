@@ -3,13 +3,7 @@ use crate::git_panel::{
     GitPanel, commit_message_editor, commit_title_exceeds_limit, git_commit_editor_style,
 };
 use crate::git_panel_settings::GitPanelSettings;
-<<<<<<< HEAD
-
-use git::repository::CommitOptions;
-use git::{Amend, Commit, GenerateCommitMessage, Signoff};
-=======
 use git::{Amend, Commit, GenerateCommitMessage, Signoff, SkipHooks};
->>>>>>> upstream/main
 use project::DisableAiSettings;
 use settings::Settings;
 use ui::{
