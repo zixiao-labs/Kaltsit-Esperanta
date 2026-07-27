@@ -4055,7 +4055,7 @@ fn window_and_layout_page() -> SettingsPage {
         ]
     }
 
-    fn title_bar_section() -> [SettingsPageItem; 10] {
+    fn title_bar_section() -> [SettingsPageItem; 11] {
         [
             SettingsPageItem::SectionHeader(tr!("Title Bar")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -4105,8 +4105,36 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Show Project Items"),
                 description: tr!("Show the project host and name in the titlebar."),
+=======
+                title: "Show Worktree Name",
+                description: "Show the worktree name button in the titlebar.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("title_bar.show_worktree_name"),
+                    pick: |settings_content| {
+                        settings_content
+                            .title_bar
+                            .as_ref()?
+                            .show_worktree_name
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .title_bar
+                            .get_or_insert_default()
+                            .show_worktree_name = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Show Project Items",
+                description: "Show the project host and name in the titlebar.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("title_bar.show_project_items"),
@@ -8087,6 +8115,39 @@ fn version_control_page() -> SettingsPage {
         ]
     }
 
+    fn file_diff_section() -> [SettingsPageItem; 2] {
+        [
+            SettingsPageItem::SectionHeader("File Diff"),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Show Full File by Default",
+                description: "Whether newly opened file diffs show the full file instead of changes only.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("git.file_diff.show_full_file"),
+                    pick: |settings_content| {
+                        settings_content
+                            .git
+                            .as_ref()?
+                            .file_diff
+                            .as_ref()?
+                            .show_full_file
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .git
+                            .get_or_insert_default()
+                            .file_diff
+                            .get_or_insert_default()
+                            .show_full_file = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+        ]
+    }
+
     SettingsPage {
         title: tr!("Version Control"),
         items: concat_sections![
@@ -8095,6 +8156,7 @@ fn version_control_page() -> SettingsPage {
             inline_git_blame_section(),
             git_blame_view_section(),
             branch_picker_section(),
+            file_diff_section(),
             git_hunks_section(),
         ],
     }

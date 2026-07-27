@@ -193,8 +193,17 @@ fn auto_release_preview(deps: &[&NamedJob]) -> NamedJob {
         .add_env(("GITHUB_TOKEN", token))
     }
 
+<<<<<<< HEAD
     let (authenticate, token) = steps::authenticate_as_zippy().into();
     let auto_release_step = auto_release_preview_step(&token);
+=======
+    let (authenticate, token) = steps::authenticate_as_zippy()
+        .for_repository(steps::RepositoryTarget::current())
+        .with_permissions([(steps::TokenPermissions::Contents, Level::Write)])
+        .into();
+    let auto_release_preview_step = auto_release_preview(&token);
+    let release_published = StepOutput::new(&auto_release_preview_step, "release_published");
+>>>>>>> upstream/main
 
     named::job(
         dependant_job(deps)
@@ -264,6 +273,7 @@ fn create_draft_release() -> NamedJob {
     }
 
     let (authenticate_step, token) = steps::authenticate_as_zippy()
+        .for_repository(steps::RepositoryTarget::current())
         .with_permissions([(TokenPermissions::Contents, Level::Write)])
         .into();
 

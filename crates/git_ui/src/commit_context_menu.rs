@@ -59,6 +59,27 @@ pub(crate) fn commit_context_menu(
         context_menu
             .context(focus_handle)
             .header(header)
+<<<<<<< HEAD
+=======
+            .entry("View Diff", Some(OpenCommitView.boxed_clone()), {
+                let repository = repository.clone();
+                let workspace = workspace.clone();
+                move |window, cx| {
+                    let Some(repository) = repository.clone() else {
+                        return;
+                    };
+                    CommitView::open(
+                        sha.to_string(),
+                        repository,
+                        workspace.clone(),
+                        None,
+                        None,
+                        window,
+                        cx,
+                    );
+                }
+            })
+>>>>>>> upstream/main
             .entry(
                 ama10_i18n::tr!("View Commit"),
                 Some(OpenCommitView.boxed_clone()),
