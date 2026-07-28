@@ -22,9 +22,7 @@ path = "src/main.rs"
 anyhow.workspace = true
 chrono.workspace = true
 credentials_provider.workspace = true
-futures.workspace = true
 gpui.workspace = true
-log.workspace = true
 progenitor-client.workspace = true
 # NOTE: deliberately NOT inheriting the workspace `reqwest` alias. The
 # workspace ships `zed-reqwest` (a fork of reqwest) under the `reqwest` name,
@@ -36,7 +34,6 @@ progenitor-client.workspace = true
 reqwest = { version = "0.13", features = ["json"] }
 serde.workspace = true
 serde_json.workspace = true
-smol.workspace = true
 # `reqwest 0.13`'s send path uses `tokio::time::sleep` for its request timeout,
 # which panics when polled outside a Tokio runtime. We hold a `runtime::Handle`
 # in `WulingClient` and route each HTTP request through `handle.spawn(...)` so

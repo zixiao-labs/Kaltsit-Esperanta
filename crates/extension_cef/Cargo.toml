@@ -7,5 +7,4 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-gpui = { path = "../gpui" }
 anyhow = "1"

@@ -5,7 +5,7 @@ use crate::tasks::workflows::{
     runners,
     steps::{
         self, CommonJobConditions, CommonPermissionSets, NamedJob, RepositoryTarget,
-        generate_token, named,
+        TokenPermissions, generate_token, named,
     },
     vars::{self, StepOutput},
 };
@@ -56,7 +56,14 @@ fn publish_job() -> NamedJob {
 
 fn update_sha_in_zed(publish_job: &NamedJob) -> NamedJob {
     let (generate_token, generated_token) =
-        generate_token(vars::ZED_ZIPPY_APP_ID, vars::ZED_ZIPPY_APP_PRIVATE_KEY).into();
+        generate_token(vars::ZED_ZIPPY_APP_ID, vars::ZED_ZIPPY_APP_PRIVATE_KEY)
+            .for_repository(RepositoryTarget::current())
+            .with_permissions([
+                (TokenPermissions::Contents, Level::Write),
+                (TokenPermissions::PullRequests, Level::Write),
+                (TokenPermissions::Workflows, Level::Write),
+            ])
+            .into();
 
     fn replace_sha() -> Step<Run> {
         named::bash(indoc! {r#"
@@ -108,6 +115,11 @@ fn update_sha_in_extensions(publish_job: &NamedJob) -> NamedJob {
     let (generate_token, generated_token) =
         generate_token(vars::ZED_ZIPPY_APP_ID, vars::ZED_ZIPPY_APP_PRIVATE_KEY)
             .for_repository(extensions_repo)
+            .with_permissions([
+                (TokenPermissions::Contents, Level::Write),
+                (TokenPermissions::PullRequests, Level::Write),
+                (TokenPermissions::Workflows, Level::Write),
+            ])
             .into();
 
     fn checkout_extensions_repo(token: &StepOutput) -> Step<Use> {

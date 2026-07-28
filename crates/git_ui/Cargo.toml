@@ -19,7 +19,6 @@ call = ["dep:call"]
 [dependencies]
 agent_settings.workspace = true
 ama10-i18n.workspace = true
-alacritty_terminal.workspace = true
 ama10-ui.workspace = true
 anyhow.workspace = true
 askpass.workspace = true

@@ -264,6 +264,7 @@ fn create_draft_release() -> NamedJob {
     }
 
     let (authenticate_step, token) = steps::authenticate_as_zippy()
+        .for_repository(steps::RepositoryTarget::current())
         .with_permissions([(TokenPermissions::Contents, Level::Write)])
         .into();
 
