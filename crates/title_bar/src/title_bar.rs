@@ -29,7 +29,7 @@ use command_palette_hooks::CommandPaletteFilter;
 
 use gpui::{
     Action, Anchor, Animation, AnimationExt, AnyElement, App, Context, Element, Entity, Focusable,
-    InteractiveElement, IntoElement, MouseButton, ParentElement, Render,
+    InteractiveElement, IntoElement, MouseButton, ParentElement, Render, SharedUri,
     StatefulInteractiveElement, Styled, Subscription, TaskExt, WeakEntity, Window, actions, div,
     pulsating_between,
 };
@@ -64,7 +64,6 @@ pub use onboarding_banner::restore_banner;
 const MAX_PROJECT_NAME_LENGTH: usize = 40;
 const MAX_BRANCH_NAME_LENGTH: usize = 40;
 const MAX_SHORT_SHA_LENGTH: usize = 8;
-const MAX_WULING_USERNAME_LENGTH: usize = 24;
 
 actions!(
     collab,
@@ -386,7 +385,6 @@ impl Render for TitleBar {
                             ),
                     )
                 })
-                .children(self.render_wuling_chip(cx))
                 .when(TitleBarSettings::get_global(cx).show_user_menu, |this| {
                     this.child(self.render_user_menu_button(cx))
                 })
@@ -467,6 +465,7 @@ impl TitleBar {
         );
 
         subscriptions.push(cx.observe(&active_call, |this, _, cx| this.active_call_changed(cx)));
+        subscriptions.push(cx.observe_global::<SettingsStore>(|_, cx| cx.notify()));
         subscriptions.push(
             cx.subscribe(&git_store, move |_, _, event, cx| match event {
                 GitStoreEvent::ActiveRepositoryChanged(_)
@@ -477,8 +476,8 @@ impl TitleBar {
             }),
         );
         subscriptions.push(cx.observe(&user_store, |_a, _, cx| cx.notify()));
-        if let Some(wuling) = ama10_ui::WulingAccountState::try_global(cx) {
-            subscriptions.push(cx.observe(&wuling, |_, _, cx| cx.notify()));
+        if let Some(connectors) = ama10_ui::ConnectorAccountState::try_global(cx) {
+            subscriptions.push(cx.observe(&connectors, |_, _, cx| cx.notify()));
         }
         if let Some(workspace_entity) = workspace.weak_handle().upgrade() {
             subscriptions.push(cx.subscribe(
@@ -1182,58 +1181,6 @@ impl TitleBar {
         }
     }
 
-    pub fn render_wuling_chip(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
-        if !TitleBarSettings::get_global(cx).show_sign_in {
-            return None;
-        }
-        let state = ama10_ui::WulingAccountState::try_global(cx)?;
-        let Some(account) = state.read(cx).account().cloned() else {
-            // Surface a dedicated entry point only once the Zed account is
-            // signed in — otherwise the Zed sign-in popover (which already
-            // offers a "Sign in with Wuling DevOps" entry) is showing and
-            // this standalone button would just duplicate it.
-            if self.user_store.read(cx).current_user().is_none() {
-                return None;
-            }
-            return Some(
-                Button::new("wuling-sign-in", tr!("Sign in to Wuling"))
-                    .label_size(LabelSize::Small)
-                    .on_click(|_, window, cx| {
-                        window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
-                    })
-                    .into_any_element(),
-            );
-        };
-        let username: SharedString = account.username.into();
-        let username_for_label: SharedString =
-            util::truncate_and_trailoff(&username, MAX_WULING_USERNAME_LENGTH).into();
-        let trigger = ui::ButtonLike::new("wuling-chip").child(
-            h_flex()
-                .gap_1()
-                .child(
-                    Icon::new(IconName::Person)
-                        .size(IconSize::Small)
-                        .color(Color::Accent),
-                )
-                .child(Label::new(username_for_label).size(LabelSize::Small)),
-        );
-        Some(
-            PopoverMenu::new("wuling-account-menu")
-                .trigger(trigger)
-                .menu(move |window, cx| {
-                    let username = username.clone();
-                    Some(ContextMenu::build(window, cx, move |menu, _, _| {
-                        menu.header(format!("Wuling DevOps — {username}"))
-                            .action("Switch instance…", ama10_ui::SetServerUrl.boxed_clone())
-                            .separator()
-                            .action("Sign out", ama10_ui::SignOut.boxed_clone())
-                    }))
-                })
-                .anchor(Anchor::TopRight)
-                .into_any_element(),
-        )
-    }
-
     pub fn render_sign_in_button(&mut self, _: &mut Context<Self>) -> impl IntoElement {
         let client = self.client.clone();
         let workspace = self.workspace.clone();
@@ -1262,13 +1209,6 @@ impl TitleBar {
                             })
                             .detach();
                     })
-                    .entry(
-                        "Sign in with Wuling DevOps",
-                        None,
-                        |window, cx| {
-                            window.dispatch_action(Box::new(ama10_ui::SignIn), cx);
-                        },
-                    )
                 }))
             })
     }
@@ -1280,8 +1220,39 @@ impl TitleBar {
         let workspace = self.workspace.clone();
         let user = user_store.read(cx).current_user();
 
-        let user_avatar = user.as_ref().map(|u| u.avatar_uri.clone());
+        let connector_state = ama10_ui::ConnectorAccountState::try_global(cx);
+        let connector_settings = ama10_ui::ConnectorSettings::get_global(cx);
+        let connector_avatar = connector_state.as_ref().and_then(|state| {
+            let connector = match connector_settings.avatar_source {
+                settings::ConnectorAvatarSource::Zed => return None,
+                settings::ConnectorAvatarSource::Wuling => ama10_ui::ConnectorId::Wuling,
+                settings::ConnectorAvatarSource::Github => ama10_ui::ConnectorId::Github,
+            };
+            state
+                .read(cx)
+                .account(connector)
+                .and_then(|account| account.avatar_url.as_ref())
+                .map(|url| SharedUri::from(url.clone()))
+        });
+        let user_avatar =
+            if connector_settings.avatar_source == settings::ConnectorAvatarSource::Zed {
+                user.as_ref().map(|user| user.avatar_uri.clone())
+            } else {
+                connector_avatar
+            };
         let username = user.as_ref().map(|u| u.username.clone());
+        let wuling_account = connector_state.as_ref().and_then(|state| {
+            state
+                .read(cx)
+                .account(ama10_ui::ConnectorId::Wuling)
+                .cloned()
+        });
+        let github_account = connector_state.as_ref().and_then(|state| {
+            state
+                .read(cx)
+                .account(ama10_ui::ConnectorId::Github)
+                .cloned()
+        });
 
         let is_signed_in = user.is_some();
 
@@ -1301,7 +1272,8 @@ impl TitleBar {
 
         let show_user_picture = TitleBarSettings::get_global(cx).show_user_picture;
 
-        let trigger = if is_signed_in && show_user_picture {
+        let has_user_avatar = user_avatar.is_some();
+        let trigger = if (is_signed_in || has_user_avatar) && show_user_picture {
             let avatar = user_avatar.map(|avatar| Avatar::new(avatar)).map(|avatar| {
                 if show_update_button {
                     avatar.indicator(
@@ -1325,7 +1297,10 @@ impl TitleBar {
                             this.gap_2()
                                 .child(Label::new(&organization.name).size(LabelSize::Small))
                         })
-                        .children(avatar),
+                        .children(avatar)
+                        .when(!has_user_avatar, |this| {
+                            this.child(Icon::new(IconName::Person).size(IconSize::Small))
+                        }),
                 )
         } else {
             ButtonLike::new("user-menu")
@@ -1340,6 +1315,8 @@ impl TitleBar {
                 let username = username.clone();
                 let current_organization = current_organization.clone();
                 let organizations = organizations.clone();
+                let wuling_account = wuling_account.clone();
+                let github_account = github_account.clone();
                 let user_store = user_store.clone();
                 let workspace = workspace.clone();
 
@@ -1445,6 +1422,54 @@ impl TitleBar {
                         }
 
                         this.separator()
+                    })
+                    .map(|menu| {
+                        let mut menu = menu.header(tr!("Connectors"));
+                        menu = if let Some(account) = wuling_account {
+                            let profile_url = account.profile_url.clone();
+                            let label = format!("Wuling DevOps — {}", account.username);
+                            menu.submenu(label, move |menu, _window, _cx| {
+                                menu.when_some(profile_url.clone(), |menu, profile_url| {
+                                    menu.entry(tr!("Open Account"), None, move |_, cx| {
+                                        cx.open_url(&profile_url);
+                                    })
+                                })
+                                .action(
+                                    tr!("Connector Settings"),
+                                    zed_actions::OpenSettings.boxed_clone(),
+                                )
+                                .separator()
+                                .action(tr!("Disconnect"), ama10_ui::DisconnectWuling.boxed_clone())
+                            })
+                        } else {
+                            menu.action(
+                                tr!("Connect Wuling DevOps"),
+                                ama10_ui::ConnectWuling.boxed_clone(),
+                            )
+                        };
+                        menu = if let Some(account) = github_account {
+                            let profile_url = account.profile_url.clone();
+                            let label = format!("GitHub — {}", account.username);
+                            menu.submenu(label, move |menu, _window, _cx| {
+                                menu.when_some(profile_url.clone(), |menu, profile_url| {
+                                    menu.entry(tr!("Open Account"), None, move |_, cx| {
+                                        cx.open_url(&profile_url);
+                                    })
+                                })
+                                .action(
+                                    tr!("Connector Settings"),
+                                    zed_actions::OpenSettings.boxed_clone(),
+                                )
+                                .separator()
+                                .action(tr!("Disconnect"), ama10_ui::DisconnectGithub.boxed_clone())
+                            })
+                        } else {
+                            menu.action(
+                                tr!("Connect GitHub"),
+                                ama10_ui::ConnectGithub.boxed_clone(),
+                            )
+                        };
+                        menu.separator()
                     })
                     .action("Settings", zed_actions::OpenSettings.boxed_clone())
                     .action("Keymap", Box::new(zed_actions::OpenKeymap))

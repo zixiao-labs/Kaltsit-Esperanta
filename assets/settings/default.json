@@ -572,6 +572,19 @@
     // The layout of window control buttons in the title bar (Linux only).
     "button_layout": "platform_default",
   },
+  // External development-platform accounts.
+  "connectors": {
+    // Which connected account supplies the title-bar avatar.
+    "avatar_source": "zed",
+    "wuling": {
+      // Base URL for the Wuling DevOps instance.
+      "server_url": "https://wuling.zixiaolabs.com",
+    },
+    "github": {
+      // Client ID for a GitHub OAuth App with Device Flow enabled.
+      "client_id": "",
+    },
+  },
   "audio": {
     // Select specific output audio device.
     // `null` means use system default.

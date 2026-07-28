@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WulingApiTypes",
+  "type": "object",
+  "required": [
+    "device_code",
+    "oauth_error",
+    "oauth_token",
+    "user",
+    "well_known"
+  ],
+  "properties": {
+    "device_code": {
+      "$ref": "#/$defs/DeviceCodeResponse"
+    },
+    "oauth_error": {
+      "$ref": "#/$defs/OAuthError"
+    },
+    "oauth_token": {
+      "$ref": "#/$defs/OAuthTokenResponse"
+    },
+    "user": {
+      "$ref": "#/$defs/User"
+    },
+    "well_known": {
+      "$ref": "#/$defs/WellKnownDoc"
+    }
+  },
+  "$defs": {
+    "DeviceCodeResponse": {
+      "type": "object",
+      "properties": {
+        "device_code": {
+          "type": "string"
+        },
+        "expires_in": {
+          "type": "integer"
+        },
+        "interval": {
+          "type": "integer"
+        },
+        "user_code": {
+          "type": "string"
+        },
+        "verification_uri": {
+          "type": "string"
+        },
+        "verification_uri_complete": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "device_code",
+        "expires_in",
+        "interval",
+        "user_code",
+        "verification_uri",
+        "verification_uri_complete"
+      ]
+    },
+    "OAuthError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "error_description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ]
+    },
+    "OAuthTokenResponse": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "type": "string"
+        },
+        "expires_in": {
+          "type": "integer"
+        },
+        "refresh_token": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "token_type": {
+          "type": "string",
+          "enum": [
+            "Bearer"
+          ]
+        }
+      },
+      "required": [
+        "access_token",
+        "expires_in",
+        "scope",
+        "token_type"
+      ]
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "avatar_url": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "avatar_url",
+        "display_name",
+        "username"
+      ]
+    },
+    "WellKnownDoc": {
+      "type": "object",
+      "properties": {
+        "authorization_endpoint": {
+          "type": "string"
+        },
+        "desktop_official_client_id": {
+          "type": "string"
+        },
+        "device_authorization_endpoint": {
+          "type": "string"
+        },
+        "frontend_device_verification_uri": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "revocation_endpoint": {
+          "type": "string"
+        },
+        "scopes_supported": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string"
+          }
+        },
+        "token_endpoint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "authorization_endpoint",
+        "desktop_official_client_id",
+        "device_authorization_endpoint",
+        "frontend_device_verification_uri",
+        "issuer",
+        "revocation_endpoint",
+        "scopes_supported",
+        "token_endpoint"
+      ]
+    }
+  }
+}

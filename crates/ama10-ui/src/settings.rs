@@ -1,98 +1,87 @@
-//! Persistent configuration for the Wuling DevOps integration.
-//!
-//! The Zed `settings_content` crate is upstream code we don't want to fork:
-//! adding a `wuling` field there would create rebase pain forever. So we
-//! sidestep it and own our own `wuling.json` under `paths::config_dir()`.
-//! Loaded on init, written when the user changes the server URL.
-
-use std::path::PathBuf;
-
 use ama10::server_url::ServerUrl;
-use anyhow::{Context as _, Result};
-use serde::{Deserialize, Serialize};
+use settings::{ConnectorAvatarSource, RegisterSetting, Settings, SettingsContent};
 
-const CONFIG_FILE: &str = "wuling.json";
-
-/// JSON shape on disk. New optional fields can be added without breaking
-/// older Esperantas thanks to `#[serde(default)]`.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-struct FileShape {
-    #[serde(default)]
-    server_url: Option<String>,
+#[derive(Clone, Debug, RegisterSetting)]
+pub struct ConnectorSettings {
+    pub avatar_source: ConnectorAvatarSource,
+    pub wuling_server: ServerUrl,
+    pub github_client_id: String,
 }
 
-/// Reify the on-disk config into a strongly-typed struct.
+impl Settings for ConnectorSettings {
+    fn from_settings(settings: &SettingsContent) -> Self {
+        let connectors = settings.connectors.as_ref();
+        let raw_server = connectors
+            .and_then(|connectors| connectors.wuling.as_ref())
+            .and_then(|wuling| wuling.server_url.as_deref())
+            .unwrap_or(ama10::server_url::DEFAULT_SERVER_URL);
+        let wuling_server = ServerUrl::parse(raw_server).unwrap_or_else(|error| {
+            log::warn!(
+                "ama10: invalid connectors.wuling.server_url {raw_server:?}: {error}; using the default"
+            );
+            ServerUrl::default_saas()
+        });
+        let github_client_id = connectors
+            .and_then(|connectors| connectors.github.as_ref())
+            .and_then(|github| github.client_id.clone())
+            .unwrap_or_default();
+
+        Self {
+            avatar_source: connectors
+                .and_then(|connectors| connectors.avatar_source)
+                .unwrap_or_default(),
+            wuling_server,
+            github_client_id,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct WulingConfig {
     pub server: ServerUrl,
 }
 
-impl Default for WulingConfig {
-    fn default() -> Self {
+impl WulingConfig {
+    pub fn load(cx: &gpui::App) -> Self {
         Self {
-            server: ServerUrl::default_saas(),
+            server: ConnectorSettings::get_global(cx).wuling_server.clone(),
         }
     }
 }
 
-impl WulingConfig {
-    fn path() -> PathBuf {
-        paths::config_dir().join(CONFIG_FILE)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_wuling_url_falls_back_to_default() {
+        let mut content = SettingsContent::default();
+        content
+            .connectors
+            .get_or_insert_default()
+            .wuling
+            .get_or_insert_default()
+            .server_url = Some("file:///tmp/wuling".to_string());
+
+        let settings = ConnectorSettings::from_settings(&content);
+        assert_eq!(
+            settings.wuling_server.as_str(),
+            ama10::server_url::DEFAULT_SERVER_URL
+        );
     }
 
-    /// Read the config from disk. If the file is missing or malformed, the
-    /// caller gets the default (SaaS) config and a `log::warn!` is emitted —
-    /// the user can recover by editing settings or signing in afresh, so
-    /// we don't propagate the error.
-    pub fn load() -> Self {
-        let path = Self::path();
-        let raw = match std::fs::read_to_string(&path) {
-            Ok(s) => s,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Self::default(),
-            Err(err) => {
-                log::warn!("ama10: could not read {}: {err}", path.display());
-                return Self::default();
-            }
-        };
-        let parsed: FileShape = match serde_json::from_str(&raw) {
-            Ok(v) => v,
-            Err(err) => {
-                log::warn!("ama10: malformed {}: {err}", path.display());
-                return Self::default();
-            }
-        };
-        let server = match parsed.server_url.as_deref() {
-            Some(s) => match ServerUrl::parse(s) {
-                Ok(url) => url,
-                Err(err) => {
-                    log::warn!(
-                        "ama10: invalid server_url {s:?} in {}: {err} — falling back to SaaS",
-                        path.display()
-                    );
-                    ServerUrl::default_saas()
-                }
-            },
-            None => ServerUrl::default_saas(),
-        };
-        Self { server }
-    }
+    #[test]
+    fn loads_connector_values() {
+        let mut content = SettingsContent::default();
+        let connectors = content.connectors.get_or_insert_default();
+        connectors.avatar_source = Some(ConnectorAvatarSource::Github);
+        connectors.wuling.get_or_insert_default().server_url =
+            Some("https://wuling.example/".to_string());
+        connectors.github.get_or_insert_default().client_id = Some("client-id".to_string());
 
-    /// Atomically write the config to disk. Atomic because settings tend to
-    /// be small and a half-written file would be worse than the previous
-    /// state — write to a tempfile then rename.
-    pub fn save(&self) -> Result<()> {
-        let path = Self::path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)
-                .with_context(|| format!("create config dir {}", parent.display()))?;
-        }
-        let payload = serde_json::to_vec_pretty(&FileShape {
-            server_url: Some(self.server.as_str().to_string()),
-        })?;
-        let tmp = path.with_extension("json.tmp");
-        std::fs::write(&tmp, payload)
-            .with_context(|| format!("write temp config {}", tmp.display()))?;
-        std::fs::rename(&tmp, &path).with_context(|| format!("rename to {}", path.display()))?;
-        Ok(())
+        let settings = ConnectorSettings::from_settings(&content);
+        assert_eq!(settings.avatar_source, ConnectorAvatarSource::Github);
+        assert_eq!(settings.wuling_server.as_str(), "https://wuling.example");
+        assert_eq!(settings.github_client_id, "client-id");
     }
 }
