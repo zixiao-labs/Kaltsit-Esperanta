@@ -1445,7 +1445,11 @@ impl TitleBar {
                                 })
                                 .action(
                                     tr!("Connector Settings"),
-                                    zed_actions::OpenSettings.boxed_clone(),
+                                    zed_actions::OpenSettingsPage {
+                                        page: tr!("Connectors").to_string(),
+                                        target: None,
+                                    }
+                                    .boxed_clone(),
                                 )
                                 .separator()
                                 .action(tr!("Disconnect"), ama10_ui::DisconnectWuling.boxed_clone())
@@ -1467,7 +1471,11 @@ impl TitleBar {
                                 })
                                 .action(
                                     tr!("Connector Settings"),
-                                    zed_actions::OpenSettings.boxed_clone(),
+                                    zed_actions::OpenSettingsPage {
+                                        page: tr!("Connectors").to_string(),
+                                        target: None,
+                                    }
+                                    .boxed_clone(),
                                 )
                                 .separator()
                                 .action(tr!("Disconnect"), ama10_ui::DisconnectGithub.boxed_clone())
@@ -1478,7 +1486,7 @@ impl TitleBar {
                                 ama10_ui::ConnectGithub.boxed_clone(),
                             )
                         };
-                        menu.separator()
+                        menu
                     })
                     .action("Settings", zed_actions::OpenSettings.boxed_clone())
                     .action("Keymap", Box::new(zed_actions::OpenKeymap))

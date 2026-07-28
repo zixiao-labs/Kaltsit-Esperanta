@@ -6,6 +6,11 @@ SOURCE_SPEC="${WULING_OPENAPI_PATH:-$REPO_ROOT/../Wuling-DevOps/api/openapi.yaml
 VENDORED_SPEC="$REPO_ROOT/crates/ama10/api/wuling-openapi.yaml"
 TYPE_SCHEMA="$REPO_ROOT/crates/ama10/api/wuling-client-types.json"
 
+if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+    echo "PyYAML is required to regenerate the Wuling API. Install it with: python3 -m pip install PyYAML" >&2
+    exit 1
+fi
+
 if [[ ! -f "$SOURCE_SPEC" ]]; then
     echo "Wuling OpenAPI source not found: $SOURCE_SPEC" >&2
     exit 1
@@ -152,7 +157,12 @@ for name, selection in selected.items():
         raise SystemExit(
             f"Wuling schema {name} made required client fields optional: {', '.join(optional_upstream)}"
         )
-    definition = project_schema(schema, f"Wuling schema {name}")
+    selected_schema = schema.copy()
+    selected_schema["properties"] = {
+        property_name: schema_properties[property_name]
+        for property_name in selection["properties"]
+    }
+    definition = project_schema(selected_schema, f"Wuling schema {name}")
     definition["properties"] = {
         property_name: definition["properties"][property_name]
         for property_name in selection["properties"]

@@ -56,10 +56,11 @@
 
 ## Wuling 客户端再生流程
 
-1. 保持 `Wuling-DevOps` 仓库与本仓 sibling，或 `export WULING_OPENAPI_PATH=/path/to/openapi.yaml`
-2. 跑 `script/regen-wuling-api.sh`
-3. review `api/wuling-openapi.yaml` 和 `api/wuling-client-types.json` 的 diff
-4. `./script/clippy -p ama10`
+1. 安装 PyYAML：`python3 -m pip install PyYAML`
+2. 保持 `Wuling-DevOps` 仓库与本仓 sibling，或 `export WULING_OPENAPI_PATH=/path/to/openapi.yaml`
+3. 跑 `script/regen-wuling-api.sh`
+4. review `api/wuling-openapi.yaml` 和 `api/wuling-client-types.json` 的 diff
+5. `./script/clippy -p ama10`
 
 脚本会原样同步 OpenAPI 约定，并从认证相关 schema 投影出一个小型 JSON Schema。`typify::import_types!` 在编译时生成 serde 类型；HTTP 请求由手写的轻量 `reqwest` 客户端完成，不再检入大型生成代码。
 
