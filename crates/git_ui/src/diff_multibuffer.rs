@@ -7,7 +7,7 @@ use anyhow::Result;
 use buffer_diff::BufferDiff;
 use collections::{HashMap, HashSet};
 use editor::{
-    EditorEvent, EditorSettings, SelectionEffects, SplittableEditor, actions::GoToHunk,
+    Editor, EditorEvent, EditorSettings, SelectionEffects, SplittableEditor, actions::GoToHunk,
     multibuffer_context_lines, scroll::Autoscroll,
 };
 use futures_lite::future::yield_now;
@@ -297,6 +297,10 @@ impl DiffMultibuffer {
     /// Returns a reference to the splittable editor.
     pub(crate) fn editor(&self) -> &Entity<SplittableEditor> {
         &self.editor
+    }
+
+    pub(crate) fn review_editor(&self, cx: &App) -> Entity<Editor> {
+        self.editor.read(cx).rhs_editor().clone()
     }
 
     pub(crate) fn selected_ranges(

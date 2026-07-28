@@ -11,9 +11,7 @@ if [[ ! -f "$SOURCE_SPEC" ]]; then
     exit 1
 fi
 
-cp "$SOURCE_SPEC" "$VENDORED_SPEC"
-
-python3 - "$VENDORED_SPEC" "$TYPE_SCHEMA" <<'PY'
+python3 - "$SOURCE_SPEC" "$TYPE_SCHEMA" <<'PY'
 import json
 import sys
 
@@ -90,13 +88,19 @@ selected = {
 }
 
 
-def project_schema(value):
+def project_schema(value, path):
     if isinstance(value, list):
-        return [project_schema(item) for item in value]
+        return [
+            project_schema(item, f"{path}[{index}]")
+            for index, item in enumerate(value)
+        ]
     if not isinstance(value, dict):
         return value
+    if "$ref" in value:
+        raise SystemExit(
+            f"{path} contains unsupported $ref {value['$ref']!r}; inline the referenced Wuling schema"
+        )
     allowed = {
-        "$ref",
         "enum",
         "items",
         "maximum",
@@ -112,11 +116,13 @@ def project_schema(value):
     for key, item in value.items():
         if key == "properties":
             projected[key] = {
-                property_name: project_schema(property_schema)
+                property_name: project_schema(
+                    property_schema, f"{path}.properties.{property_name}"
+                )
                 for property_name, property_schema in item.items()
             }
         elif key in allowed:
-            projected[key] = project_schema(item)
+            projected[key] = project_schema(item, f"{path}.{key}")
     return projected
 
 
@@ -125,7 +131,28 @@ definitions = {}
 for name, selection in selected.items():
     if name not in schemas:
         raise SystemExit(f"required Wuling schema is missing: {name}")
-    definition = project_schema(schemas[name])
+    schema = schemas[name]
+    schema_properties = schema.get("properties")
+    if not isinstance(schema_properties, dict):
+        raise SystemExit(f"Wuling schema {name} has no object properties")
+    for property_name in selection["properties"]:
+        if property_name not in schema_properties:
+            raise SystemExit(
+                f"Wuling schema {name} is missing selected field {property_name}"
+            )
+    upstream_required = schema.get("required", [])
+    if not isinstance(upstream_required, list):
+        raise SystemExit(f"Wuling schema {name} has a non-list required declaration")
+    optional_upstream = [
+        property_name
+        for property_name in selection["required"]
+        if property_name not in upstream_required
+    ]
+    if optional_upstream:
+        raise SystemExit(
+            f"Wuling schema {name} made required client fields optional: {', '.join(optional_upstream)}"
+        )
+    definition = project_schema(schema, f"Wuling schema {name}")
     definition["properties"] = {
         property_name: definition["properties"][property_name]
         for property_name in selection["properties"]
@@ -153,6 +180,8 @@ with open(output_path, "w", encoding="utf-8") as output_file:
     json.dump(output, output_file, ensure_ascii=False, indent=2)
     output_file.write("\n")
 PY
+
+cp "$SOURCE_SPEC" "$VENDORED_SPEC"
 
 echo "Updated $VENDORED_SPEC"
 echo "Updated $TYPE_SCHEMA"

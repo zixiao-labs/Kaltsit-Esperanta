@@ -905,8 +905,16 @@ impl Editor {
                     let start_point = comment.range.start.to_point(&snapshot);
                     let end_point = comment.range.end.to_point(&snapshot);
                     let buffer_ranges = snapshot.range_to_buffer_ranges(start_point..end_point);
-                    let (first_buffer, first_range, _) = buffer_ranges.first()?;
-                    let (last_buffer, last_range, _) = buffer_ranges.last()?;
+                    let (Some((first_buffer, first_range, _)), Some((last_buffer, last_range, _))) =
+                        (buffer_ranges.first(), buffer_ranges.last())
+                    else {
+                        log::debug!(
+                            "Skipping review comment {} for {} because its buffer range could not be resolved ({start_point:?}..{end_point:?})",
+                            comment.id,
+                            hunk.file_path.as_unix_str(),
+                        );
+                        return None;
+                    };
                     let start_line = first_buffer.offset_to_point(first_range.start.0).row;
                     let end_line = last_buffer.offset_to_point(last_range.end.0).row;
                     let worktree_name = snapshot

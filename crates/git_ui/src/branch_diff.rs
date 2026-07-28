@@ -400,7 +400,7 @@ impl BranchDiff {
     }
 
     pub fn review_editor(&self, cx: &App) -> Entity<Editor> {
-        self.diff.read(cx).editor().read(cx).rhs_editor().clone()
+        self.diff.read(cx).review_editor(cx)
     }
 }
 

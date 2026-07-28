@@ -470,6 +470,8 @@
 "Disconnect" = "断开连接"
 "Connect Wuling DevOps" = "连接武陵 DevOps"
 "Connect GitHub" = "连接 GitHub"
+"Wuling DevOps — {}" = "武陵 DevOps — {}"
+"GitHub — {}" = "GitHub — {}"
 "Sign in to {}" = "登录 {}"
 "Connecting to {}…" = "正在连接 {}…"
 "Contacting server…" = "正在连接服务器…"

@@ -346,6 +346,10 @@ impl Render for TitleBar {
         let status = self.client.status();
         let status = &*status.borrow();
         let user = self.user_store.read(cx).current_user();
+        let is_signed_in = user.is_some();
+        let has_user_avatar = self.user_avatar(cx).is_some();
+        let should_render_user_menu = title_bar_settings.show_user_menu
+            || ((is_signed_in || has_user_avatar) && title_bar_settings.show_user_picture);
         let is_signing_in = user.is_none()
             && matches!(
                 status,
@@ -385,7 +389,7 @@ impl Render for TitleBar {
                             ),
                     )
                 })
-                .when(TitleBarSettings::get_global(cx).show_user_menu, |this| {
+                .when(should_render_user_menu, |this| {
                     this.child(self.render_user_menu_button(cx))
                 })
                 .into_any_element(),
@@ -1213,6 +1217,29 @@ impl TitleBar {
             })
     }
 
+    fn user_avatar(&self, cx: &App) -> Option<SharedUri> {
+        let connector_settings = ama10_ui::ConnectorSettings::get_global(cx);
+        let connector = match connector_settings.avatar_source {
+            settings::ConnectorAvatarSource::Zed => {
+                return self
+                    .user_store
+                    .read(cx)
+                    .current_user()
+                    .map(|user| user.avatar_uri.clone());
+            }
+            settings::ConnectorAvatarSource::Wuling => ama10_ui::ConnectorId::Wuling,
+            settings::ConnectorAvatarSource::Github => ama10_ui::ConnectorId::Github,
+        };
+        let state = ama10_ui::ConnectorAccountState::try_global(cx)?;
+        let avatar_url = state
+            .read(cx)
+            .account(connector)?
+            .avatar_url
+            .as_ref()?
+            .clone();
+        Some(SharedUri::from(avatar_url))
+    }
+
     pub fn render_user_menu_button(&mut self, cx: &mut Context<Self>) -> impl Element {
         let show_update_button = self.update_version.read(cx).show_update_in_menu_bar();
 
@@ -1221,25 +1248,7 @@ impl TitleBar {
         let user = user_store.read(cx).current_user();
 
         let connector_state = ama10_ui::ConnectorAccountState::try_global(cx);
-        let connector_settings = ama10_ui::ConnectorSettings::get_global(cx);
-        let connector_avatar = connector_state.as_ref().and_then(|state| {
-            let connector = match connector_settings.avatar_source {
-                settings::ConnectorAvatarSource::Zed => return None,
-                settings::ConnectorAvatarSource::Wuling => ama10_ui::ConnectorId::Wuling,
-                settings::ConnectorAvatarSource::Github => ama10_ui::ConnectorId::Github,
-            };
-            state
-                .read(cx)
-                .account(connector)
-                .and_then(|account| account.avatar_url.as_ref())
-                .map(|url| SharedUri::from(url.clone()))
-        });
-        let user_avatar =
-            if connector_settings.avatar_source == settings::ConnectorAvatarSource::Zed {
-                user.as_ref().map(|user| user.avatar_uri.clone())
-            } else {
-                connector_avatar
-            };
+        let user_avatar = self.user_avatar(cx);
         let username = user.as_ref().map(|u| u.username.clone());
         let wuling_account = connector_state.as_ref().and_then(|state| {
             state
@@ -1427,7 +1436,7 @@ impl TitleBar {
                         let mut menu = menu.header(tr!("Connectors"));
                         menu = if let Some(account) = wuling_account {
                             let profile_url = account.profile_url.clone();
-                            let label = format!("Wuling DevOps — {}", account.username);
+                            let label = tr_f!("Wuling DevOps — {}", account.username);
                             menu.submenu(label, move |menu, _window, _cx| {
                                 menu.when_some(profile_url.clone(), |menu, profile_url| {
                                     menu.entry(tr!("Open Account"), None, move |_, cx| {
@@ -1449,7 +1458,7 @@ impl TitleBar {
                         };
                         menu = if let Some(account) = github_account {
                             let profile_url = account.profile_url.clone();
-                            let label = format!("GitHub — {}", account.username);
+                            let label = tr_f!("GitHub — {}", account.username);
                             menu.submenu(label, move |menu, _window, _cx| {
                                 menu.when_some(profile_url.clone(), |menu, profile_url| {
                                     menu.entry(tr!("Open Account"), None, move |_, cx| {

@@ -32,13 +32,13 @@ use feature_flags::{FeatureFlagAppExt as _, PanicFeatureFlag};
 use fs::Fs;
 use futures::FutureExt as _;
 use futures::{StreamExt, channel::mpsc, select_biased};
-use git_ui::branch_diff::{BranchDiff, BranchDiffToolbar};
+use git_ui::branch_diff::BranchDiffToolbar;
 use git_ui::commit_view::CommitViewToolbar;
 use git_ui::git_panel::GitPanel;
-use git_ui::project_diff::{ProjectDiff, ProjectDiffToolbar};
+use git_ui::project_diff::ProjectDiffToolbar;
 use git_ui::solo_diff_view::{SoloDiffGitToolbar, SoloDiffStyleToolbar};
-use git_ui::staged_diff::{StagedDiff, StagedDiffToolbar};
-use git_ui::unstaged_diff::{UnstagedDiff, UnstagedDiffToolbar};
+use git_ui::staged_diff::StagedDiffToolbar;
+use git_ui::unstaged_diff::UnstagedDiffToolbar;
 use gpui::{
     Action, App, AppContext as _, AsyncWindowContext, ClipboardItem, Context, DismissEvent,
     Element, Entity, FocusHandle, Focusable, Image, ImageFormat, KeyBinding, ParentElement,
@@ -917,24 +917,7 @@ fn register_actions(
              _: &SendReviewToAgent,
              window: &mut Window,
              cx: &mut Context<Workspace>| {
-                let review_editor = workspace
-                    .active_item_as::<ProjectDiff>(cx)
-                    .map(|diff| diff.read(cx).review_editor(cx))
-                    .or_else(|| {
-                        workspace
-                            .active_item_as::<BranchDiff>(cx)
-                            .map(|diff| diff.read(cx).review_editor(cx))
-                    })
-                    .or_else(|| {
-                        workspace
-                            .active_item_as::<StagedDiff>(cx)
-                            .map(|diff| diff.read(cx).review_editor(cx))
-                    })
-                    .or_else(|| {
-                        workspace
-                            .active_item_as::<UnstagedDiff>(cx)
-                            .map(|diff| diff.read(cx).review_editor(cx))
-                    });
+                let review_editor = git_ui::active_diff_review_editor(workspace, cx);
                 let Some(review_editor) = review_editor else {
                     return;
                 };
@@ -943,13 +926,7 @@ fn register_actions(
                     return;
                 }
                 let Some(agent_panel) = workspace.panel::<agent_ui::AgentPanel>(cx) else {
-                    workspace.show_error(
-                        ama10_i18n::tr!(
-                            "Open or create an agent thread before sending review feedback."
-                        )
-                        .to_string(),
-                        cx,
-                    );
+                    workspace.show_error(missing_review_agent_thread_message(), cx);
                     return;
                 };
                 match agent_panel.update(cx, |panel, cx| {
@@ -961,13 +938,9 @@ fn register_actions(
                         });
                         workspace.reveal_panel::<agent_ui::AgentPanel>(window, cx);
                     }
-                    Ok(false) => workspace.show_error(
-                        ama10_i18n::tr!(
-                            "Open or create an agent thread before sending review feedback."
-                        )
-                        .to_string(),
-                        cx,
-                    ),
+                    Ok(false) => {
+                        workspace.show_error(missing_review_agent_thread_message(), cx)
+                    }
                     Err(error) => workspace.show_error(
                         ama10_i18n::tr_f!("Failed to send review feedback: {}", error).to_string(),
                         cx,
@@ -1493,6 +1466,10 @@ fn register_actions(
         workspace.show_error(DebugError, cx);
         workspace.show_error(SecondDebugError, cx);
     });
+}
+
+fn missing_review_agent_thread_message() -> String {
+    ama10_i18n::tr!("Open or create an agent thread before sending review feedback.").to_string()
 }
 
 fn initialize_pane(

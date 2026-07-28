@@ -117,10 +117,14 @@ impl ConnectorAccountState {
         cx: &mut gpui::Context<Self>,
     ) {
         let changed = match account {
-            Some(account) if self.accounts.get(&connector) == Some(&account) => false,
             Some(account) => {
-                self.accounts.insert(connector, account);
-                true
+                debug_assert_eq!(connector, account.connector);
+                if self.accounts.get(&connector) == Some(&account) {
+                    false
+                } else {
+                    self.accounts.insert(connector, account);
+                    true
+                }
             }
             None => self.accounts.remove(&connector).is_some(),
         };

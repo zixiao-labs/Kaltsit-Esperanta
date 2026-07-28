@@ -26,8 +26,8 @@ async fn disconnect_wuling(cx: &AsyncApp, credentials: Arc<dyn CredentialsProvid
     let server = cx.update(|cx| ConnectorSettings::get_global(cx).wuling_server.clone());
     let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
     let client = WulingClient::new(server, credentials, tokio_handle)?;
-    if let Some(stored) = client.load_credentials(cx).await? {
-        match client.discover().await {
+    match client.load_credentials(cx).await {
+        Ok(Some(stored)) => match client.discover().await {
             Ok(well_known) => {
                 if let Err(error) = client.revoke(&well_known, &stored.access_token).await {
                     log::warn!(
@@ -40,6 +40,12 @@ async fn disconnect_wuling(cx: &AsyncApp, credentials: Arc<dyn CredentialsProvid
                     "ama10: Wuling discovery failed during disconnect; clearing the token locally: {error}"
                 );
             }
+        },
+        Ok(None) => {}
+        Err(error) => {
+            log::warn!(
+                "ama10: failed to load Wuling credentials during disconnect; clearing them locally: {error}"
+            );
         }
     }
     client.clear_credentials(cx).await

@@ -1581,6 +1581,7 @@ impl ThreadView {
         let content = vec![acp::ContentBlock::Text(acp::TextContent::new(format!(
             "Address the following human-authored review feedback. Each item is anchored to a local diff and includes its worktree, file, one-based line range, and selected excerpt.\n\n```json\n{payload}\n```"
         )))];
+        cx.emit(AcpThreadViewEvent::Interacted);
         if self.thread.read(cx).status() == ThreadStatus::Idle {
             self.send_content(
                 Task::ready(Ok(Some((content, Vec::new())))),
@@ -2299,8 +2300,6 @@ impl ThreadView {
         cx: &mut Context<Self>,
     ) {
         self.sync_queue_flag_to_native_thread(cx);
-
-        cx.emit(AcpThreadViewEvent::Interacted);
 
         self.message_editor.focus_handle(cx).focus(window, cx);
 
