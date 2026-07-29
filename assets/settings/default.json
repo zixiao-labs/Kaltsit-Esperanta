@@ -582,7 +582,7 @@
     },
     "github": {
       // Client ID for a GitHub OAuth App with Device Flow enabled.
-      "client_id": "",
+      "client_id": "Ov23liE5POLv4FQW6Tjr",
     },
   },
   "audio": {
