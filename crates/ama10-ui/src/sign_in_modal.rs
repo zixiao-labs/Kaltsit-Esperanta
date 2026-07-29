@@ -1,4 +1,4 @@
-//! GPUI modal that drives the Wuling DevOps device-flow sign-in.
+//! GPUI modal that drives connector device-flow sign-in.
 //!
 //! The modal owns the entire flow lifecycle: discover → device authorization →
 //! poll → persist tokens. State transitions trigger a redraw so the user
@@ -11,8 +11,8 @@
 //! the user pressing Escape, clicking Cancel, or the flow reaching a terminal
 //! state and the user pressing Done.
 //!
-//! On successful sign-in the modal updates the global `WulingAccountState` so
-//! observers (title bar chip, etc.) redraw immediately. Persistent state still
+//! On successful sign-in the modal updates the global connector account state
+//! so observers redraw immediately. Persistent state still
 //! lives in the keychain via `CredentialsProvider`; the global is a cached
 //! view of it.
 
@@ -20,9 +20,10 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use ama10::auth::{PollResult, Tokens, WulingClient};
-use ama10::server_url::ServerUrl;
+use ama10::connector::{ConnectorAccount, ConnectorId};
+use ama10::github::{GithubClient, GithubPollResult};
 use ama10_i18n::{tr, tr_f};
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use credentials_provider::CredentialsProvider;
 use gpui::{
     ClipboardItem, Context, DismissEvent, EventEmitter, FocusHandle, Focusable, MouseDownEvent,
@@ -35,7 +36,8 @@ use ui::{
 };
 use workspace::{ModalView, Workspace};
 
-use crate::settings::WulingConfig;
+use crate::settings::ConnectorSettings;
+use settings::Settings as _;
 
 /// All the states the sign-in modal can be in. The shape is intentionally
 /// flat so `match` in `render` reads top-to-bottom as the flow progresses.
@@ -57,17 +59,18 @@ enum State {
     Error { message: SharedString },
 }
 
-pub struct WulingSignInModal {
+pub struct ConnectorSignInModal {
     state: State,
-    server: ServerUrl,
+    connector: ConnectorId,
+    server_label: SharedString,
     focus_handle: FocusHandle,
     _task: Task<()>,
 }
 
-impl ModalView for WulingSignInModal {}
-impl EventEmitter<DismissEvent> for WulingSignInModal {}
+impl ModalView for ConnectorSignInModal {}
+impl EventEmitter<DismissEvent> for ConnectorSignInModal {}
 
-impl Focusable for WulingSignInModal {
+impl Focusable for ConnectorSignInModal {
     fn focus_handle(&self, _: &gpui::App) -> FocusHandle {
         self.focus_handle.clone()
     }
@@ -78,33 +81,47 @@ impl Focusable for WulingSignInModal {
 /// applies (the previous modal is closed first, then this one shows).
 pub fn open_sign_in_modal(
     workspace: &mut Workspace,
+    connector: ConnectorId,
     creds: Arc<dyn CredentialsProvider>,
     window: &mut Window,
     cx: &mut Context<Workspace>,
 ) {
-    workspace.toggle_modal(window, cx, |_window, cx| WulingSignInModal::new(creds, cx));
+    workspace.toggle_modal(window, cx, |_window, cx| {
+        ConnectorSignInModal::new(connector, creds, cx)
+    });
 }
 
-impl WulingSignInModal {
-    fn new(creds: Arc<dyn CredentialsProvider>, cx: &mut Context<Self>) -> Self {
-        let config = WulingConfig::load();
-        let server = config.server;
+impl ConnectorSignInModal {
+    fn new(
+        connector: ConnectorId,
+        creds: Arc<dyn CredentialsProvider>,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        let settings = ConnectorSettings::get_global(cx);
+        let server_label = match connector {
+            ConnectorId::Wuling => settings.wuling_server.as_str(),
+            ConnectorId::Github => "github.com",
+        }
+        .to_string()
+        .into();
         let tokio_handle = gpui_tokio::Tokio::handle(cx);
         let task = cx.spawn(async move |this, cx| {
-            let outcome = run_flow(this.clone(), creds, tokio_handle, cx).await;
+            let outcome = run_flow(this.clone(), connector, creds, tokio_handle, cx).await;
             if let Err(err) = outcome {
-                this.update(cx, |this, cx| {
+                if let Err(update_error) = this.update(cx, |this, cx| {
                     this.state = State::Error {
                         message: format!("{err:#}").into(),
                     };
                     cx.notify();
-                })
-                .ok();
+                }) {
+                    log::debug!("ama10: sign-in modal was dismissed: {update_error}");
+                }
             }
         });
         Self {
             state: State::Discovering,
-            server,
+            connector,
+            server_label,
             focus_handle: cx.focus_handle(),
             _task: task,
         }
@@ -126,14 +143,26 @@ impl WulingSignInModal {
 }
 
 async fn run_flow(
-    this: gpui::WeakEntity<WulingSignInModal>,
+    this: gpui::WeakEntity<ConnectorSignInModal>,
+    connector: ConnectorId,
     creds: Arc<dyn CredentialsProvider>,
     tokio_handle: tokio::runtime::Handle,
     cx: &mut gpui::AsyncApp,
 ) -> Result<()> {
-    let config = WulingConfig::load();
-    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
+    match connector {
+        ConnectorId::Wuling => run_wuling_flow(this, creds, tokio_handle, cx).await,
+        ConnectorId::Github => run_github_flow(this, creds, tokio_handle, cx).await,
+    }
+}
 
+async fn run_wuling_flow(
+    this: gpui::WeakEntity<ConnectorSignInModal>,
+    creds: Arc<dyn CredentialsProvider>,
+    tokio_handle: tokio::runtime::Handle,
+    cx: &mut gpui::AsyncApp,
+) -> Result<()> {
+    let server = cx.update(|cx| ConnectorSettings::get_global(cx).wuling_server.clone());
+    let client = WulingClient::new(server, creds, tokio_handle)?;
     let well_known = client.discover().await?;
 
     this.update(cx, |this, cx| {
@@ -141,16 +170,11 @@ async fn run_flow(
         cx.notify();
     })?;
 
-    let scopes = [
-        "user:read",
-        "repo:read",
-        "issue:read",
-        "mr:read",
-        "git:read",
-        "git:write",
-    ];
+    let scopes = ["user:read", "repo:read", "git:read", "git:write"];
     let dev = client.device_flow_begin(&well_known, &scopes).await?;
-    let expires_at = SystemTime::now() + Duration::from_secs(dev.expires_in);
+    let expires_in =
+        u64::try_from(dev.expires_in).context("Wuling returned a negative expires_in")?;
+    let expires_at = SystemTime::now() + Duration::from_secs(expires_in);
 
     this.update(cx, |this, cx| {
         this.state = State::WaitingForApproval {
@@ -162,7 +186,9 @@ async fn run_flow(
         cx.notify();
     })?;
 
-    let mut interval_secs = dev.interval.max(1);
+    let mut interval_secs =
+        u64::try_from(dev.interval).context("Wuling returned a negative polling interval")?;
+    interval_secs = interval_secs.max(1);
     loop {
         if SystemTime::now() > expires_at {
             anyhow::bail!("Verification code expired before approval");
@@ -181,17 +207,10 @@ async fn run_flow(
             PollResult::Denied => anyhow::bail!("Sign-in denied"),
             PollResult::Expired => anyhow::bail!("Verification code expired before approval"),
             PollResult::Issued(tokens) => {
-                let username = finalise(&client, cx, &tokens).await?;
-                let server_for_state = client.server().clone();
-                let username_for_state = username.clone();
+                let account = finalise_wuling(&client, cx, &tokens).await?;
+                let username = account.username.clone();
                 cx.update(|cx| {
-                    crate::account_state::set_account(
-                        cx,
-                        Some(crate::account_state::WulingAccount {
-                            username: username_for_state,
-                            server: server_for_state,
-                        }),
-                    );
+                    crate::account_state::set_account(cx, ConnectorId::Wuling, Some(account));
                 });
                 this.update(cx, |this, cx| {
                     this.state = State::Success {
@@ -205,23 +224,97 @@ async fn run_flow(
     }
 }
 
-async fn finalise(
+async fn finalise_wuling(
     client: &WulingClient,
     cx: &mut gpui::AsyncApp,
     tokens: &Tokens,
-) -> Result<String> {
+) -> Result<ConnectorAccount> {
     let me = client.current_user(&tokens.access_token).await?;
-    let expires_at = UNIX_EPOCH
-        .elapsed()
-        .map(|d| d.as_secs() as i64 + tokens.expires_in as i64)
-        .unwrap_or(0);
+    let now = i64::try_from(
+        UNIX_EPOCH
+            .elapsed()
+            .context("system clock is before the Unix epoch")?
+            .as_secs(),
+    )
+    .context("current Unix timestamp does not fit in i64")?;
+    let expires_at = now
+        .checked_add(tokens.expires_in)
+        .context("Wuling token expiration timestamp overflowed")?;
     client
         .save_credentials(cx, &me.username, tokens, expires_at)
         .await?;
-    Ok(me.username)
+    Ok(ConnectorAccount {
+        connector: ConnectorId::Wuling,
+        display_name: me.display_name,
+        username: me.username,
+        avatar_url: (!me.avatar_url.is_empty()).then_some(me.avatar_url),
+        profile_url: Some(client.server().as_str().to_string()),
+    })
 }
 
-impl Render for WulingSignInModal {
+async fn run_github_flow(
+    this: gpui::WeakEntity<ConnectorSignInModal>,
+    creds: Arc<dyn CredentialsProvider>,
+    tokio_handle: tokio::runtime::Handle,
+    cx: &mut gpui::AsyncApp,
+) -> Result<()> {
+    let client_id = cx.update(|cx| ConnectorSettings::get_global(cx).github_client_id.clone());
+    let client = GithubClient::new(client_id, creds, tokio_handle)?;
+    this.update(cx, |this, cx| {
+        this.state = State::RequestingCode;
+        cx.notify();
+    })?;
+    let device_code = client.device_flow_begin().await?;
+    let expires_at = SystemTime::now() + Duration::from_secs(device_code.expires_in);
+    this.update(cx, |this, cx| {
+        this.state = State::WaitingForApproval {
+            user_code: device_code.user_code.clone().into(),
+            verification_uri: device_code.verification_uri.clone().into(),
+            verification_uri_complete: device_code.verification_uri.clone().into(),
+            expires_at,
+        };
+        cx.notify();
+    })?;
+
+    let mut interval_seconds = device_code.interval.max(1);
+    loop {
+        if SystemTime::now() > expires_at {
+            anyhow::bail!("Verification code expired before approval");
+        }
+        cx.background_executor()
+            .timer(Duration::from_secs(interval_seconds))
+            .await;
+        match client.device_flow_poll(&device_code.device_code).await? {
+            GithubPollResult::Pending => continue,
+            GithubPollResult::SlowDown => {
+                interval_seconds = interval_seconds.saturating_add(5).min(30);
+            }
+            GithubPollResult::Denied => anyhow::bail!("Sign-in denied"),
+            GithubPollResult::Expired => {
+                anyhow::bail!("Verification code expired before approval")
+            }
+            GithubPollResult::Issued(access_token) => {
+                let account = client.current_account(&access_token).await?;
+                let username = account.username.clone();
+                client
+                    .save_credentials(access_token, account.clone(), cx)
+                    .await?;
+                cx.update(|cx| {
+                    crate::account_state::set_account(cx, ConnectorId::Github, Some(account));
+                });
+                this.update(cx, |this, cx| {
+                    this.state = State::Success {
+                        username: username.into(),
+                    };
+                    cx.notify();
+                })?;
+                return Ok(());
+            }
+        }
+    }
+}
+
+impl Render for ConnectorSignInModal {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let header = h_flex()
             .gap_2()
@@ -230,9 +323,9 @@ impl Render for WulingSignInModal {
                     .size(IconSize::Small)
                     .color(Color::Accent),
             )
-            .child(Headline::new(tr!("Sign in to Wuling DevOps")).size(HeadlineSize::Small));
+            .child(Headline::new(tr_f!("Sign in to {}", self.connector)).size(HeadlineSize::Small));
 
-        let server_line = Label::new(self.server.as_str().to_string())
+        let server_line = Label::new(self.server_label.clone())
             .size(LabelSize::Small)
             .color(Color::Muted);
 
@@ -244,7 +337,7 @@ impl Render for WulingSignInModal {
             State::Discovering | State::RequestingCode => v_flex()
                 .gap_2()
                 .items_center()
-                .child(Label::new(tr!("Connecting to the Wuling DevOps server…")))
+                .child(Label::new(tr_f!("Connecting to {}…", self.connector)))
                 .into_any_element(),
             State::WaitingForApproval {
                 user_code,
@@ -358,7 +451,7 @@ impl Render for WulingSignInModal {
 
         let focus_handle = self.focus_handle.clone();
         v_flex()
-            .key_context("WulingSignIn")
+            .key_context("ConnectorSignIn")
             .track_focus(&focus_handle)
             .on_action(cx.listener(Self::dismiss))
             .on_any_mouse_down(cx.listener(|this, _: &MouseDownEvent, window, cx| {

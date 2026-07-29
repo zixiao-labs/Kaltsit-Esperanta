@@ -6,5 +6,7 @@
 //! the OAuth Device Authorization Grant client used by the account panel.
 
 pub mod auth;
+pub mod connector;
+pub mod github;
 pub mod server_url;
 pub mod wuling_api;

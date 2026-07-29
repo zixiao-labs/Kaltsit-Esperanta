@@ -37,21 +37,10 @@ use gpui::AsyncApp;
 use serde::{Deserialize, Serialize};
 
 use crate::server_url::ServerUrl;
-
-/// Discovery document returned by `/.well-known/wuling-clients`. Only the
-/// fields Esperanta actually uses are deserialised; unknown fields are
-/// ignored so server-side schema growth doesn't break older clients.
-#[derive(Debug, Clone, Deserialize)]
-pub struct WellKnown {
-    pub issuer: String,
-    pub desktop_official_client_id: String,
-    pub authorization_endpoint: String,
-    pub token_endpoint: String,
-    pub device_authorization_endpoint: String,
-    pub revocation_endpoint: String,
-    pub frontend_device_verification_uri: String,
-    pub scopes_supported: Vec<String>,
-}
+pub use crate::wuling_api::types::{
+    DeviceCodeResponse as DeviceCodeResp, OAuthError, OAuthTokenResponse as Tokens, User as Me,
+    WellKnownDoc as WellKnown,
+};
 
 /// One step's result from the device-flow polling loop.
 pub enum PollResult {
@@ -65,45 +54,6 @@ pub enum PollResult {
     Expired,
     /// Issued: we have tokens.
     Issued(Tokens),
-}
-
-/// The (access_token, refresh_token, scopes, expires_at) bundle we hand back
-/// to the caller and persist via CredentialsProvider.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Tokens {
-    pub access_token: String,
-    pub refresh_token: Option<String>,
-    pub expires_in: u64,
-    pub scope: String,
-}
-
-impl Tokens {
-    pub fn scopes(&self) -> Vec<&str> {
-        self.scope.split_whitespace().collect()
-    }
-}
-
-/// The DevAuth response from `/api/v1/oauth/device_authorization`.
-#[derive(Debug, Clone, Deserialize)]
-pub struct DeviceCodeResp {
-    pub device_code: String,
-    pub user_code: String,
-    pub verification_uri: String,
-    pub verification_uri_complete: String,
-    pub expires_in: u64,
-    pub interval: u64,
-}
-
-/// `me` is `/api/v1/auth/me`. Subset that the account panel renders.
-#[derive(Debug, Clone, Deserialize)]
-pub struct Me {
-    pub id: String,
-    pub username: String,
-    pub display_name: String,
-    #[serde(default)]
-    pub email: String,
-    #[serde(default)]
-    pub github_login: String,
 }
 
 /// The persisted credentials envelope. We serialise this into the password
@@ -141,18 +91,18 @@ impl WulingClient {
         server: ServerUrl,
         creds: Arc<dyn CredentialsProvider>,
         tokio_handle: tokio::runtime::Handle,
-    ) -> Self {
+    ) -> Result<Self> {
         let http = reqwest::Client::builder()
-            .user_agent(user_agent())
+            .user_agent(crate::wuling_api::user_agent("ama10-wuling"))
             .timeout(Duration::from_secs(30))
             .build()
-            .expect("reqwest builder with stock defaults cannot fail");
-        Self {
+            .context("build Wuling HTTP client")?;
+        Ok(Self {
             server,
             http,
             creds,
             tokio_handle,
-        }
+        })
     }
 
     pub fn server(&self) -> &ServerUrl {
@@ -245,7 +195,7 @@ impl WulingClient {
                         serde_json::from_slice(&bytes).context("decode token response")?;
                     return anyhow::Ok(PollResult::Issued(tokens));
                 }
-                let err: OAuthErr =
+                let err: OAuthError =
                     serde_json::from_slice(&bytes).context("decode OAuth error envelope")?;
                 Ok(match err.error.as_str() {
                     "authorization_pending" => PollResult::Pending,
@@ -291,7 +241,7 @@ impl WulingClient {
                 if status.is_success() {
                     return anyhow::Ok(serde_json::from_slice::<Tokens>(&bytes)?);
                 }
-                let err: OAuthErr = serde_json::from_slice(&bytes)?;
+                let err: OAuthError = serde_json::from_slice(&bytes)?;
                 anyhow::bail!(
                     "refresh failed: {} ({})",
                     err.error,
@@ -399,32 +349,12 @@ impl WulingClient {
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct OAuthErr {
-    error: String,
-    #[serde(default)]
-    error_description: Option<String>,
-}
-
-fn user_agent() -> String {
-    // Mirrors the rest of Esperanta — see `paths::APP_NAME` and the
-    // documented naming convention. Token-safe ASCII form here is
-    // intentional: HTTP/proxy stacks do not all tolerate apostrophes or the
-    // U+00B7 middle dot in User-Agent.
-    format!(
-        "Kaltsit-Esperanta/{} (ama10; +https://github.com/zixiao-labs/Kaltsit-Esperanta)",
-        env!("CARGO_PKG_VERSION")
-    )
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn ua_includes_version() {
-        let ua = user_agent();
+        let ua = crate::wuling_api::user_agent("ama10-wuling");
         assert!(ua.starts_with("Kaltsit-Esperanta/"));
-        assert!(ua.contains("ama10"));
+        assert!(ua.contains("ama10-wuling"));
     }
 }

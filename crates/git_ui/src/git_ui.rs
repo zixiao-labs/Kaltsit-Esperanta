@@ -66,6 +66,27 @@ pub mod worktree_service;
 pub use blame_ui::GitBlameStatus;
 pub use conflict_view::MergeConflictIndicator;
 
+pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Entity<Editor>> {
+    workspace
+        .active_item_as::<ProjectDiff>(cx)
+        .map(|diff| diff.read(cx).review_editor(cx))
+        .or_else(|| {
+            workspace
+                .active_item_as::<branch_diff::BranchDiff>(cx)
+                .map(|diff| diff.read(cx).review_editor(cx))
+        })
+        .or_else(|| {
+            workspace
+                .active_item_as::<staged_diff::StagedDiff>(cx)
+                .map(|diff| diff.read(cx).review_editor(cx))
+        })
+        .or_else(|| {
+            workspace
+                .active_item_as::<unstaged_diff::UnstagedDiff>(cx)
+                .map(|diff| diff.read(cx).review_editor(cx))
+        })
+}
+
 pub fn get_provider_icon(name: &str) -> IconName {
     match name {
         "Bitbucket" => IconName::Bitbucket,

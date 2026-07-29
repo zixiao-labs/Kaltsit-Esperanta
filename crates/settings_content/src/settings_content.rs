@@ -1,5 +1,6 @@
 mod action;
 mod agent;
+mod connectors;
 mod editor;
 mod extension;
 mod fallible_options;
@@ -15,6 +16,7 @@ mod workspace;
 
 pub use action::{ActionName, ActionWithArguments, CommandAliasTarget};
 pub use agent::*;
+pub use connectors::*;
 pub use editor::*;
 pub use extension::*;
 pub use fallible_options::*;
@@ -229,6 +231,9 @@ pub struct SettingsContent {
 
     /// Configuration for the collab panel visual settings.
     pub collaboration_panel: Option<PanelSettingsContent>,
+
+    /// Accounts connected to external development platforms.
+    pub connectors: Option<ConnectorsSettingsContent>,
 
     pub debugger: Option<DebuggerSettingsContent>,
 

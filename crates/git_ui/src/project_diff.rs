@@ -299,6 +299,10 @@ impl ProjectDiff {
         self.diff.read(cx).editor().clone()
     }
 
+    pub fn review_editor(&self, cx: &App) -> Entity<Editor> {
+        self.diff.read(cx).review_editor(cx)
+    }
+
     /// Returns the multibuffer of the currently-shown diff view.
     pub fn multibuffer(&self, cx: &App) -> Entity<MultiBuffer> {
         self.diff.read(cx).multibuffer().clone()

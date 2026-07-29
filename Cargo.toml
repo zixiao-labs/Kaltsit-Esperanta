@@ -760,7 +760,6 @@ profiling = "1"
 # replace this with main when #635 is merged
 proptest = { git = "https://github.com/proptest-rs/proptest", rev = "3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b", features = ["attr-macro"] }
 proptest-derive = "0.8.0"
-progenitor-client = "0.14.0"
 proxyvars = "0.2"
 prost = "0.9"
 prost-build = "0.9"
@@ -842,6 +841,7 @@ time = { version = "0.3", features = [
 ] }
 tiny_http = "0.12"
 tokio = { version = "1" }
+typify = "0.7.0"
 toml = "0.8"
 toml_edit = { version = "0.22", default-features = false, features = [
     "display",

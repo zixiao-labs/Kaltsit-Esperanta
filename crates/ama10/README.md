@@ -33,15 +33,13 @@
 
 **完成标准**：`zh-CN` 覆盖 ≥ 95% 的用户可见字符串；Kal'tsit 主题深/浅可用；资源全部换成 Esperanta 视觉。
 
-### Stage 2 · Wuling DevOps Auth Migration ⬜
+### Stage 2 · Connector Accounts 🚧
 
-- ✅ 引入 Wuling DevOps OpenAPI 客户端到 `ama10::wuling_api`
-  （由 `script/regen-wuling-api.sh` 维护，spec 在 `crates/ama10/api/wuling-openapi.yaml`）
-- ⬜ 把 Zed 内置账号流程抽象成可替换的 `AuthProvider`
-- ⬜ 在 Provider 之上实现 Wuling DevOps 的 OAuth 2.0 / OIDC 客户端
-- ⬜ 迁移 session / refresh-token 的存储与刷新
-- ⬜ 在编辑器中以侧边面板形式嵌入 Wuling DevOps 控制台
-- ⬜ 把 ama10 的 `reqwest` 0.13 与编辑器主体的 `zed-reqwest` 之间做适配 shim（生成的客户端目前走独立 reqwest，见下方 _Notes_）
+- ✅ 以 `ConnectorId`、`ConnectorAccount` 和统一账号状态抽象 Wuling DevOps / GitHub
+- ✅ 实现 Wuling DevOps 与 GitHub OAuth Device Flow，并通过平台 `CredentialsProvider` 存储令牌
+- ✅ 把服务器 URL、GitHub Client ID 和标题栏头像来源收敛到 Connectors 设置页
+- ✅ 从账号菜单连接、打开或断开各连接器
+- ✅ 同步 Wuling OpenAPI，并只生成认证所需的轻量 serde 类型
 
 **阻塞依赖**：Wuling DevOps 认证 API 达到可用状态（目前 Stage 1 WIP，详见 [issue tracker](https://github.com/zixiao-labs/Wuling-DevOps/issues)）。
 
@@ -58,20 +56,27 @@
 
 ## Wuling 客户端再生流程
 
-1. 保持 `Wuling-DevOps` 仓库与本仓 sibling，或 `export WULING_OPENAPI_PATH=/path/to/openapi.yaml`
-2. 跑 `script/regen-wuling-api.sh`
-3. review `api/wuling-openapi.yaml` 和 `src/wuling_api/generated.rs` 的 diff
-4. `./script/clippy -p ama10`
+1. 安装 PyYAML：`python3 -m pip install PyYAML`
+2. 保持 `Wuling-DevOps` 仓库与本仓 sibling，或 `export WULING_OPENAPI_PATH=/path/to/openapi.yaml`
+3. 跑 `script/regen-wuling-api.sh`
+4. review `api/wuling-openapi.yaml` 和 `api/wuling-client-types.json` 的 diff
+5. `./script/clippy -p ama10`
 
-脚本会在生成前自动：
-- 把 spec 头从 `openapi: 3.1.0` 改成 `3.0.3`（progenitor 只吃 3.0；spec 实际只用 3.0 的 `nullable: true` 语法）
-- 给所有 operation 注入缺失的 `operationId`（形如 `get_orgs_by_org_slug_projects`）
-- 跳过 `*.git/info/refs`、`*.git/git-upload-pack`、`*.git/git-receive-pack` 三个 Git smart-HTTP 端点（走 libgit2/`git`，不进 REST 客户端）
+脚本会原样同步 OpenAPI 约定，并从认证相关 schema 投影出一个小型 JSON Schema。`typify::import_types!` 在编译时生成 serde 类型；HTTP 请求由手写的轻量 `reqwest` 客户端完成，不再检入大型生成代码。
+
+## GitHub OAuth App
+
+1. 在 GitHub 的 **Settings → Developer settings → OAuth Apps** 创建 OAuth App。
+2. Homepage URL 填项目主页；表单要求的 callback URL 可填 `http://127.0.0.1`，设备流程不会使用回调。
+3. 创建后在应用设置中启用 **Device Flow**。
+4. 把 Client ID 填入 Esperanta 的 **Settings → Connectors → GitHub → OAuth App Client ID**，再从用户菜单的 **Connectors → Connect GitHub** 登录。
+
+设备流程只使用公开的 Client ID，不应把 Client Secret 填入设置或提交到仓库。详见 [GitHub OAuth App 授权文档](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps)。
 
 ## Notes
 
-- ama10 故意没有继承工作区的 `reqwest`（那是 `zed-reqwest` fork）。`progenitor-client` 是针对上游 `reqwest 0.13` 编译的，两边的 `Request`/`Error`/`HeaderValue` 是不同类型，混用会编译失败。Stage 2 集成进编辑器时再补一层 shim。
-- 生成出来的客户端整个 `#![allow(clippy::all, ...)]`，review 时关注 `wuling_api.rs`（手写 shim 入口）和 `api/wuling-openapi.yaml`（spec diff），不必逐行看 `generated.rs`。
+- `ama10::connector` 不依赖 GPUI，连接器账号模型可被上游或其他平台复用。
+- Wuling 和 GitHub 客户端把平台能力限制在 `CredentialsProvider` 与 Tokio handle 的构造边界，网络协议和 serde 类型位于 `ama10`。
 
 
 ## 为啥不贡献回上游
@@ -83,4 +88,4 @@
 ## 许可证
 
 - 手写的 Rust 代码（`src/`、`Cargo.toml`、本 README 等）：**MIT**。
-- `api/wuling-openapi.yaml` 同步自 [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps)；由 progenitor 生成的 `src/wuling_api/generated.rs` 派生自该 spec，**Apache-2.0**。上游的 LICENSE / NOTICE 副本放在 `api/LICENSE-APACHE` 与 `api/NOTICE`，按 Apache License §4(d) 保留。
+- `api/wuling-openapi.yaml` 同步自 [Wuling DevOps](https://github.com/zixiao-labs/Wuling-DevOps)；`api/wuling-client-types.json` 派生自该 spec，**Apache-2.0**。上游的 LICENSE / NOTICE 副本放在 `api/LICENSE-APACHE` 与 `api/NOTICE`，按 Apache License §4(d) 保留。

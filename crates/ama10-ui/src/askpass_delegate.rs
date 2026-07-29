@@ -55,7 +55,7 @@ pub async fn lookup_for_host(
     creds: Arc<dyn CredentialsProvider>,
     cx: &AsyncApp,
 ) -> Result<LookupResult> {
-    let config = WulingConfig::load();
+    let config = cx.update(|cx| WulingConfig::load(cx));
     let server_host = config.server.host();
 
     let parsed = match url::Url::parse(prompt_url) {
@@ -124,7 +124,7 @@ async fn refresh_stored(
     cx: &AsyncApp,
 ) -> Result<String> {
     let tokio_handle = cx.update(|cx| gpui_tokio::Tokio::handle(cx));
-    let client = WulingClient::new(config.server.clone(), creds, tokio_handle);
+    let client = WulingClient::new(config.server.clone(), creds, tokio_handle)?;
     let well_known = client.discover().await?;
     let tokens = client.refresh(&well_known, refresh_token).await?;
     let now = std::time::UNIX_EPOCH

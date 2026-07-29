@@ -1,4 +1,4 @@
-use ama10_i18n::{tr, tr_f};
+use ama10_i18n::tr;
 use gpui::{Action as _, App, SharedString};
 use itertools::Itertools as _;
 use settings::{
@@ -77,6 +77,7 @@ pub(crate) fn settings_data(cx: &App) -> Vec<SettingsPage> {
         terminal_page(),
         version_control_page(),
         collaboration_page(),
+        connectors_page(),
         ai_page(cx),
         network_page(),
         developer_page(cx),
@@ -8268,6 +8269,107 @@ fn collaboration_page() -> SettingsPage {
     }
 }
 
+fn connectors_page() -> SettingsPage {
+    SettingsPage {
+        title: tr!("Connectors"),
+        items: vec![
+            SettingsPageItem::SectionHeader(tr!("Appearance")),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Avatar Source"),
+                description: tr!(
+                    "Choose which connected account supplies the avatar in the title bar."
+                ),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("connectors.avatar_source"),
+                    pick: |settings_content| {
+                        settings_content.connectors.as_ref()?.avatar_source.as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .connectors
+                            .get_or_insert_default()
+                            .avatar_source = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SectionHeader(tr!("Wuling DevOps")),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("Server URL"),
+                description: tr!("Base URL of the Wuling DevOps instance."),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("connectors.wuling.server_url"),
+                    pick: |settings_content| {
+                        settings_content
+                            .connectors
+                            .as_ref()?
+                            .wuling
+                            .as_ref()?
+                            .server_url
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .connectors
+                            .get_or_insert_default()
+                            .wuling
+                            .get_or_insert_default()
+                            .server_url = value;
+                    },
+                }),
+                metadata: Some(Box::new(SettingsFieldMetadata {
+                    placeholder: Some("https://wuling.zixiaolabs.com"),
+                    display_confirm_button: true,
+                    confirm_on_focus_out: true,
+                    ..Default::default()
+                })),
+                files: USER,
+            }),
+            SettingsPageItem::SectionHeader(tr!("GitHub")),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: tr!("OAuth App Client ID"),
+                description: tr!(
+                    "Client ID of a GitHub OAuth App with Device Flow enabled. A client secret is not used."
+                ),
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("connectors.github.client_id"),
+                    pick: |settings_content| {
+                        settings_content
+                            .connectors
+                            .as_ref()?
+                            .github
+                            .as_ref()?
+                            .client_id
+                            .as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .connectors
+                            .get_or_insert_default()
+                            .github
+                            .get_or_insert_default()
+                            .client_id = value;
+                    },
+                }),
+                metadata: Some(Box::new(SettingsFieldMetadata {
+                    placeholder: Some("Ov23li…"),
+                    display_confirm_button: true,
+                    display_clear_button: true,
+                    confirm_on_focus_out: true,
+                    treat_missing_text_as_empty: true,
+                    ..Default::default()
+                })),
+                files: USER,
+            }),
+        ]
+        .into(),
+    }
+}
+
 fn ai_page(cx: &App) -> SettingsPage {
     fn general_section() -> [SettingsPageItem; 6] {
         [
@@ -8833,7 +8935,7 @@ fn ai_page(cx: &App) -> SettingsPage {
 }
 
 fn network_page() -> SettingsPage {
-    fn network_section() -> [SettingsPageItem; 4] {
+    fn network_section() -> [SettingsPageItem; 3] {
         [
             SettingsPageItem::SectionHeader(tr!("Network")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -8868,27 +8970,6 @@ fn network_page() -> SettingsPage {
                     placeholder: Some("https://zed.dev"),
                     ..Default::default()
                 })),
-                files: USER,
-            }),
-            SettingsPageItem::ActionLink(ActionLink {
-                title: tr!("Wuling DevOps Server URL"),
-                description: Some(tr_f!(
-                    "The Wuling DevOps server used for OAuth sign-in and git authentication. Default: {}",
-                    ama10_ui::DEFAULT_SERVER_URL
-                )),
-                button_text: tr!("Edit"),
-                on_click: Arc::new(|settings_window, window, cx| {
-                    let Some(original_window) = settings_window.original_window else {
-                        return;
-                    };
-                    original_window
-                        .update(cx, |_workspace, original_window, cx| {
-                            original_window.dispatch_action(Box::new(ama10_ui::SetServerUrl), cx);
-                            original_window.activate_window();
-                        })
-                        .ok();
-                    window.remove_window();
-                }),
                 files: USER,
             }),
         ]

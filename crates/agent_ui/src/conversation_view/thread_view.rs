@@ -21,7 +21,7 @@ use agent::{
 use agent_settings::UserAgentsMd;
 use agent_skills::MAX_SKILL_DESCRIPTION_LEN;
 use cloud_api_types::{SubmitAgentThreadFeedbackBody, SubmitAgentThreadFeedbackCommentsBody};
-use editor::actions::OpenExcerpts;
+use editor::{ReviewFeedback, actions::OpenExcerpts};
 use sandbox::{SandboxFsPolicy, SandboxNetPolicy, SandboxPolicy};
 
 use crate::completion_provider::{AvailableSkill, PromptLocalCommand};
@@ -1571,6 +1571,30 @@ impl ThreadView {
         self.send_impl(message_editor, window, cx)
     }
 
+    pub fn send_review_feedback(
+        &mut self,
+        feedback: Vec<ReviewFeedback>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> anyhow::Result<()> {
+        let payload = serde_json::to_string_pretty(&feedback)?;
+        let content = vec![acp::ContentBlock::Text(acp::TextContent::new(format!(
+            "Address the following human-authored review feedback. Each item is anchored to a local diff and includes its worktree, file, one-based line range, and selected excerpt.\n\n```json\n{payload}\n```"
+        )))];
+        cx.emit(AcpThreadViewEvent::Interacted);
+        if self.thread.read(cx).status() == ThreadStatus::Idle {
+            self.send_content(
+                Task::ready(Ok(Some((content, Vec::new())))),
+                false,
+                window,
+                cx,
+            );
+        } else {
+            self.add_to_queue(content, Vec::new(), window, cx);
+        }
+        Ok(())
+    }
+
     /// Sends a bare `/command` turn and queues everything the user typed after
     /// it as a follow-up message. The queued remainder auto-processes when the
     /// command turn stops, so e.g. `/compact do X` compacts and then runs `do X`
@@ -2276,8 +2300,6 @@ impl ThreadView {
         cx: &mut Context<Self>,
     ) {
         self.sync_queue_flag_to_native_thread(cx);
-
-        cx.emit(AcpThreadViewEvent::Interacted);
 
         self.message_editor.focus_handle(cx).focus(window, cx);
 

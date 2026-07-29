@@ -26,7 +26,7 @@ use breadcrumbs::Breadcrumbs;
 use client::zed_urls;
 use collections::VecDeque;
 use debugger_ui::debugger_panel::DebugPanel;
-use editor::{Editor, MultiBuffer};
+use editor::{Editor, MultiBuffer, actions::SendReviewToAgent};
 use extension_host::ExtensionStore;
 use feature_flags::{FeatureFlagAppExt as _, PanicFeatureFlag};
 use fs::Fs;
@@ -777,7 +777,6 @@ fn initialize_panels(window: &mut Window, cx: &mut Context<Workspace>) -> Task<a
         let outline_panel = OutlinePanel::load(workspace_handle.clone(), cx.clone());
         let terminal_panel = TerminalPanel::load(workspace_handle.clone(), cx.clone());
         let git_panel = GitPanel::load(workspace_handle.clone(), cx.clone());
-        let wuling_panel = ama10_ui::WulingPanel::load(workspace_handle.clone(), cx.clone());
         let channels_panel =
             collab_ui::collab_panel::CollabPanel::load(workspace_handle.clone(), cx.clone());
         let debug_panel = DebugPanel::load(workspace_handle.clone(), cx);
@@ -802,7 +801,6 @@ fn initialize_panels(window: &mut Window, cx: &mut Context<Workspace>) -> Task<a
             add_panel_when_ready(outline_panel, workspace_handle.clone(), cx.clone()),
             add_panel_when_ready(terminal_panel, workspace_handle.clone(), cx.clone()),
             add_panel_when_ready(git_panel, workspace_handle.clone(), cx.clone()),
-            add_panel_when_ready(wuling_panel, workspace_handle.clone(), cx.clone()),
             add_panel_when_ready(channels_panel, workspace_handle.clone(), cx.clone()),
             add_panel_when_ready(debug_panel, workspace_handle.clone(), cx.clone()),
             initialize_agent_panel(workspace_handle, cx.clone()).map(|r| r.log_err()),
@@ -914,6 +912,42 @@ fn register_actions(
 ) {
     workspace
         .register_action(|_, _: &OpenDocs, _, cx| cx.open_url(DOCS_URL))
+        .register_action(
+            |workspace: &mut Workspace,
+             _: &SendReviewToAgent,
+             window: &mut Window,
+             cx: &mut Context<Workspace>| {
+                let review_editor = git_ui::active_diff_review_editor(workspace, cx);
+                let Some(review_editor) = review_editor else {
+                    return;
+                };
+                let feedback = review_editor.read(cx).review_feedback(cx);
+                if feedback.is_empty() {
+                    return;
+                }
+                let Some(agent_panel) = workspace.panel::<agent_ui::AgentPanel>(cx) else {
+                    workspace.show_error(missing_review_agent_thread_message(), cx);
+                    return;
+                };
+                match agent_panel.update(cx, |panel, cx| {
+                    panel.send_review_feedback(feedback, window, cx)
+                }) {
+                    Ok(true) => {
+                        review_editor.update(cx, |editor, cx| {
+                            editor.clear_review_feedback(cx);
+                        });
+                        workspace.reveal_panel::<agent_ui::AgentPanel>(window, cx);
+                    }
+                    Ok(false) => {
+                        workspace.show_error(missing_review_agent_thread_message(), cx)
+                    }
+                    Err(error) => workspace.show_error(
+                        ama10_i18n::tr_f!("Failed to send review feedback: {}", error).to_string(),
+                        cx,
+                    ),
+                }
+            },
+        )
         .register_action(|_, _: &OpenStatusPage, _, cx| cx.open_url(STATUS_URL))
         .register_action(|_, _: &GetMerch, _, cx| cx.open_url(MERCH_URL))
         .register_action(
@@ -1432,6 +1466,10 @@ fn register_actions(
         workspace.show_error(DebugError, cx);
         workspace.show_error(SecondDebugError, cx);
     });
+}
+
+fn missing_review_agent_thread_message() -> String {
+    ama10_i18n::tr!("Open or create an agent thread before sending review feedback.").to_string()
 }
 
 fn initialize_pane(
