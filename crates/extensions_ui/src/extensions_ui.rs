@@ -11,26 +11,26 @@ use cloud_api_types::{ExtensionMetadata, ExtensionProvides};
 use collections::{BTreeMap, BTreeSet};
 use command_palette_hooks::CommandPaletteFilter;
 use editor::{Editor, EditorElement, EditorStyle};
-use extension_host::{ExtensionManifest, ExtensionOperation, ExtensionStore};
+use extension_host::{ExtensionManifest, ExtensionStore};
 use fuzzy::{StringMatch, StringMatchCandidate, match_strings};
 use gpui::{
-    Action, Anchor, App, ClipboardItem, Context, DismissEvent, Entity, EventEmitter, Focusable,
-    InteractiveElement, KeyContext, ParentElement, Point, Render, Styled, Task, TaskExt, TextStyle,
+    Action, App, ClipboardItem, Context, DismissEvent, Entity, EventEmitter, Focusable,
+    InteractiveElement, KeyContext, ParentElement, Render, Styled, Task, TaskExt, TextStyle,
     UniformListScrollHandle, WeakEntity, Window, actions, point, uniform_list,
 };
-use num_format::{Locale, ToFormattedString};
+
 use picker::{Picker, PickerDelegate};
 use project::DirectoryLister;
-use release_channel::ReleaseChannel;
+
 use schemars::JsonSchema;
 use serde::Deserialize;
 use settings::{Settings, SettingsContent};
 use strum::IntoEnumIterator as _;
 use theme_settings::ThemeSettings;
 use ui::{
-    Banner, Chip, ContextMenu, Divider, ListItem, ListItemSpacing, PopoverMenu, ScrollableHandle,
-    Switch, ToggleButtonGroup, ToggleButtonGroupSize, ToggleButtonGroupStyle, ToggleButtonSimple,
-    Tooltip, WithScrollbar, prelude::*,
+    Banner, ContextMenu, Divider, ListItem, ListItemSpacing, ScrollableHandle, Switch,
+    ToggleButtonGroup, ToggleButtonGroupSize, ToggleButtonGroupStyle, ToggleButtonSimple,
+    WithScrollbar, prelude::*,
 };
 use util::ResultExt;
 use vim_mode_setting::VimModeSetting;
@@ -41,7 +41,7 @@ use workspace::{
 };
 use zed_actions::ExtensionCategoryFilter;
 
-use crate::components::ExtensionCard;
+use crate::components::{ExtensionCard, extension_provides_label, remote_extension_status};
 use crate::extension_version_selector::{
     ExtensionVersionSelector, ExtensionVersionSelectorDelegate,
 };
@@ -291,31 +291,6 @@ pub fn init(cx: &mut App) {
     .detach();
 }
 
-fn extension_provides_label(provides: ExtensionProvides) -> &'static str {
-    match provides {
-        ExtensionProvides::Themes => "Themes",
-        ExtensionProvides::IconThemes => "Icon Themes",
-        ExtensionProvides::Languages => "Languages",
-        ExtensionProvides::Grammars => "Grammars",
-        ExtensionProvides::LanguageServers => "Language Servers",
-        ExtensionProvides::ContextServers => "MCP Servers",
-        ExtensionProvides::AgentServers => "Agent Servers",
-        ExtensionProvides::SlashCommands => "Slash Commands",
-        ExtensionProvides::IndexedDocsProviders => "Indexed Docs Providers",
-        ExtensionProvides::Snippets => "Snippets",
-        ExtensionProvides::DebugAdapters => "Debug Adapters",
-    }
-}
-
-#[derive(Clone)]
-pub enum ExtensionStatus {
-    NotInstalled,
-    Installing,
-    Upgrading,
-    Installed(Arc<str>),
-    Removing,
-}
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 enum ExtensionFilter {
     All,
@@ -399,16 +374,6 @@ fn keywords_by_feature() -> &'static BTreeMap<Feature, Vec<&'static str>> {
             (Feature::Vim, vec!["vim"]),
         ])
     })
-}
-
-fn extension_button_id(extension_id: &Arc<str>, operation: ExtensionOperation) -> ElementId {
-    (SharedString::from(extension_id.clone()), operation as usize).into()
-}
-
-struct ExtensionCardButtons {
-    install_or_uninstall: Button,
-    upgrade: Option<Button>,
-    configure: Option<Button>,
 }
 
 pub struct ExtensionsPage {
@@ -550,45 +515,22 @@ impl ExtensionsPage {
         }
     }
 
-    /// Returns whether a dev extension currently exists for the extension with the given ID.
-    fn dev_extension_exists(extension_id: &str, cx: &mut Context<Self>) -> bool {
-        let extension_store = ExtensionStore::global(cx).read(cx);
-
-        extension_store
-            .dev_extensions()
-            .any(|dev_extension| dev_extension.id.as_ref() == extension_id)
-    }
-
-    fn extension_status(extension_id: &str, cx: &mut Context<Self>) -> ExtensionStatus {
-        let extension_store = ExtensionStore::global(cx).read(cx);
-
-        match extension_store.outstanding_operations().get(extension_id) {
-            Some(ExtensionOperation::Install) => ExtensionStatus::Installing,
-            Some(ExtensionOperation::Remove) => ExtensionStatus::Removing,
-            Some(ExtensionOperation::Upgrade) => ExtensionStatus::Upgrading,
-            None => match extension_store.installed_extensions().get(extension_id) {
-                Some(extension) => ExtensionStatus::Installed(extension.manifest.version.clone()),
-                None => ExtensionStatus::NotInstalled,
-            },
-        }
-    }
-
     fn filter_extension_entries(&mut self, cx: &mut Context<Self>) {
         self.filtered_remote_extension_indices.clear();
         self.filtered_remote_extension_indices.extend(
             self.remote_extension_entries
                 .iter()
                 .enumerate()
-                .filter(|(_, extension)| match self.filter {
-                    ExtensionFilter::All => true,
-                    ExtensionFilter::Installed => {
-                        let status = Self::extension_status(&extension.id, cx);
-                        matches!(status, ExtensionStatus::Installed(_))
+                .filter(|(_, extension)| {
+                    if self.filter == ExtensionFilter::All {
+                        return true;
                     }
-                    ExtensionFilter::NotInstalled => {
-                        let status = Self::extension_status(&extension.id, cx);
 
-                        matches!(status, ExtensionStatus::NotInstalled)
+                    let status = remote_extension_status(&extension.id, cx);
+                    match self.filter {
+                        ExtensionFilter::Installed => status.is_installed(),
+                        ExtensionFilter::NotInstalled => !status.is_installed(),
+                        ExtensionFilter::All => true,
                     }
                 })
                 .filter(|(_, extension)| match self.provides_filter {
@@ -727,7 +669,7 @@ impl ExtensionsPage {
                 if ix < dev_extension_entries_len {
                     let dev_ix = self.filtered_dev_extension_indices[ix];
                     let extension = &self.dev_extension_entries[dev_ix];
-                    self.render_dev_extension(extension, cx)
+                    ExtensionCard::for_dev(extension.clone(), cx)
                 } else {
                     let extension_ix =
                         self.filtered_remote_extension_indices[ix - dev_extension_entries_len];
@@ -738,6 +680,7 @@ impl ExtensionsPage {
             .collect()
     }
 
+<<<<<<< HEAD
     fn render_dev_extension(
         &self,
         extension: &ExtensionManifest,
@@ -873,15 +816,17 @@ impl ExtensionsPage {
             )
     }
 
+=======
+>>>>>>> upstream/main
     fn render_remote_extension(
         &self,
         extension: &ExtensionMetadata,
         cx: &mut Context<Self>,
     ) -> ExtensionCard {
+        let card = ExtensionCard::for_remote(extension, cx);
         let this = cx.weak_entity();
-        let status = Self::extension_status(&extension.id, cx);
-        let has_dev_extension = Self::dev_extension_exists(&extension.id, cx);
 
+<<<<<<< HEAD
         let extension_id = extension.id.clone();
         let buttons = self.buttons_for_entry(extension, &status, has_dev_extension, cx);
         let version = extension.manifest.version.clone();
@@ -1067,10 +1012,30 @@ impl ExtensionsPage {
                     ama10_i18n::tr!("Install Another Version..."),
                     None,
                     window.handler_for(this, {
+=======
+        card.context_menu(move |extension_id, authors, window, cx| {
+            let this = this.upgrade()?;
+            Some(ContextMenu::build(window, cx, |context_menu, window, _| {
+                context_menu
+                    .entry(
+                        "Install Another Version...",
+                        None,
+                        window.handler_for(&this, {
+                            let extension_id = extension_id.clone();
+                            move |this, window, cx| {
+                                this.show_extension_version_list(extension_id.clone(), window, cx)
+                            }
+                        }),
+                    )
+                    .entry("Copy Extension ID", None, {
+>>>>>>> upstream/main
                         let extension_id = extension_id.clone();
-                        move |this, window, cx| {
-                            this.show_extension_version_list(extension_id.clone(), window, cx)
+                        move |_, cx| {
+                            cx.write_to_clipboard(ClipboardItem::new_string(
+                                extension_id.to_string(),
+                            ));
                         }
+<<<<<<< HEAD
                     }),
                 )
                 .entry(ama10_i18n::tr!("Copy Extension ID"), None, {
@@ -1085,6 +1050,13 @@ impl ExtensionsPage {
                         cx.write_to_clipboard(ClipboardItem::new_string(authors.join(", ")));
                     }
                 })
+=======
+                    })
+                    .entry("Copy Author Info", None, move |_, cx| {
+                        cx.write_to_clipboard(ClipboardItem::new_string(authors.to_string()));
+                    })
+            }))
+>>>>>>> upstream/main
         })
     }
 
@@ -1127,6 +1099,7 @@ impl ExtensionsPage {
         .detach_and_log_err(cx);
     }
 
+<<<<<<< HEAD
     fn buttons_for_entry(
         &self,
         extension: &ExtensionMetadata,
@@ -1320,6 +1293,8 @@ impl ExtensionsPage {
         }
     }
 
+=======
+>>>>>>> upstream/main
     fn render_search(&self, cx: &mut Context<Self>) -> Div {
         let mut key_context = KeyContext::new_with_defaults();
         key_context.add("BufferSearchBar");

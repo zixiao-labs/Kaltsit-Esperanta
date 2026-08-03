@@ -113,9 +113,7 @@ pub use git::{
     render_diff_hunk_controls, set_blame_renderer,
 };
 pub(crate) use git::{DiffHunkKey, StoredReviewComment};
-use git::{
-    DiffReviewDragState, DiffReviewOverlay, InlineBlamePopover, update_uncommitted_diff_for_buffer,
-};
+use git::{DiffReviewDragState, DiffReviewOverlay, InlineBlamePopover};
 pub(crate) use git::{DisplayDiffHunk, PhantomDiffReviewIndicator};
 pub use hover_popover::hover_markdown_style;
 pub use inlays::Inlay;
@@ -228,7 +226,7 @@ use project::{
 use rand::seq::SliceRandom;
 use regex::Regex;
 use rpc::{ErrorCode, ErrorExt, proto::PeerId};
-use scroll::{Autoscroll, OngoingScroll, ScrollAnchor, ScrollManager, SharedScrollAnchor};
+use scroll::{Autoscroll, ScrollAnchor, ScrollManager, SharedScrollAnchor};
 use selections_collection::{MutableSelectionsCollection, SelectionsCollection};
 use serde::{Deserialize, Serialize};
 use settings::{
@@ -1223,7 +1221,6 @@ pub struct EditorSnapshot {
     pub placeholder_display_snapshot: Option<DisplaySnapshot>,
     is_focused: bool,
     scroll_anchor: SharedScrollAnchor,
-    ongoing_scroll: OngoingScroll,
     current_line_highlight: CurrentLineHighlight,
     gutter_hovered: bool,
     semantic_tokens_enabled: bool,
@@ -2172,20 +2169,41 @@ impl Editor {
             ));
             let git_store = project.read(cx).git_store().clone();
             let project = project.clone();
-            project_subscriptions.push(cx.subscribe(&git_store, move |this, _, event, cx| {
-                if let GitStoreEvent::RepositoryAdded = event {
-                    this.load_diff_task = Some(
-                        update_uncommitted_diff_for_buffer(
-                            cx.entity(),
-                            &project,
-                            this.buffer.read(cx).all_buffers(),
-                            this.buffer.clone(),
-                            cx,
-                        )
-                        .shared(),
-                    );
-                }
-            }));
+            project_subscriptions.push(cx.subscribe(
+                &git_store,
+                move |this, git_store, event, cx| {
+                    let buffers = match event {
+                        GitStoreEvent::RepositoryAdded | GitStoreEvent::DiffBaseChanged(None) => {
+                            this.buffer.read(cx).all_buffers()
+                        }
+                        GitStoreEvent::DiffBaseChanged(Some(repo_id)) => this
+                            .buffer
+                            .read(cx)
+                            .all_buffers()
+                            .into_iter()
+                            .filter(|buffer| {
+                                git_store
+                                    .read(cx)
+                                    .repository_and_path_for_buffer_id(
+                                        buffer.read(cx).remote_id(),
+                                        cx,
+                                    )
+                                    .is_some_and(|(repo, _)| repo.read(cx).id == *repo_id)
+                            })
+                            .collect(),
+                        _ => return,
+                    };
+                    if buffers.is_empty() {
+                        return;
+                    }
+                    let task = this.update_uncommitted_diff_for_buffer(&project, buffers, cx);
+                    if matches!(event, GitStoreEvent::DiffBaseChanged(Some(_))) {
+                        task.detach();
+                    } else {
+                        this.load_diff_task = Some(task.shared());
+                    }
+                },
+            ));
         }
 
         let buffer_snapshot = multi_buffer.read(cx).snapshot(cx);
@@ -2224,18 +2242,7 @@ impl Editor {
         };
 
         let mut code_action_providers = Vec::new();
-        let mut load_uncommitted_diff = None;
         if let Some(project) = project.clone() {
-            load_uncommitted_diff = Some(
-                update_uncommitted_diff_for_buffer(
-                    cx.entity(),
-                    &project,
-                    multi_buffer.read(cx).all_buffers(),
-                    multi_buffer.clone(),
-                    cx,
-                )
-                .shared(),
-            );
             code_action_providers.push(Rc::new(project) as Rc<_>);
         }
 
@@ -2449,7 +2456,7 @@ impl Editor {
             serialize_selections: Task::ready(()),
             serialize_folds: Task::ready(()),
             text_style_refinement: None,
-            load_diff_task: load_uncommitted_diff,
+            load_diff_task: None,
             diff_hunk_delegate: None,
             minimap: None,
             change_list: ChangeList::new(),
@@ -2475,6 +2482,18 @@ impl Editor {
             sticky_headers: None,
             colorize_brackets_task: Task::ready(()),
         };
+
+        if let Some(project) = editor.project.clone() {
+            editor.load_diff_task = Some(
+                editor
+                    .update_uncommitted_diff_for_buffer(
+                        &project,
+                        multi_buffer.read(cx).all_buffers(),
+                        cx,
+                    )
+                    .shared(),
+            );
+        }
 
         if is_minimap {
             return editor;
@@ -2740,6 +2759,9 @@ impl Editor {
         }
 
         let disjoint = self.selections.disjoint_anchors();
+        if disjoint.len() > 1 {
+            key_context.add("multiple_selections");
+        }
         if matches!(
             &self.mode,
             EditorMode::SingleLine | EditorMode::AutoHeight { .. }
@@ -3007,7 +3029,6 @@ impl Editor {
                 .placeholder_display_map
                 .as_ref()
                 .map(|display_map| display_map.update(cx, |map, cx| map.snapshot(cx))),
-            ongoing_scroll: self.scroll_manager.ongoing_scroll(),
             is_focused: self.focus_handle.is_focused(window),
             current_line_highlight: self
                 .current_line_highlight
@@ -9646,16 +9667,10 @@ impl Editor {
                 self.refresh_document_highlights(cx);
                 let buffer_id = buffer.read(cx).remote_id();
                 if self.buffer.read(cx).diff_for(buffer_id).is_none()
-                    && let Some(project) = &self.project
+                    && let Some(project) = self.project.clone()
                 {
-                    update_uncommitted_diff_for_buffer(
-                        cx.entity(),
-                        project,
-                        [buffer.clone()],
-                        self.buffer.clone(),
-                        cx,
-                    )
-                    .detach();
+                    self.update_uncommitted_diff_for_buffer(&project, [buffer.clone()], cx)
+                        .detach();
                 }
                 self.register_visible_buffers(cx);
                 self.update_lsp_data(Some(buffer_id), window, cx);
@@ -9784,7 +9799,8 @@ impl Editor {
                     .into_iter()
                     .flatten(),
             )
-            .flat_map(|accent| accent.0.clone().map(SharedString::from))
+            .flat_map(|accent| accent.0.as_ref().map(|c| c.to_string()))
+            .map(SharedString::from)
             .collect();
 
         Some(AccentData {

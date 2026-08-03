@@ -1162,14 +1162,39 @@ fn appearance_page() -> SettingsPage {
         ]
     }
 
-    fn agent_panel_font_section() -> [SettingsPageItem; 3] {
+    fn agent_panel_font_section() -> [SettingsPageItem; 5] {
         [
             SettingsPageItem::SectionHeader(tr!("Agent Panel Font")),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("UI Font Size"),
                 description: tr!(
                     "Font size for agent response text in the agent panel. Falls back to the regular UI font size."
                 ),
+=======
+                title: "UI Font Family",
+                description: "Font family for agent response text in the agent panel. Falls back to the regular UI font family.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("agent_ui_font_family"),
+                    pick: |settings_content| {
+                        settings_content
+                            .theme
+                            .agent_ui_font_family
+                            .as_ref()
+                            .or(settings_content.theme.ui_font_family.as_ref())
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content.theme.agent_ui_font_family = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "UI Font Size",
+                description: "Font size for agent response text in the agent panel. Falls back to the regular UI font size.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_ui_font_size"),
@@ -1188,8 +1213,33 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Buffer Font Size"),
                 description: tr!("Font size for user messages text in the agent panel."),
+=======
+                title: "Buffer Font Family",
+                description: "Font family for user messages in the agent panel. Falls back to the regular buffer font family.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("agent_buffer_font_family"),
+                    pick: |settings_content| {
+                        settings_content
+                            .theme
+                            .agent_buffer_font_family
+                            .as_ref()
+                            .or(settings_content.theme.buffer_font_family.as_ref())
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content.theme.agent_buffer_font_family = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Buffer Font Size",
+                description: "Font size for user messages text in the agent panel.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_buffer_font_size"),
@@ -2150,7 +2200,7 @@ fn editor_page() -> SettingsPage {
         ]
     }
 
-    fn gutter_section() -> [SettingsPageItem; 9] {
+    fn gutter_section() -> [SettingsPageItem; 10] {
         [
             SettingsPageItem::SectionHeader(tr!("Gutter")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -2312,8 +2362,37 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Inline Code Actions"),
                 description: tr!("Show code action button at start of buffer line."),
+=======
+                title: "Git Gutter Width",
+                description: "Width, in pixels, of the git diff indicators in the gutter. When unset, the width scales with the buffer font size.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("gutter.git_gutter_width"),
+                    pick: |settings_content| {
+                        settings_content
+                            .editor
+                            .gutter
+                            .as_ref()
+                            .and_then(|gutter| gutter.git_gutter_width.as_ref())
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .editor
+                            .gutter
+                            .get_or_insert_default()
+                            .git_gutter_width = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Inline Code Actions",
+                description: "Show code action button at start of buffer line.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("inline_code_actions"),
@@ -8054,7 +8133,7 @@ fn version_control_page() -> SettingsPage {
         ]
     }
 
-    fn git_hunks_section() -> [SettingsPageItem; 4] {
+    fn git_hunks_section() -> [SettingsPageItem; 5] {
         [
             SettingsPageItem::SectionHeader(tr!("Git Hunks")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -8072,8 +8151,27 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Path Style"),
                 description: tr!("Should the name or path be displayed first in the git view."),
+=======
+                title: "Diff Base",
+                description: "Whether git features show changes relative to HEAD (uncommitted changes) or to the default branch (all changes on the current branch).",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("git.diff_base"),
+                    pick: |settings_content| settings_content.git.as_ref()?.diff_base.as_ref(),
+                    write: |settings_content, value, _| {
+                        settings_content.git.get_or_insert_default().diff_base = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Path Style",
+                description: "Should the name or path be displayed first in the git view.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.path_style"),
