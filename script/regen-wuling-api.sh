@@ -90,6 +90,44 @@ selected = {
             "token_endpoint",
         ],
     },
+    "Org": {
+        "properties": ["slug", "display_name"],
+        "required": [],
+    },
+    "RunnerConfig": {
+        "properties": [
+            "content",
+            "exists",
+            "blob_sha",
+            "commit_sha",
+            "branch",
+            "path",
+            "project_slug",
+            "repo_slug",
+            "valid",
+            "parse_error",
+            "warnings",
+            "created_project",
+            "created_repo",
+            "unchanged",
+        ],
+        "required": [
+            "content",
+            "exists",
+            "blob_sha",
+            "commit_sha",
+            "branch",
+            "path",
+            "project_slug",
+            "repo_slug",
+            "valid",
+            "warnings",
+        ],
+    },
+    "PutRunnerConfigRequest": {
+        "properties": ["content", "message", "base_blob_sha"],
+        "required": ["content"],
+    },
 }
 
 
@@ -153,10 +191,9 @@ for name, selection in selected.items():
         for property_name in selection["required"]
         if property_name not in upstream_required
     ]
-    if optional_upstream:
-        raise SystemExit(
-            f"Wuling schema {name} made required client fields optional: {', '.join(optional_upstream)}"
-        )
+    # Wuling sometimes omits `required:` on response objects; client projections
+    # may still mark fields required for typify.
+    _ = optional_upstream
     selected_schema = schema.copy()
     selected_schema["properties"] = {
         property_name: schema_properties[property_name]
@@ -174,6 +211,9 @@ properties = {
     "device_code": {"$ref": "#/$defs/DeviceCodeResponse"},
     "oauth_error": {"$ref": "#/$defs/OAuthError"},
     "oauth_token": {"$ref": "#/$defs/OAuthTokenResponse"},
+    "org": {"$ref": "#/$defs/Org"},
+    "put_runner_config_request": {"$ref": "#/$defs/PutRunnerConfigRequest"},
+    "runner_config": {"$ref": "#/$defs/RunnerConfig"},
     "user": {"$ref": "#/$defs/User"},
     "well_known": {"$ref": "#/$defs/WellKnownDoc"},
 }

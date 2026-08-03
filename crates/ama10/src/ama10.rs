@@ -8,5 +8,8 @@
 pub mod auth;
 pub mod connector;
 pub mod github;
+pub mod runner_config;
 pub mod server_url;
+pub mod workflow;
+pub mod workflow_simulate;
 pub mod wuling_api;

@@ -10,11 +10,15 @@ license = "GPL-3.0-or-later"
 ama10-i18n.workspace = true
 ama10.workspace = true
 anyhow.workspace = true
+client.workspace = true
 credentials_provider.workspace = true
+editor.workspace = true
 gpui.workspace = true
 gpui_tokio.workspace = true
+language.workspace = true
 log.workspace = true
 menu.workspace = true
+project.workspace = true
 serde_json.workspace = true
 settings.workspace = true
 # Used only for the `runtime::Handle` type so `WulingClient::new` can be
