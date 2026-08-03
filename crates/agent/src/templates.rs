@@ -346,6 +346,8 @@ mod tests {
             available_tools: vec!["echo".into(), "terminal".into()],
             model_name: Some("test-model".to_string()),
             date: "2026-01-01".to_string(),
+            plan_mode: false,
+            plan_file: None,
             user_agents_md: None,
             sandboxing: true,
             is_linux: false,
