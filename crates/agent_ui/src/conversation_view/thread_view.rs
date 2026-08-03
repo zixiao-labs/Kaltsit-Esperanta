@@ -9341,7 +9341,7 @@ impl ThreadView {
             .map(|this| {
                 if is_redirected {
                     this.child(captioned_path(
-                        ama10_i18n::tr!("Source").into(),
+                        ama10_i18n::tr!("Source"),
                         requested_display,
                         cx,
                     ))
@@ -9351,7 +9351,7 @@ impl ThreadView {
                                 .size(IconSize::Small),
                         )
                         .child(captioned_path(
-                            ama10_i18n::tr!("Target").into(),
+                            ama10_i18n::tr!("Target"),
                             granted_display,
                             cx,
                         ))
@@ -9359,7 +9359,7 @@ impl ThreadView {
                     // Not a genuine redirect: show what the user asked for (e.g.
                     // the `C:\...` path), not the internal Linux canonical.
                     this.child(captioned_path(
-                        ama10_i18n::tr!("Write Path").into(),
+                        ama10_i18n::tr!("Write Path"),
                         requested_display,
                         cx,
                     ))
