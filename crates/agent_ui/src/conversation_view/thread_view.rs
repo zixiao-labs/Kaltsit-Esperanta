@@ -9345,16 +9345,16 @@ impl ThreadView {
                         requested_display,
                         cx,
                     ))
-                        .child(
-                            Icon::new(IconName::ArrowDown)
-                                .color(Color::Muted)
-                                .size(IconSize::Small),
-                        )
-                        .child(captioned_path(
-                            ama10_i18n::tr!("Target"),
-                            granted_display,
-                            cx,
-                        ))
+                    .child(
+                        Icon::new(IconName::ArrowDown)
+                            .color(Color::Muted)
+                            .size(IconSize::Small),
+                    )
+                    .child(captioned_path(
+                        ama10_i18n::tr!("Target"),
+                        granted_display,
+                        cx,
+                    ))
                 } else {
                     // Not a genuine redirect: show what the user asked for (e.g.
                     // the `C:\...` path), not the internal Linux canonical.

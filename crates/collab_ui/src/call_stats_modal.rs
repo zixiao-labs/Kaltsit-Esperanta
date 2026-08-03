@@ -306,17 +306,17 @@ impl Render for CallStatsModal {
             )
             .when(!is_connected && has_diagnostics, |this| {
                 this.child(
-                    h_flex()
-                        .justify_center()
-                        .child(Label::new(tr!("Showing diagnostics from the most recent call")).color(Color::Muted)),
+                    h_flex().justify_center().child(
+                        Label::new(tr!("Showing diagnostics from the most recent call"))
+                            .color(Color::Muted),
+                    ),
                 )
             })
             .when(!has_diagnostics, |this| {
                 this.child(
-                    h_flex()
-                        .justify_center()
-                        .py_4()
-                        .child(Label::new(tr!("No call diagnostics available")).color(Color::Muted)),
+                    h_flex().justify_center().py_4().child(
+                        Label::new(tr!("No call diagnostics available")).color(Color::Muted),
+                    ),
                 )
             })
             .when(has_diagnostics, |this| {
@@ -372,7 +372,9 @@ impl Render for CallStatsModal {
                         .child(
                             v_flex()
                                 .gap_1()
-                                .child(Label::new(tr!("Inbound audio")).weight(FontWeight::SEMIBOLD))
+                                .child(
+                                    Label::new(tr!("Inbound audio")).weight(FontWeight::SEMIBOLD),
+                                )
                                 .when(remote_audio.is_empty(), |this| {
                                     this.child(
                                         Label::new(tr!("Waiting for inbound audio statistics"))
