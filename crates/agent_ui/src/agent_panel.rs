@@ -6047,7 +6047,6 @@ impl AgentPanel {
         };
 
         let is_full_screen = self.is_zoomed(window, cx);
-<<<<<<< HEAD
         let (icon_id, icon_name, tooltip_text) = if is_full_screen {
             (
                 "disable-full-screen",
@@ -6060,21 +6059,11 @@ impl AgentPanel {
                 IconName::Maximize,
                 ama10_i18n::tr!("Enable Full Screen"),
             )
-=======
-        let (icon_name, tooltip_text) = if is_full_screen {
-            (IconName::Minimize, "Disable Full Screen")
-        } else {
-            (IconName::Maximize, "Enable Full Screen")
->>>>>>> upstream/main
         };
-        let full_screen_button = IconButton::new("toggle-full-screen", icon_name)
+        let full_screen_button = IconButton::new(icon_id, icon_name)
             .icon_size(IconSize::Small)
-<<<<<<< HEAD
-            .tooltip(move |_, cx| Tooltip::for_action(tooltip_text.clone(), &ToggleZoom, cx))
-=======
             .toggle_state(is_full_screen)
-            .tooltip(move |_, cx| Tooltip::for_action(tooltip_text, &ToggleZoom, cx))
->>>>>>> upstream/main
+            .tooltip(move |_, cx| Tooltip::for_action(tooltip_text.clone(), &ToggleZoom, cx))
             .on_click(cx.listener(move |this, _, window, cx| {
                 this.toggle_zoom(&ToggleZoom, window, cx);
             }));

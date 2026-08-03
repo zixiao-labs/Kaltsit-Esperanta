@@ -1166,14 +1166,10 @@ fn appearance_page() -> SettingsPage {
         [
             SettingsPageItem::SectionHeader(tr!("Agent Panel Font")),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("UI Font Size"),
+                title: tr!("UI Font Family"),
                 description: tr!(
-                    "Font size for agent response text in the agent panel. Falls back to the regular UI font size."
+                    "Font family for agent response text in the agent panel. Falls back to the regular UI font family."
                 ),
-=======
-                title: "UI Font Family",
-                description: "Font family for agent response text in the agent panel. Falls back to the regular UI font family.",
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_ui_font_family"),
@@ -1192,9 +1188,10 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "UI Font Size",
-                description: "Font size for agent response text in the agent panel. Falls back to the regular UI font size.",
->>>>>>> upstream/main
+                title: tr!("UI Font Size"),
+                description: tr!(
+                    "Font size for agent response text in the agent panel. Falls back to the regular UI font size."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_ui_font_size"),
@@ -1213,12 +1210,10 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Buffer Font Size"),
-                description: tr!("Font size for user messages text in the agent panel."),
-=======
-                title: "Buffer Font Family",
-                description: "Font family for user messages in the agent panel. Falls back to the regular buffer font family.",
+                title: tr!("Buffer Font Family"),
+                description: tr!(
+                    "Font family for user messages in the agent panel. Falls back to the regular buffer font family."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_buffer_font_family"),
@@ -1237,9 +1232,8 @@ fn appearance_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Buffer Font Size",
-                description: "Font size for user messages text in the agent panel.",
->>>>>>> upstream/main
+                title: tr!("Buffer Font Size"),
+                description: tr!("Font size for user messages text in the agent panel."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("agent_buffer_font_size"),
@@ -2362,12 +2356,10 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Inline Code Actions"),
-                description: tr!("Show code action button at start of buffer line."),
-=======
-                title: "Git Gutter Width",
-                description: "Width, in pixels, of the git diff indicators in the gutter. When unset, the width scales with the buffer font size.",
+                title: tr!("Git Gutter Width"),
+                description: tr!(
+                    "Width, in pixels, of the git diff indicators in the gutter. When unset, the width scales with the buffer font size."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("gutter.git_gutter_width"),
@@ -2390,9 +2382,8 @@ fn editor_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Inline Code Actions",
-                description: "Show code action button at start of buffer line.",
->>>>>>> upstream/main
+                title: tr!("Inline Code Actions"),
+                description: tr!("Show code action button at start of buffer line."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("inline_code_actions"),
@@ -8151,12 +8142,10 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-<<<<<<< HEAD
-                title: tr!("Path Style"),
-                description: tr!("Should the name or path be displayed first in the git view."),
-=======
-                title: "Diff Base",
-                description: "Whether git features show changes relative to HEAD (uncommitted changes) or to the default branch (all changes on the current branch).",
+                title: tr!("Diff Base"),
+                description: tr!(
+                    "Whether git features show changes relative to HEAD (uncommitted changes) or to the default branch (all changes on the current branch)."
+                ),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.diff_base"),
@@ -8169,9 +8158,8 @@ fn version_control_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
-                title: "Path Style",
-                description: "Should the name or path be displayed first in the git view.",
->>>>>>> upstream/main
+                title: tr!("Path Style"),
+                description: tr!("Should the name or path be displayed first in the git view."),
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git.path_style"),

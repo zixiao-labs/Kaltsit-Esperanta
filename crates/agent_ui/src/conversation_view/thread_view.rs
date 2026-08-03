@@ -9300,25 +9300,6 @@ impl ThreadView {
         granted: &settings::GrantedWritePath,
         cx: &Context<Self>,
     ) -> Stateful<Div> {
-<<<<<<< HEAD
-        let display_path = path.display().to_string();
-        let file_name = path
-            .file_name()
-            .map(|name| name.to_string_lossy().into_owned())
-            .unwrap_or_else(|| display_path.clone());
-        let parent_path = path.parent().and_then(|parent| {
-            let parent = parent.display().to_string();
-            (!parent.is_empty()).then_some(parent)
-        });
-        let path_icon = FileIcons::get_icon(path, cx)
-            .map(Icon::from_path)
-            .map(|icon| icon.color(Color::Muted).size(IconSize::Small))
-            .unwrap_or_else(|| {
-                Icon::new(IconName::Folder)
-                    .color(Color::Muted)
-                    .size(IconSize::Small)
-            });
-=======
         // The path that is actually granted is the resolved canonical target.
         // When the request went through a symlink to a *different* target, both
         // paths are shown, each explicitly captioned, so it's unmistakable which
@@ -9334,7 +9315,6 @@ impl ThreadView {
             .resolved
             .as_deref()
             .is_some_and(|resolved| resolved != requested_path.as_path());
->>>>>>> upstream/main
 
         let granted_display = granted_path.display().to_string();
         let requested_display = requested_path.display().to_string();
@@ -9354,64 +9334,38 @@ impl ThreadView {
         v_flex()
             .id(format!("sandbox-authorization-path-{entry_ix}-{path_ix}"))
             .min_w_0()
-<<<<<<< HEAD
-            .p_1p5()
-            .gap_2()
-            .bg(cx.theme().colors().editor_background)
-            .when(show_border, |this| {
-                this.border_b_1().border_color(cx.theme().colors().border)
-            })
-            .child(
-                h_flex()
-                    .id(SharedString::from(format!(
-                        "sandbox-authorization-path-name-{entry_ix}-{path_ix}"
-                    )))
-                    .min_w_0()
-                    .gap_0p5()
-                    .child(path_icon)
-                    .child(
-                        Label::new(file_name)
-                            .size(LabelSize::XSmall)
-                            .buffer_font(cx),
-                    )
-                    .when_some(parent_path, |this, parent_path| {
-                        this.child(
-                            Label::new(format!(" {parent_path}"))
-=======
             .gap_1()
             .px_2()
             .py_1p5()
             .bg(cx.theme().colors().editor_background)
             .map(|this| {
                 if is_redirected {
-                    this.child(captioned_path("Source".into(), requested_display, cx))
+                    this.child(captioned_path(
+                        ama10_i18n::tr!("Source").into(),
+                        requested_display,
+                        cx,
+                    ))
                         .child(
                             Icon::new(IconName::ArrowDown)
->>>>>>> upstream/main
                                 .color(Color::Muted)
                                 .size(IconSize::Small),
                         )
-<<<<<<< HEAD
-                    })
-                    .tooltip(move |_window, cx| {
-                        Tooltip::with_meta(
-                            ama10_i18n::tr!("Requested write path"),
-                            None,
-                            display_path.clone(),
+                        .child(captioned_path(
+                            ama10_i18n::tr!("Target").into(),
+                            granted_display,
                             cx,
-                        )
-                    }),
-            )
-=======
-                        .child(captioned_path("Target".into(), granted_display, cx))
+                        ))
                 } else {
                     // Not a genuine redirect: show what the user asked for (e.g.
                     // the `C:\...` path), not the internal Linux canonical.
-                    this.child(captioned_path("Write Path".into(), requested_display, cx))
+                    this.child(captioned_path(
+                        ama10_i18n::tr!("Write Path").into(),
+                        requested_display,
+                        cx,
+                    ))
                 }
             })
             .child(Divider::horizontal())
->>>>>>> upstream/main
     }
 
     fn render_permission_buttons(

@@ -3402,14 +3402,9 @@ impl CollabPanel {
     fn render_contact_placeholder(&self, is_selected: bool, cx: &mut Context<Self>) -> ListItem {
         ListItem::new("contact-placeholder")
             .child(Icon::new(IconName::Plus))
-<<<<<<< HEAD
             .child(Label::new(tr!("Add a Contact")))
-            .toggle_state(is_selected)
-=======
-            .child(Label::new("Add a Contact"))
             .focused(is_selected)
             .dock(self.dock_side(cx))
->>>>>>> upstream/main
             .on_click(cx.listener(|this, _, window, cx| this.toggle_contact_finder(window, cx)))
     }
 

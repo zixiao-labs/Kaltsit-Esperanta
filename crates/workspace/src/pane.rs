@@ -4079,20 +4079,14 @@ impl Pane {
         let (should_block, needs_wsl_translation) = self
             .workspace
             .update(cx, |workspace, cx| {
-<<<<<<< HEAD
-                if workspace.project().read(cx).is_via_collab() {
-                    workspace
-                        .show_error(tr!("Cannot drop files on a remote project").to_string(), cx);
-                    true
-                } else {
-                    false
-=======
                 let project = workspace.project().read(cx);
 
                 if project.is_via_collab() {
-                    workspace.show_error("Cannot drop files on a remote project", cx);
+                    workspace.show_error(
+                        tr!("Cannot drop files on a remote project").to_string(),
+                        cx,
+                    );
                     return (true, false);
->>>>>>> upstream/main
                 }
                 if project.is_via_remote_server() {
                     if !project.is_via_wsl(cx) {

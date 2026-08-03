@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-use ama10_i18n::tr;
-use call::{ActiveCall, Room, room};
-use gpui::{
-    DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, FontWeight, Render, SharedString,
-    Subscription, Window,
-=======
+use ama10_i18n::{tr, tr_f};
 use anyhow::Result;
 use call::{
     ActiveCall,
@@ -14,7 +8,6 @@ use call::{
 use gpui::{
     ClipboardItem, DismissEvent, Entity, EventEmitter, FocusHandle, Focusable, FontWeight, Render,
     Subscription, Task, TaskExt as _, Window,
->>>>>>> upstream/main
 };
 use livekit_client::ConnectionQuality;
 use release_channel::{AppVersion, ReleaseChannel};
@@ -246,28 +239,6 @@ impl Focusable for CallStatsModal {
 
 impl Render for CallStatsModal {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-<<<<<<< HEAD
-        let room = active_room(cx);
-        let is_connected = room.is_some();
-        let Some(stats) = room.and_then(|room| {
-            let diagnostics = room.read(cx).diagnostics()?;
-            Some(diagnostics.read(cx).stats().clone())
-        }) else {
-            return v_flex()
-                .key_context("CallStatsModal")
-                .on_action(cx.listener(Self::dismiss))
-                .track_focus(&self.focus_handle)
-                .elevation_3(cx)
-                .w(rems(24.))
-                .p_4()
-                .gap_3()
-                .child(
-                    Label::new(tr!("Unable to fetch call statistics"))
-                        .size(LabelSize::Large)
-                        .color(Color::Error),
-                );
-        };
-=======
         let is_connected = ActiveCall::try_global(cx)
             .is_some_and(|active_call| active_call.read(cx).room().is_some());
         let diagnostics = call_diagnostics(cx);
@@ -309,7 +280,6 @@ impl Render for CallStatsModal {
             .map(|snapshot| snapshot.remote_audio)
             .unwrap_or_default();
         remote_audio.sort_by_key(|audio| Reverse(audio_issue_score(audio)));
->>>>>>> upstream/main
 
         let (quality_text, quality_color) =
             quality_label(stats.connection_quality.map(|inner| inner.0));
@@ -338,7 +308,7 @@ impl Render for CallStatsModal {
                 this.child(
                     h_flex()
                         .justify_center()
-                        .child(Label::new("Showing diagnostics from the most recent call").color(Color::Muted)),
+                        .child(Label::new(tr!("Showing diagnostics from the most recent call")).color(Color::Muted)),
                 )
             })
             .when(!has_diagnostics, |this| {
@@ -346,11 +316,7 @@ impl Render for CallStatsModal {
                     h_flex()
                         .justify_center()
                         .py_4()
-<<<<<<< HEAD
-                        .child(Label::new(tr!("Not in a call")).color(Color::Muted)),
-=======
-                        .child(Label::new("No call diagnostics available").color(Color::Muted)),
->>>>>>> upstream/main
+                        .child(Label::new(tr!("No call diagnostics available")).color(Color::Muted)),
                 )
             })
             .when(has_diagnostics, |this| {
@@ -361,43 +327,11 @@ impl Render for CallStatsModal {
                         .max_h(rems(32.))
                         .overflow_y_scroll()
                         .child(
-<<<<<<< HEAD
-                            h_flex()
-                                .gap_2()
-                                .child(Label::new(tr!("Network")).weight(FontWeight::SEMIBOLD)),
-                        )
-                        .child(self.render_metric_row(
-                            tr!("Latency"),
-                            tr!("Time for data to travel to the server"),
-                            stats.latency_ms,
-                            |v| format!("{:.0}ms", v),
-                            |v| metric_rating("Latency", v),
-                        ))
-                        .child(self.render_metric_row(
-                            tr!("Jitter"),
-                            tr!("Variance or fluctuation in latency"),
-                            stats.jitter_ms,
-                            |v| format!("{:.0}ms", v),
-                            |v| metric_rating("Jitter", v),
-                        ))
-                        .child(self.render_metric_row(
-                            tr!("Packet loss"),
-                            tr!("Amount of data lost during transfer"),
-                            stats.packet_loss_pct,
-                            |v| format!("{:.1}%", v),
-                            |v| packet_loss_rating(v),
-                        ))
-                        .child(self.render_metric_row(
-                            tr!("Input lag"),
-                            tr!("Delay from audio capture to WebRTC"),
-                            stats.input_lag.map(|d| d.as_secs_f64() * 1000.0),
-                            |v| format!("{:.1}ms", v),
-                            |v| input_lag_rating(v),
-                        )),
-=======
-                            Label::new(format!(
-                                "{sample_count} samples · {:.0}s retained · {recent_issue_count} affected intervals in the last 60s",
-                                retained_duration.as_secs_f64()
+                            Label::new(tr_f!(
+                                "{} samples · {}s retained · {} affected intervals in the last 60s",
+                                sample_count,
+                                format!("{:.0}", retained_duration.as_secs_f64()),
+                                recent_issue_count
                             ))
                             .size(LabelSize::Small)
                             .color(Color::Muted),
@@ -405,31 +339,31 @@ impl Render for CallStatsModal {
                         .child(
                             v_flex()
                                 .gap_1()
-                                .child(Label::new("Network").weight(FontWeight::SEMIBOLD))
+                                .child(Label::new(tr!("Network")).weight(FontWeight::SEMIBOLD))
                                 .child(self.render_metric_row(
-                                    "Latency",
-                                    "Time for data to travel to the server",
+                                    tr!("Latency"),
+                                    tr!("Time for data to travel to the server"),
                                     stats.latency_ms,
                                     |v| format!("{:.0}ms", v),
                                     |v| metric_rating("Latency", v),
                                 ))
                                 .child(self.render_metric_row(
-                                    "Jitter",
-                                    "Variance or fluctuation in latency",
+                                    tr!("Jitter"),
+                                    tr!("Variance or fluctuation in latency"),
                                     stats.jitter_ms,
                                     |v| format!("{:.0}ms", v),
                                     |v| metric_rating("Jitter", v),
                                 ))
                                 .child(self.render_metric_row(
-                                    "Packet loss",
-                                    "Amount of data lost during transfer",
+                                    tr!("Packet loss"),
+                                    tr!("Amount of data lost during transfer"),
                                     stats.packet_loss_pct,
                                     |v| format!("{:.1}%", v),
                                     packet_loss_rating,
                                 ))
                                 .child(self.render_metric_row(
-                                    "Input lag",
-                                    "Delay from audio capture to WebRTC",
+                                    tr!("Input lag"),
+                                    tr!("Delay from audio capture to WebRTC"),
                                     stats.input_lag.map(|d| d.0.as_millis()),
                                     |v| format!("{}ms", v),
                                     input_lag_rating,
@@ -438,10 +372,10 @@ impl Render for CallStatsModal {
                         .child(
                             v_flex()
                                 .gap_1()
-                                .child(Label::new("Inbound audio").weight(FontWeight::SEMIBOLD))
+                                .child(Label::new(tr!("Inbound audio")).weight(FontWeight::SEMIBOLD))
                                 .when(remote_audio.is_empty(), |this| {
                                     this.child(
-                                        Label::new("Waiting for inbound audio statistics")
+                                        Label::new(tr!("Waiting for inbound audio statistics"))
                                             .color(Color::Muted),
                                     )
                                 })
@@ -459,14 +393,13 @@ impl Render for CallStatsModal {
                         .justify_end()
                         .gap_2()
                         .child(
-                            Button::new("copy-call-diagnostics", "Copy Report")
+                            Button::new("copy-call-diagnostics", tr!("Copy Report"))
                                 .on_click(cx.listener(|this, _, _, cx| this.copy_report(cx))),
                         )
                         .child(
-                            Button::new("save-call-diagnostics", "Save Report…")
+                            Button::new("save-call-diagnostics", tr!("Save Report…"))
                                 .on_click(cx.listener(|this, _, _, cx| this.save_report(cx))),
                         ),
->>>>>>> upstream/main
                 )
             })
     }
@@ -567,19 +500,11 @@ impl CallStatsModal {
 
     fn render_metric_row<T: Copy + Clone>(
         &self,
-<<<<<<< HEAD
         title: SharedString,
         description: SharedString,
-        value: Option<f64>,
-        format_value: impl Fn(f64) -> String,
-        rate: impl Fn(f64) -> (&'static str, Color),
-=======
-        title: &str,
-        description: &str,
         value: Option<T>,
         format_value: impl Fn(T) -> String,
         rate: impl Fn(T) -> (&'static str, Color),
->>>>>>> upstream/main
     ) -> impl IntoElement {
         let (rating_text, rating_color, value_text) = match value {
             Some(v) => {

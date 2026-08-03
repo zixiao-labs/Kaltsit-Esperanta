@@ -7532,6 +7532,7 @@ dependencies = [
 name = "git_ui_core"
 version = "0.1.0"
 dependencies = [
+ "ama10-i18n",
  "anyhow",
  "askpass",
  "buffer_diff",
@@ -14405,11 +14406,7 @@ dependencies = [
  "itertools 0.14.0",
  "language",
  "log",
-<<<<<<< HEAD
-=======
  "markdown",
- "markdown_preview",
->>>>>>> upstream/main
  "menu",
  "notifications",
  "pretty_assertions",

@@ -13,6 +13,7 @@ name = "git_ui_core"
 path = "src/git_ui_core.rs"
 
 [dependencies]
+ama10-i18n.workspace = true
 anyhow.workspace = true
 askpass.workspace = true
 buffer_diff.workspace = true

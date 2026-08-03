@@ -319,13 +319,8 @@ impl UndoMessage {
             UndoMessage::Changed(_) => {
                 tr!("this is a bug in the manage_undo_and_redo task please report")
             }
-<<<<<<< HEAD
-            UndoMessage::Undo => tr!("Undo failed"),
-            UndoMessage::Redo => tr!("Redo failed"),
-=======
-            UndoMessage::Undo => "Undo Failed",
-            UndoMessage::Redo => "Redo Failed",
->>>>>>> upstream/main
+            UndoMessage::Undo => tr!("Undo Failed"),
+            UndoMessage::Redo => tr!("Redo Failed"),
         }
     }
 }

@@ -22,22 +22,13 @@ use git_ui_core::file_diff_view::FileDiffView;
 use gpui::{
     Action, AnyElement, App, AsyncWindowContext, Bounds, ClipboardEntry as GpuiClipboardEntry,
     ClipboardItem, Context, CursorStyle, DismissEvent, Div, DragMoveEvent, Entity, EventEmitter,
-<<<<<<< HEAD
-    ExternalPaths, FocusHandle, Focusable, FontWeight, Hsla, InteractiveElement, KeyContext,
-    ListHorizontalSizingBehavior, ListSizingBehavior, Modifiers, ModifiersChangedEvent,
-    MouseButton, MouseDownEvent, MouseExitEvent, ParentElement, PathPromptOptions, Pixels, Point,
-    PromptButton, PromptLevel, Render, ScrollStrategy, Stateful, Styled, Subscription, Task,
-    UniformListScrollHandle, WeakEntity, Window, actions, anchored, deferred, div, hsla,
-    linear_color_stop, linear_gradient, point, px, size, transparent_white, uniform_list,
-=======
     ExternalDragPayload, ExternalPaths, FileDragPaths, FocusHandle, Focusable, FontWeight, Hsla,
     InteractiveElement, KeyContext, ListHorizontalSizingBehavior, ListSizingBehavior, Modifiers,
     ModifiersChangedEvent, MouseButton, MouseDownEvent, MouseExitEvent, ParentElement,
-    PathPromptOptions, Pixels, Point, PromptLevel, Render, ScrollStrategy, Stateful, Styled,
-    Subscription, Task, UniformListScrollHandle, WeakEntity, Window, actions, anchored, deferred,
-    div, hsla, linear_color_stop, linear_gradient, point, px, size, transparent_white,
+    PathPromptOptions, Pixels, Point, PromptButton, PromptLevel, Render, ScrollStrategy, Stateful,
+    Styled, Subscription, Task, UniformListScrollHandle, WeakEntity, Window, actions, anchored,
+    deferred, div, hsla, linear_color_stop, linear_gradient, point, px, size, transparent_white,
     uniform_list,
->>>>>>> upstream/main
 };
 use language::DiagnosticSeverity;
 use menu::{Confirm, SelectFirst, SelectLast, SelectNext, SelectPrevious};
@@ -1116,14 +1107,6 @@ impl ProjectPanel {
             let is_remote = project.is_remote();
             let is_collab = project.is_via_collab();
             let is_local = project.is_local() || project.is_via_wsl_with_host_interop(cx);
-<<<<<<< HEAD
-=======
-            let is_markdown = !is_dir
-                && MarkdownPreviewView::is_markdown_path(
-                    entry.path.as_std_path(),
-                    project.languages(),
-                );
->>>>>>> upstream/main
 
             let settings = ProjectPanelSettings::get_global(cx);
             let visible_worktrees_count = project.visible_worktrees(cx).count();
@@ -1763,37 +1746,6 @@ impl ProjectPanel {
         );
     }
 
-<<<<<<< HEAD
-=======
-    fn open_markdown_preview(
-        &mut self,
-        _: &OpenMarkdownPreview,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let Some((worktree, entry)) = self.selected_entry(cx) else {
-            return;
-        };
-        if !entry.is_file()
-            || !MarkdownPreviewView::is_markdown_path(
-                entry.path.as_std_path(),
-                self.project.read(cx).languages(),
-            )
-        {
-            return;
-        }
-        let project_path = ProjectPath {
-            worktree_id: worktree.id(),
-            path: entry.path.clone(),
-        };
-        self.workspace
-            .update(cx, |workspace, cx| {
-                MarkdownPreviewView::open_for_project_path(project_path, workspace, window, cx);
-            })
-            .ok();
-    }
-
->>>>>>> upstream/main
     fn open_internal(
         &mut self,
         allow_preview: bool,
