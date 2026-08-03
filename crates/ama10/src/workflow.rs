@@ -241,11 +241,9 @@ impl<'de> Deserialize<'de> for Triggers {
                     let filter = if val.is_null() {
                         Some(RefFilter::default())
                     } else {
-                        Some(
-                            RefFilter::deserialize(val).map_err(|err| {
-                                serde::de::Error::custom(format!("invalid trigger filter: {err}"))
-                            })?,
-                        )
+                        Some(RefFilter::deserialize(val).map_err(|err| {
+                            serde::de::Error::custom(format!("invalid trigger filter: {err}"))
+                        })?)
                     };
                     set_trigger(&mut triggers, &key, filter);
                 }
@@ -314,7 +312,12 @@ fn is_supported_uses(uses: &str) -> bool {
 fn is_supported_if(expr: &str) -> bool {
     matches!(
         expr.trim(),
-        "success()" | "failure()" | "always()" | "${{ success() }}" | "${{ failure() }}" | "${{ always() }}"
+        "success()"
+            | "failure()"
+            | "always()"
+            | "${{ success() }}"
+            | "${{ failure() }}"
+            | "${{ always() }}"
     )
 }
 
@@ -347,14 +350,9 @@ impl Workflow {
         let mut total_jobs = 0usize;
         for (job_id, job) in &self.jobs {
             if !is_job_id(job_id) {
-                bail!(
-                    "invalid job id {job_id:?} (must match ^[A-Za-z_][A-Za-z0-9_-]*$)"
-                );
+                bail!("invalid job id {job_id:?} (must match ^[A-Za-z_][A-Za-z0-9_-]*$)");
             }
-            if !job.resource.is_empty()
-                && !has_expr(&job.resource)
-                && !valid_tier(&job.resource)
-            {
+            if !job.resource.is_empty() && !has_expr(&job.resource) && !valid_tier(&job.resource) {
                 bail!("job {job_id:?}: resource must be one of low|medium|high");
             }
             if job.steps.is_empty() {
@@ -413,7 +411,10 @@ impl Workflow {
         let mut adjacency: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for (job_id, job) in &self.jobs {
             for dep in job.needs.iter() {
-                adjacency.entry(dep.clone()).or_default().push(job_id.clone());
+                adjacency
+                    .entry(dep.clone())
+                    .or_default()
+                    .push(job_id.clone());
                 *indegree.get_mut(job_id).expect("job exists") += 1;
             }
         }

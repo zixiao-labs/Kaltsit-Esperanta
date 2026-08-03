@@ -10,10 +10,7 @@ use settings::Settings as _;
 
 use crate::settings::ConnectorSettings;
 
-pub fn wuling_client(
-    credentials: Arc<dyn CredentialsProvider>,
-    cx: &App,
-) -> Result<WulingClient> {
+pub fn wuling_client(credentials: Arc<dyn CredentialsProvider>, cx: &App) -> Result<WulingClient> {
     let server = ConnectorSettings::get_global(cx).wuling_server.clone();
     let tokio_handle = gpui_tokio::Tokio::handle(cx);
     WulingClient::new(server, credentials, tokio_handle)

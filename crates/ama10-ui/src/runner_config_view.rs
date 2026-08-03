@@ -84,11 +84,7 @@ pub fn open_or_reuse_runner_config(
 }
 
 impl RunnerConfigView {
-    fn new(
-        workspace: WeakEntity<Workspace>,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> Self {
+    fn new(workspace: WeakEntity<Workspace>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let config = RunnerConfig::default_seed();
         let yaml = config.to_yaml().unwrap_or_else(|_| EMPTY_SEED.to_string());
         let yaml_editor = create_yaml_editor(&yaml, window, cx);
@@ -328,7 +324,11 @@ impl RunnerConfigView {
                 let text = self.yaml_editor.read(cx).text(cx);
                 let (config, report) = RunnerConfig::parse(&text)?;
                 self.config = config;
-                self.warnings = report.warnings.into_iter().map(SharedString::from).collect();
+                self.warnings = report
+                    .warnings
+                    .into_iter()
+                    .map(SharedString::from)
+                    .collect();
                 Ok(())
             }
         }
@@ -354,31 +354,33 @@ impl RunnerConfigView {
     }
 
     fn render_toolbar(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let org_buttons = h_flex().gap_1().children(self.orgs.iter().take(8).map(|org| {
-            let slug = org.slug.clone().unwrap_or_default();
-            let selected = self
-                .selected_org
-                .as_ref()
-                .is_some_and(|selected| selected.as_ref() == slug);
-            let label = org
-                .display_name
-                .clone()
-                .filter(|name| !name.is_empty())
-                .unwrap_or_else(|| slug.clone());
-            Button::new(SharedString::from(format!("org-{slug}")), label)
-                .style(if selected {
-                    ButtonStyle::Filled
-                } else {
-                    ButtonStyle::Subtle
-                })
-                .on_click(cx.listener({
-                    let slug = slug.clone();
-                    move |this, _, _, cx| {
-                        this.selected_org = Some(slug.clone().into());
-                        this.spawn_reload(cx);
-                    }
-                }))
-        }));
+        let org_buttons = h_flex()
+            .gap_1()
+            .children(self.orgs.iter().take(8).map(|org| {
+                let slug = org.slug.clone().unwrap_or_default();
+                let selected = self
+                    .selected_org
+                    .as_ref()
+                    .is_some_and(|selected| selected.as_ref() == slug);
+                let label = org
+                    .display_name
+                    .clone()
+                    .filter(|name| !name.is_empty())
+                    .unwrap_or_else(|| slug.clone());
+                Button::new(SharedString::from(format!("org-{slug}")), label)
+                    .style(if selected {
+                        ButtonStyle::Filled
+                    } else {
+                        ButtonStyle::Subtle
+                    })
+                    .on_click(cx.listener({
+                        let slug = slug.clone();
+                        move |this, _, _, cx| {
+                            this.selected_org = Some(slug.clone().into());
+                            this.spawn_reload(cx);
+                        }
+                    }))
+            }));
 
         h_flex()
             .w_full()
@@ -434,39 +436,35 @@ impl RunnerConfigView {
             (WizardStep::Pools, tr!("Pools")),
             (WizardStep::Review, tr!("Review")),
         ];
-        h_flex().size_full().child(
-            v_flex()
-                .w(rems(12.))
-                .p_2()
-                .gap_1()
-                .border_r_1()
-                .border_color(cx.theme().colors().border)
-                .children(steps.into_iter().map(|(step, label)| {
-                    let selected = self.step == step;
-                    Button::new(SharedString::from(format!("step-{label}")), label)
-                        .style(if selected {
-                            ButtonStyle::Filled
-                        } else {
-                            ButtonStyle::Subtle
-                        })
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.step = step;
-                            cx.notify();
-                        }))
-                })),
-        )
-        .child(
-            v_flex()
-                .size_full()
-                .p_3()
-                .gap_3()
-                .child(match self.step {
-                    WizardStep::Basics => self.render_basics(cx).into_any_element(),
-                    WizardStep::Tiers => self.render_tiers(cx).into_any_element(),
-                    WizardStep::Pools => self.render_pools(cx).into_any_element(),
-                    WizardStep::Review => self.render_review(cx).into_any_element(),
-                }),
-        )
+        h_flex()
+            .size_full()
+            .child(
+                v_flex()
+                    .w(rems(12.))
+                    .p_2()
+                    .gap_1()
+                    .border_r_1()
+                    .border_color(cx.theme().colors().border)
+                    .children(steps.into_iter().map(|(step, label)| {
+                        let selected = self.step == step;
+                        Button::new(SharedString::from(format!("step-{label}")), label)
+                            .style(if selected {
+                                ButtonStyle::Filled
+                            } else {
+                                ButtonStyle::Subtle
+                            })
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                this.step = step;
+                                cx.notify();
+                            }))
+                    })),
+            )
+            .child(v_flex().size_full().p_3().gap_3().child(match self.step {
+                WizardStep::Basics => self.render_basics(cx).into_any_element(),
+                WizardStep::Tiers => self.render_tiers(cx).into_any_element(),
+                WizardStep::Pools => self.render_pools(cx).into_any_element(),
+                WizardStep::Review => self.render_review(cx).into_any_element(),
+            }))
     }
 
     fn render_basics(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -538,8 +536,10 @@ impl RunnerConfigView {
                         .size(LabelSize::Small),
                     )
                     .child(
-                        h_flex().gap_1().child(Label::new(tr!("CPU")).size(LabelSize::Small)).children(
-                            [2, 4, 8, 16].map(|cpu| {
+                        h_flex()
+                            .gap_1()
+                            .child(Label::new(tr!("CPU")).size(LabelSize::Small))
+                            .children([2, 4, 8, 16].map(|cpu| {
                                 Button::new(
                                     SharedString::from(format!("{name}-cpu-{cpu}")),
                                     format!("{cpu}"),
@@ -558,8 +558,7 @@ impl RunnerConfigView {
                                         this.mark_dirty(cx);
                                     }
                                 }))
-                            }),
-                        ),
+                            })),
                     )
             }))
     }
@@ -571,52 +570,56 @@ impl RunnerConfigView {
                 h_flex()
                     .gap_2()
                     .child(Label::new(tr!("Autoscaler pools")).size(LabelSize::Large))
-                    .child(Button::new("add-aliyun-pool", tr!("Add Aliyun pool")).on_click(
-                        cx.listener(|this, _, _, cx| {
-                            this.config.pools.push(Pool {
-                                name: format!("pool-{}", this.config.pools.len() + 1),
-                                provider: PROVIDER_ALIYUN.into(),
-                                tier: this.config.default_tier.clone(),
-                                os: "linux".into(),
-                                labels: vec!["linux".into(), "docker".into()],
-                                min: 0,
-                                max: 3,
-                                aliyun: Some(AliyunPool {
-                                    region: "cn-hangzhou".into(),
-                                    instance_type: Some("ecs.g7.large".into()),
-                                    credentials_secret: "ALIYUN_CREDS".into(),
-                                    ..AliyunPool::default()
-                                }),
-                                aws: None,
-                                proxmox: None,
-                                vcenter: None,
-                            });
-                            this.mark_dirty(cx);
-                        }),
-                    ))
-                    .child(Button::new("add-aws-pool", tr!("Add AWS pool")).on_click(cx.listener(
-                        |this, _, _, cx| {
-                            this.config.pools.push(Pool {
-                                name: format!("aws-{}", this.config.pools.len() + 1),
-                                provider: PROVIDER_AWS.into(),
-                                tier: this.config.default_tier.clone(),
-                                os: "linux".into(),
-                                labels: vec!["linux".into(), "docker".into()],
-                                min: 0,
-                                max: 3,
-                                aliyun: None,
-                                aws: Some(AwsPool {
-                                    region: "us-west-2".into(),
-                                    instance_type: "c6i.xlarge".into(),
-                                    credentials_secret: "AWS_CREDS".into(),
-                                    ..AwsPool::default()
-                                }),
-                                proxmox: None,
-                                vcenter: None,
-                            });
-                            this.mark_dirty(cx);
-                        },
-                    ))),
+                    .child(
+                        Button::new("add-aliyun-pool", tr!("Add Aliyun pool")).on_click(
+                            cx.listener(|this, _, _, cx| {
+                                this.config.pools.push(Pool {
+                                    name: format!("pool-{}", this.config.pools.len() + 1),
+                                    provider: PROVIDER_ALIYUN.into(),
+                                    tier: this.config.default_tier.clone(),
+                                    os: "linux".into(),
+                                    labels: vec!["linux".into(), "docker".into()],
+                                    min: 0,
+                                    max: 3,
+                                    aliyun: Some(AliyunPool {
+                                        region: "cn-hangzhou".into(),
+                                        instance_type: Some("ecs.g7.large".into()),
+                                        credentials_secret: "ALIYUN_CREDS".into(),
+                                        ..AliyunPool::default()
+                                    }),
+                                    aws: None,
+                                    proxmox: None,
+                                    vcenter: None,
+                                });
+                                this.mark_dirty(cx);
+                            }),
+                        ),
+                    )
+                    .child(
+                        Button::new("add-aws-pool", tr!("Add AWS pool")).on_click(cx.listener(
+                            |this, _, _, cx| {
+                                this.config.pools.push(Pool {
+                                    name: format!("aws-{}", this.config.pools.len() + 1),
+                                    provider: PROVIDER_AWS.into(),
+                                    tier: this.config.default_tier.clone(),
+                                    os: "linux".into(),
+                                    labels: vec!["linux".into(), "docker".into()],
+                                    min: 0,
+                                    max: 3,
+                                    aliyun: None,
+                                    aws: Some(AwsPool {
+                                        region: "us-west-2".into(),
+                                        instance_type: "c6i.xlarge".into(),
+                                        credentials_secret: "AWS_CREDS".into(),
+                                        ..AwsPool::default()
+                                    }),
+                                    proxmox: None,
+                                    vcenter: None,
+                                });
+                                this.mark_dirty(cx);
+                            },
+                        )),
+                    ),
             )
             .child(
                 Label::new(tr!(
@@ -641,12 +644,14 @@ impl RunnerConfigView {
                                     SharedString::from(format!("remove-pool-{index}")),
                                     tr!("Remove"),
                                 )
-                                .on_click(cx.listener(move |this, _, _, cx| {
-                                    if index < this.config.pools.len() {
-                                        this.config.pools.remove(index);
-                                        this.mark_dirty(cx);
-                                    }
-                                })),
+                                .on_click(cx.listener(
+                                    move |this, _, _, cx| {
+                                        if index < this.config.pools.len() {
+                                            this.config.pools.remove(index);
+                                            this.mark_dirty(cx);
+                                        }
+                                    },
+                                )),
                             ),
                     )
                     .child(
@@ -746,11 +751,16 @@ impl Render for RunnerConfigView {
                 )
             })
             .when(!self.warnings.is_empty(), |el| {
-                el.child(div().px_2().py_1().children(self.warnings.iter().map(|warning| {
-                    Label::new(warning.clone())
-                        .color(Color::Warning)
-                        .size(LabelSize::Small)
-                })))
+                el.child(
+                    div()
+                        .px_2()
+                        .py_1()
+                        .children(self.warnings.iter().map(|warning| {
+                            Label::new(warning.clone())
+                                .color(Color::Warning)
+                                .size(LabelSize::Small)
+                        })),
+                )
             })
             .child(
                 div().p_2().child(

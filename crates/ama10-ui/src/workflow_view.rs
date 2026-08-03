@@ -293,8 +293,8 @@ impl WorkflowView {
             .map(|tree| tree.read(cx).abs_path().join(WORKFLOW_DIR).join("ci.yml"));
         self.dirty = true;
         self.mode = ViewMode::Flow;
-        self.status = tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml.")
-            .into();
+        self.status =
+            tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml.").into();
         cx.notify();
     }
 
@@ -470,72 +470,77 @@ impl WorkflowView {
         h_flex()
             .size_full()
             .child(
-                h_flex()
-                    .flex_1()
-                    .gap_4()
-                    .p_3()
-                    .children(self.layout.layers.iter().enumerate().map(|(layer_ix, ids)| {
-                        v_flex()
-                            .gap_2()
-                            .min_w(rems(14.))
-                            .child(
-                                Label::new(format!("stage {layer_ix}"))
-                                    .size(LabelSize::XSmall)
-                                    .color(Color::Muted),
-                            )
-                            .children(ids.iter().map(|id| {
-                                let node = self.layout.node(id);
-                                let label = node
-                                    .map(|node| node.label.clone())
-                                    .unwrap_or_else(|| id.clone());
-                                let needs = node
-                                    .map(|node| {
-                                        if node.needs.is_empty() {
-                                            "needs: —".to_string()
-                                        } else {
-                                            format!("needs: {}", node.needs.join(", "))
-                                        }
-                                    })
-                                    .unwrap_or_default();
-                                let is_selected =
-                                    self.selected_job.as_ref().map(|s| s.as_ref()) == Some(id.as_str());
-                                let status = status_map.get(id).copied();
-                                let job_id = id.clone();
-                                v_flex()
-                                    .gap_1()
-                                    .p_2()
-                                    .rounded_md()
-                                    .border_1()
-                                    .border_color(cx.theme().colors().border)
-                                    .child(
-                                        Button::new(
-                                            SharedString::from(format!("select-job-{id}")),
-                                            label,
-                                        )
-                                        .style(if is_selected {
-                                            ButtonStyle::Filled
-                                        } else {
-                                            ButtonStyle::Subtle
+                h_flex().flex_1().gap_4().p_3().children(
+                    self.layout
+                        .layers
+                        .iter()
+                        .enumerate()
+                        .map(|(layer_ix, ids)| {
+                            v_flex()
+                                .gap_2()
+                                .min_w(rems(14.))
+                                .child(
+                                    Label::new(format!("stage {layer_ix}"))
+                                        .size(LabelSize::XSmall)
+                                        .color(Color::Muted),
+                                )
+                                .children(ids.iter().map(|id| {
+                                    let node = self.layout.node(id);
+                                    let label = node
+                                        .map(|node| node.label.clone())
+                                        .unwrap_or_else(|| id.clone());
+                                    let needs = node
+                                        .map(|node| {
+                                            if node.needs.is_empty() {
+                                                "needs: —".to_string()
+                                            } else {
+                                                format!("needs: {}", node.needs.join(", "))
+                                            }
                                         })
-                                        .on_click(cx.listener(move |this, _, _, cx| {
-                                            this.selected_job = Some(job_id.clone().into());
-                                            cx.notify();
-                                        })),
-                                    )
-                                    .child(
-                                        Label::new(needs)
-                                            .size(LabelSize::XSmall)
-                                            .color(Color::Muted),
-                                    )
-                                    .when(status.is_some(), |el| {
-                                        el.child(
-                                            Label::new(status_label(status))
-                                                .size(LabelSize::XSmall)
-                                                .color(status_color(status)),
+                                        .unwrap_or_default();
+                                    let is_selected =
+                                        self.selected_job.as_ref().map(|s| s.as_ref())
+                                            == Some(id.as_str());
+                                    let status = status_map.get(id).copied();
+                                    let job_id = id.clone();
+                                    v_flex()
+                                        .gap_1()
+                                        .p_2()
+                                        .rounded_md()
+                                        .border_1()
+                                        .border_color(cx.theme().colors().border)
+                                        .child(
+                                            Button::new(
+                                                SharedString::from(format!("select-job-{id}")),
+                                                label,
+                                            )
+                                            .style(if is_selected {
+                                                ButtonStyle::Filled
+                                            } else {
+                                                ButtonStyle::Subtle
+                                            })
+                                            .on_click(
+                                                cx.listener(move |this, _, _, cx| {
+                                                    this.selected_job = Some(job_id.clone().into());
+                                                    cx.notify();
+                                                }),
+                                            ),
                                         )
-                                    })
-                            }))
-                    })),
+                                        .child(
+                                            Label::new(needs)
+                                                .size(LabelSize::XSmall)
+                                                .color(Color::Muted),
+                                        )
+                                        .when(status.is_some(), |el| {
+                                            el.child(
+                                                Label::new(status_label(status))
+                                                    .size(LabelSize::XSmall)
+                                                    .color(status_color(status)),
+                                            )
+                                        })
+                                }))
+                        }),
+                ),
             )
             .child(self.render_inspector(cx))
             .into_any_element()
@@ -582,25 +587,34 @@ impl WorkflowView {
                             .color(Color::Muted),
                         )
                         .child(
-                            Label::new(format!("{} step(s)", job.steps.len())).size(LabelSize::Small),
+                            Label::new(format!("{} step(s)", job.steps.len()))
+                                .size(LabelSize::Small),
                         )
                         .child(Label::new(tr!("Toggle needs")).size(LabelSize::Small))
-                        .children(self.workflow.jobs.keys().filter(|id| id.as_str() != job_id.as_ref()).map(|need| {
-                            let active = job.needs.iter().any(|existing| existing == need);
-                            let need = need.clone();
-                            Button::new(
-                                SharedString::from(format!("need-{job_id}-{need}")),
-                                need.clone(),
-                            )
-                            .style(if active {
-                                ButtonStyle::Filled
-                            } else {
-                                ButtonStyle::Subtle
-                            })
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                this.toggle_need(&need, cx);
-                            }))
-                        }))
+                        .children(
+                            self.workflow
+                                .jobs
+                                .keys()
+                                .filter(|id| id.as_str() != job_id.as_ref())
+                                .map(|need| {
+                                    let active = job.needs.iter().any(|existing| existing == need);
+                                    let need = need.clone();
+                                    Button::new(
+                                        SharedString::from(format!("need-{job_id}-{need}")),
+                                        need.clone(),
+                                    )
+                                    .style(if active {
+                                        ButtonStyle::Filled
+                                    } else {
+                                        ButtonStyle::Subtle
+                                    })
+                                    .on_click(cx.listener(
+                                        move |this, _, _, cx| {
+                                            this.toggle_need(&need, cx);
+                                        },
+                                    ))
+                                }),
+                        )
                     })
             })
             .when(selected.is_none(), |el| {
@@ -645,26 +659,28 @@ impl WorkflowView {
                     cx.notify();
                 })),
             )
-            .child(
-                Button::new("sim-reset", tr!("Reset")).on_click(cx.listener(|this, _, _, cx| {
+            .child(Button::new("sim-reset", tr!("Reset")).on_click(cx.listener(
+                |this, _, _, cx| {
                     if let Some(sim) = this.simulation.as_mut() {
                         sim.reset();
                         this.status = tr!("Simulation reset.").into();
                     }
                     cx.notify();
-                })),
-            )
+                },
+            )))
             .child(
-                Button::new("sim-fail", tr!("Fail selected")).on_click(cx.listener(|this, _, _, cx| {
-                    if let (Some(sim), Some(job)) =
-                        (this.simulation.as_mut(), this.selected_job.clone())
-                    {
-                        if let Err(error) = sim.mark_failed(job.as_ref()) {
-                            this.error = Some(format!("{error:#}").into());
+                Button::new("sim-fail", tr!("Fail selected")).on_click(cx.listener(
+                    |this, _, _, cx| {
+                        if let (Some(sim), Some(job)) =
+                            (this.simulation.as_mut(), this.selected_job.clone())
+                        {
+                            if let Err(error) = sim.mark_failed(job.as_ref()) {
+                                this.error = Some(format!("{error:#}").into());
+                            }
                         }
-                    }
-                    cx.notify();
-                })),
+                        cx.notify();
+                    },
+                )),
             )
     }
 }

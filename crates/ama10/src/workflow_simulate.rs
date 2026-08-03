@@ -55,13 +55,7 @@ impl WorkflowSimulation {
                 let suffix = combo.values().cloned().collect::<Vec<_>>().join(", ");
                 let key = format!("{job_id} ({suffix})");
                 // Matrix legs inherit the template job's needs against template ids.
-                jobs.push(simulated_job(
-                    key,
-                    job_id.clone(),
-                    job,
-                    combo,
-                    &job.needs,
-                ));
+                jobs.push(simulated_job(key, job_id.clone(), job, combo, &job.needs));
             }
         }
 
@@ -193,7 +187,11 @@ impl WorkflowSimulation {
             let mut blocked = false;
             let mut waiting = false;
             for need in &job.needs {
-                match status.get(need).copied().unwrap_or(SimulatedJobStatus::Pending) {
+                match status
+                    .get(need)
+                    .copied()
+                    .unwrap_or(SimulatedJobStatus::Pending)
+                {
                     SimulatedJobStatus::Succeeded => {}
                     SimulatedJobStatus::Failed | SimulatedJobStatus::Blocked => blocked = true,
                     _ => waiting = true,

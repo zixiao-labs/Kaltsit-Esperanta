@@ -219,8 +219,7 @@ pub struct ValidationReport {
 
 impl RunnerConfig {
     pub fn parse(yaml: &str) -> Result<(Self, ValidationReport)> {
-        let config: Self =
-            serde_yaml::from_str(yaml).context("parse runner-config.yaml")?;
+        let config: Self = serde_yaml::from_str(yaml).context("parse runner-config.yaml")?;
         let report = config.validate()?;
         Ok((config, report))
     }
@@ -230,9 +229,7 @@ impl RunnerConfig {
     }
 
     pub fn default_seed() -> Self {
-        Self::parse(EMPTY_SEED)
-            .expect("EMPTY_SEED must parse")
-            .0
+        Self::parse(EMPTY_SEED).expect("EMPTY_SEED must parse").0
     }
 
     pub fn validate(&self) -> Result<ValidationReport> {

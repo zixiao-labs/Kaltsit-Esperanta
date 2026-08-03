@@ -452,12 +452,13 @@ mod tests {
 mod put_request_shape {
     #[test]
     fn build_put_via_json() {
-        let request: crate::auth::PutRunnerConfigRequest = serde_json::from_value(serde_json::json!({
-            "content": "version: 1\n",
-            "message": "Update runner-config.yaml",
-            "base_blob_sha": ""
-        }))
-        .unwrap();
+        let request: crate::auth::PutRunnerConfigRequest =
+            serde_json::from_value(serde_json::json!({
+                "content": "version: 1\n",
+                "message": "Update runner-config.yaml",
+                "base_blob_sha": ""
+            }))
+            .unwrap();
         let encoded = serde_json::to_value(&request).unwrap();
         assert_eq!(encoded["content"], "version: 1\n");
     }
