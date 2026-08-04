@@ -36,6 +36,7 @@ pub const PROVIDER_PROXMOX: &str = "proxmox";
 pub const PROVIDER_VCENTER: &str = "vcenter";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RunnerConfig {
     #[serde(default = "default_version")]
     pub version: i32,
@@ -62,6 +63,7 @@ fn default_idle_timeout() -> String {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TierSpec {
     #[serde(default)]
     pub cpu: i32,
@@ -72,6 +74,7 @@ pub struct TierSpec {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Pool {
     pub name: String,
     pub provider: String,
@@ -99,6 +102,7 @@ fn default_os() -> String {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct AliyunPool {
     #[serde(default)]
     pub region: String,
@@ -145,6 +149,7 @@ pub struct AliyunPool {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct AwsPool {
     #[serde(default)]
     pub region: String,
@@ -165,6 +170,7 @@ pub struct AwsPool {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct ProxmoxPool {
     #[serde(default)]
     pub api_url: String,
@@ -185,6 +191,7 @@ pub struct ProxmoxPool {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct VCenterPool {
     #[serde(default)]
     pub url: String,
@@ -219,13 +226,13 @@ pub struct ValidationReport {
 
 impl RunnerConfig {
     pub fn parse(yaml: &str) -> Result<(Self, ValidationReport)> {
-        let config: Self = serde_yaml::from_str(yaml).context("parse runner-config.yaml")?;
+        let config: Self = serde_yaml_ng::from_str(yaml).context("parse runner-config.yaml")?;
         let report = config.validate()?;
         Ok((config, report))
     }
 
     pub fn to_yaml(&self) -> Result<String> {
-        serde_yaml::to_string(self).context("serialize runner-config.yaml")
+        serde_yaml_ng::to_string(self).context("serialize runner-config.yaml")
     }
 
     pub fn default_seed() -> Self {
@@ -393,13 +400,16 @@ fn parse_go_duration(raw: &str) -> Result<std::time::Duration> {
         }
         let value: u64 = number.parse().context("duration number")?;
         number.clear();
-        let piece = match ch {
-            'h' => std::time::Duration::from_secs(value * 3600),
-            'm' => std::time::Duration::from_secs(value * 60),
-            's' => std::time::Duration::from_secs(value),
+        let seconds = match ch {
+            'h' => value.checked_mul(3600).context("duration hour overflow")?,
+            'm' => value.checked_mul(60).context("duration minute overflow")?,
+            's' => value,
             _ => bail!("unsupported duration unit {ch:?} in {raw:?}"),
         };
-        total += piece;
+        let piece = std::time::Duration::from_secs(seconds);
+        total = total
+            .checked_add(piece)
+            .context("duration total overflow")?;
     }
     if !number.is_empty() {
         bail!("duration {raw:?} missing unit");
@@ -479,5 +489,129 @@ pools:
       credentials_secret: AWS_CREDS
 "#;
         assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn rejects_undefined_default_tier() {
+        let yaml = r#"
+version: 1
+default_tier: missing
+idle_timeout: 5m
+tiers:
+  medium: { cpu: 4, memory: 8Gi, storage: 80Gi }
+pools: []
+"#;
+        assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn rejects_duplicate_pool_names() {
+        let yaml = r#"
+version: 1
+default_tier: medium
+idle_timeout: 5m
+tiers:
+  medium: { cpu: 4, memory: 8Gi, storage: 80Gi }
+pools:
+  - name: dup
+    provider: aliyun
+    tier: medium
+    aliyun:
+      region: cn-hangzhou
+      instance_type: ecs.g7.large
+      credentials_secret: ALIYUN_CREDS
+  - name: dup
+    provider: aws
+    tier: medium
+    aws:
+      region: us-west-2
+      ami: ami-x
+      instance_type: t3.medium
+      subnet_id: subnet-x
+      security_group_ids: [sg-x]
+      credentials_secret: AWS_CREDS
+"#;
+        assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn rejects_provider_mismatch() {
+        let yaml = r#"
+version: 1
+default_tier: medium
+idle_timeout: 5m
+tiers:
+  medium: { cpu: 4, memory: 8Gi, storage: 80Gi }
+pools:
+  - name: bad
+    provider: aliyun
+    tier: medium
+    aws:
+      region: us-west-2
+      ami: ami-x
+      instance_type: t3.medium
+      subnet_id: subnet-x
+      security_group_ids: [sg-x]
+      credentials_secret: AWS_CREDS
+"#;
+        assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn rejects_min_greater_than_max() {
+        let yaml = r#"
+version: 1
+default_tier: medium
+idle_timeout: 5m
+tiers:
+  medium: { cpu: 4, memory: 8Gi, storage: 80Gi }
+pools:
+  - name: bad
+    provider: aliyun
+    tier: medium
+    min: 5
+    max: 1
+    aliyun:
+      region: cn-hangzhou
+      instance_type: ecs.g7.large
+      credentials_secret: ALIYUN_CREDS
+"#;
+        assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn rejects_empty_credentials_secret() {
+        let yaml = r#"
+version: 1
+default_tier: medium
+idle_timeout: 5m
+tiers:
+  medium: { cpu: 4, memory: 8Gi, storage: 80Gi }
+pools:
+  - name: bad
+    provider: aliyun
+    tier: medium
+    aliyun:
+      region: cn-hangzhou
+      instance_type: ecs.g7.large
+      credentials_secret: ""
+"#;
+        assert!(RunnerConfig::parse(yaml).is_err());
+    }
+
+    #[test]
+    fn parse_go_duration_bounds() {
+        assert_eq!(
+            parse_go_duration("1s").unwrap(),
+            std::time::Duration::from_secs(1)
+        );
+        assert_eq!(
+            parse_go_duration("1h30m").unwrap(),
+            std::time::Duration::from_secs(5400)
+        );
+        assert!(parse_go_duration("").is_err());
+        assert!(parse_go_duration("5").is_err());
+        assert!(parse_go_duration("1d").is_err());
+        assert!(parse_go_duration(&format!("{}h", u64::MAX)).is_err());
     }
 }

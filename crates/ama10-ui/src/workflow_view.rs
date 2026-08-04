@@ -1,16 +1,17 @@
 //! Workspace Item: Wuling workflow flowchart, YAML editor, and local simulate.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 use ama10::workflow::{WORKFLOW_DIR, Workflow};
 use ama10::workflow_simulate::WorkflowSimulation;
-use ama10_i18n::tr;
+use ama10_i18n::{tr, tr_f};
 use editor::{Editor, EditorMode, MultiBuffer};
 use gpui::{
-    App, Context, Entity, EventEmitter, FocusHandle, Focusable, SharedString, WeakEntity, Window,
-    actions, prelude::*,
+    App, Context, Entity, EventEmitter, FocusHandle, Focusable, SharedString, Subscription,
+    WeakEntity, Window, actions, prelude::*,
 };
-use language::Buffer;
+use language::{Buffer, BufferEvent};
 use project::Project;
 use ui::{ToggleButtonGroup, ToggleButtonSimple, prelude::*};
 use workspace::{
@@ -42,16 +43,18 @@ pub struct WorkflowView {
     focus_handle: FocusHandle,
     mode: ViewMode,
     workflow_path: Option<PathBuf>,
+    disk_mtime: Option<SystemTime>,
     workflow: Workflow,
     layout: FlowLayout,
     selected_job: Option<SharedString>,
     yaml_editor: Entity<Editor>,
-    pending_yaml: Option<String>,
+    syncing_yaml: bool,
     simulation: Option<WorkflowSimulation>,
     status: SharedString,
     error: Option<SharedString>,
     dirty: bool,
     available_files: Vec<PathBuf>,
+    _subscriptions: Vec<Subscription>,
 }
 
 pub fn init(cx: &mut App) {
@@ -94,24 +97,34 @@ impl WorkflowView {
         let workflow = Workflow::default_ci_seed();
         let yaml = workflow.to_yaml().unwrap_or_default();
         let layout = FlowLayout::from_workflow(&workflow).unwrap_or_default();
-        let yaml_editor = create_yaml_editor(&yaml, window, cx);
+        let (yaml_editor, buffer) = create_yaml_editor(&yaml, window, cx);
+        let subscription = cx.subscribe(&buffer, |this, _, event, cx| {
+            if this.syncing_yaml {
+                return;
+            }
+            if matches!(event, BufferEvent::Edited { .. }) {
+                this.dirty = true;
+                cx.notify();
+            }
+        });
         let mut this = Self {
             workspace,
             project,
             focus_handle: cx.focus_handle(),
             mode: ViewMode::Flow,
             workflow_path: None,
+            disk_mtime: None,
             workflow,
             layout,
             selected_job: None,
             yaml_editor,
-            pending_yaml: None,
+            syncing_yaml: false,
             simulation: None,
-            status: tr!("Edit .wuling/workflows locally. Simulate does not trigger remote runs.")
-                .into(),
+            status: tr!("Edit .wuling/workflows locally. Simulate does not trigger remote runs."),
             error: None,
             dirty: false,
             available_files: Vec::new(),
+            _subscriptions: vec![subscription],
         };
         this.refresh_file_list(cx);
         if let Some(path) = path {
@@ -150,14 +163,16 @@ impl WorkflowView {
             Ok(text) => match Workflow::parse(&text) {
                 Ok(workflow) => {
                     self.apply_workflow(workflow, Some(text), window, cx);
+                    self.disk_mtime = file_mtime(&path);
                     self.workflow_path = Some(path);
                     self.dirty = false;
-                    self.status = tr!("Loaded workflow file.").into();
+                    self.status = tr!("Loaded workflow file.");
                     self.error = None;
                 }
                 Err(error) => {
                     self.workflow_path = Some(path);
-                    set_editor_text(&self.yaml_editor, &text, window, cx);
+                    self.disk_mtime = None;
+                    self.set_editor_text(&text, window, cx);
                     self.mode = ViewMode::Yaml;
                     self.error = Some(format!("{error:#}").into());
                 }
@@ -179,9 +194,9 @@ impl WorkflowView {
         self.layout = FlowLayout::from_workflow(&workflow).unwrap_or_default();
         self.workflow = workflow;
         if let Some(yaml) = yaml {
-            set_editor_text(&self.yaml_editor, &yaml, window, cx);
+            self.set_editor_text(&yaml, window, cx);
         } else if let Ok(yaml) = self.workflow.to_yaml() {
-            set_editor_text(&self.yaml_editor, &yaml, window, cx);
+            self.set_editor_text(&yaml, window, cx);
         }
         self.simulation = None;
         if self
@@ -191,6 +206,14 @@ impl WorkflowView {
         {
             self.selected_job = None;
         }
+    }
+
+    fn set_editor_text(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.syncing_yaml = true;
+        self.yaml_editor.update(cx, |editor, cx| {
+            editor.set_text(text, window, cx);
+        });
+        self.syncing_yaml = false;
     }
 
     fn sync_from_active_mode(
@@ -206,7 +229,7 @@ impl WorkflowView {
             }
             ViewMode::Flow | ViewMode::Simulate => {
                 let yaml = self.workflow.to_yaml()?;
-                set_editor_text(&self.yaml_editor, &yaml, window, cx);
+                self.set_editor_text(&yaml, window, cx);
             }
         }
         Ok(())
@@ -267,12 +290,22 @@ impl WorkflowView {
             cx.notify();
             return;
         }
+        if let (Some(baseline), Some(current)) = (self.disk_mtime, file_mtime(&path))
+            && baseline != current
+        {
+            self.error = Some(tr!(
+                "File changed on disk — reload before saving to avoid overwriting."
+            ));
+            cx.notify();
+            return;
+        }
         match std::fs::write(&path, yaml.as_bytes()) {
             Ok(()) => {
                 self.workflow_path = Some(path.clone());
+                self.disk_mtime = file_mtime(&path);
                 self.dirty = false;
                 self.refresh_file_list(cx);
-                self.status = SharedString::from(format!("Saved {}", path.display()));
+                self.status = tr_f!("Saved {}", path.display());
                 self.error = None;
             }
             Err(error) => {
@@ -291,10 +324,10 @@ impl WorkflowView {
             .worktrees(cx)
             .next()
             .map(|tree| tree.read(cx).abs_path().join(WORKFLOW_DIR).join("ci.yml"));
+        self.disk_mtime = None;
         self.dirty = true;
         self.mode = ViewMode::Flow;
-        self.status =
-            tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml.").into();
+        self.status = tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml.");
         cx.notify();
     }
 
@@ -365,6 +398,7 @@ impl WorkflowView {
             Ok(layout) => {
                 self.layout = layout;
                 self.error = None;
+                self.dirty = true;
             }
             Err(error) => {
                 // revert
@@ -377,7 +411,6 @@ impl WorkflowView {
                 self.error = Some(format!("{error:#}").into());
             }
         }
-        self.dirty = true;
         cx.notify();
     }
 
@@ -462,11 +495,6 @@ impl WorkflowView {
     }
 
     fn render_flow(&self, cx: &mut Context<Self>) -> AnyElement {
-        let status_map = self
-            .simulation
-            .as_ref()
-            .map(|sim| sim.status_map())
-            .unwrap_or_default();
         h_flex()
             .size_full()
             .child(
@@ -480,7 +508,7 @@ impl WorkflowView {
                                 .gap_2()
                                 .min_w(rems(14.))
                                 .child(
-                                    Label::new(format!("stage {layer_ix}"))
+                                    Label::new(tr_f!("stage {}", layer_ix))
                                         .size(LabelSize::XSmall)
                                         .color(Color::Muted),
                                 )
@@ -492,16 +520,20 @@ impl WorkflowView {
                                     let needs = node
                                         .map(|node| {
                                             if node.needs.is_empty() {
-                                                "needs: —".to_string()
+                                                tr!("needs: —").to_string()
                                             } else {
-                                                format!("needs: {}", node.needs.join(", "))
+                                                tr_f!("needs: {}", node.needs.join(", "))
+                                                    .to_string()
                                             }
                                         })
                                         .unwrap_or_default();
                                     let is_selected =
                                         self.selected_job.as_ref().map(|s| s.as_ref())
                                             == Some(id.as_str());
-                                    let status = status_map.get(id).copied();
+                                    let status = self
+                                        .simulation
+                                        .as_ref()
+                                        .and_then(|sim| sim.status_for_job_id(id));
                                     let job_id = id.clone();
                                     v_flex()
                                         .gap_1()
@@ -571,10 +603,10 @@ impl WorkflowView {
             )
             .when_some(selected.clone(), |el, job_id| {
                 let job = self.workflow.jobs.get(job_id.as_ref());
-                el.child(Label::new(format!("job: {job_id}")))
+                el.child(Label::new(tr_f!("job: {}", job_id)))
                     .when_some(job.cloned(), |el, job| {
                         el.child(
-                            Label::new(format!(
+                            Label::new(tr_f!(
                                 "runs-on: [{}]  resource: {}",
                                 job.runs_on.join(", "),
                                 if job.resource.is_empty() {
@@ -587,8 +619,7 @@ impl WorkflowView {
                             .color(Color::Muted),
                         )
                         .child(
-                            Label::new(format!("{} step(s)", job.steps.len()))
-                                .size(LabelSize::Small),
+                            Label::new(tr_f!("{} step(s)", job.steps.len())).size(LabelSize::Small),
                         )
                         .child(Label::new(tr!("Toggle needs")).size(LabelSize::Small))
                         .children(
@@ -635,8 +666,7 @@ impl WorkflowView {
                     if let Some(sim) = this.simulation.as_mut() {
                         match sim.step() {
                             Ok(changed) => {
-                                this.status =
-                                    SharedString::from(format!("Advanced: {}", changed.join(", ")));
+                                this.status = tr_f!("Advanced: {}", changed.join(", "));
                                 this.error = None;
                             }
                             Err(error) => this.error = Some(format!("{error:#}").into()),
@@ -650,7 +680,7 @@ impl WorkflowView {
                     if let Some(sim) = this.simulation.as_mut() {
                         match sim.play_all() {
                             Ok(()) => {
-                                this.status = tr!("Simulation finished.").into();
+                                this.status = tr!("Simulation finished.");
                                 this.error = None;
                             }
                             Err(error) => this.error = Some(format!("{error:#}").into()),
@@ -663,7 +693,7 @@ impl WorkflowView {
                 |this, _, _, cx| {
                     if let Some(sim) = this.simulation.as_mut() {
                         sim.reset();
-                        this.status = tr!("Simulation reset.").into();
+                        this.status = tr!("Simulation reset.");
                     }
                     cx.notify();
                 },
@@ -674,8 +704,17 @@ impl WorkflowView {
                         if let (Some(sim), Some(job)) =
                             (this.simulation.as_mut(), this.selected_job.clone())
                         {
-                            if let Err(error) = sim.mark_failed(job.as_ref()) {
-                                this.error = Some(format!("{error:#}").into());
+                            let keys = sim.keys_for_job_id(job.as_ref());
+                            if keys.is_empty() {
+                                this.error =
+                                    Some(format!("unknown simulated job {}", job.as_ref()).into());
+                            } else {
+                                for key in keys {
+                                    if let Err(error) = sim.mark_failed(&key) {
+                                        this.error = Some(format!("{error:#}").into());
+                                        break;
+                                    }
+                                }
                             }
                         }
                         cx.notify();
@@ -685,16 +724,21 @@ impl WorkflowView {
     }
 }
 
-fn create_yaml_editor(text: &str, window: &mut Window, cx: &mut App) -> Entity<Editor> {
+fn create_yaml_editor(
+    text: &str,
+    window: &mut Window,
+    cx: &mut App,
+) -> (Entity<Editor>, Entity<Buffer>) {
     let buffer = cx.new(|cx| Buffer::local(text.to_string(), cx));
-    let multibuffer = cx.new(|cx| MultiBuffer::singleton(buffer, cx));
-    cx.new(|cx| Editor::new(EditorMode::full(), multibuffer, None, window, cx))
+    let multibuffer = cx.new(|cx| MultiBuffer::singleton(buffer.clone(), cx));
+    let editor = cx.new(|cx| Editor::new(EditorMode::full(), multibuffer, None, window, cx));
+    (editor, buffer)
 }
 
-fn set_editor_text(editor: &Entity<Editor>, text: &str, window: &mut Window, cx: &mut App) {
-    editor.update(cx, |editor, cx| {
-        editor.set_text(text, window, cx);
-    });
+fn file_mtime(path: &Path) -> Option<SystemTime> {
+    std::fs::metadata(path)
+        .and_then(|metadata| metadata.modified())
+        .ok()
 }
 
 impl Focusable for WorkflowView {
@@ -709,15 +753,16 @@ impl Item for WorkflowView {
     type Event = ItemEvent;
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
-        tr!("Wuling Workflow").into()
+        tr!("Wuling Workflow")
+    }
+
+    fn is_dirty(&self, _cx: &App) -> bool {
+        self.dirty
     }
 }
 
 impl Render for WorkflowView {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        if let Some(yaml) = self.pending_yaml.take() {
-            set_editor_text(&self.yaml_editor, &yaml, window, cx);
-        }
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         v_flex()
             .size_full()
             .bg(cx.theme().colors().editor_background)
@@ -749,5 +794,161 @@ impl Render for WorkflowView {
                     .child(self.yaml_editor.clone())
                     .into_any_element(),
             })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ama10::workflow_simulate::SimulatedJobStatus;
+    use gpui::TestAppContext;
+    use project::Project;
+    use serde_json::json;
+    use settings::SettingsStore;
+
+    fn init_test(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            let settings_store = SettingsStore::test(cx);
+            cx.set_global(settings_store);
+            theme_settings::init(theme::LoadThemes::JustBase, cx);
+            editor::init(cx);
+            release_channel::init(semver::Version::new(0, 0, 0), cx);
+        });
+    }
+
+    #[gpui::test]
+    async fn workflow_view_marks_dirty_on_edit_and_not_on_failed_toggle(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(workspace.weak_handle(), project.clone(), None, window, cx)
+            })
+        });
+
+        view.update(cx, |view, cx| {
+            assert!(!view.is_dirty(cx));
+            assert_eq!(view.tab_content_text(0, cx).as_ref(), "Wuling Workflow");
+            view.add_job(cx);
+            assert!(view.is_dirty(cx));
+            assert!(view.selected_job.is_some());
+        });
+
+        view.update(cx, |view, cx| {
+            view.dirty = false;
+            view.selected_job = Some("test".into());
+            // Self-dependency is ignored and must not mark dirty.
+            view.toggle_need("test", cx);
+            assert!(!view.dirty);
+            assert!(view.error.is_none());
+        });
+    }
+
+    #[gpui::test]
+    async fn workflow_view_simulation_keys_and_fail_selected(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(workspace.weak_handle(), project.clone(), None, window, cx)
+            })
+        });
+
+        view.update(cx, |view, cx| {
+            let simulation = WorkflowSimulation::from_workflow(&view.workflow).unwrap();
+            assert_eq!(
+                simulation.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Ready)
+            );
+            view.simulation = Some(simulation);
+            view.selected_job = Some("build".into());
+            view.mode = ViewMode::Simulate;
+            cx.notify();
+        });
+
+        view.update(cx, |view, cx| {
+            let sim = view.simulation.as_mut().unwrap();
+            for key in sim.keys_for_job_id("build") {
+                sim.mark_failed(&key).unwrap();
+            }
+            assert_eq!(
+                sim.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Failed)
+            );
+            assert_eq!(
+                sim.status_for_job_id("test"),
+                Some(SimulatedJobStatus::Blocked)
+            );
+            cx.notify();
+        });
+    }
+
+    #[gpui::test]
+    async fn workflow_view_save_detects_disk_conflict(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let workflow_yaml = Workflow::default_ci_seed().to_yaml().unwrap();
+        let temp_dir = std::env::temp_dir().join(format!(
+            "ama10-workflow-conflict-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|duration| duration.as_nanos())
+                .unwrap_or(0)
+        ));
+        let workflow_dir = temp_dir.join(WORKFLOW_DIR);
+        std::fs::create_dir_all(&workflow_dir).unwrap();
+        let path = workflow_dir.join("ci.yml");
+        std::fs::write(&path, &workflow_yaml).unwrap();
+        let baseline = file_mtime(&path);
+        assert!(baseline.is_some());
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(
+                    workspace.weak_handle(),
+                    project.clone(),
+                    Some(path.clone()),
+                    window,
+                    cx,
+                )
+            })
+        });
+
+        // Change the file on disk after load so save sees a stale baseline.
+        std::fs::write(&path, format!("{workflow_yaml}\n# external edit\n")).unwrap();
+        let current = file_mtime(&path);
+        assert_ne!(baseline, current);
+
+        view.update_in(cx, |view, window, cx| {
+            view.disk_mtime = baseline;
+            view.dirty = true;
+            view.save_to_disk(window, cx);
+            assert!(
+                view.error
+                    .as_ref()
+                    .is_some_and(|error| error.as_ref().contains("File changed on disk")),
+                "expected conflict error, got {:?}",
+                view.error
+            );
+            assert!(view.dirty, "conflict must preserve in-memory dirty state");
+        });
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
     }
 }

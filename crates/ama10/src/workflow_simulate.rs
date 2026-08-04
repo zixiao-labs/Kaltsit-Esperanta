@@ -99,6 +99,41 @@ impl WorkflowSimulation {
             .collect()
     }
 
+    /// Simulation keys for a template `job_id`, including every matrix leg.
+    pub fn keys_for_job_id(&self, job_id: &str) -> Vec<String> {
+        self.jobs
+            .iter()
+            .filter(|job| job.job_id == job_id)
+            .map(|job| job.key.clone())
+            .collect()
+    }
+
+    /// Aggregate status for a template job: Failed > Running > Ready > Pending > Blocked > Succeeded.
+    pub fn status_for_job_id(&self, job_id: &str) -> Option<SimulatedJobStatus> {
+        let statuses: Vec<_> = self
+            .jobs
+            .iter()
+            .filter(|job| job.job_id == job_id)
+            .map(|job| job.status)
+            .collect();
+        if statuses.is_empty() {
+            return None;
+        }
+        for candidate in [
+            SimulatedJobStatus::Failed,
+            SimulatedJobStatus::Running,
+            SimulatedJobStatus::Ready,
+            SimulatedJobStatus::Pending,
+            SimulatedJobStatus::Blocked,
+            SimulatedJobStatus::Succeeded,
+        ] {
+            if statuses.contains(&candidate) {
+                return Some(candidate);
+            }
+        }
+        statuses.first().copied()
+    }
+
     pub fn mark_failed(&mut self, key: &str) -> Result<()> {
         let job = self
             .jobs

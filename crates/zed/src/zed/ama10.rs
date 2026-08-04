@@ -32,12 +32,6 @@ pub fn init(cx: &mut App) {
             .register_action(|workspace, _: &DisconnectGithub, window, cx| {
                 let creds = Client::global(cx).credentials_provider();
                 ama10_ui::spawn_disconnect(workspace, ConnectorId::Github, window, cx, creds);
-            })
-            .register_action(|workspace, _: &ama10_ui::OpenRunnerConfig, window, cx| {
-                ama10_ui::open_or_reuse_runner_config(workspace, window, cx);
-            })
-            .register_action(|workspace, _: &ama10_ui::OpenWulingWorkflow, window, cx| {
-                ama10_ui::open_or_reuse_workflow(workspace, None, window, cx);
             });
     })
     .detach();

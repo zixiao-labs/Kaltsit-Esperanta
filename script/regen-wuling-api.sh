@@ -152,6 +152,7 @@ def project_schema(value, path):
         "minimum",
         "minItems",
         "minLength",
+        "pattern",
         "properties",
         "type",
     }
@@ -193,7 +194,12 @@ for name, selection in selected.items():
     ]
     # Wuling sometimes omits `required:` on response objects; client projections
     # may still mark fields required for typify.
-    _ = optional_upstream
+    if optional_upstream:
+        print(
+            f"warning: Wuling schema {name}: selection required {optional_upstream} "
+            f"not listed in upstream required {upstream_required}",
+            file=sys.stderr,
+        )
     selected_schema = schema.copy()
     selected_schema["properties"] = {
         property_name: schema_properties[property_name]

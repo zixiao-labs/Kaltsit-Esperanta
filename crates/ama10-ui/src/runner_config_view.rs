@@ -12,7 +12,8 @@ use gpui::{
     actions, prelude::*,
 };
 use language::Buffer;
-use ui::{ToggleButtonGroup, ToggleButtonSimple, prelude::*};
+use ui::{ToggleButtonGroup, ToggleButtonSimple, Tooltip, prelude::*};
+use util::ResultExt as _;
 use workspace::{
     Workspace,
     item::{Item, ItemEvent},
@@ -42,6 +43,17 @@ enum WizardStep {
     Review,
 }
 
+impl WizardStep {
+    fn id(self) -> &'static str {
+        match self {
+            Self::Basics => "basics",
+            Self::Tiers => "tiers",
+            Self::Pools => "pools",
+            Self::Review => "review",
+        }
+    }
+}
+
 pub struct RunnerConfigView {
     #[allow(dead_code)]
     workspace: WeakEntity<Workspace>,
@@ -51,6 +63,7 @@ pub struct RunnerConfigView {
     orgs: Vec<Org>,
     selected_org: Option<SharedString>,
     config: RunnerConfig,
+    config_valid: bool,
     yaml_editor: Entity<Editor>,
     pending_yaml: Option<String>,
     blob_sha: String,
@@ -79,7 +92,11 @@ pub fn open_or_reuse_runner_config(
         workspace.activate_item(&existing, true, true, window, cx);
         return;
     }
-    let view = cx.new(|cx| RunnerConfigView::new(workspace.weak_handle(), window, cx));
+    let view = cx.new(|cx| {
+        let view = RunnerConfigView::new(workspace.weak_handle(), window, cx);
+        view.spawn_load_orgs(cx);
+        view
+    });
     workspace.add_item_to_active_pane(Box::new(view), None, true, window, cx);
 }
 
@@ -96,16 +113,16 @@ impl RunnerConfigView {
             orgs: Vec::new(),
             selected_org: None,
             config,
+            config_valid: true,
             yaml_editor,
             pending_yaml: None,
             blob_sha: String::new(),
-            status: tr!("Connect Wuling, then pick an organization.").into(),
+            status: tr!("Connect Wuling, then pick an organization."),
             error: None,
             warnings: Vec::new(),
             dirty: false,
             loading: false,
         };
-        this.spawn_load_orgs(cx);
         this
     }
 
@@ -126,9 +143,10 @@ impl RunnerConfigView {
                 Err(error) => {
                     this.update(cx, |this, cx| {
                         this.error = Some(format!("{error:#}").into());
-                        this.status = tr!("Not signed in to Wuling DevOps.").into();
+                        this.status = tr!("Not signed in to Wuling DevOps.");
                         cx.notify();
-                    });
+                    })
+                    .log_err();
                     return;
                 }
             };
@@ -144,15 +162,17 @@ impl RunnerConfigView {
                             this.spawn_reload(cx);
                         }
                         this.error = None;
-                        this.status = tr!("Select an organization to load runner-config.").into();
+                        this.status = tr!("Select an organization to load runner-config.");
                         cx.notify();
-                    });
+                    })
+                    .log_err();
                 }
                 Err(error) => {
                     this.update(cx, |this, cx| {
                         this.error = Some(format!("{error:#}").into());
                         cx.notify();
-                    });
+                    })
+                    .log_err();
                 }
             }
         })
@@ -187,7 +207,8 @@ impl RunnerConfigView {
                         cx.notify();
                     }
                 }
-            });
+            })
+            .log_err();
         })
         .detach();
     }
@@ -207,20 +228,23 @@ impl RunnerConfigView {
         match RunnerConfig::parse(&content) {
             Ok((config, report)) => {
                 self.config = config;
+                self.config_valid = true;
                 self.warnings
                     .extend(report.warnings.into_iter().map(SharedString::from));
                 self.error = doc.parse_error.clone().map(SharedString::from);
             }
             Err(error) => {
+                self.config = RunnerConfig::default_seed();
+                self.config_valid = false;
                 self.error = Some(format!("{error:#}").into());
             }
         }
         self.pending_yaml = Some(content);
         self.dirty = !doc.exists;
         self.status = if doc.exists {
-            tr!("Loaded runner-config.yaml.").into()
+            tr!("Loaded runner-config.yaml.")
         } else {
-            tr!("No runner-config yet — editing the seed template.").into()
+            tr!("No runner-config yet — editing the seed template.")
         };
         cx.notify();
     }
@@ -232,23 +256,36 @@ impl RunnerConfigView {
             return;
         }
         let Some(org) = self.selected_org.clone() else {
-            self.error = Some(tr!("Select an organization first.").into());
+            self.error = Some(tr!("Select an organization first."));
             cx.notify();
             return;
         };
-        let content = match self.config.to_yaml() {
-            Ok(yaml) => yaml,
-            Err(error) => {
-                self.error = Some(format!("{error:#}").into());
-                cx.notify();
-                return;
-            }
+        if self.mode == ViewMode::Wizard && !self.config_valid {
+            self.error = Some(tr!(
+                "Switch to YAML mode to fix the invalid configuration before saving."
+            ));
+            cx.notify();
+            return;
+        }
+        let content = match self.mode {
+            ViewMode::Wizard => match self.config.to_yaml() {
+                Ok(yaml) => yaml,
+                Err(error) => {
+                    self.error = Some(format!("{error:#}").into());
+                    cx.notify();
+                    return;
+                }
+            },
+            // Preserve comments/ordering from the editor after parse validation.
+            ViewMode::Yaml => self.yaml_editor.read(cx).text(cx),
         };
         if let Err(error) = RunnerConfig::parse(&content) {
+            self.config_valid = false;
             self.error = Some(format!("{error:#}").into());
             cx.notify();
             return;
         }
+        self.config_valid = true;
         self.loading = true;
         self.error = None;
         cx.notify();
@@ -275,16 +312,7 @@ impl RunnerConfigView {
             let result = async {
                 let token = load_access_token(&client, cx).await?;
                 let org = require_slug(Some(org.as_ref()))?;
-                let if_match = if blob_sha.is_empty() {
-                    None
-                } else {
-                    Some(blob_sha.as_str())
-                };
-                anyhow::Ok(
-                    client
-                        .put_runner_config(&token, &org, request, if_match)
-                        .await?,
-                )
+                anyhow::Ok(client.put_runner_config(&token, &org, request).await?)
             }
             .await;
             this.update(cx, |this, cx| {
@@ -292,9 +320,9 @@ impl RunnerConfigView {
                 match result {
                     Ok(doc) => {
                         this.status = if doc.unchanged.unwrap_or(false) {
-                            tr!("Unchanged — already up to date.").into()
+                            tr!("Unchanged — already up to date.")
                         } else {
-                            tr!("Saved runner-config.yaml.").into()
+                            tr!("Saved runner-config.yaml.")
                         };
                         this.apply_document(doc, cx);
                         this.dirty = false;
@@ -304,7 +332,8 @@ impl RunnerConfigView {
                         cx.notify();
                     }
                 }
-            });
+            })
+            .log_err();
         })
         .detach();
     }
@@ -324,6 +353,7 @@ impl RunnerConfigView {
                 let text = self.yaml_editor.read(cx).text(cx);
                 let (config, report) = RunnerConfig::parse(&text)?;
                 self.config = config;
+                self.config_valid = true;
                 self.warnings = report
                     .warnings
                     .into_iter()
@@ -338,6 +368,7 @@ impl RunnerConfigView {
         if self.mode == mode {
             return;
         }
+        let previous = self.mode;
         if let Err(error) = self.sync_from_active_mode(window, cx) {
             self.error = Some(format!("{error:#}").into());
             cx.notify();
@@ -345,6 +376,11 @@ impl RunnerConfigView {
         }
         self.mode = mode;
         self.error = None;
+        if previous == ViewMode::Yaml && mode == ViewMode::Wizard {
+            self.status = tr!(
+                "Saving from Wizard may discard YAML comments unless original text is merged back."
+            );
+        }
         cx.notify();
     }
 
@@ -356,8 +392,8 @@ impl RunnerConfigView {
     fn render_toolbar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let org_buttons = h_flex()
             .gap_1()
-            .children(self.orgs.iter().take(8).map(|org| {
-                let slug = org.slug.clone().unwrap_or_default();
+            .children(self.orgs.iter().filter_map(|org| {
+                let slug = org.slug.clone().filter(|slug| !slug.is_empty())?;
                 let selected = self
                     .selected_org
                     .as_ref()
@@ -367,19 +403,18 @@ impl RunnerConfigView {
                     .clone()
                     .filter(|name| !name.is_empty())
                     .unwrap_or_else(|| slug.clone());
-                Button::new(SharedString::from(format!("org-{slug}")), label)
-                    .style(if selected {
-                        ButtonStyle::Filled
-                    } else {
-                        ButtonStyle::Subtle
-                    })
-                    .on_click(cx.listener({
-                        let slug = slug.clone();
-                        move |this, _, _, cx| {
-                            this.selected_org = Some(slug.clone().into());
+                Some(
+                    Button::new(SharedString::from(format!("org-{slug}")), label)
+                        .style(if selected {
+                            ButtonStyle::Filled
+                        } else {
+                            ButtonStyle::Subtle
+                        })
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            this.selected_org = Some(SharedString::from(slug.clone()));
                             this.spawn_reload(cx);
-                        }
-                    }))
+                        })),
+                )
             }));
 
         h_flex()
@@ -417,7 +452,11 @@ impl RunnerConfigView {
             .child(
                 Button::new("save-runner-config", tr!("Save"))
                     .style(ButtonStyle::Filled)
-                    .disabled(self.loading || self.selected_org.is_none())
+                    .disabled(
+                        self.loading
+                            || self.selected_org.is_none()
+                            || (self.mode == ViewMode::Wizard && !self.config_valid),
+                    )
                     .on_click(cx.listener(|this, _, window, cx| this.spawn_save(window, cx))),
             )
             .when(self.dirty, |el| {
@@ -427,6 +466,15 @@ impl RunnerConfigView {
                         .size(LabelSize::Small),
                 )
             })
+            .when(self.mode == ViewMode::Wizard && !self.config_valid, |el| {
+                el.child(
+                    Label::new(tr!(
+                        "Switch to YAML mode to fix the invalid configuration before saving."
+                    ))
+                    .color(Color::Warning)
+                    .size(LabelSize::Small),
+                )
+            })
     }
 
     fn render_wizard(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -434,7 +482,7 @@ impl RunnerConfigView {
             (WizardStep::Basics, tr!("Basics")),
             (WizardStep::Tiers, tr!("Tiers")),
             (WizardStep::Pools, tr!("Pools")),
-            (WizardStep::Review, tr!("Review")),
+            (WizardStep::Review, tr!("Preview")),
         ];
         h_flex()
             .size_full()
@@ -447,7 +495,7 @@ impl RunnerConfigView {
                     .border_color(cx.theme().colors().border)
                     .children(steps.into_iter().map(|(step, label)| {
                         let selected = self.step == step;
-                        Button::new(SharedString::from(format!("step-{label}")), label)
+                        Button::new(SharedString::from(format!("step-{}", step.id())), label)
                             .style(if selected {
                                 ButtonStyle::Filled
                             } else {
@@ -468,6 +516,7 @@ impl RunnerConfigView {
     }
 
     fn render_basics(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
+        let tier_names: Vec<String> = self.config.tiers.keys().cloned().collect();
         v_flex()
             .gap_3()
             .child(Label::new(tr!("Default tier and idle timeout")).size(LabelSize::Large))
@@ -475,18 +524,21 @@ impl RunnerConfigView {
                 h_flex()
                     .gap_2()
                     .child(Label::new(tr!("default_tier")))
-                    .children(["low", "medium", "high"].map(|tier| {
+                    .children(tier_names.into_iter().map(|tier| {
                         let selected = self.config.default_tier == tier;
-                        Button::new(SharedString::from(format!("default-tier-{tier}")), tier)
-                            .style(if selected {
-                                ButtonStyle::Filled
-                            } else {
-                                ButtonStyle::Subtle
-                            })
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                this.config.default_tier = tier.to_string();
-                                this.mark_dirty(cx);
-                            }))
+                        Button::new(
+                            SharedString::from(format!("default-tier-{tier}")),
+                            tier.clone(),
+                        )
+                        .style(if selected {
+                            ButtonStyle::Filled
+                        } else {
+                            ButtonStyle::Subtle
+                        })
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            this.config.default_tier = tier.clone();
+                            this.mark_dirty(cx);
+                        }))
                     })),
             )
             .child(
@@ -573,8 +625,9 @@ impl RunnerConfigView {
                     .child(
                         Button::new("add-aliyun-pool", tr!("Add Aliyun pool")).on_click(
                             cx.listener(|this, _, _, cx| {
+                                let name = unique_pool_name(&this.config.pools, "pool");
                                 this.config.pools.push(Pool {
-                                    name: format!("pool-{}", this.config.pools.len() + 1),
+                                    name,
                                     provider: PROVIDER_ALIYUN.into(),
                                     tier: this.config.default_tier.clone(),
                                     os: "linux".into(),
@@ -598,8 +651,9 @@ impl RunnerConfigView {
                     .child(
                         Button::new("add-aws-pool", tr!("Add AWS pool")).on_click(cx.listener(
                             |this, _, _, cx| {
+                                let name = unique_pool_name(&this.config.pools, "aws");
                                 this.config.pools.push(Pool {
-                                    name: format!("aws-{}", this.config.pools.len() + 1),
+                                    name,
                                     provider: PROVIDER_AWS.into(),
                                     tier: this.config.default_tier.clone(),
                                     os: "linux".into(),
@@ -638,7 +692,30 @@ impl RunnerConfigView {
                     .child(
                         h_flex()
                             .justify_between()
-                            .child(Label::new(pool.name.clone()))
+                            .gap_2()
+                            .child(
+                                Button::new(
+                                    SharedString::from(format!("rename-pool-{index}")),
+                                    pool.name.clone(),
+                                )
+                                .tooltip(Tooltip::text(tr!("Click to assign a unique pool name")))
+                                .on_click(cx.listener(
+                                    move |this, _, _, cx| {
+                                        if let Some(pool) = this.config.pools.get(index) {
+                                            let prefix = pool_name_prefix(&pool.name);
+                                            let name = unique_pool_name_excluding(
+                                                &this.config.pools,
+                                                &prefix,
+                                                index,
+                                            );
+                                            if let Some(pool) = this.config.pools.get_mut(index) {
+                                                pool.name = name;
+                                            }
+                                            this.mark_dirty(cx);
+                                        }
+                                    },
+                                )),
+                            )
                             .child(
                                 Button::new(
                                     SharedString::from(format!("remove-pool-{index}")),
@@ -678,7 +755,7 @@ impl RunnerConfigView {
         let validation = RunnerConfig::parse(&yaml);
         v_flex()
             .gap_2()
-            .child(Label::new(tr!("Review")).size(LabelSize::Large))
+            .child(Label::new(tr!("Preview")).size(LabelSize::Large))
             .child(match &validation {
                 Ok((_, report)) if report.warnings.is_empty() => {
                     Label::new(tr!("Configuration is valid.")).color(Color::Success)
@@ -717,6 +794,142 @@ fn set_editor_text(editor: &Entity<Editor>, text: &str, window: &mut Window, cx:
     });
 }
 
+fn unique_pool_name(pools: &[Pool], prefix: &str) -> String {
+    unique_pool_name_excluding(pools, prefix, usize::MAX)
+}
+
+fn unique_pool_name_excluding(pools: &[Pool], prefix: &str, exclude_index: usize) -> String {
+    let existing: std::collections::BTreeSet<&str> = pools
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| *index != exclude_index)
+        .map(|(_, pool)| pool.name.as_str())
+        .collect();
+    let mut index = 1usize;
+    loop {
+        let candidate = format!("{prefix}-{index}");
+        if !existing.contains(candidate.as_str()) {
+            return candidate;
+        }
+        index += 1;
+    }
+}
+
+fn pool_name_prefix(name: &str) -> String {
+    match name.rsplit_once('-') {
+        Some((prefix, suffix))
+            if !prefix.is_empty() && suffix.chars().all(|ch| ch.is_ascii_digit()) =>
+        {
+            prefix.to_string()
+        }
+        _ => name.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gpui::TestAppContext;
+    use project::Project;
+    use serde_json::json;
+    use settings::SettingsStore;
+
+    fn empty_pool(name: &str) -> Pool {
+        Pool {
+            name: name.into(),
+            provider: PROVIDER_ALIYUN.into(),
+            tier: "medium".into(),
+            os: "linux".into(),
+            labels: Vec::new(),
+            min: 0,
+            max: 1,
+            aliyun: None,
+            aws: None,
+            proxmox: None,
+            vcenter: None,
+        }
+    }
+
+    #[test]
+    fn unique_pool_name_skips_existing_and_holes() {
+        let pools = vec![empty_pool("pool-1"), empty_pool("pool-3")];
+        assert_eq!(unique_pool_name(&pools, "pool"), "pool-2");
+        assert_eq!(unique_pool_name(&[], "aws"), "aws-1");
+    }
+
+    #[test]
+    fn unique_pool_name_excluding_allows_keeping_own_name() {
+        let pools = vec![empty_pool("pool-1"), empty_pool("pool-2")];
+        assert_eq!(
+            unique_pool_name_excluding(&pools, "pool", 0),
+            "pool-1".to_string()
+        );
+        assert_eq!(unique_pool_name_excluding(&pools, "pool", 1), "pool-2");
+    }
+
+    #[test]
+    fn pool_name_prefix_strips_numeric_suffix() {
+        assert_eq!(pool_name_prefix("pool-12"), "pool");
+        assert_eq!(pool_name_prefix("aws"), "aws");
+        assert_eq!(pool_name_prefix("pool-x"), "pool-x");
+    }
+
+    fn init_test(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            let settings_store = SettingsStore::test(cx);
+            cx.set_global(settings_store);
+            theme_settings::init(theme::LoadThemes::JustBase, cx);
+            editor::init(cx);
+            release_channel::init(semver::Version::new(0, 0, 0), cx);
+        });
+    }
+
+    #[gpui::test]
+    async fn runner_config_view_tracks_dirty_and_invalid_parse(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project, window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| RunnerConfigView::new(workspace.weak_handle(), window, cx))
+        });
+
+        view.update(cx, |view, cx| {
+            assert!(!view.is_dirty(cx));
+            assert!(view.config_valid);
+            view.mark_dirty(cx);
+            assert!(view.is_dirty(cx));
+            assert_eq!(
+                view.tab_content_text(0, cx).as_ref(),
+                "Wuling Runner Config"
+            );
+        });
+
+        let invalid: RunnerConfigDocument = serde_json::from_value(json!({
+            "content": "version: 1\ndefault_tier: missing\n",
+            "exists": true,
+            "blob_sha": "abc",
+            "commit_sha": "def",
+            "branch": "main",
+            "path": "runner-config.yaml",
+            "project_slug": "config",
+            "repo_slug": "config",
+            "valid": false,
+            "warnings": [],
+        }))
+        .unwrap();
+
+        view.update(cx, |view, cx| {
+            view.apply_document(invalid, cx);
+            assert!(!view.config_valid);
+            assert!(view.error.is_some());
+        });
+    }
+}
+
 impl Focusable for RunnerConfigView {
     fn focus_handle(&self, _cx: &App) -> FocusHandle {
         self.focus_handle.clone()
@@ -729,7 +942,11 @@ impl Item for RunnerConfigView {
     type Event = ItemEvent;
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
-        tr!("Wuling Runner Config").into()
+        tr!("Wuling Runner Config")
+    }
+
+    fn is_dirty(&self, _cx: &App) -> bool {
+        self.dirty
     }
 }
 

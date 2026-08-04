@@ -86,3 +86,48 @@ pub fn status_color(status: Option<SimulatedJobStatus>) -> Color {
         _ => Color::Muted,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ama10::workflow::Workflow;
+
+    #[test]
+    fn flow_layout_layers_follow_needs() {
+        let workflow = Workflow::default_ci_seed();
+        let layout = FlowLayout::from_workflow(&workflow).unwrap();
+        assert_eq!(layout.layers.len(), 2);
+        assert_eq!(layout.layers[0], vec!["build".to_string()]);
+        assert_eq!(layout.layers[1], vec!["test".to_string()]);
+        assert_eq!(
+            layout.node("test").unwrap().needs,
+            vec!["build".to_string()]
+        );
+    }
+
+    #[test]
+    fn flow_layout_rejects_unknown_need() {
+        let yaml = r#"
+name: Bad
+on: [workflow_dispatch]
+jobs:
+  test:
+    needs: [missing]
+    runs-on: linux
+    steps: [{ run: echo test }]
+"#;
+        let error = Workflow::parse(yaml).unwrap_err();
+        assert!(error.to_string().contains("unknown job"));
+    }
+
+    #[test]
+    fn status_label_and_color() {
+        assert_eq!(
+            status_label(Some(SimulatedJobStatus::Failed)).as_ref(),
+            "failed"
+        );
+        assert_eq!(status_color(Some(SimulatedJobStatus::Failed)), Color::Error);
+        assert_eq!(status_label(None).as_ref(), "");
+        assert_eq!(status_color(None), Color::Muted);
+    }
+}

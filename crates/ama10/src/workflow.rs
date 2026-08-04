@@ -327,13 +327,13 @@ fn has_expr(value: &str) -> bool {
 
 impl Workflow {
     pub fn parse(yaml: &str) -> Result<Self> {
-        let workflow: Self = serde_yaml::from_str(yaml).context("parse workflow")?;
+        let workflow: Self = serde_yaml_ng::from_str(yaml).context("parse workflow")?;
         workflow.validate()?;
         Ok(workflow)
     }
 
     pub fn to_yaml(&self) -> Result<String> {
-        serde_yaml::to_string(self).context("serialize workflow")
+        serde_yaml_ng::to_string(self).context("serialize workflow")
     }
 
     pub fn validate(&self) -> Result<()> {
@@ -411,6 +411,9 @@ impl Workflow {
         let mut adjacency: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for (job_id, job) in &self.jobs {
             for dep in job.needs.iter() {
+                if !self.jobs.contains_key(dep) {
+                    bail!("job {job_id:?} needs unknown job {dep:?}");
+                }
                 adjacency
                     .entry(dep.clone())
                     .or_default()
@@ -536,6 +539,17 @@ impl Job {
         let mut combos = if axis_names.is_empty() {
             vec![BTreeMap::new()]
         } else {
+            let mut projected = 1usize;
+            for values in &axis_values {
+                projected = projected.checked_mul(values.len()).ok_or_else(|| {
+                    anyhow::anyhow!("strategy.matrix combination count overflowed")
+                })?;
+                if projected > MAX_MATRIX_JOBS {
+                    bail!(
+                        "strategy.matrix expands to at least {projected} combinations, exceeding {MAX_MATRIX_JOBS}"
+                    );
+                }
+            }
             cartesian(&axis_names, &axis_values)
         };
 
@@ -643,6 +657,30 @@ jobs:
         let roundtrip = workflow.to_yaml().unwrap();
         let again = Workflow::parse(&roundtrip).unwrap();
         assert!(again.jobs.contains_key("test"));
+    }
+
+    #[test]
+    fn default_ci_seed_parses() {
+        let workflow = Workflow::default_ci_seed();
+        assert_eq!(
+            workflow.job_order().unwrap(),
+            vec!["build".to_string(), "test".to_string()]
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_need() {
+        let yaml = r#"
+name: Missing
+on: [workflow_dispatch]
+jobs:
+  test:
+    needs: [missing]
+    runs-on: linux
+    steps: [{ run: echo test }]
+"#;
+        let err = Workflow::parse(yaml).unwrap_err().to_string();
+        assert!(err.contains("unknown job"), "{err}");
     }
 
     #[test]

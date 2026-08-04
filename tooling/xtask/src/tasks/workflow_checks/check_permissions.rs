@@ -1,5 +1,5 @@
 use annotate_snippets::{AnnotationKind, Group, Level, Snippet};
-use serde_yaml::Value;
+use serde_yaml_ng::Value;
 use std::{ops::Range, path::Path};
 
 pub enum PermissionsError {

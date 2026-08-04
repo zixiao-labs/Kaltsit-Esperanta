@@ -3969,7 +3969,7 @@ components:
             declared, otherwise `<job_key> (v1, v2)` over the matrix values.
         ordinal:
           type: integer
-          minimum: 0
+          minimum: 1
           description: 1-based position in the run's expanded, topologically ordered job list.
         matrix:
           type: object
