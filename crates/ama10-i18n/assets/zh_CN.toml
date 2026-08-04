@@ -986,6 +986,7 @@
 "Edit .wuling/workflows locally. Simulate does not trigger remote runs." = "本地编辑 .wuling/workflows。模拟运行不会触发远端流水线。"
 "Loaded workflow file." = "已加载工作流文件。"
 "Created a CI workflow seed — Save to write .wuling/workflows/ci.yml." = "已创建 CI 工作流模板 — 保存将写入 .wuling/workflows/ci.yml。"
+"Created a CI workflow seed — Save to write {}." = "已创建 CI 工作流模板 — 保存将写入 {}。"
 "No file" = "无文件"
 "New" = "新建"
 "Flow" = "流程"

@@ -1,10 +1,12 @@
 //! Shared helpers for Wuling API calls from ama10-ui.
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use ama10::auth::{StoredCreds, WulingClient};
 use ama10_i18n::tr;
 use anyhow::{Context as _, Result, bail};
+use async_lock::Mutex as AsyncMutex;
 use credentials_provider::CredentialsProvider;
 use gpui::{App, AsyncApp};
 use settings::Settings as _;
@@ -28,19 +30,23 @@ pub async fn load_access_token(client: &WulingClient, cx: &AsyncApp) -> Result<S
         .as_secs()
         .try_into()
         .context("current Unix timestamp does not fit in i64")?;
-    if stored.expires_at_unix > 0 && now >= stored.expires_at_unix {
-        return refresh_access_token(client, &stored, now, cx).await;
+    if access_token_expired(&stored, now) {
+        return refresh_access_token(client, now, cx).await;
     }
     Ok(stored.access_token)
 }
 
-async fn refresh_access_token(
-    client: &WulingClient,
-    stored: &StoredCreds,
-    now: i64,
-    cx: &AsyncApp,
-) -> Result<String> {
+async fn refresh_access_token(client: &WulingClient, now: i64, cx: &AsyncApp) -> Result<String> {
     let reconnect = || tr!("Reconnect Wuling DevOps").to_string();
+    let lock = refresh_lock_for(client.server().as_str());
+    let _guard = lock.lock().await;
+
+    // Another caller may have finished refreshing while we waited for the lock.
+    let stored = client.load_credentials(cx).await?.with_context(reconnect)?;
+    if !access_token_expired(&stored, now) {
+        return Ok(stored.access_token);
+    }
+
     let Some(refresh_token) = stored.refresh_token.as_deref() else {
         bail!("{}", reconnect());
     };
@@ -58,6 +64,21 @@ async fn refresh_access_token(
         .await
         .with_context(reconnect)?;
     Ok(access_token)
+}
+
+fn access_token_expired(stored: &StoredCreds, now: i64) -> bool {
+    stored.expires_at_unix > 0 && now >= stored.expires_at_unix
+}
+
+fn refresh_lock_for(server: &str) -> Arc<AsyncMutex<()>> {
+    static LOCKS: OnceLock<Mutex<HashMap<String, Arc<AsyncMutex<()>>>>> = OnceLock::new();
+    let locks = LOCKS.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut map = locks
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    map.entry(server.to_string())
+        .or_insert_with(|| Arc::new(AsyncMutex::new(())))
+        .clone()
 }
 
 pub fn require_slug(org_slug: Option<&str>) -> Result<String> {

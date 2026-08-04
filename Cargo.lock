@@ -726,6 +726,7 @@ dependencies = [
  "ama10",
  "ama10-i18n",
  "anyhow",
+ "async-lock",
  "client",
  "credentials_provider",
  "editor",

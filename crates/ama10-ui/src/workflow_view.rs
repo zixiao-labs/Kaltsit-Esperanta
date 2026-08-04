@@ -1,5 +1,6 @@
 //! Workspace Item: Wuling workflow flowchart, YAML editor, and local simulate.
 
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -160,23 +161,29 @@ impl WorkflowView {
 
     fn load_path(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
         match std::fs::read_to_string(&path) {
-            Ok(text) => match Workflow::parse(&text) {
-                Ok(workflow) => {
-                    self.apply_workflow(workflow, Some(text), window, cx);
-                    self.disk_mtime = file_mtime(&path);
-                    self.workflow_path = Some(path);
-                    self.dirty = false;
-                    self.status = tr!("Loaded workflow file.");
-                    self.error = None;
+            Ok(text) => {
+                // Capture baseline before parse so a parse failure cannot clear it.
+                let baseline = probe_file_mtime(&path).ok().flatten();
+                match Workflow::parse(&text) {
+                    Ok(workflow) => {
+                        self.apply_workflow(workflow, Some(text), window, cx);
+                        self.disk_mtime = baseline;
+                        self.workflow_path = Some(path);
+                        self.dirty = false;
+                        self.status = tr!("Loaded workflow file.");
+                        self.error = None;
+                    }
+                    Err(error) => {
+                        self.workflow_path = Some(path);
+                        if let Some(mtime) = baseline {
+                            self.disk_mtime = Some(mtime);
+                        }
+                        self.set_editor_text(&text, window, cx);
+                        self.mode = ViewMode::Yaml;
+                        self.error = Some(format!("{error:#}").into());
+                    }
                 }
-                Err(error) => {
-                    self.workflow_path = Some(path);
-                    self.disk_mtime = None;
-                    self.set_editor_text(&text, window, cx);
-                    self.mode = ViewMode::Yaml;
-                    self.error = Some(format!("{error:#}").into());
-                }
-            },
+            }
             Err(error) => {
                 self.error = Some(format!("{error:#}").into());
             }
@@ -273,16 +280,11 @@ impl WorkflowView {
                 return;
             }
         };
-        let path = self.workflow_path.clone().unwrap_or_else(|| {
-            let fallback = self
-                .project
-                .read(cx)
-                .worktrees(cx)
-                .next()
-                .map(|tree| tree.read(cx).abs_path().join(WORKFLOW_DIR).join("ci.yml"))
-                .unwrap_or_else(|| PathBuf::from(format!("{WORKFLOW_DIR}/ci.yml")));
-            fallback
-        });
+        let path = self
+            .workflow_path
+            .clone()
+            .or_else(|| unique_new_workflow_path(&self.project, cx))
+            .unwrap_or_else(|| PathBuf::from(format!("{WORKFLOW_DIR}/ci.yml")));
         if let Some(parent) = path.parent()
             && let Err(error) = std::fs::create_dir_all(parent)
         {
@@ -290,19 +292,17 @@ impl WorkflowView {
             cx.notify();
             return;
         }
-        if let (Some(baseline), Some(current)) = (self.disk_mtime, file_mtime(&path))
-            && baseline != current
-        {
+        if disk_state_conflicts(self.disk_mtime, &path) {
             self.error = Some(tr!(
                 "File changed on disk — reload before saving to avoid overwriting."
             ));
             cx.notify();
             return;
         }
-        match std::fs::write(&path, yaml.as_bytes()) {
+        match write_workflow_atomic(&path, &yaml) {
             Ok(()) => {
                 self.workflow_path = Some(path.clone());
-                self.disk_mtime = file_mtime(&path);
+                self.disk_mtime = probe_file_mtime(&path).ok().flatten();
                 self.dirty = false;
                 self.refresh_file_list(cx);
                 self.status = tr_f!("Saved {}", path.display());
@@ -318,17 +318,34 @@ impl WorkflowView {
     fn create_new(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let workflow = Workflow::default_ci_seed();
         self.apply_workflow(workflow, None, window, cx);
-        self.workflow_path = self
-            .project
-            .read(cx)
-            .worktrees(cx)
-            .next()
-            .map(|tree| tree.read(cx).abs_path().join(WORKFLOW_DIR).join("ci.yml"));
+        let path = unique_new_workflow_path(&self.project, cx);
+        let status = match path.as_ref() {
+            Some(path) => tr_f!(
+                "Created a CI workflow seed — Save to write {}.",
+                path.display()
+            ),
+            None => tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml."),
+        };
+        self.workflow_path = path;
+        // Explicit Missing baseline: None→Some on save is treated as a conflict.
         self.disk_mtime = None;
         self.dirty = true;
         self.mode = ViewMode::Flow;
-        self.status = tr!("Created a CI workflow seed — Save to write .wuling/workflows/ci.yml.");
+        self.status = status;
         cx.notify();
+    }
+
+    fn invalidate_simulation(&mut self) {
+        self.simulation = None;
+        if self.mode != ViewMode::Simulate {
+            return;
+        }
+        match WorkflowSimulation::from_workflow(&self.workflow) {
+            Ok(simulation) => self.simulation = Some(simulation),
+            Err(error) => {
+                self.error = Some(format!("{error:#}").into());
+            }
+        }
     }
 
     fn add_job(&mut self, cx: &mut Context<Self>) {
@@ -361,6 +378,7 @@ impl WorkflowView {
         );
         self.layout = FlowLayout::from_workflow(&self.workflow).unwrap_or_default();
         self.selected_job = Some(id.into());
+        self.invalidate_simulation();
         self.dirty = true;
         cx.notify();
     }
@@ -375,6 +393,7 @@ impl WorkflowView {
         }
         self.selected_job = None;
         self.layout = FlowLayout::from_workflow(&self.workflow).unwrap_or_default();
+        self.invalidate_simulation();
         self.dirty = true;
         cx.notify();
     }
@@ -398,6 +417,7 @@ impl WorkflowView {
             Ok(layout) => {
                 self.layout = layout;
                 self.error = None;
+                self.invalidate_simulation();
                 self.dirty = true;
             }
             Err(error) => {
@@ -735,10 +755,107 @@ fn create_yaml_editor(
     (editor, buffer)
 }
 
-fn file_mtime(path: &Path) -> Option<SystemTime> {
-    std::fs::metadata(path)
-        .and_then(|metadata| metadata.modified())
-        .ok()
+fn probe_file_mtime(path: &Path) -> std::io::Result<Option<SystemTime>> {
+    match std::fs::metadata(path) {
+        Ok(metadata) => Ok(Some(metadata.modified()?)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+fn disk_state_conflicts(baseline: Option<SystemTime>, path: &Path) -> bool {
+    match probe_file_mtime(path) {
+        Ok(current) => current != baseline,
+        Err(_) => true,
+    }
+}
+
+fn unique_new_workflow_path(project: &Entity<Project>, cx: &App) -> Option<PathBuf> {
+    let root = project
+        .read(cx)
+        .worktrees(cx)
+        .next()?
+        .read(cx)
+        .abs_path()
+        .to_path_buf();
+    let dir = root.join(WORKFLOW_DIR);
+    let candidate = dir.join("ci.yml");
+    if !candidate.exists() {
+        return Some(candidate);
+    }
+    for index in 1..1000 {
+        let candidate = dir.join(format!("ci-{index}.yml"));
+        if !candidate.exists() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn write_workflow_atomic(path: &Path, yaml: &str) -> std::io::Result<()> {
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty());
+    let parent = parent.unwrap_or_else(|| Path::new("."));
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("workflow.yml");
+    let temp_path = parent.join(format!(".{file_name}.{}.tmp", std::process::id()));
+
+    let write_temp = (|| {
+        let mut file = std::fs::File::create(&temp_path)?;
+        file.write_all(yaml.as_bytes())?;
+        file.flush()?;
+        file.sync_all()?;
+        Ok(())
+    })();
+    if let Err(error) = write_temp {
+        let _ = std::fs::remove_file(&temp_path);
+        return Err(error);
+    }
+
+    match replace_file(&temp_path, path) {
+        Ok(()) => Ok(()),
+        Err(error) => {
+            let _ = std::fs::remove_file(&temp_path);
+            Err(error)
+        }
+    }
+}
+
+fn replace_file(temp_path: &Path, path: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        let parent = path.parent().unwrap_or_else(|| Path::new("."));
+        let file_name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("workflow.yml");
+        let backup_path = parent.join(format!(".{file_name}.{}.bak", std::process::id()));
+        let had_existing = path.exists();
+        if had_existing {
+            std::fs::rename(path, &backup_path)?;
+        }
+        match std::fs::rename(temp_path, path) {
+            Ok(()) => {
+                if had_existing {
+                    let _ = std::fs::remove_file(&backup_path);
+                }
+                Ok(())
+            }
+            Err(error) => {
+                if had_existing {
+                    let _ = std::fs::rename(&backup_path, path);
+                }
+                Err(error)
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        std::fs::rename(temp_path, path)
+    }
 }
 
 impl Focusable for WorkflowView {
@@ -915,7 +1032,7 @@ mod tests {
         std::fs::create_dir_all(&workflow_dir).unwrap();
         let path = workflow_dir.join("ci.yml");
         std::fs::write(&path, &workflow_yaml).unwrap();
-        let baseline = file_mtime(&path);
+        let baseline = probe_file_mtime(&path).ok().flatten();
         assert!(baseline.is_some());
 
         let view = workspace.update_in(cx, |workspace, window, cx| {
@@ -932,7 +1049,7 @@ mod tests {
 
         // Change the file on disk after load so save sees a stale baseline.
         std::fs::write(&path, format!("{workflow_yaml}\n# external edit\n")).unwrap();
-        let current = file_mtime(&path);
+        let current = probe_file_mtime(&path).ok().flatten();
         assert_ne!(baseline, current);
 
         view.update_in(cx, |view, window, cx| {
@@ -950,5 +1067,113 @@ mod tests {
         });
 
         let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+
+    #[gpui::test]
+    async fn workflow_view_add_job_invalidates_simulation(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(workspace.weak_handle(), project.clone(), None, window, cx)
+            })
+        });
+
+        view.update(cx, |view, cx| {
+            let before = WorkflowSimulation::from_workflow(&view.workflow).unwrap();
+            assert_eq!(
+                before.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Ready)
+            );
+            view.simulation = Some(before);
+            view.mode = ViewMode::Simulate;
+            view.add_job(cx);
+            let simulation = view.simulation.as_ref().expect("simulation rebuilt");
+            assert!(
+                simulation.status_for_job_id("job_3").is_some(),
+                "rebuilt simulation must include the added job"
+            );
+            assert_eq!(
+                simulation.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Ready),
+                "stale pre-edit DAG must not be retained"
+            );
+        });
+    }
+
+    #[gpui::test]
+    async fn workflow_view_remove_job_invalidates_simulation(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(workspace.weak_handle(), project.clone(), None, window, cx)
+            })
+        });
+
+        view.update(cx, |view, cx| {
+            view.simulation = Some(WorkflowSimulation::from_workflow(&view.workflow).unwrap());
+            view.mode = ViewMode::Simulate;
+            view.selected_job = Some("test".into());
+            view.remove_selected_job(cx);
+            let simulation = view.simulation.as_ref().expect("simulation rebuilt");
+            assert!(simulation.status_for_job_id("test").is_none());
+            assert_eq!(
+                simulation.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Ready)
+            );
+        });
+    }
+
+    #[gpui::test]
+    async fn workflow_view_toggle_need_invalidates_simulation(cx: &mut TestAppContext) {
+        init_test(cx);
+        let fs = fs::FakeFs::new(cx.executor());
+        fs.insert_tree("/root", json!({ "README.md": "" })).await;
+        let project = Project::test(fs, ["/root".as_ref()], cx).await;
+        let (workspace, cx) =
+            cx.add_window_view(|window, cx| Workspace::test_new(project.clone(), window, cx));
+
+        let view = workspace.update_in(cx, |workspace, window, cx| {
+            cx.new(|cx| {
+                WorkflowView::new(workspace.weak_handle(), project.clone(), None, window, cx)
+            })
+        });
+
+        view.update(cx, |view, cx| {
+            let mut simulation = WorkflowSimulation::from_workflow(&view.workflow).unwrap();
+            for key in simulation.keys_for_job_id("build") {
+                simulation.mark_failed(&key).unwrap();
+            }
+            assert_eq!(
+                simulation.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Failed)
+            );
+            view.simulation = Some(simulation);
+            view.mode = ViewMode::Simulate;
+            view.selected_job = Some("test".into());
+            view.toggle_need("build", cx);
+            assert!(view.error.is_none());
+            let simulation = view.simulation.as_ref().expect("simulation rebuilt");
+            // Successful edit must drop the advanced/failed state from the old DAG.
+            assert_eq!(
+                simulation.status_for_job_id("build"),
+                Some(SimulatedJobStatus::Ready)
+            );
+            assert_eq!(
+                simulation.status_for_job_id("test"),
+                Some(SimulatedJobStatus::Ready)
+            );
+        });
     }
 }
