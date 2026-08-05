@@ -27,6 +27,7 @@ gpui.workspace = true
 reqwest = { version = "0.13", features = ["form", "json"] }
 serde.workspace = true
 serde_json.workspace = true
+serde_yaml_ng.workspace = true
 strum.workspace = true
 # `reqwest 0.13`'s send path uses `tokio::time::sleep` for its request timeout,
 # which panics when polled outside a Tokio runtime. We hold a `runtime::Handle`
@@ -35,6 +36,7 @@ strum.workspace = true
 tokio = { workspace = true, features = ["rt"] }
 typify.workspace = true
 url.workspace = true
+percent-encoding.workspace = true
 
 [lints]
 workspace = true

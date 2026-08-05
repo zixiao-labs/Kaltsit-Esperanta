@@ -38,7 +38,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::server_url::ServerUrl;
 pub use crate::wuling_api::types::{
-    DeviceCodeResponse as DeviceCodeResp, OAuthError, OAuthTokenResponse as Tokens, User as Me,
+    DeviceCodeResponse as DeviceCodeResp, OAuthError, OAuthTokenResponse as Tokens, Org,
+    PutRunnerConfigRequest, RunnerConfig as RunnerConfigDocument, User as Me,
     WellKnownDoc as WellKnown,
 };
 
@@ -302,6 +303,101 @@ impl WulingClient {
             .await?
     }
 
+    /// GET `/api/v1/orgs` — organizations the signed-in user can access.
+    pub async fn list_orgs(&self, access_token: &str) -> Result<Vec<Org>> {
+        #[derive(serde::Deserialize)]
+        struct OrgsResponse {
+            orgs: Vec<Org>,
+        }
+
+        let url = self.server.join("/api/v1/orgs");
+        let http = self.http.clone();
+        let access_token = access_token.to_string();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .get(&url)
+                    .bearer_auth(&access_token)
+                    .send()
+                    .await?
+                    .error_for_status()?;
+                let body = resp.json::<OrgsResponse>().await?;
+                anyhow::Ok(body.orgs)
+            })
+            .await?
+    }
+
+    /// GET `/api/v1/orgs/{org_slug}/runner-config`.
+    pub async fn get_runner_config(
+        &self,
+        access_token: &str,
+        org_slug: &str,
+    ) -> Result<RunnerConfigDocument> {
+        let url = self.server.join(&runner_config_path(org_slug));
+        let http = self.http.clone();
+        let access_token = access_token.to_string();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http.get(&url).bearer_auth(&access_token).send().await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if !status.is_success() {
+                    anyhow::bail!(
+                        "get runner-config failed ({status}): {}",
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                serde_json::from_slice::<RunnerConfigDocument>(&bytes)
+                    .context("decode runner-config response")
+            })
+            .await?
+    }
+
+    /// PUT `/api/v1/orgs/{org_slug}/runner-config` with optimistic concurrency via
+    /// `base_blob_sha` in the JSON body (empty string asserts the file does not exist yet).
+    pub async fn put_runner_config(
+        &self,
+        access_token: &str,
+        org_slug: &str,
+        request: PutRunnerConfigRequest,
+    ) -> Result<RunnerConfigDocument> {
+        let url = self.server.join(&runner_config_path(org_slug));
+        let http = self.http.clone();
+        let access_token = access_token.to_string();
+        self.tokio_handle
+            .spawn(async move {
+                let resp = http
+                    .put(&url)
+                    .bearer_auth(&access_token)
+                    .json(&request)
+                    .send()
+                    .await?;
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if status == reqwest::StatusCode::PRECONDITION_FAILED {
+                    anyhow::bail!(
+                        "runner-config precondition failed ({status}): reload and try again — {}",
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                if status == reqwest::StatusCode::CONFLICT {
+                    anyhow::bail!(
+                        "runner-config conflict ({status}): reload and try again — {}",
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                if !status.is_success() {
+                    anyhow::bail!(
+                        "put runner-config failed ({status}): {}",
+                        String::from_utf8_lossy(&bytes)
+                    );
+                }
+                serde_json::from_slice::<RunnerConfigDocument>(&bytes)
+                    .context("decode runner-config response")
+            })
+            .await?
+    }
+
     /// Persist tokens to the OS credentials store keyed by the server URL.
     /// `username` is what the user will see ("alice" et al.); the password
     /// slot stores a JSON-encoded `StoredCreds`.
@@ -349,6 +445,25 @@ impl WulingClient {
     }
 }
 
+fn runner_config_path(org_slug: &str) -> String {
+    let encoded = percent_encoding::utf8_percent_encode(org_slug, PATH_SEGMENT_ENCODE_SET);
+    format!("/api/v1/orgs/{encoded}/runner-config")
+}
+
+/// Encode reserved characters in a single URL path segment without treating `/` as a separator.
+const PATH_SEGMENT_ENCODE_SET: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'#')
+    .add(b'<')
+    .add(b'>')
+    .add(b'?')
+    .add(b'`')
+    .add(b'{')
+    .add(b'}')
+    .add(b'%')
+    .add(b'/');
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -356,5 +471,30 @@ mod tests {
         let ua = crate::wuling_api::user_agent("ama10-wuling");
         assert!(ua.starts_with("Kaltsit-Esperanta/"));
         assert!(ua.contains("ama10-wuling"));
+    }
+
+    #[test]
+    fn runner_config_path_encodes_slug() {
+        assert_eq!(
+            super::runner_config_path("acme/corp"),
+            "/api/v1/orgs/acme%2Fcorp/runner-config"
+        );
+    }
+}
+
+#[cfg(test)]
+mod put_request_shape {
+    #[test]
+    fn build_put_via_json() {
+        let request: crate::auth::PutRunnerConfigRequest =
+            serde_json::from_value(serde_json::json!({
+                "content": "version: 1\n",
+                "message": "Update runner-config.yaml",
+                "base_blob_sha": ""
+            }))
+            .unwrap();
+        let encoded = serde_json::to_value(&request).unwrap();
+        assert_eq!(encoded["content"], "version: 1\n");
+        assert_eq!(encoded["base_blob_sha"], "");
     }
 }

@@ -10,7 +10,7 @@ use annotate_snippets::{Group, Renderer};
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use itertools::{Either, Itertools};
-use serde_yaml::Value;
+use serde_yaml_ng::Value;
 use strum::IntoEnumIterator;
 
 use crate::tasks::workflows::WorkflowType;
@@ -68,7 +68,7 @@ impl WorkflowFile {
                 )
             })
             .and_then(|file_content| {
-                serde_yaml::from_str(&file_content)
+                serde_yaml_ng::from_str(&file_content)
                     .map(|parsed_content| Self {
                         raw_content: file_content,
                         parsed_content,
