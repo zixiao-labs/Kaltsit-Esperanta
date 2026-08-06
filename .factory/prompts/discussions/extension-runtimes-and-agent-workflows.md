@@ -1,5 +1,7 @@
 # 四大特性前置需求调研：JS/TS 扩展、CEF 绑定、前端增强模式、Agent 编排工作流
 
+> **补充（2026-08-06）：** 统一安全等级、OS 沙箱全套建议、扩展签名、嵌入式 JS 能力与 Agent Workflow 限制，见同目录 [`unified-security-architecture.md`](./unified-security-architecture.md)。PerlicaScript JIT / deopt / 类型混淆契约见兄弟仓 `perlicascript/docs/jit-security.md`。本文仍是四大特性的前置调研快照，不被全文替代。
+>
 > 状态：调研（前置需求盘点），非实现计划。快照日期：2026-07-11。基于对 `Kaltsit-Esperanta`、`perlicascript` 的一手代码勘察及 Zed 的公开资料；其他兄弟项目仍待单独补充。
 > 核心约束（用户明确）：**安全性第一，绝不重蹈 VS Code 覆辙**（所有扩展同进程、满权限、无能力系统）；PerlicaScript 定位为**通用语言**（类比 Node.js 里的 JS），而非仅 DSL。
 
