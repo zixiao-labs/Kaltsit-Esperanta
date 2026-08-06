@@ -9,7 +9,7 @@
 > - [`docs/src/ai/tool-permissions.md`](../../../docs/src/ai/tool-permissions.md)
 > - [`docs/src/worktree-trust.md`](../../../docs/src/worktree-trust.md)
 > - [四大特性前置调研](./extension-runtimes-and-agent-workflows.md)
-> - PerlicaScript JIT 安全契约：[`perlicascript/docs/jit-security.md`](../../../../perlicascript/docs/jit-security.md)（假定与本仓同级检出）
+> - PerlicaScript JIT 安全契约：[zixiao-labs/perlicascript `docs/jit-security.md`](https://github.com/zixiao-labs/perlicascript/blob/docs/jit-security/docs/jit-security.md)（待合入 `main` 后改为默认分支链接）
 >
 > 核心约束：**安全性第一，绝不重蹈 VS Code 覆辙**（同进程、满权限、无能力系统）。指令与细粒度命令规则不可作为唯一防线；不可信代码按最大化敌意建模。
 
@@ -42,7 +42,7 @@
 4. **沙箱外副作用**：`edit` 工具、LSP/proc macro、普通终端、MCP、git submodule hooks——沙箱不覆盖；`ultra` 档规划额外收紧（见 §8）。
 5. **恶意扩展 / 未签名包**：无验签时 marketplace 或本地 tar 可携带任意能力声明。
 6. **恶意 Workflow 脚本**：模型生成的编排脚本若有 FS/shell，等同于在用户会话里跑不可信代码；且可放大子代理数量与费用。
-7. **JIT / 类型混淆**：优化码与 deopt 路径若信任错误类型标签，可破坏 VM 不变量并绕过宿主检查（契约见 `perlicascript/docs/jit-security.md`）。
+7. **JIT / 类型混淆**：优化码与 deopt 路径若信任错误类型标签，可破坏 VM 不变量并绕过宿主检查（契约见 [jit-security.md](https://github.com/zixiao-labs/perlicascript/blob/docs/jit-security/docs/jit-security.md)）。
 
 ### 1.3 非目标（本设计不承诺）
 
@@ -109,9 +109,10 @@
 ```
 
 - `level`：`none` | `low` | `medium` | `high` | `extreme` | `ultra` | `custom`
+- **`security.level` 是不可绕过的安全上限**：有效策略 = 显式策略（含 `custom.*`、`agent.sandbox_permissions`、`agent.tool_permissions`、UI 钉住覆盖）∩ 该等级的硬限制。显式项只能收紧或在等级允许的旋钮内调整，**不得**覆盖等级已禁用的能力。
 - 非 `custom` 时忽略或只读展示 `custom.*`（实现期再定是否持久化覆盖）
 - `medium` 为**建议默认**（平衡自动化与供应链/沙箱基线）
-- 与现有 `agent.sandbox_permissions` / `agent.tool_permissions` 关系：等级写入**默认包**；用户在设置 UI 中的显式覆盖在 `custom` 或「从当前等级钉住覆盖」流程中生效（实现期：避免静默互相打架，优先显式 `custom`）
+- 与现有 `agent.sandbox_permissions` / `agent.tool_permissions` 关系：等级写入**默认包并施加上限**；用户在设置 UI 中的显式覆盖仅在等级允许范围内生效；需要超出当前等级上限时必须先改 `level`（改为更低档或 `custom`）；`custom` 旋钮独立，但网络诚实边界仍受 §3.3.1 约束
 
 ### 3.2 等级 → 四组策略包
 
@@ -120,10 +121,21 @@
 | **none** | 关（`allow_unsandboxed` 等价） | 不验签；允许 dev | 不限（仅有硬上限防失控，见 §7） | 宽松；仍建议禁远程 import |
 | **low** | 开；升级提示宽松 | 宽松（未签名 + dev 可装，警告） | 小预算；可选审批 | 禁远程 import；能力闸门开 |
 | **medium** | Zed 默认：项目可写、`.git` 只读、默认无网；升级需理由 | **要求 Wuling DevOps 代码签名**；dev 需额外确认 | 中等预算；**运行前审批** | 零 ambient I/O；ops ∩ granter |
-| **high** | 严格：少升级路径；网络/写路径默认更窄 | **仅** Zixiao Palace Laboratory Group 与 Zed Industries Inc 签名 | 严格预算；**强制审批**；子代理不可自行 unsandboxed | 最小 ops 集；堆/时间硬上限 |
-| **extreme** | 几乎不可升级；**禁 unsandboxed** | 同 high + **禁 dev 扩展** | 极小 fan-out；强制审批 | 几乎无 I/O ops（只读宿主 API） |
-| **ultra** | 同 extreme | 白名单签名 + **能力默认全拒**（逐项授予） | **禁用**或只读编排（不可 spawn 写工具） | **禁用**嵌入式 JS 扩展 |
-| **custom** | 旋钮独立 | 旋钮独立 | 旋钮独立 | 旋钮独立 |
+| **high** | 严格：少升级路径；网络/写路径默认更窄；**禁**通过覆盖重开 `allow_unsandboxed` | **仅** Zixiao Palace Laboratory Group 与 Zed Industries Inc 签名；**禁**通过覆盖重开未签名/非白名单加载 | 严格预算；**强制审批**；子代理不可自行 unsandboxed；**禁**覆盖重开 `subagent_may_request_unsandboxed` | 最小 ops 集；堆/时间硬上限；**禁**覆盖扩大至 ambient I/O |
+| **extreme** | 几乎不可升级；**禁 unsandboxed**（覆盖无效） | 同 high + **禁 dev 扩展**（覆盖无效） | 极小 fan-out；强制审批；同上 unsandboxed 禁令 | 几乎无 I/O ops（只读宿主 API）；覆盖不得放宽 |
+| **ultra** | 同 extreme | 白名单签名 + **能力默认全拒**（逐项授予）；禁 dev | **禁用**或只读编排（不可 spawn 写工具）；覆盖不得重开写编排 | **禁用**嵌入式 JS 扩展（覆盖不得重开） |
+| **custom** | 旋钮独立，但仍受 §3.3.1 网络全局上限 | 旋钮独立 | 旋钮独立 | 旋钮独立 |
+
+**覆盖规则（`high` / `extreme` / `ultra`）**
+
+| 禁止通过覆盖重新启用 | `high` | `extreme` | `ultra` |
+|----------------------|--------|-----------|---------|
+| `allow_unsandboxed` / 子代理自行请求 unsandboxed | 禁 | 禁 | 禁 |
+| 开发扩展（Install Dev Extension） | 禁（仅签名白名单） | 禁 | 禁 |
+| 该等级已禁用的 Workflow 写编排 / spawn 写工具 | — | — | 禁 |
+| 该等级已禁用的嵌入式 JS 运行时 | — | — | 禁 |
+
+验收用例（设计级，实现前必写）：(1) `high` 下 `custom.sandbox.allow_unsandboxed=true` 被拒绝或钳制为 `false`；(2) `extreme` 下 `allow_dev_extensions=true` 无效；(3) `ultra` 下 Workflow/`embedded_js` 开关无法重开写能力。
 
 ### 3.3 `custom` 旋钮清单（设计）
 
@@ -135,7 +147,7 @@
 - `allow_write_escalation: bool`
 - `protected_paths: string[]`（默认含 Git 元数据）
 - `default_network: deny | allowlist`
-- `host_allowlist: string[]`
+- `host_allowlist: string[]`（解析与强制语义见 §3.3.1）
 
 **extension_signing**
 
@@ -157,7 +169,27 @@
 - `max_concurrent_agents` / `max_total_agents`
 - `max_depth` / `max_tokens` / `max_wall_ms`
 - `size_guideline: unrestricted | small | medium | large`
-- `subagent_may_request_unsandboxed: bool`（`high+` 预设为 `false`）
+- `subagent_may_request_unsandboxed: bool`（`high+` 预设为 `false`，且不可覆盖为 `true`）
+
+### 3.3.1 `host_allowlist` 强制路径与解析语义
+
+`host_allowlist` **不是**完整网络隔离；它只约束经宿主强制点的出站。对齐现有 `crates/http_proxy`（hostname 模式、解析后 IP 钉扎、拒 loopback/private/link-local）并扩展到所有设计中的网络入口：
+
+| 路径 | 强制要求 |
+|------|----------|
+| Agent `fetch` / 沙箱内 HTTP(S) | 必须经宿主 `http_proxy`；CONNECT/绝对 URI 的 Host 经 allowlist；解析后地址钉扎 |
+| 嵌入式 JS `fetch` / `import` | 同一 proxy + allowlist；禁止运行时自建直连或绕过 env |
+| MCP / 扩展下载等宿主发起的出站 | 走同一 allowlist 决策面（或显式独立列表，但须文档化且不得更宽于等级上限） |
+| 编辑器内部请求（更新检查、遥测等） | **不**计入 Agent allowlist；与 Agent 策略面分离，避免误开放 |
+| 非 HTTP(S)（SSH、FTP、raw socket、自定义 scheme） | **不在** allowlist 覆盖范围内；默认拒绝。`high+` 下若无法经 proxy 强制，**明确拒绝**该能力/升级，不得宣称「已按 allowlist 隔离」 |
+
+**解析与边界规则（设计）**
+
+- **模式**：精确主机名或前导 `*.` 子域通配；拒绝 IP 字面量（含 bracketed IPv6）与 `localhost` / `*.localhost` 作为 allowlist 条目（与现网 `HostPattern` 一致）。
+- **DNS / 重定向**：允许的是「请求 Host + 钉扎后的解析地址」；DNS 复绑到 loopback/private/link-local → 拒绝。HTTP 重定向目标须重新过 allowlist + 钉扎，不得跟随未批准 Host。
+- **IPv6**：匹配与存储去括号；字面量不可作为模式；解析到 ULA/link-local/mapped 私网等同私网拒绝（`allow_all_hosts` 例外按现实现）。
+- **代理与绕过**：沙箱仅注入宿主 proxy；`NO_PROXY` / 隐式 loopback bypass **不得**被模型或脚本用来到达未批准目标。上游企业代理若存在，仍先过 Agent allowlist，再转发。
+- **诚实边界**：allowlist ≠ 全主机防火墙。凡无法统一强制的网络路径，在 `high+` 模式 **拒绝启用或拒绝升级**，UI/文档不得暗示完整网络隔离。
 
 ### 3.4 与现有 UI 的关系
 
@@ -176,11 +208,13 @@
 | 规则 | 约束 |
 |------|------|
 | 默认 FS | 全盘只读倾向 + 项目目录可写 + 隔离 temp |
-| `.git` | 即使落在可写子树内也保持受保护；Agent **不得**请求写 `.git`（防 hooks 逃逸） |
-| 网络 | 默认拒绝；经宿主 `http_proxy` + host allowlist |
-| 升级 | 展示权限与理由；一次 / 本线程 / 永久；fail-closed |
+| `.git`（全写入入口） | Git 元数据（工作树 `.git`、linked worktree common dir、refs/index/hooks/config 等）对 **所有 Agent 可写入口** 一律拒绝写入，不限于沙箱 terminal：`terminal`（sandboxed）、`edit` / `write_file`、LSP/code action 引发的写盘、MCP 写工具、以及策略层仍宣称受 Agent 控制的普通终端路径。用户主动在**非 Agent** 普通终端中的操作不在此强制范围内，但 UI 须区分二者，避免把「Agent 不得写 `.git`」误读为仅沙箱工具规则 |
+| 网络 | 默认拒绝；经宿主 `http_proxy` + host allowlist（语义见 §3.3.1） |
+| 升级 | 展示权限与理由；一次 / 本线程 / 永久；fail-closed；写路径升级**永不**隐含 `.git` 可写 |
 | TOCTOU | 路径检查与进入沙箱之间的 symlink 交换必须失败关闭，不得挂载攻击者目标 |
 | 平台 | macOS Seatbelt；Linux bwrap +（已有）FD/身份校验 + seccomp；Windows 经 WSL |
+
+**`.git` 回归（实现前必有）**：为每个写入入口各备接受/拒绝用例——对受保护 Git 元数据路径的写请求必须被拒绝；对项目内非 Git 元数据路径在已授权时可接受。覆盖至少：`edit`/`write_file`、sandboxed `terminal`、MCP 写工具（若启用）、以及任何经 Agent 调度的 LSP 写盘桥。
 
 ### 4.2 设计补强（相对现状）
 
@@ -235,7 +269,7 @@ V8 isolate **不是**抗恶意代码的硬安全边界。市场审核扩展可�
 
 ## 6. 插件 / 扩展签名与加载
 
-### 6.1 信任锚
+### 6.1 信任锚与签名绑定
 
 1. **Wuling DevOps 代码签名**：发行/分发流水线签名；编辑器安装时验签（fail-closed）。
 2. **发布者白名单**（`high` / `extreme` / `ultra`）：
@@ -243,23 +277,43 @@ V8 isolate **不是**抗恶意代码的硬安全边界。市场审核扩展可�
    - Zed Industries Inc
 3. **能力闸门**：签名只解决「谁发布」；「能做什么」仍由 `ExtensionCapability` + 用户/等级授予决定。
 
+**签名必须绑定**（缺一即验签失败）：
+
+- 规范化 manifest（稳定序列化后的声明内容）
+- 发布者身份
+- 扩展版本
+- 实际扩展包内容摘要（安装产物哈希，防「签名与包分离替换」）
+
+**信任模型（设计）**
+
+| 主题 | 规则 |
+|------|------|
+| 信任根 | 内置/更新通道分发的 Wuling（及白名单发布者）根或中间证书；仅承认当前信任根链 |
+| 密钥轮换 | 新钥经信任根签发后可验；轮换期可短暂双认，过期后旧钥只用于校验**已安装**版本，不得授权新安装/更新 |
+| 撤销 | CRL/等价撤销信息；密钥泄露或证书撤销后，**不得**继续授权受影响发布者的更新或新装；已加载实例应在下次启动/更新检查时拒绝并提示卸载或冻结 |
+| 过期 | 签名或证书过期 → 拒绝新装与更新；已安装版本可按策略「只跑不更新」直至用户确认，但不得用过期签名为**新**包背书 |
+| 离线验证 | 安装/加载时用本地信任根 + 缓存的撤销快照验签；无网络不得跳过验签；撤销快照过期时 `medium+` fail-closed（拒绝更新），`low`/`none` 可警告 |
+| 回滚 | 允许回滚到先前已验签且未撤销的版本；禁止用撤销后的密钥或篡改包「回滚」 |
+| 已安装版本 | 记录安装时的包摘要与签名元数据；内容与记录不符 → 拒绝加载 |
+
 ### 6.2 按等级的加载策略
 
 | 等级 | 签名策略 | Dev Extension（Install Dev Extension） |
 |------|----------|----------------------------------------|
 | none | 不验签 | 允许 |
 | low | 未签名可装，UI 警告 | 允许 |
-| medium | **必须**通过 Wuling DevOps 验签 | 允许但每次确认 |
-| high | 验签 + 发布者 ∈ 白名单 | **禁止**（除非日后 `custom`） |
+| medium | **必须**通过 Wuling DevOps 验签（含包摘要绑定） | 允许但每次确认 |
+| high | 验签 + 发布者 ∈ 白名单 | **禁止**（档内覆盖无效） |
 | extreme | 同 high | **禁止** |
 | ultra | 同 high + 能力默认全拒 | **禁止** |
 | custom | `extension_signing.mode` 等 | `allow_dev_extensions` |
 
 ### 6.3 安装时强制流程
 
-1. 解析 manifest → 验签 → 校验发布者（若需要）→ 展示能力声明 →（按等级）用户确认 → 写入授予集。
-2. 验签失败、发布者不在白名单、或能力未被授予：**拒绝加载**，不得半加载执行。
-3. WASM / 未来 Deno / Bun / Perlica **同一信任与能力管线**；禁止「JS 扩展跳过验签」。
+1. 解析并规范化 manifest → 计算包摘要 → 验签（manifest + 发布者 + 版本 + 摘要）→ 查撤销/过期 → 校验发布者（若需要）→ 展示能力声明 →（按等级）用户确认 → 写入授予集与安装记录。
+2. 验签失败、绑定字段不一致、发布者不在白名单、证书/签名已撤销或过期、或能力未被授予：**拒绝加载**，不得半加载执行。
+3. 密钥泄露或撤销后：拒绝受影响更新；不得用旧信任继续授权新包。
+4. WASM / 未来 Deno / Bun / Perlica **同一信任与能力管线**；禁止「JS 扩展跳过验签」。
 
 ### 6.4 与 WASM 现状对齐
 
@@ -278,8 +332,38 @@ V8 isolate **不是**抗恶意代码的硬安全边界。市场审核扩展可�
 | 脚本**无**直接文件系统 / shell / 网络 | 脚本只协调；副作用只经子代理工具 |
 | 仅暴露编排 ops（如 `agent`、`pipeline`、预算/取消） | 缩小攻击面 |
 | 子代理权限 ≤ 父会话，且受 `security.level` 裁剪 | 防止脚本放大 YOLO |
-| 可恢复 effect journal（控制面状态，非代码 CRDT） | 崩溃恢复；in-flight 标 `unknown`，不盲目重跑 |
+| 可恢复 effect journal（控制面状态，非代码 CRDT） | 崩溃恢复；in-flight 标 `unknown`，不盲目重跑（原子协议见 §7.1.1） |
 | 用户取消传播到脚本与全部子任务 | 费用与失控控制 |
+
+### 7.1.1 Agent budget 与 effect journal：原子记账与崩溃恢复
+
+预算与 journal **同事务语义**（实现可用单文件 WAL / 同目录 rename 提交；失败则两者都不前进）。
+
+**启动子代理的顺序（成功路径）**
+
+1. 校验剩余预算 ≥ 本次预留（并发/总数/token/wall 等）。
+2. 持久化 journal 条目：`reserved`（含预留量、子代理 id、幂等键、父 effect id）。
+3. 扣减/冻结预算中的预留（可见剩余下降；尚未计为已消费）。
+4. 启动子代理；journal 更新为 `running`。
+5. 终态：`completed` / `failed` / `cancelled` → 将预留转为**已消费**或**释放未使用**部分，并持久化后再调度下一步。
+
+任一步崩溃：恢复时以 journal 为准，不得仅凭内存重放。
+
+**恢复规则**
+
+| journal 状态 | 预算处理 | 执行 |
+|--------------|----------|------|
+| 无对应 journal | 不扣预算 | 不启动 |
+| `reserved` 且进程未观察到子代理 | 保留预留直至对账；超时未确认 → 释放预留并标 `aborted` | **不**自动重跑 |
+| `running` / in-flight=`unknown` | 预留保持；不得当作可再分配余额 | **禁止**盲目重试；见下 |
+| `completed`（已消费） | 保持已消费 | 不重跑该 effect |
+| `failed`/`cancelled`（已释放或已消费按策略） | 按条目记录的释放/消费数恢复余额视图 | 仅当用户/策略显式允许时带**新幂等键**重试 |
+
+**`in-flight = unknown`（对账）**
+
+1. 自动：查询子代理运行时/线程是否仍存活；若能确认终态则补写 journal 并结算预算。
+2. 仍未知：标记需**人工或策略化对账**（UI 展示预留量与可能重复风险）；选项限于：确认已完成（计消费）、确认未执行（释放预留）、带新幂等键有限重试（再次走完整预留协议）。
+3. 恢复路径**不得**在未结算旧预留时再扣一笔相同逻辑工作的预算，也**不得**在未知是否已执行时释放预算后又自动重跑（防双花与双执行）。
 
 ### 7.2 运行时上限（设计默认；等级可下调）
 
@@ -322,7 +406,7 @@ V8 isolate **不是**抗恶意代码的硬安全边界。市场审核扩展可�
 
 - 宿主 ABI 必须 capability-token 化；异步经 channel broker，不持有 GPUI `App`。
 - JIT（FE 基线 + SuperCharger）安全契约见兄弟仓：  
-  [`perlicascript/docs/jit-security.md`](../../../../perlicascript/docs/jit-security.md)
+  [zixiao-labs/perlicascript `docs/jit-security.md`](https://github.com/zixiao-labs/perlicascript/blob/docs/jit-security/docs/jit-security.md)（待合入 `main`）
 - 按等级：`high+` 可禁 SuperCharger；`ultra` 可禁 JIT，仅解释执行。
 
 ---
@@ -354,13 +438,15 @@ V8 isolate **不是**抗恶意代码的硬安全边界。市场审核扩展可�
 
 ## 11. 验收标准（设计级）
 
-实现某一阶段时，至少满足：
+**进入实现阶段前**须满足下列可执行条件（设计评审勾选）；实现某一阶段时至少保持：
 
-1. 将 `security.level` 从 `none` 调到 `high`，无需手改多处 JSON 即可收紧沙箱升级、签名与 Workflow 预算。
-2. `medium` 下未签名扩展 fail-closed；`high` 下非白名单发布者 fail-closed。
-3. Workflow 脚本无法直接 `open`/`fetch`/`exec`；超预算停止调度。
-4. 沙箱 TOCTOU 与 `.git` 保护回归测试保持 fail-closed。
-5. 文档/UI 不声称沙箱覆盖 edit/LSP/普通终端。
+1. 将 `security.level` 从 `none` 调到 `high`，无需手改多处 JSON 即可收紧沙箱升级、签名与 Workflow 预算；有效策略始终为显式策略 ∩ 等级上限（§3.1）。
+2. **策略覆盖优先级**：`high`/`extreme`/`ultra` 下试图重开 `allow_unsandboxed`、dev 扩展、或该档已禁用的 Workflow/嵌入式 JS，必须被拒绝或钳制（§3.2 验收用例）。
+3. `medium` 下未签名扩展 fail-closed；`high` 下非白名单发布者 fail-closed；签名校验含规范化 manifest + 发布者 + 版本 + 包摘要；撤销/过期密钥不得授权更新（§6）。
+4. Workflow 脚本无法直接 `open`/`fetch`/`exec`；超预算停止调度；budget 与 effect journal 按 §7.1.1 原子提交，崩溃恢复不双执行、不错误释放预留；`in-flight=unknown` 经对账后再结算。
+5. 沙箱 TOCTOU 与 `.git` 保护回归测试保持 fail-closed；**所有非仅-terminal 的 Agent 写入入口**（`edit`/`write_file`、MCP 写、Agent 调度的 LSP 写等）对受保护 `.git` 路径拒绝写入（§4.1）。
+6. `custom`/`host_allowlist`：无法统一强制的网络路径在 `high+` 拒绝；文档/UI 不把 allowlist 宣称为完整网络隔离（§3.3.1）。
+7. 文档/UI 不声称沙箱覆盖 edit/LSP/普通终端。
 
 ---
 
