@@ -24,6 +24,7 @@ members = [
     "crates/bedrock",
     "crates/benchmarks",
     "crates/breadcrumbs",
+    "crates/browser_ui",
     "crates/buffer_diff",
     "crates/call",
     "crates/channel",
@@ -310,6 +311,7 @@ ama10-ui = { path = "crates/ama10-ui" }
 mantra = { path = "crates/mantra" }
 bedrock = { path = "crates/bedrock" }
 breadcrumbs = { path = "crates/breadcrumbs" }
+browser_ui = { path = "crates/browser_ui" }
 buffer_diff = { path = "crates/buffer_diff" }
 call = { path = "crates/call" }
 channel = { path = "crates/channel" }

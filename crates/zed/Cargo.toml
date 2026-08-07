@@ -79,6 +79,7 @@ auto_update_ui.workspace = true
 ama10-i18n.workspace = true
 ama10-ui.workspace = true
 breadcrumbs.workspace = true
+browser_ui.workspace = true
 call.workspace = true
 chrono.workspace = true
 channel.workspace = true

@@ -2526,6 +2526,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "browser_ui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async_host_runtime",
+ "core-video",
+ "extension_cef",
+ "gpui",
+ "log",
+ "project",
+ "schemars 1.0.4",
+ "serde",
+ "ui",
+ "util",
+ "workspace",
+]
+
+[[package]]
 name = "brush-parser"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -23613,6 +23631,7 @@ dependencies = [
  "auto_update",
  "auto_update_ui",
  "breadcrumbs",
+ "browser_ui",
  "call",
  "channel",
  "chrono",

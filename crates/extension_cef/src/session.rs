@@ -52,6 +52,10 @@ impl AsyncCefHost {
         self.session.try_recv_event()
     }
 
+    pub fn event_receiver(&self) -> async_channel::Receiver<CefHostEvent> {
+        self.session.clone_event_receiver()
+    }
+
     pub async fn create_browser(
         &self,
         url: impl Into<String>,
