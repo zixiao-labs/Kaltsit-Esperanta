@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use async_host_runtime::HostLifecycle;
+use crate::design_mode::DesignModeState;
 use extension_cef::{AsyncCefHost, BrowserId, CefHostEvent, CefSettings, SharedPaintFrame};
 use gpui::{
     App, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
@@ -22,6 +23,8 @@ actions!(
     [
         /// Open the embedded browser in an editor tab.
         Open,
+        /// Toggle Design Mode for the active browser tab.
+        ToggleDesignMode,
     ]
 );
 
@@ -44,7 +47,8 @@ pub struct BrowserView {
     latest_frame: Option<SharedPaintFrame>,
     #[cfg(target_os = "macos")]
     surface_frame: Option<core_video::pixel_buffer::CVPixelBuffer>,
-    design_mode: bool,
+    design_mode: DesignModeState,
+    agent_context: SharedString,
     _event_task: Task<()>,
     _bootstrap_task: Task<()>,
 }
@@ -138,7 +142,8 @@ impl BrowserView {
             latest_frame: None,
             #[cfg(target_os = "macos")]
             surface_frame: None,
-            design_mode: false,
+            design_mode: DesignModeState::default(),
+            agent_context: SharedString::default(),
             _event_task: event_task,
             _bootstrap_task: bootstrap_task,
         }
@@ -152,17 +157,29 @@ impl BrowserView {
         self.browser_id
     }
 
-    pub fn design_mode(&self) -> bool {
-        self.design_mode
+    pub fn design_mode_enabled(&self) -> bool {
+        self.design_mode.enabled
+    }
+
+    pub fn agent_context_markdown(&self) -> SharedString {
+        self.agent_context.clone()
     }
 
     pub fn set_design_mode(&mut self, enabled: bool, cx: &mut Context<Self>) {
-        self.design_mode = enabled;
+        self.design_mode.enabled = enabled;
+        if !enabled {
+            self.design_mode.clear();
+            self.agent_context = SharedString::default();
+        }
         cx.notify();
     }
 
     pub fn toggle_design_mode(&mut self, cx: &mut Context<Self>) {
-        self.set_design_mode(!self.design_mode, cx);
+        self.set_design_mode(!self.design_mode.enabled, cx);
+    }
+
+    fn refresh_agent_context(&mut self) {
+        self.agent_context = SharedString::from(self.design_mode.agent_context_markdown());
     }
 
     pub fn navigate_to(&mut self, url: String, cx: &mut Context<Self>) {
@@ -229,8 +246,9 @@ impl BrowserView {
             .track_focus(&self.focus_handle)
             .on_mouse_down(
                 gpui::MouseButton::Left,
-                cx.listener(|this, event: &MouseDownEvent, _window, _cx| {
-                    if this.design_mode {
+                cx.listener(|this, event: &MouseDownEvent, _window, cx| {
+                    if this.design_mode.enabled {
+                        this.handle_design_mouse_down(event, cx);
                         return;
                     }
                     let Some(id) = this.browser_id else {
@@ -241,8 +259,13 @@ impl BrowserView {
             )
             .on_mouse_up(
                 gpui::MouseButton::Left,
-                cx.listener(|this, event: &MouseUpEvent, _window, _cx| {
-                    if this.design_mode {
+                cx.listener(|this, event: &MouseUpEvent, _window, cx| {
+                    if this.design_mode.enabled {
+                        if event.modifiers.shift {
+                            this.design_mode.finish_region();
+                            this.refresh_agent_context();
+                            cx.notify();
+                        }
                         return;
                     }
                     let Some(id) = this.browser_id else {
@@ -251,8 +274,12 @@ impl BrowserView {
                     crate::input_bridge::forward_mouse_up(&this.host, id, event);
                 }),
             )
-            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, _cx| {
-                if this.design_mode {
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, cx| {
+                if this.design_mode.enabled {
+                    if event.modifiers.shift {
+                        this.design_mode.update_region(event.position);
+                        cx.notify();
+                    }
                     return;
                 }
                 let Some(id) = this.browser_id else {
@@ -261,7 +288,7 @@ impl BrowserView {
                 crate::input_bridge::forward_mouse_move(&this.host, id, event);
             }))
             .on_scroll_wheel(cx.listener(|this, event: &ScrollWheelEvent, _window, _cx| {
-                if this.design_mode {
+                if this.design_mode.enabled {
                     return;
                 }
                 let Some(id) = this.browser_id else {
@@ -270,7 +297,7 @@ impl BrowserView {
                 crate::input_bridge::forward_scroll(&this.host, id, event);
             }))
             .on_key_down(cx.listener(|this, event: &KeyDownEvent, _window, _cx| {
-                if this.design_mode {
+                if this.design_mode.enabled {
                     return;
                 }
                 let Some(id) = this.browser_id else {
@@ -279,7 +306,7 @@ impl BrowserView {
                 crate::input_bridge::forward_key_down(&this.host, id, event);
             }))
             .on_key_up(cx.listener(|this, event: &KeyUpEvent, _window, _cx| {
-                if this.design_mode {
+                if this.design_mode.enabled {
                     return;
                 }
                 let Some(id) = this.browser_id else {
@@ -288,7 +315,67 @@ impl BrowserView {
                 crate::input_bridge::forward_key_up(&this.host, id, event);
             }))
             .child(content)
+            .children(self.render_design_overlays())
             .into_any_element()
+    }
+
+    fn handle_design_mouse_down(&mut self, event: &MouseDownEvent, cx: &mut Context<Self>) {
+        if event.modifiers.shift {
+            self.design_mode.begin_region(event.position);
+            cx.notify();
+            return;
+        }
+
+        let x: f32 = event.position.x.into();
+        let y: f32 = event.position.y.into();
+        let node = extension_cef::DesignNodeInfo {
+            xpath: format!("//*[@data-x='{x}'][@data-y='{y}']"),
+            tag: "div".into(),
+            attributes: vec![("data-design-mode".into(), "true".into())],
+            computed_style_summary: "/* stub DOM probe — wire CDP Overlay next */".into(),
+            x,
+            y,
+        };
+        let additive = event.modifiers.alt || event.modifiers.secondary();
+        self.design_mode.select_node(node, additive);
+        self.refresh_agent_context();
+        cx.notify();
+    }
+
+    fn render_design_overlays(&self) -> Vec<AnyElement> {
+        if !self.design_mode.enabled {
+            return Vec::new();
+        }
+        let mut overlays = Vec::new();
+        if let Some(bounds) = self.design_mode.region_bounds_px() {
+            overlays.push(
+                div()
+                    .absolute()
+                    .left(bounds.origin.x)
+                    .top(bounds.origin.y)
+                    .w(bounds.size.width)
+                    .h(bounds.size.height)
+                    .border_2()
+                    .border_color(gpui::blue())
+                    .bg(gpui::rgba(0x3b82f633))
+                    .into_any_element(),
+            );
+        }
+        for selection in &self.design_mode.selected {
+            overlays.push(
+                div()
+                    .absolute()
+                    .left(gpui::px(selection.node.x))
+                    .top(gpui::px(selection.node.y))
+                    .w(gpui::px(24.))
+                    .h(gpui::px(24.))
+                    .border_2()
+                    .border_color(gpui::green())
+                    .bg(gpui::rgba(0x22c55e33))
+                    .into_any_element(),
+            );
+        }
+        overlays
     }
 
     fn render_viewport_content(&self) -> AnyElement {
@@ -390,7 +477,7 @@ impl Item for BrowserView {
 
 impl Render for BrowserView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let design_label = if self.design_mode {
+        let design_label = if self.design_mode.enabled {
             "Design Mode: On"
         } else {
             "Design Mode: Off"
@@ -398,6 +485,7 @@ impl Render for BrowserView {
 
         v_flex()
             .size_full()
+            .key_context("Browser")
             .track_focus(&self.focus_handle(cx))
             .child(
                 h_flex()
@@ -424,6 +512,19 @@ impl Render for BrowserView {
                     .py_0p5()
                     .child(Label::new(self.status.clone()).size(LabelSize::XSmall)),
             )
-            .child(div().flex_1().w_full().child(self.render_viewport(cx)))
+            .when(self.design_mode.enabled && !self.agent_context.is_empty(), |this| {
+                this.child(
+                    div()
+                        .w_full()
+                        .max_h(gpui::px(120.))
+                        .overflow_hidden()
+                        .px_2()
+                        .py_1()
+                        .border_b_1()
+                        .border_color(cx.theme().colors().border)
+                        .child(Label::new(self.agent_context.clone()).size(LabelSize::XSmall)),
+                )
+            })
+            .child(div().flex_1().w_full().relative().child(self.render_viewport(cx)))
     }
 }
