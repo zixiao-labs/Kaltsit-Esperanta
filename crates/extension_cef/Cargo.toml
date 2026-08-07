@@ -1,10 +1,29 @@
 [package]
-name = "extension-cef"
+name = "extension_cef"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
+publish.workspace = true
+license = "GPL-3.0-or-later"
+
+[lints]
+workspace = true
 
 [lib]
-path = "src/lib.rs"
+path = "src/extension_cef.rs"
+doctest = false
+
+[features]
+default = []
+# Force the stub host even when libcef is present (tests / CI).
+force-stub = []
 
 [dependencies]
-anyhow = "1"
+anyhow.workspace = true
+async_host_runtime.workspace = true
+async-channel.workspace = true
+libloading = "0.8"
+log.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+smol.workspace = true

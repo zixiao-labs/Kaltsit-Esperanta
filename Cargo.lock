@@ -6421,6 +6421,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "extension_cef"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-channel 2.5.0",
+ "async_host_runtime",
+ "libloading",
+ "log",
+ "parking_lot",
+ "smol",
+]
+
+[[package]]
 name = "extension_cli"
 version = "0.1.0"
 dependencies = [
