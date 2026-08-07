@@ -76,6 +76,7 @@ members = [
     "crates/extension_api",
     "crates/extension_cef",
     "crates/extension_cli",
+    "crates/extension_deno",
     "crates/extension_host",
     "crates/extensions_ui",
     "crates/feature_flags",
@@ -356,6 +357,7 @@ etw_tracing = { path = "crates/etw_tracing" }
 eval_utils = { path = "crates/eval_utils" }
 extension = { path = "crates/extension" }
 extension_cef = { path = "crates/extension_cef" }
+extension_deno = { path = "crates/extension_deno" }
 extension_host = { path = "crates/extension_host" }
 extensions_ui = { path = "crates/extensions_ui" }
 feature_flags = { path = "crates/feature_flags" }

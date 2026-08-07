@@ -1494,35 +1494,106 @@ impl ExtensionStore {
             .await;
 
             let mut wasm_extensions = Vec::new();
+            let mut deno_extensions = Vec::new();
             for extension in extension_entries {
-                if extension.manifest.lib.kind.is_none() {
+                let Some(kind) = extension.manifest.lib.kind.clone() else {
                     continue;
                 };
 
                 let extension_path = root_dir.join(extension.manifest.id.as_ref());
-                let wasm_extension = WasmExtension::load(
-                    &extension_path,
-                    &extension.manifest,
-                    wasm_host.clone(),
-                    cx,
-                )
-                .await
-                .with_context(|| format!("Loading extension from {extension_path:?}"));
+                match kind {
+                    ExtensionLibraryKind::Rust => {
+                        let wasm_extension = WasmExtension::load(
+                            &extension_path,
+                            &extension.manifest,
+                            wasm_host.clone(),
+                            cx,
+                        )
+                        .await
+                        .with_context(|| format!("Loading extension from {extension_path:?}"));
 
-                match wasm_extension {
-                    Ok(wasm_extension) => {
-                        wasm_extensions.push((extension.manifest.clone(), wasm_extension))
+                        match wasm_extension {
+                            Ok(wasm_extension) => {
+                                wasm_extensions.push((extension.manifest.clone(), wasm_extension))
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    "Failed to load extension: {}, {:#}",
+                                    extension.manifest.id,
+                                    e
+                                );
+                                this.update(cx, |_, cx| {
+                                    cx.emit(Event::ExtensionFailedToLoad(
+                                        extension.manifest.id.clone(),
+                                    ))
+                                })
+                                .ok();
+                            }
+                        }
                     }
-                    Err(e) => {
-                        log::error!(
-                            "Failed to load extension: {}, {:#}",
-                            extension.manifest.id,
-                            e
+                    ExtensionLibraryKind::Deno => {
+                        // Heavy JS isolate load runs on a background host thread via
+                        // async_host_runtime — never block the GPUI foreground.
+                        let settings = extension_deno::DenoExtensionSettings::default();
+                        let host = extension_deno::AsyncDenoExtension::spawn(
+                            extension_path.clone(),
+                            settings,
                         );
-                        this.update(cx, |_, cx| {
-                            cx.emit(Event::ExtensionFailedToLoad(extension.manifest.id.clone()))
-                        })
-                        .ok();
+                        let load_result = cx
+                            .background_spawn({
+                                let host = std::sync::Arc::new(host);
+                                async move {
+                                    let deadline = std::time::Instant::now()
+                                        + std::time::Duration::from_secs(10);
+                                    loop {
+                                        match host.lifecycle().get() {
+                                            extension_deno::HostLifecycle::Ready => {
+                                                host.call_activate().await?;
+                                                break Ok(host);
+                                            }
+                                            extension_deno::HostLifecycle::Failed { message } => {
+                                                break Err(anyhow::anyhow!(message));
+                                            }
+                                            extension_deno::HostLifecycle::Loading => {
+                                                if std::time::Instant::now() > deadline {
+                                                    break Err(anyhow::anyhow!(
+                                                        "timed out loading Deno extension"
+                                                    ));
+                                                }
+                                                smol::Timer::after(
+                                                    std::time::Duration::from_millis(16),
+                                                )
+                                                .await;
+                                            }
+                                        }
+                                    }
+                                }
+                            })
+                            .await;
+
+                        match load_result {
+                            Ok(host) => {
+                                log::info!(
+                                    "Loaded Deno extension {} (secure JS host)",
+                                    extension.manifest.id
+                                );
+                                deno_extensions.push((extension.manifest.clone(), host));
+                                let _ = &deno_extensions;
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    "Failed to load Deno extension: {}, {:#}",
+                                    extension.manifest.id,
+                                    e
+                                );
+                                this.update(cx, |_, cx| {
+                                    cx.emit(Event::ExtensionFailedToLoad(
+                                        extension.manifest.id.clone(),
+                                    ))
+                                })
+                                .ok();
+                            }
+                        }
                     }
                 }
             }
@@ -1762,6 +1833,11 @@ impl ExtensionStore {
                 .lib
                 .kind
                 .get_or_insert(ExtensionLibraryKind::Rust);
+        } else if extension_deno::is_deno_extension_dir(&extension_dir) {
+            extension_manifest
+                .lib
+                .kind
+                .get_or_insert(ExtensionLibraryKind::Deno);
         }
 
         index.extensions.insert(
