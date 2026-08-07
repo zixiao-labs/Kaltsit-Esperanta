@@ -7,6 +7,7 @@
 
 mod ffi;
 mod host;
+mod osr;
 mod session;
 
 pub use async_host_runtime::{HostLifecycle, HostLifecycleCell};
@@ -14,6 +15,7 @@ pub use host::{
     BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefLogSeverity,
     CefSettings, PaintBuffer,
 };
+pub use osr::{SharedPaintFrame, paint_buffer_to_shared_frame, solid_color_paint};
 pub use session::{AsyncCefHost, probe_libcef_path};
 
 use anyhow::Result;
@@ -99,6 +101,34 @@ mod tests {
         assert_eq!(browser.0, 1);
 
         drop(host);
+    }
+
+    #[test]
+    fn stub_create_browser_emits_osr_frame() {
+        let host = AsyncCefHost::spawn_stub(CefSettings::default());
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        while !matches!(host.lifecycle().get(), HostLifecycle::Ready) {
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(5));
+        }
+
+        smol::block_on(host.create_browser("https://example.com", None)).expect("create");
+
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        let mut saw_frame = false;
+        while std::time::Instant::now() < deadline {
+            while let Ok(event) = host.try_recv_event() {
+                if matches!(event, CefHostEvent::Frame(_)) {
+                    saw_frame = true;
+                    break;
+                }
+            }
+            if saw_frame {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert!(saw_frame, "expected OSR Frame event from stub browser");
     }
 
     #[test]

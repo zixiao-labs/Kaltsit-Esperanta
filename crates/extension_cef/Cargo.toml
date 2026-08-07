@@ -25,5 +25,9 @@ libloading = "0.8"
 log.workspace = true
 parking_lot.workspace = true
 
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation.workspace = true
+core-video.workspace = true
+
 [dev-dependencies]
 smol.workspace = true

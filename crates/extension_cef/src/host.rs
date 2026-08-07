@@ -8,6 +8,7 @@ use async_channel::Sender;
 use async_host_runtime::{HostCommand, HostLifecycleCell, handle_command_result};
 
 use crate::ffi::CefFunctionTable;
+use crate::osr::{self, SharedPaintFrame};
 
 /// Opaque browser identifier stable across the async boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -106,7 +107,10 @@ pub enum CefHostEvent {
     LoadStart { id: BrowserId, url: String },
     LoadEnd { id: BrowserId, http_status: i32 },
     LoadError { id: BrowserId, message: String },
+    /// Raw BGRA paint from CEF.
     Paint(PaintBuffer),
+    /// Sendable frame for the UI thread (`to_cv_pixel_buffer` on macOS).
+    Frame(SharedPaintFrame),
     TitleChanged { id: BrowserId, title: String },
     AddressChanged { id: BrowserId, url: String },
 }
@@ -175,6 +179,10 @@ impl CefHost {
             id,
             http_status: 200,
         });
+        // Stub OSR: emit a solid frame so UI can exercise the surface path.
+        if self.stub {
+            self.emit_stub_frame(id, events);
+        }
         Ok(id)
     }
 
@@ -221,6 +229,21 @@ impl CefHost {
             unsafe {
                 (table.cef_do_message_loop_work)();
             }
+        }
+    }
+
+    /// Push a CEF OSR paint as sendable shared frames for the UI thread.
+    pub fn push_paint(&self, paint: PaintBuffer, events: &Sender<CefHostEvent>) -> Result<()> {
+        let frame = osr::paint_buffer_to_shared_frame(&paint)?;
+        let _ = events.send_blocking(CefHostEvent::Paint(paint));
+        let _ = events.send_blocking(CefHostEvent::Frame(frame));
+        Ok(())
+    }
+
+    fn emit_stub_frame(&self, id: BrowserId, events: &Sender<CefHostEvent>) {
+        let paint = osr::solid_color_paint(id, 16, 16, [40, 40, 40, 255]);
+        if let Err(error) = self.push_paint(paint, events) {
+            log::warn!("failed to emit stub OSR frame: {error:#}");
         }
     }
 }
