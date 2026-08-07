@@ -96,8 +96,48 @@ pub enum CefHostCommand {
         code: String,
         reply: Sender<Result<()>>,
     },
+    SendMouseClick {
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        button: MouseButtonKind,
+        mouse_up: bool,
+        click_count: u32,
+    },
+    SendMouseMove {
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        mouse_leave: bool,
+    },
+    SendMouseWheel {
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        delta_x: f32,
+        delta_y: f32,
+    },
+    SendKeyEvent {
+        id: BrowserId,
+        event: KeyEventPayload,
+    },
     /// Pump the CEF message loop once (external pump mode).
     DoMessageLoopWork,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MouseButtonKind {
+    Left,
+    Middle,
+    Right,
+}
+
+#[derive(Clone, Debug)]
+pub struct KeyEventPayload {
+    pub key_down: bool,
+    pub characters: String,
+    pub keycode: u32,
+    pub modifiers: u32,
 }
 
 #[derive(Debug)]
@@ -242,6 +282,56 @@ impl CefHost {
         Ok(())
     }
 
+    pub fn send_mouse_click(
+        &self,
+        id: BrowserId,
+        _x: f32,
+        _y: f32,
+        _button: MouseButtonKind,
+        _mouse_up: bool,
+        _click_count: u32,
+    ) -> Result<()> {
+        if !self.browsers.contains_key(&id) {
+            return Err(anyhow!("unknown browser {id:?}"));
+        }
+        // Real CEF: CefBrowserHost::SendMouseClickEvent
+        Ok(())
+    }
+
+    pub fn send_mouse_move(
+        &self,
+        id: BrowserId,
+        _x: f32,
+        _y: f32,
+        _mouse_leave: bool,
+    ) -> Result<()> {
+        if !self.browsers.contains_key(&id) {
+            return Err(anyhow!("unknown browser {id:?}"));
+        }
+        Ok(())
+    }
+
+    pub fn send_mouse_wheel(
+        &self,
+        id: BrowserId,
+        _x: f32,
+        _y: f32,
+        _delta_x: f32,
+        _delta_y: f32,
+    ) -> Result<()> {
+        if !self.browsers.contains_key(&id) {
+            return Err(anyhow!("unknown browser {id:?}"));
+        }
+        Ok(())
+    }
+
+    pub fn send_key_event(&self, id: BrowserId, _event: &KeyEventPayload) -> Result<()> {
+        if !self.browsers.contains_key(&id) {
+            return Err(anyhow!("unknown browser {id:?}"));
+        }
+        Ok(())
+    }
+
     pub fn do_message_loop_work(&self) {
         if let Some(table) = &self.table {
             unsafe {
@@ -313,6 +403,36 @@ fn dispatch(
         CefHostCommand::ExecuteJavaScript { id, code, reply } => {
             let result = host.execute_javascript(id, &code);
             let _ = reply.send_blocking(result);
+        }
+        CefHostCommand::SendMouseClick {
+            id,
+            x,
+            y,
+            button,
+            mouse_up,
+            click_count,
+        } => {
+            host.send_mouse_click(id, x, y, button, mouse_up, click_count)?;
+        }
+        CefHostCommand::SendMouseMove {
+            id,
+            x,
+            y,
+            mouse_leave,
+        } => {
+            host.send_mouse_move(id, x, y, mouse_leave)?;
+        }
+        CefHostCommand::SendMouseWheel {
+            id,
+            x,
+            y,
+            delta_x,
+            delta_y,
+        } => {
+            host.send_mouse_wheel(id, x, y, delta_x, delta_y)?;
+        }
+        CefHostCommand::SendKeyEvent { id, event } => {
+            host.send_key_event(id, &event)?;
         }
         CefHostCommand::DoMessageLoopWork => {
             host.do_message_loop_work();

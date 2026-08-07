@@ -4,7 +4,8 @@ use std::time::{Duration, Instant};
 use async_host_runtime::HostLifecycle;
 use extension_cef::{AsyncCefHost, BrowserId, CefHostEvent, CefSettings, SharedPaintFrame};
 use gpui::{
-    App, Context, Entity, EventEmitter, FocusHandle, Focusable, SharedString, Task, Window,
+    App, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
+    MouseDownEvent, MouseMoveEvent, MouseUpEvent, ScrollWheelEvent, SharedString, Task, Window,
     actions, prelude::*,
 };
 use project::Project;
@@ -218,30 +219,110 @@ impl BrowserView {
         cx.notify();
     }
 
-    fn render_viewport(&self) -> AnyElement {
+    fn render_viewport(&self, cx: &mut Context<Self>) -> AnyElement {
+        let content = self.render_viewport_content();
+
+        // Capture relative to the viewport; Design Mode consumes input itself.
+        div()
+            .id("browser-viewport")
+            .size_full()
+            .track_focus(&self.focus_handle)
+            .on_mouse_down(
+                gpui::MouseButton::Left,
+                cx.listener(|this, event: &MouseDownEvent, _window, _cx| {
+                    if this.design_mode {
+                        return;
+                    }
+                    let Some(id) = this.browser_id else {
+                        return;
+                    };
+                    crate::input_bridge::forward_mouse_down(&this.host, id, event);
+                }),
+            )
+            .on_mouse_up(
+                gpui::MouseButton::Left,
+                cx.listener(|this, event: &MouseUpEvent, _window, _cx| {
+                    if this.design_mode {
+                        return;
+                    }
+                    let Some(id) = this.browser_id else {
+                        return;
+                    };
+                    crate::input_bridge::forward_mouse_up(&this.host, id, event);
+                }),
+            )
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, _cx| {
+                if this.design_mode {
+                    return;
+                }
+                let Some(id) = this.browser_id else {
+                    return;
+                };
+                crate::input_bridge::forward_mouse_move(&this.host, id, event);
+            }))
+            .on_scroll_wheel(cx.listener(|this, event: &ScrollWheelEvent, _window, _cx| {
+                if this.design_mode {
+                    return;
+                }
+                let Some(id) = this.browser_id else {
+                    return;
+                };
+                crate::input_bridge::forward_scroll(&this.host, id, event);
+            }))
+            .on_key_down(cx.listener(|this, event: &KeyDownEvent, _window, _cx| {
+                if this.design_mode {
+                    return;
+                }
+                let Some(id) = this.browser_id else {
+                    return;
+                };
+                crate::input_bridge::forward_key_down(&this.host, id, event);
+            }))
+            .on_key_up(cx.listener(|this, event: &KeyUpEvent, _window, _cx| {
+                if this.design_mode {
+                    return;
+                }
+                let Some(id) = this.browser_id else {
+                    return;
+                };
+                crate::input_bridge::forward_key_up(&this.host, id, event);
+            }))
+            .child(content)
+            .into_any_element()
+    }
+
+    fn render_viewport_content(&self) -> AnyElement {
         #[cfg(target_os = "macos")]
         if let Some(frame) = &self.surface_frame {
             return gpui::surface(frame.clone()).size_full().into_any_element();
         }
 
         if let Some(frame) = &self.latest_frame {
-            return div()
-                .size_full()
-                .flex()
-                .items_center()
-                .justify_center()
-                .child(
-                    Label::new(format!(
-                        "Frame {}×{} ({} bytes) — surface unavailable on this platform",
-                        frame.width,
-                        frame.height,
-                        frame.bgra.len()
-                    ))
-                    .size(LabelSize::Small),
-                )
-                .into_any_element();
+            return self.render_frame_placeholder(frame);
         }
 
+        self.render_status_placeholder()
+    }
+
+    fn render_frame_placeholder(&self, frame: &SharedPaintFrame) -> AnyElement {
+        div()
+            .size_full()
+            .flex()
+            .items_center()
+            .justify_center()
+            .child(
+                Label::new(format!(
+                    "Frame {}×{} ({} bytes) — surface unavailable on this platform",
+                    frame.width,
+                    frame.height,
+                    frame.bgra.len()
+                ))
+                .size(LabelSize::Small),
+            )
+            .into_any_element()
+    }
+
+    fn render_status_placeholder(&self) -> AnyElement {
         div()
             .size_full()
             .flex()
@@ -343,6 +424,6 @@ impl Render for BrowserView {
                     .py_0p5()
                     .child(Label::new(self.status.clone()).size(LabelSize::XSmall)),
             )
-            .child(div().flex_1().w_full().child(self.render_viewport()))
+            .child(div().flex_1().w_full().child(self.render_viewport(cx)))
     }
 }

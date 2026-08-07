@@ -10,7 +10,7 @@ use crate::default_libcef_candidates;
 use crate::ffi;
 use crate::host::{
     BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefSettings,
-    run_host_loop,
+    KeyEventPayload, MouseButtonKind, run_host_loop,
 };
 
 /// Asynchronously loaded CEF host. Safe to construct on the GPUI thread.
@@ -121,6 +121,62 @@ impl AsyncCefHost {
 
     pub async fn do_message_loop_work(&self) -> Result<()> {
         self.session.send(CefHostCommand::DoMessageLoopWork).await
+    }
+
+    pub fn send_mouse_click_blocking(
+        &self,
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        button: MouseButtonKind,
+        mouse_up: bool,
+        click_count: u32,
+    ) -> Result<()> {
+        self.session.send_blocking(CefHostCommand::SendMouseClick {
+            id,
+            x,
+            y,
+            button,
+            mouse_up,
+            click_count,
+        })
+    }
+
+    pub fn send_mouse_move_blocking(
+        &self,
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        mouse_leave: bool,
+    ) -> Result<()> {
+        self.session.send_blocking(CefHostCommand::SendMouseMove {
+            id,
+            x,
+            y,
+            mouse_leave,
+        })
+    }
+
+    pub fn send_mouse_wheel_blocking(
+        &self,
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        delta_x: f32,
+        delta_y: f32,
+    ) -> Result<()> {
+        self.session.send_blocking(CefHostCommand::SendMouseWheel {
+            id,
+            x,
+            y,
+            delta_x,
+            delta_y,
+        })
+    }
+
+    pub fn send_key_event_blocking(&self, id: BrowserId, event: KeyEventPayload) -> Result<()> {
+        self.session
+            .send_blocking(CefHostCommand::SendKeyEvent { id, event })
     }
 }
 

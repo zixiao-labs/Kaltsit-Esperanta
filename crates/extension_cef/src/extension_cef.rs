@@ -13,7 +13,7 @@ mod session;
 pub use async_host_runtime::{HostLifecycle, HostLifecycleCell};
 pub use host::{
     BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefLogSeverity,
-    CefSettings, PaintBuffer,
+    CefSettings, KeyEventPayload, MouseButtonKind, PaintBuffer,
 };
 pub use osr::{SharedPaintFrame, paint_buffer_to_shared_frame, solid_color_paint};
 pub use session::{AsyncCefHost, probe_libcef_path};

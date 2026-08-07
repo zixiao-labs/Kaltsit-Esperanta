@@ -1,6 +1,7 @@
 //! Embedded browser editor tab (frontend enhancement surface).
 
 mod browser_view;
+mod input_bridge;
 
 pub use browser_view::{BrowserView, Open, OpenUrl, open_or_reuse_browser};
 
