@@ -1345,6 +1345,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_host_runtime"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-channel 2.5.0",
+ "futures 0.3.32",
+ "parking_lot",
+ "smol",
+]
+
+[[package]]
 name = "async_zip"
 version = "0.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"

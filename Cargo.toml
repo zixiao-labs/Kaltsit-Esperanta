@@ -14,6 +14,7 @@ members = [
     "crates/anthropic",
     "crates/askpass",
     "crates/assets",
+    "crates/async_host_runtime",
     "crates/audio",
     "crates/ama10",
     "crates/auto_update",
@@ -297,6 +298,7 @@ ai_onboarding = { path = "crates/ai_onboarding" }
 anthropic = { path = "crates/anthropic" }
 askpass = { path = "crates/askpass" }
 assets = { path = "crates/assets" }
+async_host_runtime = { path = "crates/async_host_runtime" }
 audio = { path = "crates/audio" }
 auto_update = { path = "crates/auto_update" }
 auto_update_ui = { path = "crates/auto_update_ui" }
