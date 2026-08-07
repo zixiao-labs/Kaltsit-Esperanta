@@ -69,6 +69,12 @@ const TOOLS: &[ToolInfo] = &[
         regex_explanation: "Patterns are matched against the URL being fetched.",
     },
     ToolInfo {
+        id: "browser",
+        name: "Browser",
+        description: "Embedded browser navigate/click/type/screenshot actions",
+        regex_explanation: "Patterns are matched against the navigation URL when present.",
+    },
+    ToolInfo {
         id: "search_web",
         name: "Web Search",
         description: "Web search queries",

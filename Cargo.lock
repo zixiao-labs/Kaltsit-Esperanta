@@ -262,6 +262,7 @@ dependencies = [
  "editor",
  "env_logger 0.11.8",
  "eval_utils",
+ "extension_cef",
  "feature_flags",
  "fs",
  "futures 0.3.32",
@@ -6450,6 +6451,7 @@ dependencies = [
  "libloading",
  "log",
  "parking_lot",
+ "serde",
  "smol",
 ]
 

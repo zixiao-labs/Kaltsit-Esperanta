@@ -1,6 +1,6 @@
 use crate::{
-    ApplyCodeActionTool, AskUserQuestionTool, CodeActionStore, ContextServerRegistry, CopyPathTool,
-    CreateDirectoryTool, CreateThreadTool, DbLanguageModel, DbThread, DeletePathTool,
+    ApplyCodeActionTool, AskUserQuestionTool, BrowserTool, CodeActionStore, ContextServerRegistry,
+    CopyPathTool, CreateDirectoryTool, CreateThreadTool, DbLanguageModel, DbThread, DeletePathTool,
     DiagnosticsTool, EditFileTool, EnterPlanModeTool, ExitPlanModeTool, FetchTool, FindPathTool,
     FindReferencesTool, GetCodeActionsTool, GoToDefinitionTool, GrepTool, ListAgentsAndModelsTool,
     ListDirectoryTool, MovePathTool, ProjectSnapshot, ReadFileTool, RenameTool,
@@ -2153,6 +2153,7 @@ impl Thread {
             language_registry,
         ));
         self.add_tool(FetchTool::new(self.project.read(cx).client().http_client()));
+        self.add_tool(BrowserTool::new());
         self.add_tool(FindPathTool::new(self.project.clone()));
         self.add_tool(GrepTool::new(self.project.clone()));
         self.add_tool(ListDirectoryTool::new(self.project.clone()));

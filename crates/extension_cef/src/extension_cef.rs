@@ -5,12 +5,14 @@
 //! symbols cannot be resolved, the host stays in [`HostLifecycle::Failed`] and
 //! callers can show a clear unavailable state.
 
+mod cdp;
 mod ffi;
 mod host;
 mod osr;
 mod session;
 
 pub use async_host_runtime::{HostLifecycle, HostLifecycleCell};
+pub use cdp::{CdpSession, ConsoleMessage, DesignNodeInfo, NetworkEntry};
 pub use host::{
     BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefLogSeverity,
     CefSettings, KeyEventPayload, MouseButtonKind, PaintBuffer,
