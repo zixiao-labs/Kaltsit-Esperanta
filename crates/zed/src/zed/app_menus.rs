@@ -93,6 +93,10 @@ pub fn app_menus(cx: &mut App) -> Vec<Menu> {
                 MenuItem::action("Extensions", zed_actions::Extensions::default()),
                 #[cfg(not(target_os = "windows"))]
                 MenuItem::action("Install CLI", install_cli::InstallCliBinary),
+                MenuItem::action(
+                    "Install Browser Runtime",
+                    browser_ui::InstallBrowserRuntime,
+                ),
                 MenuItem::separator(),
                 #[cfg(target_os = "macos")]
                 MenuItem::action("Hide ZetaCode", super::Hide),

@@ -14,6 +14,16 @@ Secure embedded JS/TS extension runtime.
 - Default: secure stub host (CI-friendly, no V8 download)
 - `deno-core`: embed `deno_core::JsRuntime` for real evaluation
 
+Production packaging:
+
+```bash
+cargo xtask setup-deno
+./build-mac.sh --with-deno
+# or: cargo build -p zed --release --features deno-core
+```
+
+`zed/deno-core` forwards to `extension_host/deno-core` → `extension_deno/deno-core`.
+
 ## Entry files
 
 Dev install detects `extension.js` / `extension.ts` / `extension.mjs` and sets

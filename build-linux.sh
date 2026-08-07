@@ -79,7 +79,7 @@ app_dir="${temp_dir}/${BIN_NAME}${suffix}.app"
 
 mkdir -p "${app_dir}/bin" "${app_dir}/libexec" "${app_dir}/lib"
 cp "${target_dir}/${target_triple}/release/${BIN_NAME}" "${app_dir}/libexec/zed-editor"
-cp "${target_dir}/${target_triple}/release/cli" "${app_dir}/bin/zed"
+cp "${target_dir}/${target_triple}/release/zeta" "${app_dir}/bin/zeta"
 
 # Bundle the editor's dynamic library dependencies (skipping ones expected on
 # every Linux system).

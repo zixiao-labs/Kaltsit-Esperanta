@@ -1479,7 +1479,7 @@ mod mac_os {
             );
         }
         let app_path = String::from_utf8(app_path_output.stdout)?.trim().to_owned();
-        let cli_path = format!("{app_path}/Contents/MacOS/cli");
+        let cli_path = format!("{app_path}/Contents/MacOS/zeta");
         Command::new(cli_path).args(leftover_args).spawn()?;
         Ok(())
     }

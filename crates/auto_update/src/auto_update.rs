@@ -26,7 +26,7 @@ use std::{
     ffi::OsStr,
     ffi::OsString,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex, OnceLock},
     time::{Duration, SystemTime},
 };
 use util::command::new_command;
@@ -257,6 +257,60 @@ impl Settings for AutoUpdateSetting {
 struct GlobalAutoUpdate(Option<Entity<AutoUpdater>>);
 
 impl Global for GlobalAutoUpdate {}
+
+/// Optional runtime sidecars (CEF, …) refreshed by [`init_component_updates`].
+///
+/// Intentionally **not** wired into full-application [`AutoUpdater`] polling —
+/// Wuling / Esperanta release infra is not ready for app auto-update, but
+/// optional native components can still be refreshed independently.
+pub type RuntimeComponentRefresh =
+    Arc<dyn Fn(Arc<HttpClientWithUrl>, &AsyncApp) -> Task<()> + Send + Sync>;
+
+fn runtime_component_hooks() -> &'static Mutex<Vec<RuntimeComponentRefresh>> {
+    static HOOKS: OnceLock<Mutex<Vec<RuntimeComponentRefresh>>> = OnceLock::new();
+    HOOKS.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+/// Register a component refresh hook for [`init_component_updates`].
+pub fn register_runtime_component_refresh(hook: RuntimeComponentRefresh) {
+    runtime_component_hooks()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .push(hook);
+}
+
+async fn refresh_runtime_components(client: Arc<HttpClientWithUrl>, cx: &AsyncApp) {
+    let hooks = runtime_component_hooks()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .clone();
+    for hook in hooks {
+        hook(client.clone(), cx).await;
+    }
+}
+
+const COMPONENT_POLL_INTERVAL: Duration = Duration::from_secs(60 * 60);
+
+/// Poll registered runtime-component hooks only (CEF, …).
+///
+/// Does **not** check for or download application releases. Safe to enable
+/// while full-app [`init`] stays disabled.
+pub fn init_component_updates(client: Arc<Client>, cx: &mut App) {
+    let http = client.http_client();
+    cx.spawn(async move |cx| {
+        // First pass shortly after startup, then on a long interval.
+        cx.background_executor()
+            .timer(Duration::from_secs(30))
+            .await;
+        loop {
+            refresh_runtime_components(http.clone(), cx).await;
+            cx.background_executor()
+                .timer(COMPONENT_POLL_INTERVAL)
+                .await;
+        }
+    })
+    .detach();
+}
 
 pub fn init(client: Arc<Client>, cx: &mut App) {
     cx.observe_new(|workspace: &mut Workspace, _window, _cx| {

@@ -61,8 +61,12 @@ impl BrowserView {
         cx: &mut Context<Self>,
     ) -> Self {
         let address = SharedString::from(initial_url.unwrap_or_else(|| "about:blank".to_string()));
-        // Stub host until a real libcef is available; never dlopen on the UI thread.
-        let host = Arc::new(AsyncCefHost::spawn_stub(CefSettings::default()));
+        // Prefer a managed/system libcef; fall back to stub so CI and fresh installs
+        // stay fail-soft. Loading always happens on the CEF host thread.
+        let host = Arc::new(match extension_cef::probe_libcef_path() {
+            Some(path) => AsyncCefHost::spawn_with_library_path(CefSettings::default(), path),
+            None => AsyncCefHost::spawn_stub(CefSettings::default()),
+        });
         let event_rx = host.event_receiver();
 
         let event_task = cx.spawn(async move |this, cx| {

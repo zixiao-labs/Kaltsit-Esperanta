@@ -84,6 +84,7 @@ linux() {
     rm -rf "$HOME/.local/zed$suffix.app"
 
     # Remove the binary symlink
+    rm -f "$HOME/.local/bin/zeta"
     rm -f "$HOME/.local/bin/zed"
 
     # Remove the .desktop file
@@ -132,6 +133,7 @@ macos() {
     fi
 
     # Remove the binary symlink
+    rm -f "$HOME/.local/bin/zeta"
     rm -f "$HOME/.local/bin/zed"
 
     # Remove the database directory for this channel

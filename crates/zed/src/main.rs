@@ -693,16 +693,15 @@ fn main() {
         });
         AppState::set_global(app_state.clone(), cx);
 
-        // ESPERANTA: auto-update temporarily disabled. The upstream feed
-        // (`https://zed.dev/api/releases/...`) would resolve to a
-        // zed-industries build, not a Kal'tsit·Esperanta build, so polling it
-        // is at best useless and at worst would prompt users to "upgrade"
-        // their way out of this fork. Re-enable once the release feed is
-        // pointed at our own infra.
+        // ESPERANTA: full-application auto-update stays disabled until Wuling
+        // release infra is ready. The upstream feed would resolve to a
+        // zed-industries build, not Kal'tsit·Esperanta.
         // auto_update::init(client.clone(), cx);
+        // Component-only updates are started later, after browser_ui registers
+        // its CEF refresh hook (see init_component_updates below).
         dap_adapters::init(cx);
         // ESPERANTA: paired with the disable above — `auto_update_ui::init`
-        // only registers UI surfaces for the auto-updater, so we drop it too.
+        // only registers UI surfaces for the app auto-updater, so we drop it.
         // auto_update_ui::init(cx);
         reliability::init(client.clone(), app_state.workspace_store.clone(), cx);
         extension_host::init(
@@ -822,6 +821,9 @@ fn main() {
         csv_preview::init(cx);
         svg_preview::init(cx);
         browser_ui::init(cx);
+        // Component-only auto-update (CEF, …): never downloads a replacement
+        // editor binary. Safe while full-app auto_update::init stays disabled.
+        auto_update::init_component_updates(client.clone(), cx);
         onboarding::init(cx);
         settings_ui::init(cx);
         keymap_editor::init(cx);

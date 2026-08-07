@@ -3,13 +3,24 @@
 mod browser_view;
 mod design_mode;
 mod input_bridge;
+mod install_runtime;
 
 pub use browser_view::{BrowserView, Open, OpenUrl, ToggleDesignMode, open_or_reuse_browser};
 pub use design_mode::{DesignModeState, DesignSelection};
+pub use install_runtime::{InstallBrowserRuntime, install_browser_runtime};
 
+use std::sync::Arc;
+
+use auto_update::register_runtime_component_refresh;
 use gpui::App;
+use http_client::HttpClient;
 
 pub fn init(cx: &mut App) {
+    register_runtime_component_refresh(Arc::new(|http, cx| {
+        let http: Arc<dyn HttpClient> = http;
+        install_runtime::refresh_managed_cef(http, cx)
+    }));
+
     cx.observe_new(|workspace: &mut workspace::Workspace, _, _| {
         workspace.register_action(|workspace, _: &Open, window, cx| {
             open_or_reuse_browser(workspace, None, window, cx);
@@ -27,6 +38,9 @@ pub fn init(cx: &mut App) {
                     view.update(cx, |view, cx| view.set_design_mode(true, cx));
                 }
             }
+        });
+        workspace.register_action(|_workspace, _: &InstallBrowserRuntime, window, cx| {
+            install_browser_runtime(window, cx);
         });
     })
     .detach();

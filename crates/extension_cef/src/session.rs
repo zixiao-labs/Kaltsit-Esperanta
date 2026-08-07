@@ -210,6 +210,18 @@ fn load_host(settings: CefSettings, library_path: Option<String>) -> Result<CefH
 
 /// Return the first existing candidate path that successfully resolves CEF symbols.
 pub fn probe_libcef_path() -> Option<String> {
+    if let Some(managed) = crate::managed::probe_managed_libcef_path() {
+        match ffi::try_load(&managed) {
+            Ok(_) => return Some(managed.to_string_lossy().into_owned()),
+            Err(error) => {
+                log::debug!(
+                    "CEF managed probe skipped {}: {error:#}",
+                    managed.display()
+                );
+            }
+        }
+    }
+
     for candidate in default_libcef_candidates() {
         let path = Path::new(candidate);
         // Skip bare sonames that are not absolute and do not exist as relative

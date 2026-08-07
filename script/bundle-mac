@@ -208,7 +208,7 @@ function sign_app_binaries() {
     if [[ $can_code_sign = true ]]; then
         echo "Code signing binaries"
         # sequence of codesign commands modeled after this example: https://developer.apple.com/forums/thread/701514
-        /usr/bin/codesign --deep --force --timestamp --options runtime --sign "$IDENTITY" "${app_path}/Contents/MacOS/cli" -v
+        /usr/bin/codesign --deep --force --timestamp --options runtime --sign "$IDENTITY" "${app_path}/Contents/MacOS/zeta" -v
         /usr/bin/codesign --deep --force --timestamp --options runtime --sign "$IDENTITY" "${app_path}/Contents/MacOS/git" -v
         /usr/bin/codesign --deep --force --timestamp --options runtime --entitlements crates/zed/resources/zed.entitlements --sign "$IDENTITY" "${app_path}/Contents/MacOS/${BIN_NAME}" -v
         /usr/bin/codesign --force --timestamp --options runtime --entitlements crates/zed/resources/zed.entitlements --sign "$IDENTITY" "${app_path}" -v
@@ -340,7 +340,7 @@ function upload_debug_symbols() {
 upload_debug_symbols
 
 cp target/${target_triple}/${target_dir}/${BIN_NAME} "${app_path}/Contents/MacOS/${BIN_NAME}"
-cp target/${target_triple}/${target_dir}/cli "${app_path}/Contents/MacOS/cli"
+cp target/${target_triple}/${target_dir}/zeta "${app_path}/Contents/MacOS/zeta"
 sign_app_binaries
 
 sign_binary "target/$target_triple/release/remote_server"

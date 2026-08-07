@@ -4,6 +4,7 @@ pub mod licenses;
 pub mod package_conformity;
 pub mod publish_gpui;
 pub mod sandbox_tests;
+pub mod setup_deno;
 pub mod setup_webrtc;
 pub mod web_examples;
 pub mod workflow_checks;
