@@ -15,8 +15,9 @@ use futures::channel::oneshot;
 use parking_lot::RwLock;
 
 /// Lifecycle of an asynchronously loaded host.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub enum HostLifecycle {
+    #[default]
     Loading,
     Ready,
     Failed { message: String },
@@ -43,12 +44,6 @@ impl HostLifecycle {
 #[derive(Clone, Default)]
 pub struct HostLifecycleCell {
     inner: Arc<RwLock<HostLifecycle>>,
-}
-
-impl Default for HostLifecycle {
-    fn default() -> Self {
-        Self::Loading
-    }
 }
 
 impl HostLifecycleCell {
@@ -216,18 +211,34 @@ where
     pub fn shutdown(&self) {
         let _ = self.command_tx.send_blocking(HostCommand::Shutdown);
     }
+
+    /// Request shutdown and block until the host thread exits.
+    ///
+    /// Prefer this from background tasks / tests. Do not call from the GPUI
+    /// foreground thread — use [`Drop`](Drop) which never blocks indefinitely.
+    pub fn shutdown_and_join(mut self) {
+        let _ = self.command_tx.send_blocking(HostCommand::Shutdown);
+        self.command_tx.close();
+        if let Some(join) = self.join.take() {
+            let _ = join.join();
+        }
+    }
 }
 
 impl<C, E> Drop for HostSession<C, E> {
     fn drop(&mut self) {
         let _ = self.command_tx.send_blocking(HostCommand::Shutdown);
-        // Closing the sender (by dropping the session fields later) also wakes
-        // `recv`; explicitly join so load/run cannot outlive the handle without
-        // a chance to exit.
+        self.command_tx.close();
+        // Never block the GPUI foreground thread on a slow/hung host. Wait a
+        // short bounded interval for a cooperative exit, then detach.
         if let Some(join) = self.join.take() {
-            // Avoid deadlocking the foreground if the host ignores shutdown;
-            // prefer detach-on-timeout only in tests — here we join briefly via
-            // park pattern: just join. Host loops must honor Shutdown / channel close.
+            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(50);
+            while !join.is_finished() {
+                if std::time::Instant::now() >= deadline {
+                    return;
+                }
+                thread::sleep(std::time::Duration::from_millis(1));
+            }
             let _ = join.join();
         }
     }
@@ -391,10 +402,8 @@ mod tests {
             thread::sleep(Duration::from_millis(5));
         }
 
-        drop(session);
+        session.shutdown_and_join();
 
-        // If Drop failed to join, this test process may linger; the join in Drop
-        // is the guarantee under test.
         assert_eq!(started.load(Ordering::SeqCst), 1);
     }
 
