@@ -20,8 +20,7 @@ pub use host::{
 };
 pub use managed::{
     MANAGED_CEF_VERSION, default_cef_download_url, install_if_needed as install_managed_cef,
-    managed_cef_root, probe_managed_libcef_path,
-    refresh_if_installed as refresh_managed_cef,
+    managed_cef_root, probe_managed_libcef_path, refresh_if_installed as refresh_managed_cef,
 };
 pub use osr::{SharedPaintFrame, paint_buffer_to_shared_frame, solid_color_paint};
 pub use session::{AsyncCefHost, probe_libcef_path};

@@ -133,7 +133,6 @@ pub async fn refresh_if_installed(http: Arc<dyn HttpClient>) -> Result<Option<Pa
 }
 
 async fn download_and_extract(http: Arc<dyn HttpClient>) -> Result<PathBuf> {
-
     let url = default_cef_download_url()?;
     log::info!("Downloading managed CEF from {url}");
 

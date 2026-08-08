@@ -31,13 +31,7 @@ pub fn run_setup_deno(args: SetupDenoArgs) -> Result<()> {
     eprintln!("Warming V8 / deno_core via cargo check (this may download a large prebuilt)...");
     let status = Command::new("cargo")
         .current_dir(&workspace_root)
-        .args([
-            "check",
-            "-p",
-            "extension_deno",
-            "--features",
-            "deno-core",
-        ])
+        .args(["check", "-p", "extension_deno", "--features", "deno-core"])
         .status()
         .context("running cargo check -p extension_deno --features deno-core")?;
     if !status.success() {

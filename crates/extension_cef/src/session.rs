@@ -214,10 +214,7 @@ pub fn probe_libcef_path() -> Option<String> {
         match ffi::try_load(&managed) {
             Ok(_) => return Some(managed.to_string_lossy().into_owned()),
             Err(error) => {
-                log::debug!(
-                    "CEF managed probe skipped {}: {error:#}",
-                    managed.display()
-                );
+                log::debug!("CEF managed probe skipped {}: {error:#}", managed.display());
             }
         }
     }
