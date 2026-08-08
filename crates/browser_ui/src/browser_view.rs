@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use async_host_runtime::HostLifecycle;
 use crate::design_mode::DesignModeState;
+use async_host_runtime::HostLifecycle;
 use extension_cef::{AsyncCefHost, BrowserId, CefHostEvent, CefSettings, SharedPaintFrame};
 use gpui::{
     App, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
@@ -512,19 +512,28 @@ impl Render for BrowserView {
                     .py_0p5()
                     .child(Label::new(self.status.clone()).size(LabelSize::XSmall)),
             )
-            .when(self.design_mode.enabled && !self.agent_context.is_empty(), |this| {
-                this.child(
-                    div()
-                        .w_full()
-                        .max_h(gpui::px(120.))
-                        .overflow_hidden()
-                        .px_2()
-                        .py_1()
-                        .border_b_1()
-                        .border_color(cx.theme().colors().border)
-                        .child(Label::new(self.agent_context.clone()).size(LabelSize::XSmall)),
-                )
-            })
-            .child(div().flex_1().w_full().relative().child(self.render_viewport(cx)))
+            .when(
+                self.design_mode.enabled && !self.agent_context.is_empty(),
+                |this| {
+                    this.child(
+                        div()
+                            .w_full()
+                            .max_h(gpui::px(120.))
+                            .overflow_hidden()
+                            .px_2()
+                            .py_1()
+                            .border_b_1()
+                            .border_color(cx.theme().colors().border)
+                            .child(Label::new(self.agent_context.clone()).size(LabelSize::XSmall)),
+                    )
+                },
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .w_full()
+                    .relative()
+                    .child(self.render_viewport(cx)),
+            )
     }
 }
