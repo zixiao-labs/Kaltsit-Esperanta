@@ -9,6 +9,7 @@ use gpui::{
 };
 use project::Project;
 use ui::{Icon, IconName, Label, LabelSize, prelude::*};
+#[cfg(target_os = "macos")]
 use util::ResultExt as _;
 use workspace::{
     Workspace,
@@ -204,11 +205,11 @@ impl BrowserView {
                 self.status = SharedString::from(format!("Load error: {message}"));
             }
             CefHostEvent::Frame(frame) => {
-                self.latest_frame = Some(frame.clone());
                 #[cfg(target_os = "macos")]
                 {
                     self.surface_frame = frame.to_cv_pixel_buffer().log_err();
                 }
+                self.latest_frame = Some(frame);
             }
             CefHostEvent::Paint(_)
             | CefHostEvent::BrowserCreated(_)
