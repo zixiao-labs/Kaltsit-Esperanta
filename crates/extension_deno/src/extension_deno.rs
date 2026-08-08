@@ -47,8 +47,13 @@ mod tests {
     #[test]
     fn async_host_loads_stub_extension() {
         let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("extension.js"), "export function activate() {}").unwrap();
-        let host = AsyncDenoExtension::spawn(dir.path().to_path_buf(), DenoExtensionSettings::default());
+        std::fs::write(
+            dir.path().join("extension.js"),
+            "export function activate() {}",
+        )
+        .unwrap();
+        let host =
+            AsyncDenoExtension::spawn(dir.path().to_path_buf(), DenoExtensionSettings::default());
         let deadline = std::time::Instant::now() + Duration::from_secs(2);
         while !host.lifecycle().get().is_ready() {
             assert!(

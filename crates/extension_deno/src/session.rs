@@ -78,7 +78,11 @@ impl AsyncDenoExtension {
             .map_err(|_| anyhow!("deno host closed"))?
     }
 
-    pub async fn call_op(&self, name: impl Into<String>, args_json: impl Into<String>) -> Result<String> {
+    pub async fn call_op(
+        &self,
+        name: impl Into<String>,
+        args_json: impl Into<String>,
+    ) -> Result<String> {
         let (reply_tx, reply_rx) = bounded(1);
         self.session
             .send(DenoHostCommand::CallOp {

@@ -1539,6 +1539,7 @@ impl ExtensionStore {
                             extension_path.clone(),
                             settings,
                         );
+                        let executor = cx.background_executor().clone();
                         let load_result = cx
                             .background_spawn({
                                 let host = std::sync::Arc::new(host);
@@ -1560,10 +1561,9 @@ impl ExtensionStore {
                                                         "timed out loading Deno extension"
                                                     ));
                                                 }
-                                                smol::Timer::after(
-                                                    std::time::Duration::from_millis(16),
-                                                )
-                                                .await;
+                                                executor
+                                                    .timer(std::time::Duration::from_millis(16))
+                                                    .await;
                                             }
                                         }
                                     }
