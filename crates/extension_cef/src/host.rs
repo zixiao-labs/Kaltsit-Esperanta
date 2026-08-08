@@ -229,6 +229,9 @@ impl CefHost {
             id,
             http_status: 200,
         });
+        if self.stub {
+            self.emit_stub_frame(id, events);
+        }
         Ok(())
     }
 

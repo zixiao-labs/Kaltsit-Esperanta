@@ -132,6 +132,38 @@ mod tests {
     }
 
     #[test]
+    fn stub_navigate_emits_osr_frame() {
+        let host = AsyncCefHost::spawn_stub(CefSettings::default());
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        while !matches!(host.lifecycle().get(), HostLifecycle::Ready) {
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(5));
+        }
+
+        let browser_id =
+            smol::block_on(host.create_browser("https://example.com", None)).expect("create");
+        while host.try_recv_event().is_ok() {}
+
+        smol::block_on(host.navigate(browser_id, "https://example.org")).expect("navigate");
+
+        let deadline = std::time::Instant::now() + Duration::from_secs(2);
+        let mut saw_frame = false;
+        while std::time::Instant::now() < deadline {
+            while let Ok(event) = host.try_recv_event() {
+                if matches!(event, CefHostEvent::Frame(_)) {
+                    saw_frame = true;
+                    break;
+                }
+            }
+            if saw_frame {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert!(saw_frame, "expected OSR Frame event after stub navigate");
+    }
+
+    #[test]
     fn missing_library_load_marks_failed() {
         let host = AsyncCefHost::spawn_with_library_path(
             CefSettings::default(),
