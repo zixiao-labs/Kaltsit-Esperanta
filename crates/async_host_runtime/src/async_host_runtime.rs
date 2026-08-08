@@ -196,6 +196,16 @@ where
             .map_err(|_| anyhow!("async host command channel closed"))
     }
 
+    /// Non-blocking send for high-frequency UI events (e.g. mouse move).
+    ///
+    /// Prefer this over [`Self::send_blocking`] on the GPUI foreground thread
+    /// so a busy host loop cannot stall input handling.
+    pub fn try_send(&self, command: C) -> Result<()> {
+        self.command_tx
+            .try_send(HostCommand::User(command))
+            .map_err(|_| anyhow!("async host command channel closed"))
+    }
+
     /// Send a command and wait for an acknowledgement from the host loop.
     ///
     /// The host's `run` closure must complete the oneshot when handling
