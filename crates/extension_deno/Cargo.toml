@@ -22,9 +22,7 @@ deno-core = ["dep:deno_core"]
 anyhow.workspace = true
 async_host_runtime.workspace = true
 async-channel.workspace = true
-log.workspace = true
 serde.workspace = true
-serde_json.workspace = true
 
 [dependencies.deno_core]
 version = "0.340.0"

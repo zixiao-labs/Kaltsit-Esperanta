@@ -2571,10 +2571,8 @@ dependencies = [
 name = "browser_ui"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async_host_runtime",
  "auto_update",
- "client",
  "core-video",
  "extension_cef",
  "gpui",
@@ -6668,9 +6666,7 @@ dependencies = [
  "async-channel 2.5.0",
  "async_host_runtime",
  "deno_core",
- "log",
  "serde",
- "serde_json",
  "smol",
  "tempfile",
 ]
@@ -6713,7 +6709,6 @@ dependencies = [
  "serde_json",
  "serde_json_lenient",
  "settings",
- "smol",
  "task",
  "telemetry",
  "tempfile",

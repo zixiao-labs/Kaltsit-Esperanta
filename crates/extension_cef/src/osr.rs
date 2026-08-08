@@ -123,7 +123,7 @@ pub fn bgra_to_nv12_pixel_buffer(
         return Err(anyhow!("failed to lock CVPixelBuffer"));
     }
 
-    let result: Result<()> = (|| {
+    let result: Result<()> = {
         let y_base = unsafe { pixel_buffer.get_base_address_of_plane(0) as *mut u8 };
         let y_stride = pixel_buffer.get_bytes_per_row_of_plane(0);
         let uv_base = unsafe { pixel_buffer.get_base_address_of_plane(1) as *mut u8 };
@@ -153,7 +153,7 @@ pub fn bgra_to_nv12_pixel_buffer(
             }
         }
         Ok(())
-    })();
+    };
 
     pixel_buffer.unlock_base_address(0);
     result?;
