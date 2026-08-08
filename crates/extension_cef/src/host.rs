@@ -164,14 +164,12 @@ impl CefHost {
         events: &Sender<CefHostEvent>,
     ) -> Result<BrowserId> {
         let id = self.alloc_id();
-        self.browsers.insert(
-            id,
-            BrowserSlot {
-                url: url.clone(),
-            },
-        );
+        self.browsers.insert(id, BrowserSlot { url: url.clone() });
         let _ = events.send_blocking(CefHostEvent::BrowserCreated(id));
-        let _ = events.send_blocking(CefHostEvent::AddressChanged { id, url: url.clone() });
+        let _ = events.send_blocking(CefHostEvent::AddressChanged {
+            id,
+            url: url.clone(),
+        });
         let _ = events.send_blocking(CefHostEvent::LoadStart { id, url });
         let _ = events.send_blocking(CefHostEvent::LoadEnd {
             id,
@@ -180,11 +178,7 @@ impl CefHost {
         Ok(id)
     }
 
-    pub fn close_browser(
-        &mut self,
-        id: BrowserId,
-        events: &Sender<CefHostEvent>,
-    ) -> Result<()> {
+    pub fn close_browser(&mut self, id: BrowserId, events: &Sender<CefHostEvent>) -> Result<()> {
         if self.browsers.remove(&id).is_none() {
             return Err(anyhow!("unknown browser {id:?}"));
         }

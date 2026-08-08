@@ -11,7 +11,7 @@ mod session;
 
 pub use async_host_runtime::{HostLifecycle, HostLifecycleCell};
 pub use host::{
-    BrowserId, CefBrowserSettings, CefHost, CefHostEvent, CefHostCommand, CefLogSeverity,
+    BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefLogSeverity,
     CefSettings, PaintBuffer,
 };
 pub use session::{AsyncCefHost, probe_libcef_path};
