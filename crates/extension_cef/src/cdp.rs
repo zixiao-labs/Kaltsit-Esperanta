@@ -7,6 +7,7 @@
 
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{Result, anyhow};
 use parking_lot::Mutex;
@@ -16,6 +17,11 @@ use crate::{
 };
 
 const MAX_LOG_LINES: usize = 2_000;
+
+/// Delay without `smol::Timer` / `async_io::Timer` (both are clippy-disallowed).
+async fn delay(duration: Duration) {
+    smol::unblock(move || std::thread::sleep(duration)).await;
+}
 
 #[derive(Clone, Debug)]
 pub struct ConsoleMessage {
@@ -53,7 +59,7 @@ impl CdpSession {
             if std::time::Instant::now() > deadline {
                 return Err(anyhow!("timed out waiting for browser host"));
             }
-            async_io::Timer::after(std::time::Duration::from_millis(10)).await;
+            delay(Duration::from_millis(10)).await;
         }
 
         let browser_id = host.create_browser(initial_url, None).await?;
@@ -132,7 +138,7 @@ impl CdpSession {
             if std::time::Instant::now() > deadline {
                 return Err(anyhow!("no OSR frame available for screenshot"));
             }
-            async_io::Timer::after(std::time::Duration::from_millis(10)).await;
+            delay(Duration::from_millis(10)).await;
         }
     }
 

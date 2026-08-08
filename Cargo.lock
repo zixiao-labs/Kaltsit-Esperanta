@@ -6445,7 +6445,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-channel 2.5.0",
- "async-io",
  "async_host_runtime",
  "core-foundation 0.10.0",
  "core-video",
