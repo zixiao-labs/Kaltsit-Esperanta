@@ -47,7 +47,12 @@ pub struct CdpSession {
 
 impl CdpSession {
     pub async fn create(initial_url: &str) -> Result<Arc<Self>> {
-        let host = Arc::new(AsyncCefHost::spawn_stub(CefSettings::default()));
+        // Prefer a managed/system libcef (same policy as BrowserView); fall back
+        // to stub so CI and fresh installs stay fail-soft.
+        let host = Arc::new(match crate::probe_libcef_path() {
+            Some(path) => AsyncCefHost::spawn_with_library_path(CefSettings::default(), path),
+            None => AsyncCefHost::spawn_stub(CefSettings::default()),
+        });
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         while !host.lifecycle().get().is_ready() {
             if host.lifecycle().get().is_failed() {
@@ -109,14 +114,25 @@ impl CdpSession {
 
     pub fn type_text(&self, text: &str) -> Result<()> {
         for ch in text.chars() {
-            let payload = KeyEventPayload {
-                key_down: true,
-                characters: ch.to_string(),
-                keycode: 0,
-                modifiers: 0,
-            };
-            self.host
-                .send_key_event_blocking(self.browser_id, payload)?;
+            let characters = ch.to_string();
+            self.host.send_key_event_blocking(
+                self.browser_id,
+                KeyEventPayload {
+                    key_down: true,
+                    characters: characters.clone(),
+                    keycode: 0,
+                    modifiers: 0,
+                },
+            )?;
+            self.host.send_key_event_blocking(
+                self.browser_id,
+                KeyEventPayload {
+                    key_down: false,
+                    characters,
+                    keycode: 0,
+                    modifiers: 0,
+                },
+            )?;
         }
         Ok(())
     }

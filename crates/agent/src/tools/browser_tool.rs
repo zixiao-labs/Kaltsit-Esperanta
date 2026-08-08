@@ -5,13 +5,14 @@ use agent_client_protocol::schema::v1 as acp;
 use anyhow::Result;
 use extension_cef::CdpSession;
 use futures::FutureExt as _;
+use futures::lock::Mutex;
 use gpui::{App, AppContext as _, Task};
-use parking_lot::Mutex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ui::SharedString;
 use util::markdown::MarkdownInlineCode;
 
+use super::fetch_tool::{host_pattern_for_url, normalize_url, verify_host_not_forbidden};
 use crate::sandboxing::{NetworkRequest, SandboxRequest};
 use crate::{AgentTool, ToolCallEventStream, ToolInput, ToolPermissionContext};
 
@@ -64,11 +65,12 @@ impl BrowserTool {
     }
 
     async fn session(&self) -> Result<Arc<CdpSession>> {
-        if let Some(session) = self.session.lock().clone() {
-            return Ok(session);
+        let mut guard = self.session.lock().await;
+        if let Some(session) = guard.as_ref() {
+            return Ok(session.clone());
         }
         let session = CdpSession::create("about:blank").await?;
-        *self.session.lock() = Some(session.clone());
+        *guard = Some(session.clone());
         Ok(session)
     }
 }
@@ -87,6 +89,10 @@ fn fail(message: impl Into<String>) -> BrowserToolOutput {
         console: None,
         network: None,
     }
+}
+
+fn is_blank_navigation(url: &str) -> bool {
+    url == "about:blank"
 }
 
 impl AgentTool for BrowserTool {
@@ -168,31 +174,52 @@ impl AgentTool for BrowserTool {
                 }
             };
 
-            if let BrowserAction::Navigate { url } = &input.action {
-                if url != "about:blank" {
-                    let host = url::Url::parse(url)
-                        .ok()
-                        .and_then(|parsed| parsed.host_str().map(str::to_owned))
-                        .ok_or_else(|| fail(format!("invalid URL: {url}")))?;
-                    let pattern = http_proxy::HostPattern::parse(&host).map_err(|error| {
-                        fail(format!(
-                            "cannot authorize browser navigate to {host:?}: {error}"
-                        ))
-                    })?;
-                    let request = SandboxRequest {
-                        network: NetworkRequest::Hosts(vec![pattern]),
-                        ..SandboxRequest::default()
-                    };
-                    let approve = cx.update(|cx| {
-                        event_stream.authorize_sandbox(
-                            request,
-                            format!("Browser navigate to {host}"),
-                            cx,
-                        )
+            let mut input = input;
+            if let BrowserAction::Navigate { url } = &mut input.action {
+                if !is_blank_navigation(url) {
+                    let normalized = normalize_url(url).into_owned();
+                    let unsandboxed = cx.update(|cx| {
+                        !crate::sandboxing::sandboxing_enabled(cx)
+                            || event_stream.unsandboxed_access_granted(cx)
                     });
-                    approve
-                        .await
-                        .map_err(|error| fail(format!("browser navigate blocked: {error:#}")))?;
+
+                    if !unsandboxed {
+                        let host = host_pattern_for_url(&normalized)
+                            .map_err(|error| fail(error.to_string()))?;
+                        let approve = cx.update(|cx| {
+                            event_stream.authorize_sandbox(
+                                SandboxRequest {
+                                    network: NetworkRequest::Hosts(vec![host]),
+                                    ..SandboxRequest::default()
+                                },
+                                format!("Browser navigate to {}", MarkdownInlineCode(&normalized)),
+                                cx,
+                            )
+                        });
+                        futures::select! {
+                            result = approve.fuse() => result.map_err(|error| {
+                                fail(format!("browser navigate blocked: {error:#}"))
+                            })?,
+                            _ = event_stream.cancelled_by_user().fuse() => {
+                                return Err(fail("Browser action cancelled by user"));
+                            }
+                        };
+
+                        let verify_task = cx.background_spawn({
+                            let url = normalized.clone();
+                            async move { verify_host_not_forbidden(&url) }
+                        });
+                        futures::select! {
+                            result = verify_task.fuse() => result.map_err(|error| {
+                                fail(format!("browser navigate blocked: {error:#}"))
+                            })?,
+                            _ = event_stream.cancelled_by_user().fuse() => {
+                                return Err(fail("Browser action cancelled by user"));
+                            }
+                        };
+                    }
+
+                    *url = normalized;
                 }
             }
 

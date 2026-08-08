@@ -38,7 +38,7 @@ enum FetchStep {
 
 /// Prepends `https://` when the URL has no explicit HTTP(S) scheme, matching the
 /// behavior the fetch tool has always had for user/model-supplied URLs.
-fn normalize_url(url: &str) -> Cow<'_, str> {
+pub(crate) fn normalize_url(url: &str) -> Cow<'_, str> {
     if !url.starts_with("https://") && !url.starts_with("http://") {
         Cow::Owned(format!("https://{url}"))
     } else {
@@ -174,7 +174,7 @@ impl FetchTool {
 /// DNS resolution blocks, so callers should run this off the foreground thread.
 /// See the caller for why this is a gate rather than a full resolve-to-connect
 /// pin.
-fn verify_host_not_forbidden(url: &str) -> Result<()> {
+pub(crate) fn verify_host_not_forbidden(url: &str) -> Result<()> {
     let normalized = normalize_url(url);
     let parsed =
         url::Url::parse(&normalized).with_context(|| format!("could not parse URL {url:?}"))?;
@@ -191,10 +191,10 @@ fn verify_host_not_forbidden(url: &str) -> Result<()> {
     Ok(())
 }
 
-/// Extracts the host from a fetch URL as a [`http_proxy::HostPattern`] so it can
+/// Extracts the host from a URL as a [`http_proxy::HostPattern`] so it can
 /// be matched against the shared network grants. Mirrors the scheme handling in
 /// [`normalize_url`] (defaulting to `https://` when none is given).
-fn host_pattern_for_url(url: &str) -> Result<http_proxy::HostPattern> {
+pub(crate) fn host_pattern_for_url(url: &str) -> Result<http_proxy::HostPattern> {
     let normalized = normalize_url(url);
     let parsed =
         url::Url::parse(&normalized).with_context(|| format!("could not parse URL {url:?}"))?;
@@ -203,7 +203,7 @@ fn host_pattern_for_url(url: &str) -> Result<http_proxy::HostPattern> {
         .with_context(|| format!("URL {url:?} has no host to authorize network access for"))?;
     http_proxy::HostPattern::parse(host).map_err(|error| match error {
         http_proxy::HostPatternError::IpLiteral(_) => anyhow::anyhow!(
-            "cannot fetch {host:?}: loopback and IP-literal hosts can't be granted network \
+            "cannot authorize {host:?}: loopback and IP-literal hosts can't be granted network \
              access individually. They are only reachable once unsandboxed access has been \
              granted (for example, via a terminal command that requests it)."
         ),
