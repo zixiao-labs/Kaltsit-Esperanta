@@ -34,7 +34,7 @@ pub fn forward_mouse_up(host: &AsyncCefHost, id: BrowserId, event: &MouseUpEvent
 }
 
 pub fn forward_mouse_move(host: &AsyncCefHost, id: BrowserId, event: &MouseMoveEvent) {
-    host.send_mouse_move_blocking(id, event.position.x.into(), event.position.y.into(), false)
+    host.send_mouse_move(id, event.position.x.into(), event.position.y.into(), false)
         .log_err();
 }
 

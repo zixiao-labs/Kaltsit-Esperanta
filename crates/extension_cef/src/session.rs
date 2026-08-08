@@ -157,6 +157,22 @@ impl AsyncCefHost {
         })
     }
 
+    /// Fire-and-forget mouse move for the GPUI input path.
+    pub fn send_mouse_move(
+        &self,
+        id: BrowserId,
+        x: f32,
+        y: f32,
+        mouse_leave: bool,
+    ) -> Result<()> {
+        self.session.try_send(CefHostCommand::SendMouseMove {
+            id,
+            x,
+            y,
+            mouse_leave,
+        })
+    }
+
     pub fn send_mouse_wheel_blocking(
         &self,
         id: BrowserId,
