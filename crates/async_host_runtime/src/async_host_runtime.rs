@@ -20,7 +20,9 @@ pub enum HostLifecycle {
     #[default]
     Loading,
     Ready,
-    Failed { message: String },
+    Failed {
+        message: String,
+    },
 }
 
 impl HostLifecycle {
@@ -171,6 +173,10 @@ where
 
     pub fn event_receiver(&self) -> &Receiver<E> {
         &self.event_rx
+    }
+
+    pub fn clone_event_receiver(&self) -> Receiver<E> {
+        self.event_rx.clone()
     }
 
     pub fn try_recv_event(&self) -> Result<E, async_channel::TryRecvError> {
