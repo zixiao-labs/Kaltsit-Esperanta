@@ -53,7 +53,7 @@ impl CdpSession {
             if std::time::Instant::now() > deadline {
                 return Err(anyhow!("timed out waiting for browser host"));
             }
-            smol::Timer::after(std::time::Duration::from_millis(10)).await;
+            async_io::Timer::after(std::time::Duration::from_millis(10)).await;
         }
 
         let browser_id = host.create_browser(initial_url, None).await?;
@@ -90,8 +90,14 @@ impl CdpSession {
             false,
             1,
         )?;
-        self.host
-            .send_mouse_click_blocking(self.browser_id, x, y, MouseButtonKind::Left, true, 1)?;
+        self.host.send_mouse_click_blocking(
+            self.browser_id,
+            x,
+            y,
+            MouseButtonKind::Left,
+            true,
+            1,
+        )?;
         Ok(())
     }
 
@@ -126,7 +132,7 @@ impl CdpSession {
             if std::time::Instant::now() > deadline {
                 return Err(anyhow!("no OSR frame available for screenshot"));
             }
-            smol::Timer::after(std::time::Duration::from_millis(10)).await;
+            async_io::Timer::after(std::time::Duration::from_millis(10)).await;
         }
     }
 

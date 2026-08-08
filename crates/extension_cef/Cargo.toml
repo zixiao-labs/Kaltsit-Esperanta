@@ -21,6 +21,7 @@ force-stub = []
 anyhow.workspace = true
 async_host_runtime.workspace = true
 async-channel.workspace = true
+async-io.workspace = true
 libloading = "0.8"
 log.workspace = true
 parking_lot.workspace = true

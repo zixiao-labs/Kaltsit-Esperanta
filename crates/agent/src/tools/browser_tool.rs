@@ -149,7 +149,9 @@ impl AgentTool for BrowserTool {
                     format!("Browser navigate {}", MarkdownInlineCode(url))
                 }
                 BrowserAction::Click { x, y } => format!("Browser click ({x}, {y})"),
-                BrowserAction::Type { text } => format!("Browser type {}", MarkdownInlineCode(text)),
+                BrowserAction::Type { text } => {
+                    format!("Browser type {}", MarkdownInlineCode(text))
+                }
                 BrowserAction::Scroll { .. } => "Browser scroll".into(),
                 BrowserAction::Screenshot => "Browser screenshot".into(),
                 BrowserAction::Console { .. } => "Browser console".into(),
@@ -173,7 +175,9 @@ impl AgentTool for BrowserTool {
                         .and_then(|parsed| parsed.host_str().map(str::to_owned))
                         .ok_or_else(|| fail(format!("invalid URL: {url}")))?;
                     let pattern = http_proxy::HostPattern::parse(&host).map_err(|error| {
-                        fail(format!("cannot authorize browser navigate to {host:?}: {error}"))
+                        fail(format!(
+                            "cannot authorize browser navigate to {host:?}: {error}"
+                        ))
                     })?;
                     let request = SandboxRequest {
                         network: NetworkRequest::Hosts(vec![pattern]),
