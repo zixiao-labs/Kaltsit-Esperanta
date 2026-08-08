@@ -25,7 +25,8 @@ impl SharedPaintFrame {
             .width
             .checked_mul(paint.height)
             .and_then(|pixels| pixels.checked_mul(4))
-            .ok_or_else(|| anyhow!("paint buffer dimensions overflow"))? as usize;
+            .ok_or_else(|| anyhow!("paint buffer dimensions overflow"))?
+            as usize;
         if paint.bytes.len() < expected {
             return Err(anyhow!(
                 "paint buffer too small: got {} want {expected}",

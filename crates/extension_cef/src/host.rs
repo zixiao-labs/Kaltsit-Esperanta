@@ -104,15 +104,30 @@ pub enum CefHostCommand {
 pub enum CefHostEvent {
     BrowserCreated(BrowserId),
     BrowserClosed(BrowserId),
-    LoadStart { id: BrowserId, url: String },
-    LoadEnd { id: BrowserId, http_status: i32 },
-    LoadError { id: BrowserId, message: String },
+    LoadStart {
+        id: BrowserId,
+        url: String,
+    },
+    LoadEnd {
+        id: BrowserId,
+        http_status: i32,
+    },
+    LoadError {
+        id: BrowserId,
+        message: String,
+    },
     /// Raw BGRA paint from CEF.
     Paint(PaintBuffer),
     /// Sendable frame for the UI thread (`to_cv_pixel_buffer` on macOS).
     Frame(SharedPaintFrame),
-    TitleChanged { id: BrowserId, title: String },
-    AddressChanged { id: BrowserId, url: String },
+    TitleChanged {
+        id: BrowserId,
+        title: String,
+    },
+    AddressChanged {
+        id: BrowserId,
+        url: String,
+    },
 }
 
 struct BrowserSlot {
