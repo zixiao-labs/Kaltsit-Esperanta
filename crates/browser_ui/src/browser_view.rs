@@ -8,10 +8,12 @@ use extension_cef::{
     AsyncCefHost, BrowserId, CefBrowserSettings, CefHostEvent, CefSettings, PLACEHOLDER_OSR_STATUS,
     SharedPaintFrame,
 };
+#[cfg(target_os = "macos")]
+use gpui::ObjectFit;
 use gpui::{
     App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
-    MouseDownEvent, MouseMoveEvent, MouseUpEvent, ObjectFit, Pixels, Point, ScrollWheelEvent,
-    SharedString, Task, Window, canvas, prelude::*,
+    MouseDownEvent, MouseMoveEvent, MouseUpEvent, Pixels, Point, ScrollWheelEvent, SharedString,
+    Task, Window, canvas, prelude::*,
 };
 use project::Project;
 use ui::{Icon, IconName, Label, LabelSize, prelude::*};
