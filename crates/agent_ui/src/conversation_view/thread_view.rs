@@ -272,6 +272,46 @@ struct ParsedCatNumberedCode {
     line_count: usize,
 }
 
+fn format_review_feedback_message(feedback: &[ReviewFeedback]) -> anyhow::Result<String> {
+    let mut message = String::from(
+        "Address the following human-authored review feedback. Each card is anchored to a local diff; paths in backticks can be opened from the thread.\n",
+    );
+
+    for (index, item) in feedback.iter().enumerate() {
+        let location = if item.start_line == item.end_line {
+            format!("L{}", item.start_line)
+        } else {
+            format!("L{}–{}", item.start_line, item.end_line)
+        };
+        let worktree = item
+            .worktree_name
+            .as_deref()
+            .map(|name| format!(" ({name})"))
+            .unwrap_or_default();
+        let excerpt = item.excerpt.trim_end();
+        let excerpt_block = if excerpt.is_empty() {
+            String::new()
+        } else {
+            format!("\n```\n{excerpt}\n```\n")
+        };
+
+        message.push_str(&format!(
+            "\n### {}. `{file}` {location}{worktree}\n\n{comment}\n{excerpt_block}",
+            index + 1,
+            file = item.file_path,
+            comment = item.comment.trim(),
+        ));
+    }
+
+    let payload = serde_json::to_string_pretty(feedback)?;
+    message.push_str(
+        "\n<details>\n<summary>Machine-readable review feedback</summary>\n\n```json\n",
+    );
+    message.push_str(&payload);
+    message.push_str("\n```\n</details>\n");
+    Ok(message)
+}
+
 fn parse_cat_numbered_markdown_code_block(markdown: &str) -> Option<ParsedCatNumberedCode> {
     let (_tag, code) = parse_single_fenced_code_block(markdown)?;
     parse_cat_numbered_code(code)
@@ -529,6 +569,26 @@ mod numbered_code_block_tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn formats_review_feedback_as_structured_cards() {
+        let message = format_review_feedback_message(&[ReviewFeedback {
+            worktree_name: Some("app".into()),
+            file_path: "src/example.rs".into(),
+            start_line: 12,
+            end_line: 15,
+            excerpt: "fn main() {}".into(),
+            comment: "Keep the old name".into(),
+            status: editor::ReviewCommentStatus::Draft,
+        }])
+        .expect("review feedback should format");
+
+        assert!(message.contains("### 1. `src/example.rs` L12–15 (app)"));
+        assert!(message.contains("Keep the old name"));
+        assert!(message.contains("```\nfn main() {}\n```"));
+        assert!(message.contains("<summary>Machine-readable review feedback</summary>"));
+        assert!(message.contains("\"file_path\": \"src/example.rs\""));
     }
 }
 
@@ -1585,10 +1645,9 @@ impl ThreadView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> anyhow::Result<()> {
-        let payload = serde_json::to_string_pretty(&feedback)?;
-        let content = vec![acp::ContentBlock::Text(acp::TextContent::new(format!(
-            "Address the following human-authored review feedback. Each item is anchored to a local diff and includes its worktree, file, one-based line range, and selected excerpt.\n\n```json\n{payload}\n```"
-        )))];
+        let content = vec![acp::ContentBlock::Text(acp::TextContent::new(
+            format_review_feedback_message(&feedback)?,
+        ))];
         cx.emit(AcpThreadViewEvent::Interacted);
         if self.thread.read(cx).status() == ThreadStatus::Idle {
             self.send_content(

@@ -81,6 +81,22 @@ impl CapabilityGranter {
 
         Ok(())
     }
+
+    pub fn grant_http_fetch(&self, desired_url: &Url) -> Result<()> {
+        let is_allowed = self
+            .granted_capabilities
+            .iter()
+            .any(|capability| match capability {
+                ExtensionCapability::HttpFetch(capability) => capability.allows(desired_url),
+                _ => false,
+            });
+
+        if !is_allowed {
+            bail!("capability for http:fetch {desired_url} is not granted by the extension host",);
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -113,6 +129,7 @@ mod tests {
             debug_adapters: Default::default(),
             debug_locators: Default::default(),
             language_model_providers: BTreeMap::default(),
+            pull_request_providers: BTreeMap::default(),
         }
     }
 

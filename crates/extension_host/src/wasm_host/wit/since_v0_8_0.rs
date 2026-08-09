@@ -632,6 +632,9 @@ impl http_client::Host for WasmState {
     ) -> wasmtime::Result<Result<http_client::HttpResponse, String>> {
         maybe!(async {
             let url = &request.url;
+            let parsed_url = url::Url::parse(url)
+                .with_context(|| format!("failed to parse fetch URL '{url}'"))?;
+            self.capability_granter.grant_http_fetch(&parsed_url)?;
             let request = convert_request(&request)?;
             let mut response = self.host.http_client.send(request).await?;
 
@@ -648,10 +651,13 @@ impl http_client::Host for WasmState {
         &mut self,
         request: http_client::HttpRequest,
     ) -> wasmtime::Result<Result<Resource<ExtensionHttpResponseStream>, String>> {
-        let request = convert_request(&request)?;
-        let response = self.host.http_client.send(request);
         maybe!(async {
-            let response = response.await?;
+            let url = &request.url;
+            let parsed_url = url::Url::parse(url)
+                .with_context(|| format!("failed to parse fetch URL '{url}'"))?;
+            self.capability_granter.grant_http_fetch(&parsed_url)?;
+            let request = convert_request(&request)?;
+            let response = self.host.http_client.send(request).await?;
             let stream = Arc::new(Mutex::new(response));
             let resource = self.table.push(stream)?;
             Ok(resource)

@@ -42,4 +42,9 @@ pub enum ExtensionCapabilityContent {
     NpmInstallPackage {
         package: String,
     },
+    #[serde(rename = "http:fetch")]
+    HttpFetch {
+        host: String,
+        path: Vec<String>,
+    },
 }

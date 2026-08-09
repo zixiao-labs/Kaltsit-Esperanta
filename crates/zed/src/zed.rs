@@ -935,6 +935,7 @@ fn register_actions(
                 }) {
                     Ok(true) => {
                         review_editor.update(cx, |editor, cx| {
+                            editor.mark_review_feedback_sent(cx);
                             editor.clear_review_feedback(cx);
                         });
                         workspace.reveal_panel::<agent_ui::AgentPanel>(window, cx);

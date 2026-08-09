@@ -40259,6 +40259,17 @@ fn test_review_feedback_preserves_anchor_metadata_until_cleared(cx: &mut TestApp
         assert_eq!(feedback[0].end_line, 2);
         assert_eq!(feedback[0].excerpt, "first\nsecond");
         assert_eq!(feedback[0].comment, "Handle this edge case");
+        assert_eq!(feedback[0].status, ReviewCommentStatus::Draft);
+
+        let session = editor.review_session(cx);
+        assert_eq!(session.source, ReviewSessionSource::LocalDiff);
+        assert_eq!(session.threads.len(), 1);
+        assert_eq!(session.threads[0].file_path, "src/example.rs");
+        assert_eq!(session.threads[0].comments[0].author, "You");
+
+        editor.mark_review_feedback_sent(cx);
+        assert!(editor.review_feedback(cx).is_empty());
+        assert_eq!(editor.total_review_comment_count(), 0);
 
         editor.clear_review_feedback(cx);
         assert!(editor.review_feedback(cx).is_empty());

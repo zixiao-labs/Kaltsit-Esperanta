@@ -3,13 +3,14 @@ pub mod extension_builder;
 mod extension_events;
 mod extension_host_proxy;
 mod extension_manifest;
+mod pull_request_provider;
 mod types;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use ::lsp::LanguageServerName;
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use async_trait::async_trait;
 use gpui::{App, Task};
 use language::LanguageName;
@@ -21,6 +22,7 @@ pub use crate::capabilities::*;
 pub use crate::extension_events::*;
 pub use crate::extension_host_proxy::*;
 pub use crate::extension_manifest::*;
+pub use crate::pull_request_provider::*;
 pub use crate::types::*;
 
 /// Initializes the `extension` crate.
@@ -179,6 +181,59 @@ pub trait Extension: Send + Sync + 'static {
         locator_name: String,
         config: SpawnInTerminal,
     ) -> Result<DebugRequest>;
+
+    async fn pull_request_provider_metadata(
+        &self,
+        provider_id: Arc<str>,
+    ) -> Result<PullRequestProviderMetadata> {
+        Err(anyhow!(
+            "pull_request_provider_metadata is not implemented for provider {provider_id}"
+        ))
+    }
+
+    async fn list_pull_requests(
+        &self,
+        provider_id: Arc<str>,
+        _remote: ParsedGitRemote,
+        _query: PullRequestQuery,
+    ) -> Result<Vec<PullRequestSummary>> {
+        Err(anyhow!(
+            "list_pull_requests is not implemented for provider {provider_id}"
+        ))
+    }
+
+    async fn get_pull_request(
+        &self,
+        provider_id: Arc<str>,
+        _remote: ParsedGitRemote,
+        number: u32,
+    ) -> Result<PullRequestDetail> {
+        Err(anyhow!(
+            "get_pull_request is not implemented for provider {provider_id} #{number}"
+        ))
+    }
+
+    async fn post_review_comments(
+        &self,
+        provider_id: Arc<str>,
+        _remote: ParsedGitRemote,
+        number: u32,
+        _batch: ReviewBatch,
+    ) -> Result<()> {
+        Err(anyhow!(
+            "post_review_comments is not implemented for provider {provider_id} #{number}"
+        ))
+    }
+
+    async fn resolve_review_thread(
+        &self,
+        provider_id: Arc<str>,
+        thread_id: String,
+    ) -> Result<()> {
+        Err(anyhow!(
+            "resolve_review_thread is not implemented for provider {provider_id} thread {thread_id}"
+        ))
+    }
 }
 
 pub fn parse_wasm_extension_version(extension_id: &str, wasm_bytes: &[u8]) -> Result<Version> {

@@ -17,7 +17,8 @@ use extension::extension_builder::{CompileExtensionOptions, ExtensionBuilder};
 use extension::{
     ExtensionContextServerProxy, ExtensionDebugAdapterProviderProxy, ExtensionEvents,
     ExtensionGrammarProxy, ExtensionHostProxy, ExtensionLanguageProxy,
-    ExtensionLanguageServerProxy, ExtensionSnippetProxy, ExtensionThemeProxy,
+    ExtensionLanguageServerProxy, ExtensionPullRequestProxy, ExtensionSnippetProxy,
+    ExtensionThemeProxy,
 };
 use fs::{Fs, RemoveOptions, RenameOptions};
 use futures::future::join_all;
@@ -1617,6 +1618,19 @@ impl ExtensionStore {
                     for id in manifest.context_servers.keys() {
                         this.proxy
                             .register_context_server(extension.clone(), id.clone(), cx);
+                    }
+
+                    for (provider_id, entry) in &manifest.pull_request_providers {
+                        let label = entry
+                            .label
+                            .clone()
+                            .unwrap_or_else(|| provider_id.to_string());
+                        this.proxy.register_pull_request_provider(
+                            extension.clone(),
+                            provider_id.clone(),
+                            label.into(),
+                            cx,
+                        );
                     }
 
                     for (debug_adapter, meta) in &manifest.debug_adapters {

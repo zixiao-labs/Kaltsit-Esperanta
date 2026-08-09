@@ -1,8 +1,10 @@
 mod download_file_capability;
+mod http_fetch_capability;
 mod npm_install_package_capability;
 mod process_exec_capability;
 
 pub use download_file_capability::*;
+pub use http_fetch_capability::*;
 pub use npm_install_package_capability::*;
 pub use process_exec_capability::*;
 
@@ -17,4 +19,6 @@ pub enum ExtensionCapability {
     DownloadFile(DownloadFileCapability),
     #[serde(rename = "npm:install")]
     NpmInstallPackage(NpmInstallPackageCapability),
+    #[serde(rename = "http:fetch")]
+    HttpFetch(HttpFetchCapability),
 }

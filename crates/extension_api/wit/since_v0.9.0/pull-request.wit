@@ -1,0 +1,71 @@
+interface pull-request {
+    /// Metadata describing a pull-request / merge-request provider.
+    record pull-request-provider-metadata {
+        /// Stable provider id from `extension.toml`.
+        id: string,
+        /// Human-readable label shown in the host UI.
+        label: string,
+        /// Whether the provider can create and resolve review comments.
+        supports-review-comments: bool,
+    }
+
+    /// A parsed git remote in `owner/repo` form.
+    record parsed-git-remote {
+        owner: string,
+        repo: string,
+    }
+
+    /// Query used when listing pull requests for a remote.
+    record pull-request-query {
+        query: option<string>,
+        limit: option<u32>,
+    }
+
+    /// Compact pull-request summary for pickers.
+    record pull-request-summary {
+        number: u32,
+        title: string,
+        url: string,
+        author: option<string>,
+        is-draft: bool,
+    }
+
+    /// One draft or published review comment.
+    record review-batch-comment {
+        file-path: string,
+        start-line: u32,
+        end-line: u32,
+        body: string,
+        excerpt: option<string>,
+    }
+
+    /// Batch of review comments to submit through a provider.
+    record review-batch {
+        comments: list<review-batch-comment>,
+    }
+
+    /// One comment inside a review thread.
+    record pull-request-review-comment {
+        id: string,
+        author: string,
+        body: string,
+    }
+
+    /// Anchored review thread returned by a provider.
+    record pull-request-review-thread {
+        id: string,
+        file-path: string,
+        start-line: u32,
+        end-line: u32,
+        excerpt: option<string>,
+        is-resolved: bool,
+        comments: list<pull-request-review-comment>,
+    }
+
+    /// Full pull-request detail used to populate the shared review surface.
+    record pull-request-detail {
+        summary: pull-request-summary,
+        files: list<string>,
+        threads: list<pull-request-review-thread>,
+    }
+}
