@@ -74,6 +74,11 @@ extend-exclude = [
     "crates/editor/src/document_symbols.rs",
 ]
 
+[default.extend-words]
+# Screen-capture crate (`zed-scap` / `scap`).
+scap = "scap"
+Scap = "Scap"
+
 [default]
 extend-ignore-re = [
     # PNG is a file format, not a typo

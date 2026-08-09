@@ -4,21 +4,27 @@
 //! raw CEF pointers; keep the lint allowed so the FFI surface stays readable.
 #![allow(unsafe_op_in_unsafe_fn)]
 
-use std::collections::HashMap;
-use std::ffi::CString;
-use std::mem::offset_of;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicUsize, Ordering};
+use std::path::Path;
 
-use anyhow::{Context as _, Result, anyhow, bail};
+use anyhow::{Result, anyhow};
 use async_channel::Sender;
 
 use crate::ffi::CefFunctionTable;
-use crate::host::{
-    BrowserId, CefHostEvent, CefSettings, KeyEventPayload, MouseButtonKind, PaintBuffer,
-};
-use crate::managed::managed_cef_root;
-use crate::osr;
+use crate::host::{BrowserId, CefHostEvent, CefSettings, KeyEventPayload, MouseButtonKind};
+
+#[cfg(target_os = "macos")]
+use std::collections::HashMap;
+#[cfg(target_os = "macos")]
+use std::ffi::CString;
+#[cfg(target_os = "macos")]
+use std::mem::offset_of;
+#[cfg(target_os = "macos")]
+use std::path::PathBuf;
+#[cfg(target_os = "macos")]
+use std::sync::atomic::{AtomicI32, AtomicU32, AtomicUsize, Ordering};
+
+#[cfg(target_os = "macos")]
+use anyhow::{Context as _, bail};
 
 #[cfg(target_os = "macos")]
 use crate::cef_sys::{
@@ -31,6 +37,12 @@ use crate::cef_sys::{
     cef_paint_element_type_t, cef_paint_element_type_t_PET_VIEW, cef_rect_t, cef_render_handler_t,
     cef_screen_info_t, cef_settings_t, cef_state_t_STATE_ENABLED, cef_string_t, cef_window_info_t,
 };
+#[cfg(target_os = "macos")]
+use crate::host::PaintBuffer;
+#[cfg(target_os = "macos")]
+use crate::managed::managed_cef_root;
+#[cfg(target_os = "macos")]
+use crate::osr;
 
 #[cfg(not(target_os = "macos"))]
 pub struct CefRuntime;
