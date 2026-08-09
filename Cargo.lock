@@ -2571,6 +2571,7 @@ dependencies = [
 name = "browser_ui"
 version = "0.1.0"
 dependencies = [
+ "ama10-i18n",
  "async_host_runtime",
  "auto_update",
  "core-video",
@@ -2578,12 +2579,14 @@ dependencies = [
  "gpui",
  "http_client",
  "log",
+ "menu",
  "project",
- "schemars 1.0.4",
  "serde",
  "ui",
+ "ui_input",
  "util",
  "workspace",
+ "zed_actions",
 ]
 
 [[package]]
@@ -6614,8 +6617,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-channel 2.5.0",
- "async-compression",
- "async-tar",
  "async_host_runtime",
  "core-foundation 0.10.0",
  "core-video",

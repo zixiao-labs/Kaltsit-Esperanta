@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ama10_i18n::{tr, tr_f};
 use extension_cef::{
     install_managed_cef, probe_managed_libcef_path, refresh_managed_cef as refresh_managed_cef_lib,
 };
@@ -23,7 +24,8 @@ pub fn install_browser_runtime(window: &mut Window, cx: &mut Context<Workspace>)
                 workspace.show_toast(
                     Toast::new(
                         NotificationId::unique::<AlreadyInstalled>(),
-                        format!("Browser runtime already installed at {}", path.display()),
+                        tr_f!("Browser runtime already installed at {}", path.display())
+                            .to_string(),
                     ),
                     cx,
                 );
@@ -38,7 +40,7 @@ pub fn install_browser_runtime(window: &mut Window, cx: &mut Context<Workspace>)
             workspace.show_toast(
                 Toast::new(
                     NotificationId::unique::<Installing>(),
-                    "Downloading browser runtime…",
+                    tr!("Downloading browser runtime…").to_string(),
                 ),
                 cx,
             );
@@ -52,10 +54,11 @@ pub fn install_browser_runtime(window: &mut Window, cx: &mut Context<Workspace>)
             workspace.show_toast(
                 Toast::new(
                     NotificationId::unique::<Installed>(),
-                    format!(
+                    tr_f!(
                         "Installed browser runtime to {}. Open a Browser tab to use it.",
                         path.display()
-                    ),
+                    )
+                    .to_string(),
                 ),
                 cx,
             );
@@ -63,7 +66,7 @@ pub fn install_browser_runtime(window: &mut Window, cx: &mut Context<Workspace>)
         Ok(())
     })
     .detach_and_prompt_err(
-        "Cannot install the browser runtime",
+        tr!("Cannot install the browser runtime").as_ref(),
         window,
         cx,
         |error, _, _| Some(format!("{error:#}")),

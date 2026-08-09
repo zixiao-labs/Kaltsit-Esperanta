@@ -9,13 +9,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context as _, Result, anyhow, bail};
-use async_compression::futures::bufread::{BzDecoder, GzipDecoder};
-use futures::io::BufReader;
 use http_client::{AsyncBody, HttpClient};
 use smol::fs;
+use smol::stream::StreamExt as _;
 
-/// Pinned CEF package version for managed installs.
-pub const MANAGED_CEF_VERSION: &str = "131.3.5+g437feba+chromium-131.0.6778.205";
+/// Pinned CEF package version for managed installs (Spotify CDN builds).
+pub const MANAGED_CEF_VERSION: &str = "131.3.5+g573cec5+chromium-131.0.6778.205";
 
 const DOWNLOAD_URL_ENV: &str = "ZETA_CEF_DOWNLOAD_URL";
 
@@ -74,35 +73,25 @@ pub fn default_cef_download_url() -> Result<String> {
         return Ok(url);
     }
 
-    let (os, arch, ext) = cef_artifact_triple()?;
-    // Hosted next to other Zeta optional runtimes; override with ZETA_CEF_DOWNLOAD_URL
-    // when mirroring to a private blob store.
+    let platform = spotify_cef_platform()?;
+    // Official Spotify CEF CDN; override with ZETA_CEF_DOWNLOAD_URL for a private mirror.
+    // Use the minimal distribution: runtime binaries without samples/debug symbols.
+    let version = MANAGED_CEF_VERSION.replace('+', "%2B");
     Ok(format!(
-        "https://zed-cef-releases.nyc3.digitaloceanspaces.com/cef_{}_{}_{}.{}",
-        sanitize_version(MANAGED_CEF_VERSION),
-        os,
-        arch,
-        ext
+        "https://cef-builds.spotifycdn.com/cef_binary_{version}_{platform}_minimal.tar.bz2"
     ))
 }
 
-fn cef_artifact_triple() -> Result<(&'static str, &'static str, &'static str)> {
-    let os = match env::consts::OS {
-        "macos" => "macos",
-        "linux" => "linux",
-        "windows" => "windows",
-        other => bail!("unsupported OS for managed CEF: {other}"),
-    };
-    let arch = match env::consts::ARCH {
-        "aarch64" => "aarch64",
-        "x86_64" => "x86_64",
-        other => bail!("unsupported arch for managed CEF: {other}"),
-    };
-    let ext = match os {
-        "windows" => "zip",
-        _ => "tar.bz2",
-    };
-    Ok((os, arch, ext))
+fn spotify_cef_platform() -> Result<&'static str> {
+    match (env::consts::OS, env::consts::ARCH) {
+        ("macos", "aarch64") => Ok("macosarm64"),
+        ("macos", "x86_64") => Ok("macosx64"),
+        ("linux", "x86_64") => Ok("linux64"),
+        ("linux", "aarch64") => Ok("linuxarm64"),
+        ("windows", "x86_64") => Ok("windows64"),
+        ("windows", "aarch64") => Ok("windowsarm64"),
+        (os, arch) => bail!("unsupported OS/arch for managed CEF: {os}/{arch}"),
+    }
 }
 
 /// Ensure the pinned CEF runtime is present, downloading when missing.
@@ -166,9 +155,8 @@ async fn download_and_extract(http: Arc<dyn HttpClient>) -> Result<PathBuf> {
     }
 
     let archive_path = parent.join(format!(
-        "cef-{}-download.{}",
+        "cef-{}-download.tar.bz2",
         sanitize_version(MANAGED_CEF_VERSION),
-        cef_artifact_triple()?.2
     ));
     {
         let mut file = fs::File::create(&archive_path)
@@ -181,6 +169,7 @@ async fn download_and_extract(http: Arc<dyn HttpClient>) -> Result<PathBuf> {
 
     extract_archive(&archive_path, &root).await?;
     let _ = fs::remove_file(&archive_path).await;
+    normalize_extracted_cef(&root).await?;
 
     let lib_path = root.join(managed_libcef_relative_path());
     if !lib_path.is_file() {
@@ -195,47 +184,164 @@ async fn download_and_extract(http: Arc<dyn HttpClient>) -> Result<PathBuf> {
     Ok(lib_path)
 }
 
-async fn extract_archive(archive_path: &Path, destination: &Path) -> Result<()> {
-    let file = fs::File::open(archive_path)
-        .await
-        .with_context(|| format!("opening {}", archive_path.display()))?;
-    let extension = archive_path
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .unwrap_or_default();
+/// Flatten Spotify CEF layout (`cef_binary_*/Release/...`) into the managed root.
+async fn normalize_extracted_cef(root: &Path) -> Result<()> {
+    let expected = root.join(managed_libcef_relative_path());
+    if expected.is_file() {
+        return Ok(());
+    }
 
-    match extension {
-        "bz2" => {
-            let decoder = BzDecoder::new(BufReader::new(file));
-            let archive = async_tar::Archive::new(decoder);
-            archive
-                .unpack(destination)
-                .await
-                .context("extracting CEF tar.bz2")?;
+    let release_dir = find_release_dir(root)
+        .await?
+        .ok_or_else(|| anyhow!("CEF archive missing Release/ under {}", root.display()))?;
+
+    #[cfg(target_os = "macos")]
+    {
+        let framework_name = "Chromium Embedded Framework.framework";
+        let source = release_dir.join(framework_name);
+        if !source.is_dir() {
+            bail!(
+                "CEF Release/ missing {} at {}",
+                framework_name,
+                source.display()
+            );
         }
-        "gz" => {
-            let decoder = GzipDecoder::new(BufReader::new(file));
-            let archive = async_tar::Archive::new(decoder);
-            archive
-                .unpack(destination)
-                .await
-                .context("extracting CEF tar.gz")?;
+        let destination = root.join(framework_name);
+        fs::rename(&source, &destination)
+            .await
+            .with_context(|| format!("moving {} -> {}", source.display(), destination.display()))?;
+        // CEF's GPU process resolves ANGLE/SwiftShader next to the helper /
+        // framework_dir parent. Symlink the framework Libraries so software and
+        // hardware paths can load them after we flatten Spotify's Release/.
+        link_macos_gpu_libraries(root, &destination).await?;
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let mut entries = fs::read_dir(&release_dir)
+            .await
+            .with_context(|| format!("reading {}", release_dir.display()))?;
+        while let Some(entry) = entries.next().await {
+            let entry = entry?;
+            let source = entry.path();
+            let file_name = entry.file_name();
+            let destination = root.join(&file_name);
+            fs::rename(&source, &destination).await.with_context(|| {
+                format!("moving {} -> {}", source.display(), destination.display())
+            })?;
         }
-        "zip" => {
-            // Keep the managed installer dependency-light: shell out on Windows.
-            let status = smol::process::Command::new("tar")
-                .args(["-xf"])
-                .arg(archive_path)
-                .arg("-C")
-                .arg(destination)
-                .status()
-                .await
-                .context("running tar to extract CEF zip")?;
-            if !status.success() {
-                return Err(anyhow!("tar failed extracting {}", archive_path.display()));
-            }
+    }
+
+    remove_extraneous_extract_dirs(root).await?;
+    Ok(())
+}
+
+async fn find_release_dir(root: &Path) -> Result<Option<PathBuf>> {
+    let direct = root.join("Release");
+    if direct.is_dir() {
+        return Ok(Some(direct));
+    }
+
+    let mut entries = fs::read_dir(root)
+        .await
+        .with_context(|| format!("reading {}", root.display()))?;
+    while let Some(entry) = entries.next().await {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
         }
-        other => bail!("unsupported CEF archive extension: {other}"),
+        let candidate = path.join("Release");
+        if candidate.is_dir() {
+            return Ok(Some(candidate));
+        }
+    }
+    Ok(None)
+}
+
+async fn remove_extraneous_extract_dirs(root: &Path) -> Result<()> {
+    let keep = match env::consts::OS {
+        "macos" => "Chromium Embedded Framework.framework",
+        _ => return Ok(()),
+    };
+
+    let mut entries = fs::read_dir(root)
+        .await
+        .with_context(|| format!("reading {}", root.display()))?;
+    while let Some(entry) = entries.next().await {
+        let entry = entry?;
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else {
+            continue;
+        };
+        if name == keep || is_macos_gpu_library_name(name) {
+            continue;
+        }
+        let path = entry.path();
+        if path.is_dir() {
+            fs::remove_dir_all(&path)
+                .await
+                .with_context(|| format!("removing leftover {}", path.display()))?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn is_macos_gpu_library_name(name: &str) -> bool {
+    matches!(
+        name,
+        "libEGL.dylib" | "libGLESv2.dylib" | "libvk_swiftshader.dylib" | "vk_swiftshader_icd.json"
+    )
+}
+
+#[cfg(not(target_os = "macos"))]
+fn is_macos_gpu_library_name(_name: &str) -> bool {
+    false
+}
+
+#[cfg(target_os = "macos")]
+async fn link_macos_gpu_libraries(root: &Path, framework_dir: &Path) -> Result<()> {
+    let libraries = framework_dir.join("Libraries");
+    for name in [
+        "libEGL.dylib",
+        "libGLESv2.dylib",
+        "libvk_swiftshader.dylib",
+        "vk_swiftshader_icd.json",
+    ] {
+        let source = libraries.join(name);
+        if !source.is_file() {
+            continue;
+        }
+        let destination = root.join(name);
+        if destination.exists() || destination.symlink_metadata().is_ok() {
+            continue;
+        }
+        let relative = PathBuf::from("Chromium Embedded Framework.framework/Libraries").join(name);
+        std::os::unix::fs::symlink(&relative, &destination).with_context(|| {
+            format!(
+                "symlinking {} -> {}",
+                destination.display(),
+                relative.display()
+            )
+        })?;
+    }
+    Ok(())
+}
+
+async fn extract_archive(archive_path: &Path, destination: &Path) -> Result<()> {
+    // CEF frameworks ship symlink/hardlink layouts that async-tar fails on when
+    // applying mtimes (ENOENT on libGLESv2.dylib etc.). System tar handles this.
+    let status = smol::process::Command::new("tar")
+        .arg("-xf")
+        .arg(archive_path)
+        .arg("-C")
+        .arg(destination)
+        .status()
+        .await
+        .with_context(|| format!("running tar to extract {}", archive_path.display()))?;
+    if !status.success() {
+        bail!("tar failed extracting {}", archive_path.display());
     }
     Ok(())
 }
@@ -260,5 +366,17 @@ mod tests {
             "{}",
             root.display()
         );
+    }
+
+    #[test]
+    fn default_url_points_at_spotify_minimal() {
+        let url = default_cef_download_url().expect("url");
+        assert!(
+            url.starts_with("https://cef-builds.spotifycdn.com/cef_binary_"),
+            "{url}"
+        );
+        assert!(url.contains("%2B"), "{url}");
+        assert!(url.ends_with("_minimal.tar.bz2"), "{url}");
+        assert!(!url.contains("digitaloceanspaces.com"), "{url}");
     }
 }

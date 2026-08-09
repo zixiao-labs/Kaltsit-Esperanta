@@ -9,8 +9,10 @@ into the editor.
 - `AsyncCefHost` opens `libcef` on a dedicated background thread via
   `async_host_runtime` so GPUI never blocks on `dlopen`.
 - Production installs use a managed download under `data_dir/cef/<version>/`
-  (menu: **Install Browser Runtime**). After the first install, component-only
-  auto-update (`auto_update::init_component_updates`) can refresh the pin —
+  (menu: **Install Browser Runtime**). The default artifact comes from the
+  Spotify CEF CDN (`cef-builds.spotifycdn.com`, minimal distribution). After
+  the first install, component-only auto-update
+  (`auto_update::init_component_updates`) can refresh the pin —
   full-application auto-update stays off.
 - Override the artifact URL with `ZETA_CEF_DOWNLOAD_URL`.
 - When the library is missing, the host falls back to stub mode (fail-soft).

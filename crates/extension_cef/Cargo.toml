@@ -12,6 +12,10 @@ workspace = true
 path = "src/extension_cef.rs"
 doctest = false
 
+[[bin]]
+name = "zeta-cef-helper"
+path = "src/bin/zeta_cef_helper.rs"
+
 [features]
 default = []
 # Force the stub host even when libcef is present (tests / CI).
@@ -19,10 +23,8 @@ force-stub = []
 
 [dependencies]
 anyhow.workspace = true
-async-compression.workspace = true
 async_host_runtime.workspace = true
 async-channel.workspace = true
-async-tar.workspace = true
 futures.workspace = true
 http_client.workspace = true
 libloading = "0.8"

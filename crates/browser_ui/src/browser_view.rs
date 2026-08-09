@@ -2,37 +2,34 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::design_mode::DesignModeState;
+use ama10_i18n::{tr, tr_f};
 use async_host_runtime::HostLifecycle;
-use extension_cef::{AsyncCefHost, BrowserId, CefHostEvent, CefSettings, SharedPaintFrame};
+use extension_cef::{
+    AsyncCefHost, BrowserId, CefBrowserSettings, CefHostEvent, CefSettings, PLACEHOLDER_OSR_STATUS,
+    SharedPaintFrame,
+};
 use gpui::{
-    App, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
-    MouseDownEvent, MouseMoveEvent, MouseUpEvent, ScrollWheelEvent, SharedString, Task, Window,
-    actions, prelude::*,
+    App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable, KeyDownEvent, KeyUpEvent,
+    MouseDownEvent, MouseMoveEvent, MouseUpEvent, ObjectFit, Pixels, Point, ScrollWheelEvent,
+    SharedString, Task, Window, canvas, prelude::*,
 };
 use project::Project;
 use ui::{Icon, IconName, Label, LabelSize, prelude::*};
-#[cfg(target_os = "macos")]
-use util::ResultExt as _;
 use workspace::{
     Workspace,
     item::{Item, ItemEvent},
 };
+pub use zed_actions::browser::{Open, OpenUrl, ToggleDesignMode};
 
-actions!(
-    browser,
-    [
-        /// Open the embedded browser in an editor tab.
-        Open,
-        /// Toggle Design Mode for the active browser tab.
-        ToggleDesignMode,
-    ]
-);
-
-/// Open the embedded browser at a specific URL.
-#[derive(Clone, PartialEq, serde::Deserialize, schemars::JsonSchema, gpui::Action)]
-#[action(namespace = browser)]
-pub struct OpenUrl {
-    pub url: String,
+fn normalize_navigation_url(input: &str) -> String {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return "about:blank".to_string();
+    }
+    if trimmed.contains("://") || trimmed.starts_with("about:") {
+        return trimmed.to_string();
+    }
+    format!("https://{trimmed}")
 }
 
 pub struct BrowserView {
@@ -42,11 +39,14 @@ pub struct BrowserView {
     host: Arc<AsyncCefHost>,
     browser_id: Option<BrowserId>,
     address: SharedString,
+    address_field: Entity<ui_input::InputField>,
     title: SharedString,
     status: SharedString,
     latest_frame: Option<SharedPaintFrame>,
     #[cfg(target_os = "macos")]
     surface_frame: Option<core_video::pixel_buffer::CVPixelBuffer>,
+    viewport_bounds: Bounds<Pixels>,
+    device_scale_factor: f32,
     design_mode: DesignModeState,
     agent_context: SharedString,
     _event_task: Task<()>,
@@ -57,10 +57,15 @@ impl BrowserView {
     pub fn new(
         project: Entity<Project>,
         initial_url: Option<String>,
-        _window: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
         let address = SharedString::from(initial_url.unwrap_or_else(|| "about:blank".to_string()));
+        let address_field = cx.new(|cx| {
+            let field = ui_input::InputField::new(window, cx, tr!("Enter URL").as_ref());
+            field.set_text(address.as_ref(), window, cx);
+            field
+        });
         // Prefer a managed/system libcef; fall back to stub so CI and fresh installs
         // stay fail-soft. Loading always happens on the CEF host thread.
         let host = Arc::new(match extension_cef::probe_libcef_path() {
@@ -84,6 +89,7 @@ impl BrowserView {
 
         let host_for_boot = host.clone();
         let boot_url = address.to_string();
+        let initial_scale = window.scale_factor();
         let bootstrap_task = cx.spawn(async move |this, cx| {
             let deadline = Instant::now() + Duration::from_secs(10);
             loop {
@@ -91,8 +97,7 @@ impl BrowserView {
                     HostLifecycle::Ready => break,
                     HostLifecycle::Failed { message } => {
                         this.update(cx, |this, cx| {
-                            this.status =
-                                SharedString::from(format!("Browser unavailable: {message}"));
+                            this.status = tr_f!("Browser unavailable: {}", message);
                             cx.notify();
                         })
                         .ok();
@@ -101,8 +106,7 @@ impl BrowserView {
                     HostLifecycle::Loading => {
                         if Instant::now() > deadline {
                             this.update(cx, |this, cx| {
-                                this.status =
-                                    SharedString::from("Timed out waiting for browser host");
+                                this.status = tr!("Timed out waiting for browser host");
                                 cx.notify();
                             })
                             .ok();
@@ -115,19 +119,38 @@ impl BrowserView {
                 }
             }
 
-            match host_for_boot.create_browser(boot_url.clone(), None).await {
+            let browser_settings = this
+                .read_with(cx, |this, _cx| {
+                    let width = f32::from(this.viewport_bounds.size.width).round() as i32;
+                    let height = f32::from(this.viewport_bounds.size.height).round() as i32;
+                    CefBrowserSettings {
+                        view_width: if width > 0 { width } else { 960 },
+                        view_height: if height > 0 { height } else { 540 },
+                        device_scale_factor: this.device_scale_factor,
+                        ..Default::default()
+                    }
+                })
+                .unwrap_or_else(|_| CefBrowserSettings {
+                    device_scale_factor: initial_scale,
+                    ..Default::default()
+                });
+
+            match host_for_boot
+                .create_browser(boot_url.clone(), Some(browser_settings))
+                .await
+            {
                 Ok(id) => {
                     this.update(cx, |this, cx| {
                         this.browser_id = Some(id);
-                        this.status = SharedString::from("Ready");
+                        this.status = tr!("Ready");
+                        this.sync_viewport_to_host();
                         cx.notify();
                     })
                     .ok();
                 }
                 Err(error) => {
                     this.update(cx, |this, cx| {
-                        this.status =
-                            SharedString::from(format!("Failed to create browser: {error:#}"));
+                        this.status = tr_f!("Failed to create browser: {}", format!("{error:#}"));
                         cx.notify();
                     })
                     .ok();
@@ -141,16 +164,75 @@ impl BrowserView {
             host,
             browser_id: None,
             address,
-            title: SharedString::from("Browser"),
-            status: SharedString::from("Loading browser host…"),
+            address_field,
+            title: tr!("Browser"),
+            status: tr!("Loading browser host…"),
             latest_frame: None,
             #[cfg(target_os = "macos")]
             surface_frame: None,
+            viewport_bounds: Bounds::default(),
+            device_scale_factor: initial_scale,
             design_mode: DesignModeState::default(),
             agent_context: SharedString::default(),
             _event_task: event_task,
             _bootstrap_task: bootstrap_task,
         }
+    }
+
+    fn sync_viewport_to_host(&self) {
+        let Some(id) = self.browser_id else {
+            return;
+        };
+        let width = f32::from(self.viewport_bounds.size.width).round() as i32;
+        let height = f32::from(self.viewport_bounds.size.height).round() as i32;
+        if width <= 0 || height <= 0 {
+            return;
+        }
+        self.host
+            .resize_browser(id, width, height, self.device_scale_factor)
+            .ok();
+    }
+
+    fn update_viewport_geometry(&mut self, bounds: Bounds<Pixels>, scale_factor: f32) {
+        let size_changed = self.viewport_bounds.size != bounds.size;
+        let scale_changed = (self.device_scale_factor - scale_factor).abs() > f32::EPSILON;
+        self.viewport_bounds = bounds;
+        self.device_scale_factor = scale_factor;
+        if size_changed || scale_changed {
+            self.sync_viewport_to_host();
+        }
+    }
+
+    fn view_origin(&self) -> Point<Pixels> {
+        self.viewport_bounds.origin
+    }
+
+    fn confirm_navigation(
+        &mut self,
+        _: &menu::Confirm,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let url = self.address_field.read(cx).text(cx);
+        let url = normalize_navigation_url(&url);
+        self.navigate_to(url, cx);
+    }
+
+    fn sync_address_field_from_state(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let field_focused = self
+            .address_field
+            .focus_handle(cx)
+            .contains_focused(window, cx);
+        if field_focused {
+            return;
+        }
+        let current = self.address_field.read(cx).text(cx);
+        if current == self.address.as_ref() {
+            return;
+        }
+        self.address_field.update(cx, |field, cx| {
+            field.set_text(self.address.as_ref(), window, cx);
+        });
     }
 
     pub fn host(&self) -> &Arc<AsyncCefHost> {
@@ -188,7 +270,7 @@ impl BrowserView {
 
     pub fn navigate_to(&mut self, url: String, cx: &mut Context<Self>) {
         self.address = SharedString::from(url.clone());
-        self.status = SharedString::from("Navigating…");
+        self.status = tr!("Navigating…");
         cx.notify();
 
         let host = self.host.clone();
@@ -199,7 +281,7 @@ impl BrowserView {
             };
             if let Err(error) = host.navigate(id, url).await {
                 this.update(cx, |this, cx| {
-                    this.status = SharedString::from(format!("Navigate failed: {error:#}"));
+                    this.status = tr_f!("Navigate failed: {}", format!("{error:#}"));
                     cx.notify();
                 })
                 .ok();
@@ -218,18 +300,27 @@ impl BrowserView {
                 cx.emit(ItemEvent::UpdateTab);
             }
             CefHostEvent::LoadStart { url, .. } => {
-                self.status = SharedString::from(format!("Loading {url}…"));
+                self.status = tr_f!("Loading {}…", url);
             }
             CefHostEvent::LoadEnd { http_status, .. } => {
-                self.status = SharedString::from(format!("Loaded ({http_status})"));
+                self.status = tr_f!("Loaded ({})", http_status);
             }
             CefHostEvent::LoadError { message, .. } => {
-                self.status = SharedString::from(format!("Load error: {message}"));
+                if message == PLACEHOLDER_OSR_STATUS {
+                    self.status = tr!("Paint placeholder — CEF OSR not wired yet");
+                } else {
+                    self.status = tr_f!("Load error: {}", message);
+                }
             }
             CefHostEvent::Frame(frame) => {
                 #[cfg(target_os = "macos")]
                 {
-                    self.surface_frame = frame.to_cv_pixel_buffer().log_err();
+                    match frame.to_cv_pixel_buffer() {
+                        Ok(buffer) => self.surface_frame = Some(buffer),
+                        Err(error) => {
+                            log::warn!("CEF frame → CVPixelBuffer failed: {error:#}");
+                        }
+                    }
                 }
                 self.latest_frame = Some(frame);
             }
@@ -242,42 +333,49 @@ impl BrowserView {
 
     fn render_viewport(&self, cx: &mut Context<Self>) -> AnyElement {
         let content = self.render_viewport_content();
+        let viewport_measure = {
+            let entity = cx.entity().downgrade();
+            canvas(
+                move |bounds, window, cx| {
+                    let scale_factor = window.scale_factor();
+                    entity
+                        .update(cx, |this, _cx| {
+                            this.update_viewport_geometry(bounds, scale_factor);
+                        })
+                        .ok();
+                },
+                |_bounds, (), _window, _cx| {},
+            )
+            .size_full()
+            .absolute()
+        };
 
         // Capture relative to the viewport; Design Mode consumes input itself.
         div()
             .id("browser-viewport")
             .size_full()
             .track_focus(&self.focus_handle)
-            .on_mouse_down(
-                gpui::MouseButton::Left,
-                cx.listener(|this, event: &MouseDownEvent, _window, cx| {
-                    if this.design_mode.enabled {
-                        this.handle_design_mouse_down(event, cx);
-                        return;
-                    }
-                    let Some(id) = this.browser_id else {
-                        return;
-                    };
-                    crate::input_bridge::forward_mouse_down(&this.host, id, event);
-                }),
-            )
+            .on_any_mouse_down(cx.listener(|this, event: &MouseDownEvent, window, cx| {
+                this.focus_handle.focus(window, cx);
+                if let Some(id) = this.browser_id {
+                    this.host.set_focus(id, true).ok();
+                }
+                if this.design_mode.enabled {
+                    this.handle_design_mouse_down(event, cx);
+                    return;
+                }
+                let Some(id) = this.browser_id else {
+                    return;
+                };
+                let origin = this.view_origin();
+                crate::input_bridge::forward_mouse_down(&this.host, id, event, origin);
+            }))
+            .on_mouse_up(gpui::MouseButton::Left, cx.listener(Self::handle_mouse_up))
             .on_mouse_up(
-                gpui::MouseButton::Left,
-                cx.listener(|this, event: &MouseUpEvent, _window, cx| {
-                    if this.design_mode.enabled {
-                        if event.modifiers.shift {
-                            this.design_mode.finish_region();
-                            this.refresh_agent_context();
-                            cx.notify();
-                        }
-                        return;
-                    }
-                    let Some(id) = this.browser_id else {
-                        return;
-                    };
-                    crate::input_bridge::forward_mouse_up(&this.host, id, event);
-                }),
+                gpui::MouseButton::Middle,
+                cx.listener(Self::handle_mouse_up),
             )
+            .on_mouse_up(gpui::MouseButton::Right, cx.listener(Self::handle_mouse_up))
             .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, cx| {
                 if this.design_mode.enabled {
                     if event.modifiers.shift {
@@ -289,7 +387,8 @@ impl BrowserView {
                 let Some(id) = this.browser_id else {
                     return;
                 };
-                crate::input_bridge::forward_mouse_move(&this.host, id, event);
+                let origin = this.view_origin();
+                crate::input_bridge::forward_mouse_move(&this.host, id, event, origin);
             }))
             .on_scroll_wheel(cx.listener(|this, event: &ScrollWheelEvent, _window, _cx| {
                 if this.design_mode.enabled {
@@ -298,7 +397,8 @@ impl BrowserView {
                 let Some(id) = this.browser_id else {
                     return;
                 };
-                crate::input_bridge::forward_scroll(&this.host, id, event);
+                let origin = this.view_origin();
+                crate::input_bridge::forward_scroll(&this.host, id, event, origin);
             }))
             .on_key_down(cx.listener(|this, event: &KeyDownEvent, _window, _cx| {
                 if this.design_mode.enabled {
@@ -318,9 +418,31 @@ impl BrowserView {
                 };
                 crate::input_bridge::forward_key_up(&this.host, id, event);
             }))
+            .child(viewport_measure)
             .child(content)
             .children(self.render_design_overlays())
             .into_any_element()
+    }
+
+    fn handle_mouse_up(
+        &mut self,
+        event: &MouseUpEvent,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.design_mode.enabled {
+            if event.modifiers.shift {
+                self.design_mode.finish_region();
+                self.refresh_agent_context();
+                cx.notify();
+            }
+            return;
+        }
+        let Some(id) = self.browser_id else {
+            return;
+        };
+        let origin = self.view_origin();
+        crate::input_bridge::forward_mouse_up(&self.host, id, event, origin);
     }
 
     fn handle_design_mouse_down(&mut self, event: &MouseDownEvent, cx: &mut Context<Self>) {
@@ -385,7 +507,11 @@ impl BrowserView {
     fn render_viewport_content(&self) -> AnyElement {
         #[cfg(target_os = "macos")]
         if let Some(frame) = &self.surface_frame {
-            return gpui::surface(frame.clone()).size_full().into_any_element();
+            // Fill the DIP viewport; CEF paints physical pixels via device_scale_factor.
+            return gpui::surface(frame.clone())
+                .object_fit(ObjectFit::Fill)
+                .size_full()
+                .into_any_element();
         }
 
         if let Some(frame) = &self.latest_frame {
@@ -440,6 +566,9 @@ pub fn open_or_reuse_browser(
 
     let project = workspace.project().clone();
     let view = cx.new(|cx| BrowserView::new(project, url, window, cx));
+    view.update(cx, |view, cx| {
+        view.address_field.focus_handle(cx).focus(window, cx);
+    });
     workspace.add_item_to_active_pane(Box::new(view), None, true, window, cx);
 }
 
@@ -460,7 +589,7 @@ impl Item for BrowserView {
 
     fn tab_content_text(&self, _detail: usize, _cx: &App) -> SharedString {
         if self.title.is_empty() {
-            SharedString::from("Browser")
+            tr!("Browser")
         } else {
             self.title.clone()
         }
@@ -480,17 +609,20 @@ impl Item for BrowserView {
 }
 
 impl Render for BrowserView {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let design_label = if self.design_mode.enabled {
-            "Design Mode: On"
+            tr!("Design Mode: On")
         } else {
-            "Design Mode: Off"
+            tr!("Design Mode: Off")
         };
+
+        self.sync_address_field_from_state(window, cx);
 
         v_flex()
             .size_full()
             .key_context("Browser")
             .track_focus(&self.focus_handle(cx))
+            .on_action(cx.listener(Self::confirm_navigation))
             .child(
                 h_flex()
                     .w_full()
@@ -499,8 +631,13 @@ impl Render for BrowserView {
                     .py_1()
                     .border_b_1()
                     .border_color(cx.theme().colors().border)
-                    .child(Label::new(self.address.clone()).size(LabelSize::Small))
-                    .child(div().flex_1())
+                    .child(
+                        div()
+                            .id("browser-address-bar")
+                            .flex_1()
+                            .min_w_0()
+                            .child(self.address_field.clone()),
+                    )
                     .child(
                         Button::new("toggle-design-mode", design_label).on_click(cx.listener(
                             |this, _, _window, cx| {

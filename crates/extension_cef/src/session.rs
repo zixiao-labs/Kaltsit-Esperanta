@@ -123,7 +123,27 @@ impl AsyncCefHost {
         self.session.send(CefHostCommand::DoMessageLoopWork).await
     }
 
-    pub fn send_mouse_click_blocking(
+    pub fn resize_browser(
+        &self,
+        id: BrowserId,
+        view_width: i32,
+        view_height: i32,
+        device_scale_factor: f32,
+    ) -> Result<()> {
+        self.session.try_send(CefHostCommand::ResizeBrowser {
+            id,
+            view_width,
+            view_height,
+            device_scale_factor,
+        })
+    }
+
+    pub fn set_focus(&self, id: BrowserId, focused: bool) -> Result<()> {
+        self.session
+            .try_send(CefHostCommand::SetFocus { id, focused })
+    }
+
+    pub fn send_mouse_click(
         &self,
         id: BrowserId,
         x: f32,
@@ -131,62 +151,59 @@ impl AsyncCefHost {
         button: MouseButtonKind,
         mouse_up: bool,
         click_count: u32,
+        modifiers: u32,
     ) -> Result<()> {
-        self.session.send_blocking(CefHostCommand::SendMouseClick {
+        self.session.try_send(CefHostCommand::SendMouseClick {
             id,
             x,
             y,
             button,
             mouse_up,
             click_count,
+            modifiers,
         })
     }
 
-    pub fn send_mouse_move_blocking(
+    /// Fire-and-forget mouse move for the GPUI input path.
+    pub fn send_mouse_move(
         &self,
         id: BrowserId,
         x: f32,
         y: f32,
         mouse_leave: bool,
+        modifiers: u32,
     ) -> Result<()> {
-        self.session.send_blocking(CefHostCommand::SendMouseMove {
-            id,
-            x,
-            y,
-            mouse_leave,
-        })
-    }
-
-    /// Fire-and-forget mouse move for the GPUI input path.
-    pub fn send_mouse_move(&self, id: BrowserId, x: f32, y: f32, mouse_leave: bool) -> Result<()> {
         self.session.try_send(CefHostCommand::SendMouseMove {
             id,
             x,
             y,
             mouse_leave,
+            modifiers,
         })
     }
 
-    pub fn send_mouse_wheel_blocking(
+    pub fn send_mouse_wheel(
         &self,
         id: BrowserId,
         x: f32,
         y: f32,
         delta_x: f32,
         delta_y: f32,
+        modifiers: u32,
     ) -> Result<()> {
-        self.session.send_blocking(CefHostCommand::SendMouseWheel {
+        self.session.try_send(CefHostCommand::SendMouseWheel {
             id,
             x,
             y,
             delta_x,
             delta_y,
+            modifiers,
         })
     }
 
-    pub fn send_key_event_blocking(&self, id: BrowserId, event: KeyEventPayload) -> Result<()> {
+    pub fn send_key_event(&self, id: BrowserId, event: KeyEventPayload) -> Result<()> {
         self.session
-            .send_blocking(CefHostCommand::SendKeyEvent { id, event })
+            .try_send(CefHostCommand::SendKeyEvent { id, event })
     }
 }
 
@@ -205,7 +222,7 @@ fn load_host(settings: CefSettings, library_path: Option<String>) -> Result<CefH
 
     log::info!("Loading libcef from {}", path.display());
     let table = ffi::try_load(&path)?;
-    CefHost::new_from_table(settings, table)
+    CefHost::new_from_table(settings, table, path)
 }
 
 /// Return the first existing candidate path that successfully resolves CEF symbols.

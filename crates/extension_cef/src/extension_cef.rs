@@ -6,17 +6,20 @@
 //! callers can show a clear unavailable state.
 
 mod cdp;
+#[cfg(target_os = "macos")]
+mod cef_sys;
 mod ffi;
 mod host;
 mod managed;
 mod osr;
+mod osr_runtime;
 mod session;
 
 pub use async_host_runtime::{HostLifecycle, HostLifecycleCell};
 pub use cdp::{CdpSession, ConsoleMessage, DesignNodeInfo, NetworkEntry};
 pub use host::{
     BrowserId, CefBrowserSettings, CefHost, CefHostCommand, CefHostEvent, CefLogSeverity,
-    CefSettings, KeyEventPayload, MouseButtonKind, PaintBuffer,
+    CefSettings, KeyEventPayload, MouseButtonKind, PLACEHOLDER_OSR_STATUS, PaintBuffer,
 };
 pub use managed::{
     MANAGED_CEF_VERSION, default_cef_download_url, install_if_needed as install_managed_cef,

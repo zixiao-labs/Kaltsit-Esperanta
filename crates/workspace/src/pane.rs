@@ -4299,6 +4299,8 @@ fn default_render_tab_bar_buttons(
                                 tr!("New Center Terminal"),
                                 NewCenterTerminal::default().boxed_clone(),
                             )
+                            .separator()
+                            .action(tr!("New Browser"), zed_actions::browser::Open.boxed_clone())
                     }))
                 }),
         )

@@ -879,6 +879,29 @@ pub mod wsl_actions {
     }
 }
 
+pub mod browser {
+    use gpui::{Action, actions};
+    use schemars::JsonSchema;
+    use serde::Deserialize;
+
+    actions!(
+        browser,
+        [
+            /// Open the embedded browser in an editor tab.
+            Open,
+            /// Toggle Design Mode for the active browser tab.
+            ToggleDesignMode,
+        ]
+    );
+
+    /// Open the embedded browser at a specific URL.
+    #[derive(Clone, PartialEq, Deserialize, JsonSchema, Action)]
+    #[action(namespace = browser)]
+    pub struct OpenUrl {
+        pub url: String,
+    }
+}
+
 pub mod preview {
     pub mod markdown {
         use gpui::actions;

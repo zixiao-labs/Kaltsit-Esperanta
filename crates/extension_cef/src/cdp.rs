@@ -93,29 +93,18 @@ impl CdpSession {
     }
 
     pub fn click(&self, x: f32, y: f32) -> Result<()> {
-        self.host.send_mouse_click_blocking(
-            self.browser_id,
-            x,
-            y,
-            MouseButtonKind::Left,
-            false,
-            1,
-        )?;
-        self.host.send_mouse_click_blocking(
-            self.browser_id,
-            x,
-            y,
-            MouseButtonKind::Left,
-            true,
-            1,
-        )?;
+        self.host.send_mouse_move(self.browser_id, x, y, false, 0)?;
+        self.host
+            .send_mouse_click(self.browser_id, x, y, MouseButtonKind::Left, false, 1, 0)?;
+        self.host
+            .send_mouse_click(self.browser_id, x, y, MouseButtonKind::Left, true, 1, 0)?;
         Ok(())
     }
 
     pub fn type_text(&self, text: &str) -> Result<()> {
         for ch in text.chars() {
             let characters = ch.to_string();
-            self.host.send_key_event_blocking(
+            self.host.send_key_event(
                 self.browser_id,
                 KeyEventPayload {
                     key_down: true,
@@ -124,7 +113,7 @@ impl CdpSession {
                     modifiers: 0,
                 },
             )?;
-            self.host.send_key_event_blocking(
+            self.host.send_key_event(
                 self.browser_id,
                 KeyEventPayload {
                     key_down: false,
@@ -139,7 +128,7 @@ impl CdpSession {
 
     pub fn scroll(&self, delta_x: f32, delta_y: f32) -> Result<()> {
         self.host
-            .send_mouse_wheel_blocking(self.browser_id, 0., 0., delta_x, delta_y)
+            .send_mouse_wheel(self.browser_id, 0., 0., delta_x, delta_y, 0)
     }
 
     pub async fn screenshot(&self) -> Result<SharedPaintFrame> {
