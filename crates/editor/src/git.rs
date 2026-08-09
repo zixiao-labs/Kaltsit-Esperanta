@@ -310,9 +310,10 @@ pub(super) struct DiffHunkKey {
     pub(super) hunk_start_anchor: Anchor,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReviewCommentStatus {
+    #[default]
     Draft,
     Queued,
     Sent,
@@ -443,12 +444,6 @@ impl StoredReviewComment {
             is_editing: false,
             status: ReviewCommentStatus::Draft,
         }
-    }
-}
-
-impl Default for ReviewCommentStatus {
-    fn default() -> Self {
-        Self::Draft
     }
 }
 
@@ -1552,8 +1547,8 @@ impl Editor {
         for (hunk_key, comments) in &mut self.stored_review_comments {
             let hunk_valid = hunk_key.hunk_start_anchor.is_valid(&snapshot);
             for comment in comments {
-                let range_valid =
-                    comment.range.start.is_valid(&snapshot) && comment.range.end.is_valid(&snapshot);
+                let range_valid = comment.range.start.is_valid(&snapshot)
+                    && comment.range.end.is_valid(&snapshot);
                 if (!hunk_valid || !range_valid)
                     && comment.status != ReviewCommentStatus::Outdated
                     && comment.status != ReviewCommentStatus::Resolved
@@ -2909,11 +2904,7 @@ impl Editor {
                             .w_full()
                             .items_center()
                             .gap_1()
-                            .child(
-                                Label::new("You")
-                                    .size(LabelSize::Small)
-                                    .color(Color::Muted),
-                            )
+                            .child(Label::new("You").size(LabelSize::Small).color(Color::Muted))
                             .child(
                                 h_flex()
                                     .items_center()
@@ -2998,19 +2989,16 @@ impl Editor {
                     .gap_0p5()
                     .visible_on_hover(group_id)
                     .child(
-                        IconButton::new(
-                            format!("diff-review-edit-{comment_id}"),
-                            IconName::Pencil,
-                        )
-                        .icon_color(ui::Color::Muted)
-                        .icon_size(action_icon_size)
-                        .tooltip(Tooltip::text("Edit comment"))
-                        .on_click(move |_, window, cx| {
-                            window.dispatch_action(
-                                Box::new(crate::actions::EditReviewComment { id: comment_id }),
-                                cx,
-                            );
-                        }),
+                        IconButton::new(format!("diff-review-edit-{comment_id}"), IconName::Pencil)
+                            .icon_color(ui::Color::Muted)
+                            .icon_size(action_icon_size)
+                            .tooltip(Tooltip::text("Edit comment"))
+                            .on_click(move |_, window, cx| {
+                                window.dispatch_action(
+                                    Box::new(crate::actions::EditReviewComment { id: comment_id }),
+                                    cx,
+                                );
+                            }),
                     )
                     .child(
                         IconButton::new(

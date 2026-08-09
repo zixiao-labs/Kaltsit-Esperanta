@@ -225,11 +225,7 @@ pub trait Extension: Send + Sync + 'static {
         ))
     }
 
-    async fn resolve_review_thread(
-        &self,
-        provider_id: Arc<str>,
-        thread_id: String,
-    ) -> Result<()> {
+    async fn resolve_review_thread(&self, provider_id: Arc<str>, thread_id: String) -> Result<()> {
         Err(anyhow!(
             "resolve_review_thread is not implemented for provider {provider_id} thread {thread_id}"
         ))

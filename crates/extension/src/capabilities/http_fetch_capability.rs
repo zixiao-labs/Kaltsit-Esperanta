@@ -62,7 +62,11 @@ mod tests {
             path: vec!["**".to_string()],
         };
         assert_eq!(
-            capability.allows(&"https://api.github.com/repos/zed/zed/pulls".parse().unwrap()),
+            capability.allows(
+                &"https://api.github.com/repos/zed/zed/pulls"
+                    .parse()
+                    .unwrap()
+            ),
             true
         );
         assert_eq!(

@@ -304,9 +304,8 @@ fn format_review_feedback_message(feedback: &[ReviewFeedback]) -> anyhow::Result
     }
 
     let payload = serde_json::to_string_pretty(feedback)?;
-    message.push_str(
-        "\n<details>\n<summary>Machine-readable review feedback</summary>\n\n```json\n",
-    );
+    message
+        .push_str("\n<details>\n<summary>Machine-readable review feedback</summary>\n\n```json\n");
     message.push_str(&payload);
     message.push_str("\n```\n</details>\n");
     Ok(message)
