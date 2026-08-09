@@ -129,7 +129,7 @@ fi
 # We use llvm-objcopy because GNU objcopy on older distros (e.g. Ubuntu 20.04)
 # doesn't understand CREL sections produced by newer LLVM.
 llvm-objcopy --strip-debug "${target_dir}/${target_triple}/release/${BIN_NAME}"
-llvm-objcopy --strip-debug "${target_dir}/${target_triple}/release/cli"
+llvm-objcopy --strip-debug "${target_dir}/${target_triple}/release/zeta"
 llvm-objcopy --strip-debug "${target_dir}/${remote_server_triple}/release/remote_server"
 
 # Ensure that remote_server does not depend on libssl nor libcrypto, as we got rid of these deps.
@@ -154,7 +154,7 @@ app_dir="${temp_dir}/${BIN_NAME}${suffix}.app"
 # Binary
 mkdir -p "${app_dir}/bin" "${app_dir}/libexec"
 cp "${target_dir}/${target_triple}/release/${BIN_NAME}" "${app_dir}/libexec/zed-editor"
-cp "${target_dir}/${target_triple}/release/cli" "${app_dir}/bin/zed"
+cp "${target_dir}/${target_triple}/release/zeta" "${app_dir}/bin/zeta"
 
 # Libs
 # Bundle libstdc++ so older supported systems can run binaries built with our

@@ -15,6 +15,8 @@ workspace = true
 tracy = ["ztracing/tracy"]
 # LEAK_BACKTRACE=1 cargo run --features zed/track-project-leak --profile release-fast
 track-project-leak = ["gpui/leak-detection"]
+# Embed deno_core / V8 for Deno JS extensions in production bundles.
+deno-core = ["extension_host/deno-core"]
 test-support = [
     "gpui/test-support",
     "gpui_platform/screen-capture",
@@ -79,6 +81,7 @@ auto_update_ui.workspace = true
 ama10-i18n.workspace = true
 ama10-ui.workspace = true
 breadcrumbs.workspace = true
+browser_ui.workspace = true
 call.workspace = true
 chrono.workspace = true
 channel.workspace = true

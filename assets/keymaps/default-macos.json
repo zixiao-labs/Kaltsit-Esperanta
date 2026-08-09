@@ -1675,6 +1675,14 @@
     },
   },
   {
+    "context": "Browser",
+    "use_key_equivalents": true,
+    "bindings": {
+      "cmd-shift-d": "browser::ToggleDesignMode",
+      "cmd-l": "browser::Open",
+    },
+  },
+  {
     "context": "GitGraphSearchBar > Editor",
     "bindings": {
       "tab": "git_graph::FocusNextTabStop",

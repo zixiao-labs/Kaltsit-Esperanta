@@ -27,6 +27,8 @@ enum CliCommand {
     WslSandboxTests(tasks::wsl_sandbox_tests::WslSandboxTestsArgs),
     /// Downloads the pinned `webrtc-sys` release and configures `LK_CUSTOM_WEBRTC`.
     SetupWebrtc(tasks::setup_webrtc::SetupWebrtcArgs),
+    /// Warms the pinned `deno_core` / V8 prebuilt for production Deno embedding.
+    SetupDeno(tasks::setup_deno::SetupDenoArgs),
     /// Builds GPUI web examples and serves them.
     WebExamples(tasks::web_examples::WebExamplesArgs),
     Workflows(tasks::workflows::GenerateWorkflowArgs),
@@ -47,6 +49,7 @@ fn main() -> Result<()> {
         CliCommand::SandboxTests(args) => tasks::sandbox_tests::run_sandbox_tests(args),
         CliCommand::WslSandboxTests(args) => tasks::wsl_sandbox_tests::run_wsl_sandbox_tests(args),
         CliCommand::SetupWebrtc(args) => tasks::setup_webrtc::run_setup_webrtc(args),
+        CliCommand::SetupDeno(args) => tasks::setup_deno::run_setup_deno(args),
         CliCommand::WebExamples(args) => tasks::web_examples::run_web_examples(args),
         CliCommand::Workflows(args) => tasks::workflows::run_workflows(args),
         CliCommand::CheckWorkflows(args) => tasks::workflow_checks::validate(args),

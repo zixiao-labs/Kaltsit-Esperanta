@@ -54,7 +54,7 @@ main() {
 
     "$platform" "$@"
 
-    if [ "$(command -v zed)" = "$HOME/.local/bin/zed" ]; then
+    if [ "$(command -v zeta)" = "$HOME/.local/bin/zeta" ]; then
         echo "Zed has been installed. Run with 'zed'"
     else
         echo "To run Zed from your terminal, you must add ~/.local/bin to your PATH"
@@ -74,7 +74,7 @@ main() {
                 ;;
         esac
 
-        echo "To run Zed now, '~/.local/bin/zed'"
+        echo "To run ZetaCode now, '~/.local/bin/zeta'"
     fi
 }
 
@@ -120,11 +120,15 @@ linux() {
     mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications"
 
     # Link the binary
-    if [ -f "$HOME/.local/zed$suffix.app/bin/zed" ]; then
-        ln -sf "$HOME/.local/zed$suffix.app/bin/zed" "$HOME/.local/bin/zed"
+    if [ -f "$HOME/.local/zed$suffix.app/bin/zeta" ]; then
+        ln -sf "$HOME/.local/zed$suffix.app/bin/zeta" "$HOME/.local/bin/zeta"
     else
-        # support for versions before 0.139.x.
-        ln -sf "$HOME/.local/zed$suffix.app/bin/cli" "$HOME/.local/bin/zed"
+        # support for versions that still shipped bin/cli or bin/zed.
+        if [ -f "$HOME/.local/zed$suffix.app/bin/cli" ]; then
+            ln -sf "$HOME/.local/zed$suffix.app/bin/cli" "$HOME/.local/bin/zeta"
+        else
+            ln -sf "$HOME/.local/zed$suffix.app/bin/zed" "$HOME/.local/bin/zeta"
+        fi
     fi
 
     # Copy .desktop file
@@ -137,7 +141,8 @@ linux() {
         cp "$src_dir/zed$suffix.desktop" "${desktop_file_path}"
     fi
     sed -i "s|Icon=zed|Icon=$HOME/.local/zed$suffix.app/share/icons/hicolor/512x512/apps/zed.png|g" "${desktop_file_path}"
-    sed -i "s|Exec=zed|Exec=$HOME/.local/zed$suffix.app/bin/zed|g" "${desktop_file_path}"
+    sed -i "s|Exec=zed|Exec=$HOME/.local/zed$suffix.app/bin/zeta|g" "${desktop_file_path}"
+    sed -i "s|Exec=zeta|Exec=$HOME/.local/zed$suffix.app/bin/zeta|g" "${desktop_file_path}"
 }
 
 macos() {
@@ -155,7 +160,11 @@ macos() {
 
     mkdir -p "$HOME/.local/bin"
     # Link the binary
-    ln -sf "/Applications/$app/Contents/MacOS/cli" "$HOME/.local/bin/zed"
+    if [ -f "/Applications/$app/Contents/MacOS/zeta" ]; then
+        ln -sf "/Applications/$app/Contents/MacOS/zeta" "$HOME/.local/bin/zeta"
+    else
+        ln -sf "/Applications/$app/Contents/MacOS/cli" "$HOME/.local/bin/zeta"
+    fi
 }
 
 main "$@"

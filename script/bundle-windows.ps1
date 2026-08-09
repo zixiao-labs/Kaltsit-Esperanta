@@ -119,10 +119,10 @@ function GenerateLicenses {
 
 function BuildZedAndItsFriends {
     Write-Output "Building $BinName and its friends, for channel: $channel"
-    # Build the editor binary, cli.exe and auto_update_helper.exe
+    # Build the editor binary, zeta.exe and auto_update_helper.exe
     cargo build --release --package zed --package cli --package auto_update_helper --target $target
     Copy-Item -Path ".\$CargoOutDir\$BinName.exe" -Destination "$innoDir\$BinName.exe" -Force
-    Copy-Item -Path ".\$CargoOutDir\cli.exe" -Destination "$innoDir\cli.exe" -Force
+    Copy-Item -Path ".\$CargoOutDir\zeta.exe" -Destination "$innoDir\zeta.exe" -Force
     Copy-Item -Path ".\$CargoOutDir\auto_update_helper.exe" -Destination "$innoDir\auto_update_helper.exe" -Force
     # Build explorer_command_injector.dll
     switch ($channel) {
@@ -161,7 +161,7 @@ function BuildRemoteServer {
 function ZipZedAndItsFriendsDebug {
     $items = @(
         ".\$CargoOutDir\$BinName.pdb",
-        ".\$CargoOutDir\cli.pdb",
+        ".\$CargoOutDir\zeta.pdb",
         ".\$CargoOutDir\auto_update_helper.pdb",
         ".\$CargoOutDir\explorer_command_injector.pdb",
         ".\$CargoOutDir\remote_server.pdb"
@@ -222,7 +222,7 @@ function SignZedAndItsFriends {
         return
     }
 
-    $files = "$innoDir\$BinName.exe,$innoDir\cli.exe,$innoDir\auto_update_helper.exe,$innoDir\zed_explorer_command_injector.dll,$innoDir\zed_explorer_command_injector.appx"
+    $files = "$innoDir\$BinName.exe,$innoDir\zeta.exe,$innoDir\auto_update_helper.exe,$innoDir\zed_explorer_command_injector.dll,$innoDir\zed_explorer_command_injector.appx"
     & "$innoDir\sign.ps1" $files
 }
 
@@ -246,7 +246,7 @@ function DownloadConpty {
 function CollectFiles {
     Move-Item -Path "$innoDir\zed_explorer_command_injector.appx" -Destination "$innoDir\appx\zed_explorer_command_injector.appx" -Force
     Move-Item -Path "$innoDir\zed_explorer_command_injector.dll" -Destination "$innoDir\appx\zed_explorer_command_injector.dll" -Force
-    Move-Item -Path "$innoDir\cli.exe" -Destination "$innoDir\bin\zed.exe" -Force
+    Move-Item -Path "$innoDir\zeta.exe" -Destination "$innoDir\bin\zeta.exe" -Force
     Move-Item -Path "$innoDir\zed.sh" -Destination "$innoDir\bin\zed" -Force
     Move-Item -Path "$innoDir\auto_update_helper.exe" -Destination "$innoDir\tools\auto_update_helper.exe" -Force
     if($Architecture -eq "aarch64") {

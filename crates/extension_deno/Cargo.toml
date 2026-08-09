@@ -1,0 +1,33 @@
+[package]
+name = "extension_deno"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+license = "GPL-3.0-or-later"
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/extension_deno.rs"
+doctest = false
+
+[features]
+default = []
+# Pulls deno_core / V8. Off by default so CI and developer builds stay light;
+# enable for full JsRuntime embedding.
+deno-core = ["dep:deno_core"]
+
+[dependencies]
+anyhow.workspace = true
+async_host_runtime.workspace = true
+async-channel.workspace = true
+serde.workspace = true
+
+[dependencies.deno_core]
+version = "0.340.0"
+optional = true
+
+[dev-dependencies]
+smol.workspace = true
+tempfile.workspace = true

@@ -331,17 +331,17 @@ pub fn get_zed_cli_path() -> Result<PathBuf> {
         .context("Failed to determine parent directory of zed executable path.")?;
 
     let possible_locations: &[&str] = if cfg!(target_os = "macos") {
-        // On macOS, the zed executable and zed-cli are inside the app bundle,
-        // so here ./cli is for both installed and development builds.
-        &["./cli"]
+        // On macOS, the editor and CLI are inside the app bundle,
+        // so here ./zeta is for both installed and development builds.
+        &["./zeta"]
     } else if cfg!(target_os = "windows") {
-        // bin/zed.exe is for installed builds, ./cli.exe is for development builds.
-        &["bin/zed.exe", "./cli.exe"]
+        // bin/zeta.exe is for installed builds, ./zeta.exe is for development builds.
+        &["bin/zeta.exe", "./zeta.exe"]
     } else if cfg!(target_os = "linux") || cfg!(target_os = "freebsd") {
-        // bin is the standard, ./cli is for the target directory in development builds.
-        &["../bin/zed", "./cli"]
+        // bin is the standard, ./zeta is for the target directory in development builds.
+        &["../bin/zeta", "./zeta"]
     } else {
-        anyhow::bail!("unsupported platform for determining zed-cli path");
+        anyhow::bail!("unsupported platform for determining zeta CLI path");
     };
 
     possible_locations

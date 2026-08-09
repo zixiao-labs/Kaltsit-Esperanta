@@ -1,7 +1,27 @@
-# 适用于带有WebView的扩展的CEF绑定
+# CEF bindings (`extension_cef`)
 
-此处由于FFI，unsafe代码可能较多，心脏不好的慎入（虽然不会让整个编辑器段错误但是别让Nathan Sobo看到，GPUI也是unsafe堆出来的）
+Dynamically links Chromium Embedded Framework (`libcef`) for the embedded
+browser / frontend-enhancement stack. The shared library is **not** compiled
+into the editor.
 
-将使用C ABI（extern "C"）暴露动态链接接口（省我们的编译时间&最终包存储空间&内存占用，阿里云ECS和OSS很贵的）
+## Loading model
 
-请确保libcef，libcef_dll_wrapper和libcef.lib（如果需要）在系统中，不然会遇到扩展无法激活的情况
+- `AsyncCefHost` opens `libcef` on a dedicated background thread via
+  `async_host_runtime` so GPUI never blocks on `dlopen`.
+- Production installs use a managed download under `data_dir/cef/<version>/`
+  (menu: **Install Browser Runtime**). The default artifact comes from the
+  Spotify CEF CDN (`cef-builds.spotifycdn.com`, minimal distribution). After
+  the first install, component-only auto-update
+  (`auto_update::init_component_updates`) can refresh the pin —
+  full-application auto-update stays off.
+- Override the artifact URL with `ZETA_CEF_DOWNLOAD_URL`.
+- When the library is missing, the host falls back to stub mode (fail-soft).
+  Tests use `AsyncCefHost::spawn_stub` or the `force-stub` feature.
+
+## Required libraries
+
+Probe order: managed install → platform defaults:
+
+- macOS: `Chromium Embedded Framework`
+- Linux: `libcef.so`
+- Windows: `libcef.dll`

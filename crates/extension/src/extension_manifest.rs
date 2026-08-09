@@ -316,6 +316,7 @@ impl TargetConfig {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum ExtensionLibraryKind {
     Rust,
+    Deno,
 }
 
 #[derive(Clone, Default, PartialEq, Eq, Debug, Deserialize, Serialize)]

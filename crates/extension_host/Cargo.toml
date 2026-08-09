@@ -14,6 +14,7 @@ doctest = false
 
 [features]
 test-support = []
+deno-core = ["extension_deno/deno-core"]
 
 [dependencies]
 anyhow.workspace = true
@@ -25,6 +26,7 @@ cloud_api_types.workspace = true
 collections.workspace = true
 dap.workspace = true
 extension.workspace = true
+extension_deno.workspace = true
 fs.workspace = true
 futures.workspace = true
 gpui.workspace = true
