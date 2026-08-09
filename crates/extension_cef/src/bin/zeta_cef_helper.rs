@@ -1,17 +1,6 @@
 //! CEF subprocess helper for macOS.
 
-use std::env;
-use std::ffi::CString;
-use std::path::PathBuf;
 use std::process;
-
-use libloading::{Library, Symbol};
-
-#[repr(C)]
-struct CefMainArgs {
-    argc: std::ffi::c_int,
-    argv: *mut *mut std::ffi::c_char,
-}
 
 fn main() {
     if let Err(error) = run() {
@@ -20,53 +9,63 @@ fn main() {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 fn run() -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(not(target_os = "macos"))]
-    {
-        return Err("zeta-cef-helper is only supported on macOS".into());
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let framework_binary = resolve_framework_binary()?;
-        let library = unsafe { Library::new(&framework_binary)? };
-
-        type CefExecuteProcessFn = unsafe extern "C" fn(
-            args: *const CefMainArgs,
-            application: *mut std::ffi::c_void,
-            windows_sandbox_info: *mut std::ffi::c_void,
-        ) -> std::ffi::c_int;
-
-        let cef_execute_process: Symbol<CefExecuteProcessFn> =
-            unsafe { library.get(b"cef_execute_process\0")? };
-
-        let args: Vec<CString> = env::args()
-            .map(|argument| {
-                CString::new(argument).unwrap_or_else(|_| CString::new("").expect("empty"))
-            })
-            .collect();
-        let mut argv: Vec<*mut std::ffi::c_char> = args
-            .iter()
-            .map(|arg| arg.as_ptr() as *mut std::ffi::c_char)
-            .collect();
-
-        let main_args = CefMainArgs {
-            argc: argv.len() as std::ffi::c_int,
-            argv: argv.as_mut_ptr(),
-        };
-
-        let exit_code =
-            unsafe { cef_execute_process(&main_args, std::ptr::null_mut(), std::ptr::null_mut()) };
-
-        if exit_code == -1 {
-            process::exit(0);
-        }
-        process::exit(exit_code);
-    }
+    Err("zeta-cef-helper is only supported on macOS".into())
 }
 
 #[cfg(target_os = "macos")]
-fn resolve_framework_binary() -> Result<PathBuf, Box<dyn std::error::Error>> {
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    use std::env;
+    use std::ffi::CString;
+
+    use libloading::{Library, Symbol};
+
+    #[repr(C)]
+    struct CefMainArgs {
+        argc: std::ffi::c_int,
+        argv: *mut *mut std::ffi::c_char,
+    }
+
+    let framework_binary = resolve_framework_binary()?;
+    let library = unsafe { Library::new(&framework_binary)? };
+
+    type CefExecuteProcessFn = unsafe extern "C" fn(
+        args: *const CefMainArgs,
+        application: *mut std::ffi::c_void,
+        windows_sandbox_info: *mut std::ffi::c_void,
+    ) -> std::ffi::c_int;
+
+    let cef_execute_process: Symbol<CefExecuteProcessFn> =
+        unsafe { library.get(b"cef_execute_process\0")? };
+
+    let args: Vec<CString> = env::args()
+        .map(|argument| CString::new(argument).unwrap_or_else(|_| CString::new("").expect("empty")))
+        .collect();
+    let mut argv: Vec<*mut std::ffi::c_char> = args
+        .iter()
+        .map(|arg| arg.as_ptr() as *mut std::ffi::c_char)
+        .collect();
+
+    let main_args = CefMainArgs {
+        argc: argv.len() as std::ffi::c_int,
+        argv: argv.as_mut_ptr(),
+    };
+
+    let exit_code =
+        unsafe { cef_execute_process(&main_args, std::ptr::null_mut(), std::ptr::null_mut()) };
+
+    if exit_code == -1 {
+        process::exit(0);
+    }
+    process::exit(exit_code);
+}
+
+#[cfg(target_os = "macos")]
+fn resolve_framework_binary() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
+    use std::env;
+    use std::path::PathBuf;
+
     if let Ok(path) = env::var("ZETA_CEF_FRAMEWORK") {
         let framework = PathBuf::from(path);
         let binary = framework.join("Chromium Embedded Framework");
