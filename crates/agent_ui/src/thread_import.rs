@@ -586,7 +586,7 @@ impl Render for ThreadImportModal {
                         Section::new().child(
                             v_flex()
                                 .id("thread-import-agent-list")
-                                .max_h(rems_from_px(320.))
+                                .max_h(rems_from_px(320_f32))
                                 .pb_1()
                                 .overflow_y_scroll()
                                 .when(has_agents, |this| this.children(agent_rows))
@@ -631,7 +631,7 @@ impl Render for ThreadImportModal {
                                     .disabled(disabled_import_thread)
                                     .key_binding(
                                         KeyBinding::for_action(&menu::SecondaryConfirm, cx)
-                                            .map(|kb| kb.size(rems_from_px(12.))),
+                                            .map(|kb| kb.size(rems_from_px(12_f32))),
                                     )
                                     .on_click(cx.listener(|this, _, window, cx| {
                                         this.import_threads(&menu::SecondaryConfirm, window, cx);
