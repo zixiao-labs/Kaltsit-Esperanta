@@ -179,13 +179,8 @@ impl Render for ChannelModal {
                                 .on_click(cx.listener(Self::set_channel_visibility)),
                             )
                             .children(
-<<<<<<< HEAD
-                                Some(
-                                    Button::new("copy-link", tr!("Copy Link"))
-=======
                                 (visibility == ChannelVisibility::Public).then_some(
-                                    Button::new("copy-link", "Copy Link")
->>>>>>> upstream/main
+                                    Button::new("copy-link", tr!("Copy Link"))
                                         .label_size(LabelSize::Small)
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             if let Some(channel) = this

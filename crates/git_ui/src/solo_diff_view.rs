@@ -876,13 +876,8 @@ impl Render for SoloDiffGitToolbar {
             )
             .child(Divider::vertical())
             .child(h_group_sm().child(if button_states.stage_file {
-<<<<<<< HEAD
                 Button::new("stage-file", ama10_i18n::tr!("Stage All"))
-                    .width(rems_from_px(80.))
-=======
-                Button::new("stage-file", "Stage All")
                     .width(rems_from_px(80_f32))
->>>>>>> upstream/main
                     .disabled(!button_states.stage_file)
                     .tooltip(Tooltip::for_action_title_in(
                         ama10_i18n::tr!("Stage All"),
@@ -891,13 +886,8 @@ impl Render for SoloDiffGitToolbar {
                     ))
                     .on_click(cx.listener(|this, _, window, cx| this.stage_file(window, cx)))
             } else {
-<<<<<<< HEAD
                 Button::new("unstage-file", ama10_i18n::tr!("Unstage All"))
-                    .width(rems_from_px(80.))
-=======
-                Button::new("unstage-file", "Unstage All")
                     .width(rems_from_px(80_f32))
->>>>>>> upstream/main
                     .disabled(!button_states.unstage_file)
                     .tooltip(Tooltip::for_action_title_in(
                         ama10_i18n::tr!("Unstage All"),

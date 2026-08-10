@@ -2053,11 +2053,7 @@ impl Pane {
                                 );
                                 window.prompt(
                                     PromptLevel::Warning,
-<<<<<<< HEAD
                                     tr_f!("Unable to save file: {}", &err).as_ref(),
-=======
-                                    &format!("Unable to save file: {err}"),
->>>>>>> upstream/main
                                     Some(&detail),
                                     &[
                                         PromptButton::new(tr!("Close Without Saving")),

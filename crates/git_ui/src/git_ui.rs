@@ -60,7 +60,6 @@ pub mod unstaged_diff;
 pub use blame_ui::GitBlameStatus;
 pub use conflict_view::MergeConflictIndicator;
 
-<<<<<<< HEAD
 pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Entity<Editor>> {
     workspace
         .active_item_as::<ProjectDiff>(cx)
@@ -82,22 +81,6 @@ pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Enti
         })
 }
 
-pub fn get_provider_icon(name: &str) -> IconName {
-    match name {
-        "Bitbucket" => IconName::Bitbucket,
-        "Chromium" => IconName::Gerrit,
-        "Codeberg" => IconName::Codeberg,
-        "Forgejo Self-Hosted" => IconName::Forgejo,
-        "GitHub" => IconName::Github,
-        "GitLab" => IconName::Gitlab,
-        "Gitea" => IconName::Gitea,
-        "SourceHut" => IconName::Sourcehut,
-        _ => IconName::Link,
-    }
-}
-
-=======
->>>>>>> upstream/main
 pub fn init(cx: &mut App) {
     editor::set_blame_renderer(blame_ui::GitBlameRenderer, cx);
     commit_view::init(cx);

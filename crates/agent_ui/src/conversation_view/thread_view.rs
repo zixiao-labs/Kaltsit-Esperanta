@@ -2388,7 +2388,6 @@ impl ThreadView {
         removed
     }
 
-    #[expect(dead_code)]
     fn toggle_queue_entry_steer(&mut self, id: QueueEntryId, cx: &mut Context<Self>) {
         self.message_queue.toggle_steer(id);
         self.sync_queue_flag_to_native_thread(cx);
@@ -4670,8 +4669,6 @@ impl ThreadView {
             .into_any()
     }
 
-<<<<<<< HEAD
-=======
     fn render_queue_steer_button(
         &self,
         entry_id: QueueEntryId,
@@ -4682,7 +4679,7 @@ impl ThreadView {
     ) -> impl IntoElement {
         let focus_handle = self.message_editor.focus_handle(cx);
 
-        Button::new(("steer", index), "Steer")
+        Button::new(("steer", index), ama10_i18n::tr!("Steer"))
             .label_size(LabelSize::Small)
             .toggle_state(steer_on)
             .selected_style(ButtonStyle::Tinted(TintColor::Accent))
@@ -4694,10 +4691,12 @@ impl ThreadView {
             })
             .tooltip(move |_window, cx| {
                 Tooltip::with_meta(
-                    "Steer",
+                    ama10_i18n::tr!("Steer"),
                     None,
-                    "Interrupt the agent at its next step to send this message. \
-                     When off, queued messages wait for the agent to finish.",
+                    ama10_i18n::tr!(
+                        "Interrupt the agent at its next step to send this message. \
+                     When off, queued messages wait for the agent to finish."
+                    ),
                     cx,
                 )
             })
@@ -4706,7 +4705,6 @@ impl ThreadView {
             }))
     }
 
->>>>>>> upstream/main
     fn render_message_queue_entries(
         &self,
         _window: &mut Window,
@@ -4717,6 +4715,7 @@ impl ThreadView {
 
         let queue_len = self.message_queue.len();
         let can_fast_track = self.message_queue.can_fast_track() && queue_len > 0;
+        let is_native = self.as_native_thread(cx).is_some();
 
         v_flex()
             .id("message_queue_list")
@@ -4733,14 +4732,9 @@ impl ThreadView {
                 };
 
                 let editor_focused = editor.focus_handle(cx).is_focused(_window);
-<<<<<<< HEAD
-                let keybinding_size = rems_from_px(12.);
-=======
                 let keybinding_size = rems_from_px(12_f32);
                 let steer_on = entry.steer;
-
                 let min_width = rems_from_px(160_f32);
->>>>>>> upstream/main
 
                 h_flex()
                     .group("queue_entry")
@@ -4766,7 +4760,7 @@ impl ThreadView {
                     .child(if editor_focused {
                         h_flex()
                             .gap_1()
-                            .min_w(rems_from_px(150.))
+                            .min_w(min_width)
                             .justify_end()
                             .child(
                                 IconButton::new(("edit", index), IconName::Pencil)
@@ -4785,6 +4779,11 @@ impl ThreadView {
                                         );
                                     })),
                             )
+                            .when(is_native, |row| {
+                                row.child(self.render_queue_steer_button(
+                                    entry_id, index, is_next, steer_on, cx,
+                                ))
+                            })
                             .child(
                                 Button::new(
                                     ("send_now_focused", index),
@@ -4810,7 +4809,7 @@ impl ThreadView {
                         h_flex()
                             .when(!is_next, |this| this.visible_on_hover("queue_entry"))
                             .gap_1()
-                            .min_w(rems_from_px(150.))
+                            .min_w(min_width)
                             .justify_end()
                             .child(
                                 IconButton::new(("delete", index), IconName::Trash)
@@ -4862,6 +4861,11 @@ impl ThreadView {
                                         );
                                     })),
                             )
+                            .when(is_native, |row| {
+                                row.child(self.render_queue_steer_button(
+                                    entry_id, index, is_next, steer_on, cx,
+                                ))
+                            })
                             .child(
                                 Button::new(("send_now", index), ama10_i18n::tr!("Send Now"))
                                     .label_size(LabelSize::Small)
@@ -12534,6 +12538,16 @@ impl Render for ThreadView {
                     this.move_queued_message_to_main_editor(id, None, None, window, cx);
                 }
             }))
+            .on_action(
+                cx.listener(|this, _: &ToggleSteerFirstQueuedMessage, _, cx| {
+                    if this.as_native_thread(cx).is_none() {
+                        return;
+                    }
+                    if let Some(id) = this.message_queue.first_id() {
+                        this.toggle_queue_entry_steer(id, cx);
+                    }
+                }),
+            )
             .on_action(cx.listener(|this, _: &ClearMessageQueue, _, cx| {
                 this.message_queue.clear();
                 this.sync_queue_flag_to_native_thread(cx);

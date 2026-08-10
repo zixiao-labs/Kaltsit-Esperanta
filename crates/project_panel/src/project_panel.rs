@@ -1131,12 +1131,8 @@ impl ProjectPanel {
             };
 
             let has_pasteable_content = self.has_pasteable_content(cx);
-<<<<<<< HEAD
             let entity = cx.entity();
-            let context_menu = ContextMenu::build(window, cx, |menu, _, cx| {
-=======
             let context_menu = ContextMenu::build(window, cx, |menu, _, _| {
->>>>>>> upstream/main
                 menu.context(self.focus_handle.clone()).map(|menu| {
                     if is_read_only {
                         menu.when(is_dir, |menu| {
@@ -1173,7 +1169,6 @@ impl ProjectPanel {
                                 )
                             })
                             .separator()
-<<<<<<< HEAD
                             .action(tr!("Cut"), Box::new(Cut))
                             .action(tr!("Copy"), Box::new(Copy))
                             .action(tr!("Duplicate"), Box::new(Duplicate))
@@ -1182,37 +1177,13 @@ impl ProjectPanel {
                                 tr!("Paste"),
                                 Box::new(Paste),
                             )
-                            .when(
-                                !is_collab && cx.has_flag::<ProjectPanelUndoRedoFeatureFlag>(),
-                                |menu| {
-                                    let can_undo = self.undo_manager.can_undo();
-                                    let can_redo = self.undo_manager.can_redo();
-
-                                    menu.action_disabled_when(
-                                        !can_undo,
-                                        tr!("Undo"),
-                                        Box::new(Undo),
-                                    )
-                                    .action_disabled_when(
-                                        !can_redo,
-                                        tr!("Redo"),
-                                        Box::new(Redo),
-                                    )
-                                },
-                            )
-=======
-                            .action("Cut", Box::new(Cut))
-                            .action("Copy", Box::new(Copy))
-                            .action("Duplicate", Box::new(Duplicate))
-                            .action_disabled_when(!has_pasteable_content, "Paste", Box::new(Paste))
                             .when(!is_collab, |menu| {
                                 let can_undo = self.undo_manager.can_undo();
                                 let can_redo = self.undo_manager.can_redo();
 
-                                menu.action_disabled_when(!can_undo, "Undo", Box::new(Undo))
-                                    .action_disabled_when(!can_redo, "Redo", Box::new(Redo))
+                                menu.action_disabled_when(!can_undo, tr!("Undo"), Box::new(Undo))
+                                    .action_disabled_when(!can_redo, tr!("Redo"), Box::new(Redo))
                             })
->>>>>>> upstream/main
                             .when(is_remote, |menu| {
                                 menu.separator()
                                     .action(tr!("Download..."), Box::new(DownloadFromRemote))
