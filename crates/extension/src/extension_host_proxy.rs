@@ -32,7 +32,7 @@ pub struct ExtensionHostProxy {
     context_server_proxy: RwLock<Option<Arc<dyn ExtensionContextServerProxy>>>,
     debug_adapter_provider_proxy: RwLock<Option<Arc<dyn ExtensionDebugAdapterProviderProxy>>>,
     language_model_provider_proxy: RwLock<Option<Arc<dyn ExtensionLanguageModelProviderProxy>>>,
-    pull_request_proxy: RwLock<Option<Arc<dyn ExtensionPullRequestProxy>>>,
+    pull_request_provider_proxy: RwLock<Option<Arc<dyn ExtensionPullRequestProviderProxy>>>,
 }
 
 impl ExtensionHostProxy {
@@ -58,7 +58,7 @@ impl ExtensionHostProxy {
             context_server_proxy: RwLock::default(),
             debug_adapter_provider_proxy: RwLock::default(),
             language_model_provider_proxy: RwLock::default(),
-            pull_request_proxy: RwLock::default(),
+            pull_request_provider_proxy: RwLock::default(),
         }
     }
 
@@ -101,8 +101,8 @@ impl ExtensionHostProxy {
             .replace(Arc::new(proxy));
     }
 
-    pub fn register_pull_request_proxy(&self, proxy: impl ExtensionPullRequestProxy) {
-        self.pull_request_proxy.write().replace(Arc::new(proxy));
+    pub fn register_pull_request_provider_proxy(&self, proxy: impl ExtensionPullRequestProviderProxy) {
+        self.pull_request_provider_proxy.write().replace(Arc::new(proxy));
     }
 }
 
@@ -474,7 +474,7 @@ impl ExtensionLanguageModelProviderProxy for ExtensionHostProxy {
 }
 
 /// Registers pull-request / merge-request providers contributed by extensions.
-pub trait ExtensionPullRequestProxy: Send + Sync + 'static {
+pub trait ExtensionPullRequestProviderProxy: Send + Sync + 'static {
     fn register_pull_request_provider(
         &self,
         extension: Arc<dyn Extension>,
@@ -486,7 +486,7 @@ pub trait ExtensionPullRequestProxy: Send + Sync + 'static {
     fn unregister_pull_request_provider(&self, provider_id: Arc<str>, cx: &mut App);
 }
 
-impl ExtensionPullRequestProxy for ExtensionHostProxy {
+impl ExtensionPullRequestProviderProxy for ExtensionHostProxy {
     fn register_pull_request_provider(
         &self,
         extension: Arc<dyn Extension>,
@@ -494,7 +494,7 @@ impl ExtensionPullRequestProxy for ExtensionHostProxy {
         label: SharedString,
         cx: &mut App,
     ) {
-        let Some(proxy) = self.pull_request_proxy.read().clone() else {
+        let Some(proxy) = self.pull_request_provider_proxy.read().clone() else {
             return;
         };
 
@@ -502,7 +502,7 @@ impl ExtensionPullRequestProxy for ExtensionHostProxy {
     }
 
     fn unregister_pull_request_provider(&self, provider_id: Arc<str>, cx: &mut App) {
-        let Some(proxy) = self.pull_request_proxy.read().clone() else {
+        let Some(proxy) = self.pull_request_provider_proxy.read().clone() else {
             return;
         };
 

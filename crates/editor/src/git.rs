@@ -1545,11 +1545,11 @@ impl Editor {
         let mut changed = false;
 
         for (hunk_key, comments) in &mut self.stored_review_comments {
-            let hunk_valid = hunk_key.hunk_start_anchor.is_valid(&snapshot);
+            let hunk_present = Self::diff_hunk_key_is_present(hunk_key, &snapshot);
             for comment in comments {
-                let range_valid = comment.range.start.is_valid(&snapshot)
-                    && comment.range.end.is_valid(&snapshot);
-                if (!hunk_valid || !range_valid)
+                let range_valid =
+                    comment.range.start.is_valid(&snapshot) && comment.range.end.is_valid(&snapshot);
+                if (!hunk_present || !range_valid)
                     && comment.status != ReviewCommentStatus::Outdated
                     && comment.status != ReviewCommentStatus::Resolved
                 {
@@ -1566,6 +1566,22 @@ impl Editor {
             });
             cx.notify();
         }
+    }
+
+    fn diff_hunk_key_is_present(hunk_key: &DiffHunkKey, snapshot: &MultiBufferSnapshot) -> bool {
+        if !hunk_key.hunk_start_anchor.is_valid(snapshot) {
+            return false;
+        }
+        let key_point = hunk_key.hunk_start_anchor.to_point(snapshot);
+        snapshot
+            .diff_hunks_in_range(key_point..snapshot.max_point())
+            .any(|hunk| {
+                let hunk_start = hunk.multi_buffer_range.start.to_point(snapshot);
+                hunk_start == key_point
+                    && snapshot
+                        .file_at(hunk.multi_buffer_range.start)
+                        .is_some_and(|file| file.path() == &hunk_key.file_path)
+            })
     }
 
     /// Toggles the expanded state of the comments section in the overlay.
@@ -2988,8 +3004,12 @@ impl Editor {
                 h_flex()
                     .gap_0p5()
                     .visible_on_hover(group_id)
-                    .child(
-                        IconButton::new(format!("diff-review-edit-{comment_id}"), IconName::Pencil)
+                    .when(status.is_sendable(), |this| {
+                        this.child(
+                            IconButton::new(
+                                format!("diff-review-edit-{comment_id}"),
+                                IconName::Pencil,
+                            )
                             .icon_color(ui::Color::Muted)
                             .icon_size(action_icon_size)
                             .tooltip(Tooltip::text("Edit comment"))
@@ -2999,7 +3019,8 @@ impl Editor {
                                     cx,
                                 );
                             }),
-                    )
+                        )
+                    })
                     .child(
                         IconButton::new(
                             format!("diff-review-delete-{comment_id}"),

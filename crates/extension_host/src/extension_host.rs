@@ -15,9 +15,9 @@ use collections::{BTreeMap, BTreeSet, FxHashSet, HashMap, HashSet, btree_map};
 pub use extension::ExtensionManifest;
 use extension::extension_builder::{CompileExtensionOptions, ExtensionBuilder};
 use extension::{
-    ExtensionContextServerProxy, ExtensionDebugAdapterProviderProxy, ExtensionEvents,
+    Extension, ExtensionContextServerProxy, ExtensionDebugAdapterProviderProxy, ExtensionEvents,
     ExtensionGrammarProxy, ExtensionHostProxy, ExtensionLanguageProxy,
-    ExtensionLanguageServerProxy, ExtensionPullRequestProxy, ExtensionSnippetProxy,
+    ExtensionLanguageServerProxy, ExtensionPullRequestProviderProxy, ExtensionSnippetProxy,
     ExtensionThemeProxy,
 };
 use fs::{Fs, RemoveOptions, RenameOptions};
@@ -1323,6 +1323,10 @@ impl ExtensionStore {
             for locator in extension.manifest.debug_locators.keys() {
                 self.proxy.unregister_debug_locator(locator.clone());
             }
+            for provider_id in extension.manifest.pull_request_providers.keys() {
+                self.proxy
+                    .unregister_pull_request_provider(provider_id.clone(), cx);
+            }
         }
 
         self.wasm_extensions
@@ -1621,6 +1625,13 @@ impl ExtensionStore {
                     }
 
                     for (provider_id, entry) in &manifest.pull_request_providers {
+                        if !extension.supports_pull_request_provider(provider_id) {
+                            log::debug!(
+                                "skipping pull request provider `{provider_id}` from extension `{}` because the provider ABI is not implemented",
+                                manifest.id
+                            );
+                            continue;
+                        }
                         let label = entry
                             .label
                             .clone()

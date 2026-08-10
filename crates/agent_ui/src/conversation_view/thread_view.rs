@@ -272,6 +272,42 @@ struct ParsedCatNumberedCode {
     line_count: usize,
 }
 
+fn longest_backtick_run(text: &str) -> usize {
+    let mut longest = 0;
+    let mut current = 0;
+    for character in text.chars() {
+        if character == '`' {
+            current += 1;
+            longest = longest.max(current);
+        } else {
+            current = 0;
+        }
+    }
+    longest
+}
+
+fn markdown_inline_code(text: &str) -> String {
+    let fence = "`".repeat((longest_backtick_run(text) + 1).max(1));
+    format!("{fence}{text}{fence}")
+}
+
+fn markdown_fenced_block(text: &str, language: Option<&str>) -> String {
+    let fence = "`".repeat(longest_backtick_run(text).saturating_add(1).max(3));
+    let mut block = String::new();
+    block.push_str(&fence);
+    if let Some(language) = language {
+        block.push_str(language);
+    }
+    block.push('\n');
+    block.push_str(text);
+    if !text.is_empty() && !text.ends_with('\n') {
+        block.push('\n');
+    }
+    block.push_str(&fence);
+    block.push('\n');
+    block
+}
+
 fn format_review_feedback_message(feedback: &[ReviewFeedback]) -> anyhow::Result<String> {
     let mut message = String::from(
         "Address the following human-authored review feedback. Each card is anchored to a local diff; paths in backticks can be opened from the thread.\n",
@@ -286,28 +322,27 @@ fn format_review_feedback_message(feedback: &[ReviewFeedback]) -> anyhow::Result
         let worktree = item
             .worktree_name
             .as_deref()
-            .map(|name| format!(" ({name})"))
+            .map(|name| format!(" ({})", markdown_inline_code(name)))
             .unwrap_or_default();
         let excerpt = item.excerpt.trim_end();
         let excerpt_block = if excerpt.is_empty() {
             String::new()
         } else {
-            format!("\n```\n{excerpt}\n```\n")
+            format!("\n{}", markdown_fenced_block(excerpt, None))
         };
 
         message.push_str(&format!(
-            "\n### {}. `{file}` {location}{worktree}\n\n{comment}\n{excerpt_block}",
+            "\n### {}. {file} {location}{worktree}\n\n{comment}\n{excerpt_block}",
             index + 1,
-            file = item.file_path,
+            file = markdown_inline_code(&item.file_path),
             comment = item.comment.trim(),
         ));
     }
 
     let payload = serde_json::to_string_pretty(feedback)?;
-    message
-        .push_str("\n<details>\n<summary>Machine-readable review feedback</summary>\n\n```json\n");
-    message.push_str(&payload);
-    message.push_str("\n```\n</details>\n");
+    message.push_str("\n<details>\n<summary>Machine-readable review feedback</summary>\n\n");
+    message.push_str(&markdown_fenced_block(&payload, Some("json")));
+    message.push_str("</details>\n");
     Ok(message)
 }
 
@@ -583,11 +618,36 @@ mod numbered_code_block_tests {
         }])
         .expect("review feedback should format");
 
-        assert!(message.contains("### 1. `src/example.rs` L12–15 (app)"));
+        assert!(message.contains("### 1. `src/example.rs` L12–15 (`app`)"));
         assert!(message.contains("Keep the old name"));
         assert!(message.contains("```\nfn main() {}\n```"));
         assert!(message.contains("<summary>Machine-readable review feedback</summary>"));
         assert!(message.contains("\"file_path\": \"src/example.rs\""));
+    }
+
+    #[test]
+    fn formats_review_feedback_with_backticks_and_newlines_safely() {
+        let message = format_review_feedback_message(&[ReviewFeedback {
+            worktree_name: Some("app`name".into()),
+            file_path: "src/`weird`.rs".into(),
+            start_line: 1,
+            end_line: 2,
+            excerpt: "let x = `\ncode\n`;".into(),
+            comment: "Keep fences intact".into(),
+            status: editor::ReviewCommentStatus::Draft,
+        }])
+        .expect("review feedback should format");
+
+        assert!(message.contains("### 1. ``src/`weird`.rs`` L1–2 (``app`name``)"));
+        assert!(message.contains("````\nlet x = `\ncode\n`;\n````\n"));
+        let details = message
+            .split_once("<details>")
+            .map(|(_, rest)| rest)
+            .expect("details section");
+        assert!(details.contains("```json\n"));
+        assert!(details.contains("\"file_path\": \"src/`weird`.rs\""));
+        assert!(details.contains("</details>"));
+        assert!(!details.contains("````\nlet x = `"));
     }
 }
 

@@ -182,6 +182,13 @@ pub trait Extension: Send + Sync + 'static {
         config: SpawnInTerminal,
     ) -> Result<DebugRequest>;
 
+    /// Returns whether this extension implements the pull-request provider ABI
+    /// for `provider_id`. Defaults to `false` so unimplemented providers are
+    /// not registered into the UI.
+    fn supports_pull_request_provider(&self, _provider_id: &str) -> bool {
+        false
+    }
+
     async fn pull_request_provider_metadata(
         &self,
         provider_id: Arc<str>,
@@ -225,7 +232,11 @@ pub trait Extension: Send + Sync + 'static {
         ))
     }
 
-    async fn resolve_review_thread(&self, provider_id: Arc<str>, thread_id: String) -> Result<()> {
+    async fn resolve_review_thread(
+        &self,
+        provider_id: Arc<str>,
+        thread_id: Arc<str>,
+    ) -> Result<()> {
         Err(anyhow!(
             "resolve_review_thread is not implemented for provider {provider_id} thread {thread_id}"
         ))

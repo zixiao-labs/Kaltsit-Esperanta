@@ -100,22 +100,35 @@ To allow a specific npm package (e.g., `typescript`) to be installed:
 { kind = "npm:install", package = "typescript" }
 ```
 
-### `http:fetch`
+### `http:fetch` {#http-fetch}
 
 The `http:fetch` capability grants extensions the ability to perform HTTP
 requests through the extension HTTP client. Pull-request providers should
 declare the API hosts they need here.
 
-#### Examples
+Open the Settings Editor and search for `granted_extension_capabilities`, then
+add an `http:fetch` entry for each allowed host.
 
-To allow any host:
+Or add this to your settings.json:
 
-```toml
-{ kind = "http:fetch", host = "*", path = ["**"] }
+```json [settings]
+{
+  "granted_extension_capabilities": [
+    { "kind": "http:fetch", "host": "*", "path": ["**"] }
+  ]
+}
 ```
 
 To allow only the GitHub API:
 
-```toml
-{ kind = "http:fetch", host = "api.github.com", path = ["**"] }
+```json [settings]
+{
+  "granted_extension_capabilities": [
+    {
+      "kind": "http:fetch",
+      "host": "api.github.com",
+      "path": ["**"]
+    }
+  ]
+}
 ```
