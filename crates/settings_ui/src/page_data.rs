@@ -5805,7 +5805,7 @@ fn panels_page() -> SettingsPage {
         ]
     }
 
-    fn terminal_panel_section() -> [SettingsPageItem; 4] {
+    fn terminal_panel_section() -> [SettingsPageItem; 5] {
         [
             SettingsPageItem::SectionHeader(tr!("Terminal Panel")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -5823,10 +5823,34 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Terminal Panel Flexible Sizing"),
                 description: tr!(
                     "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right."
                 ),
+=======
+                title: "Starts Open",
+                description: "Whether the terminal panel should open on startup.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("terminal.starts_open"),
+                    pick: |settings_content| {
+                        settings_content.terminal.as_ref()?.starts_open.as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .terminal
+                            .get_or_insert_default()
+                            .starts_open = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Terminal Panel Flexible Sizing",
+                description: "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.flexible"),
@@ -6091,7 +6115,7 @@ fn panels_page() -> SettingsPage {
         ]
     }
 
-    fn git_panel_section() -> [SettingsPageItem; 17] {
+    fn git_panel_section() -> [SettingsPageItem; 18] {
         [
             SettingsPageItem::SectionHeader(tr!("Git Panel")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -6123,8 +6147,32 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Git Panel Default Width"),
                 description: tr!("Default width of the Git panel in pixels."),
+=======
+                title: "Starts Open",
+                description: "Whether the git panel should open on startup.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("git_panel.starts_open"),
+                    pick: |settings_content| {
+                        settings_content.git_panel.as_ref()?.starts_open.as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content
+                            .git_panel
+                            .get_or_insert_default()
+                            .starts_open = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Git Panel Default Width",
+                description: "Default width of the Git panel in pixels.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.default_width"),

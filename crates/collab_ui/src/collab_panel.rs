@@ -58,7 +58,7 @@ const COLLABORATION_PANEL_KEY: &str = "CollaborationPanel";
 const TOAST_DURATION: Duration = Duration::from_secs(5);
 
 fn panel_row_height() -> Rems {
-    rems_from_px(26.)
+    rems_from_px(26_f32)
 }
 
 actions!(
@@ -3275,6 +3275,7 @@ impl CollabPanel {
             .child(item)
             .when(open_context_menu.is_none(), |this| {
                 this.tooltip(move |_, cx| {
+<<<<<<< HEAD
                     let text: SharedString = if !online {
                         tr_f!("{} is offline", username.clone())
                     } else if busy {
@@ -3285,6 +3286,18 @@ impl CollabPanel {
                             tr_f!("Invite {} to join call", username.clone())
                         } else {
                             tr_f!("Call {}", username.clone())
+=======
+                    let text = if !online {
+                        format!(" {username} is Offline")
+                    } else if busy {
+                        format!(" {username} is on a Call")
+                    } else {
+                        let room = ActiveCall::global(cx).read(cx).room();
+                        if room.is_some() {
+                            format!("Invite {username} to Join Call")
+                        } else {
+                            format!("Call {username}")
+>>>>>>> upstream/main
                         }
                     };
                     Tooltip::simple(text, cx)

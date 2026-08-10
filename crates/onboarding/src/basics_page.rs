@@ -80,6 +80,7 @@ fn render_theme_section(tab_index: &mut isize, cx: &mut App) -> impl IntoElement
                                 move |_, _, cx| {
                                     write_mode_change(mode, cx);
 
+<<<<<<< HEAD
                                     telemetry::event!(
                                         "Welcome Theme mode Changed",
                                         from = theme_mode,
@@ -95,6 +96,23 @@ fn render_theme_section(tab_index: &mut isize, cx: &mut App) -> impl IntoElement
                     .style(ui::ToggleButtonGroupStyle::Outlined)
                     .width(rems_from_px(3. * 64.)),
                 ),
+=======
+                                telemetry::event!(
+                                    "Welcome Theme mode Changed",
+                                    from = theme_mode,
+                                    to = mode
+                                );
+                            },
+                        )
+                    }),
+                )
+                .size(ToggleButtonGroupSize::Medium)
+                .tab_index(tab_index)
+                .selected_index(theme_mode as usize)
+                .style(ui::ToggleButtonGroupStyle::Outlined)
+                .width(rems_from_px(3.0_f32 * 64.0_f32)),
+            ),
+>>>>>>> upstream/main
         )
         .child(
             h_flex()
