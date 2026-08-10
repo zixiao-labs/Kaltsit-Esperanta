@@ -1547,8 +1547,8 @@ impl Editor {
         for (hunk_key, comments) in &mut self.stored_review_comments {
             let hunk_present = Self::diff_hunk_key_is_present(hunk_key, &snapshot);
             for comment in comments {
-                let range_valid =
-                    comment.range.start.is_valid(&snapshot) && comment.range.end.is_valid(&snapshot);
+                let range_valid = comment.range.start.is_valid(&snapshot)
+                    && comment.range.end.is_valid(&snapshot);
                 if (!hunk_present || !range_valid)
                     && comment.status != ReviewCommentStatus::Outdated
                     && comment.status != ReviewCommentStatus::Resolved

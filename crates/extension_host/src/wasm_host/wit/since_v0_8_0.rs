@@ -742,7 +742,9 @@ impl WasmState {
                 return Ok((request.url, response));
             }
 
-            let Some(location) = response.headers().get(::http_client::http::header::LOCATION)
+            let Some(location) = response
+                .headers()
+                .get(::http_client::http::header::LOCATION)
             else {
                 return Ok((request.url, response));
             };

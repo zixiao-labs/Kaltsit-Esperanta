@@ -171,8 +171,7 @@ mod tests {
     #[test]
     fn test_grant_http_fetch() {
         let manifest = Arc::new(extension_manifest());
-        let allowed =
-            Url::parse("https://api.github.com/repos/zed-industries/zed/pulls").unwrap();
+        let allowed = Url::parse("https://api.github.com/repos/zed-industries/zed/pulls").unwrap();
         let wrong_host = Url::parse("https://gitlab.com/api/v4/projects").unwrap();
         let wrong_path = Url::parse("https://api.github.com/user").unwrap();
 
@@ -184,7 +183,7 @@ mod tests {
                 host: "api.github.com".to_string(),
                 path: vec!["repos".to_string(), "**".to_string()],
             })],
-            manifest.clone(),
+            manifest,
         );
         assert!(granter.grant_http_fetch(&allowed).is_ok());
         assert!(granter.grant_http_fetch(&wrong_host).is_err());

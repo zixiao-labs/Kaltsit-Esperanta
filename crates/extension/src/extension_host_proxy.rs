@@ -101,8 +101,13 @@ impl ExtensionHostProxy {
             .replace(Arc::new(proxy));
     }
 
-    pub fn register_pull_request_provider_proxy(&self, proxy: impl ExtensionPullRequestProviderProxy) {
-        self.pull_request_provider_proxy.write().replace(Arc::new(proxy));
+    pub fn register_pull_request_provider_proxy(
+        &self,
+        proxy: impl ExtensionPullRequestProviderProxy,
+    ) {
+        self.pull_request_provider_proxy
+            .write()
+            .replace(Arc::new(proxy));
     }
 }
 
