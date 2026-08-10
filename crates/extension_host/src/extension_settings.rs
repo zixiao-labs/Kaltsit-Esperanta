@@ -58,6 +58,12 @@ impl Settings for ExtensionSettings {
                             package,
                         })
                     }
+                    settings::ExtensionCapabilityContent::HttpFetch { host, path } => {
+                        ExtensionCapability::HttpFetch(extension::HttpFetchCapability {
+                            host,
+                            path,
+                        })
+                    }
                 })
                 .collect(),
         }

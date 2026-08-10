@@ -81,13 +81,29 @@ impl CapabilityGranter {
 
         Ok(())
     }
+
+    pub fn grant_http_fetch(&self, desired_url: &Url) -> Result<()> {
+        let is_allowed = self
+            .granted_capabilities
+            .iter()
+            .any(|capability| match capability {
+                ExtensionCapability::HttpFetch(capability) => capability.allows(desired_url),
+                _ => false,
+            });
+
+        if !is_allowed {
+            bail!("capability for http:fetch {desired_url} is not granted by the extension host",);
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
-    use extension::{ProcessExecCapability, SchemaVersion};
+    use extension::{HttpFetchCapability, ProcessExecCapability, SchemaVersion};
 
     use super::*;
 
@@ -113,6 +129,7 @@ mod tests {
             debug_adapters: Default::default(),
             debug_locators: Default::default(),
             language_model_providers: BTreeMap::default(),
+            pull_request_providers: BTreeMap::default(),
         }
     }
 
@@ -149,5 +166,27 @@ mod tests {
             manifest,
         );
         assert!(granter.grant_exec("ls", &["-la"]).is_ok());
+    }
+
+    #[test]
+    fn test_grant_http_fetch() {
+        let manifest = Arc::new(extension_manifest());
+        let allowed = Url::parse("https://api.github.com/repos/zed-industries/zed/pulls").unwrap();
+        let wrong_host = Url::parse("https://gitlab.com/api/v4/projects").unwrap();
+        let wrong_path = Url::parse("https://api.github.com/user").unwrap();
+
+        let granter = CapabilityGranter::new(Vec::new(), manifest.clone());
+        assert!(granter.grant_http_fetch(&allowed).is_err());
+
+        let granter = CapabilityGranter::new(
+            vec![ExtensionCapability::HttpFetch(HttpFetchCapability {
+                host: "api.github.com".to_string(),
+                path: vec!["repos".to_string(), "**".to_string()],
+            })],
+            manifest,
+        );
+        assert!(granter.grant_http_fetch(&allowed).is_ok());
+        assert!(granter.grant_http_fetch(&wrong_host).is_err());
+        assert!(granter.grant_http_fetch(&wrong_path).is_err());
     }
 }

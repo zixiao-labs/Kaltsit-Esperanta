@@ -2216,6 +2216,7 @@
     { "kind": "process:exec", "command": "*", "args": ["**"] },
     { "kind": "download_file", "host": "*", "path": ["**"] },
     { "kind": "npm:install", "package": "*" },
+    { "kind": "http:fetch", "host": "*", "path": ["**"] },
   ],
   // Controls how completions are processed for this language.
   "completions": {

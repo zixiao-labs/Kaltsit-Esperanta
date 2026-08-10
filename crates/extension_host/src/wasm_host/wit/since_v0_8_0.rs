@@ -631,10 +631,7 @@ impl http_client::Host for WasmState {
         request: http_client::HttpRequest,
     ) -> wasmtime::Result<Result<http_client::HttpResponse, String>> {
         maybe!(async {
-            let url = &request.url;
-            let request = convert_request(&request)?;
-            let mut response = self.host.http_client.send(request).await?;
-
+            let (url, mut response) = self.send_with_authorized_redirects(request).await?;
             if response.status().is_client_error() || response.status().is_server_error() {
                 bail!("failed to fetch '{url}': status code {}", response.status())
             }
@@ -648,10 +645,8 @@ impl http_client::Host for WasmState {
         &mut self,
         request: http_client::HttpRequest,
     ) -> wasmtime::Result<Result<Resource<ExtensionHttpResponseStream>, String>> {
-        let request = convert_request(&request)?;
-        let response = self.host.http_client.send(request);
         maybe!(async {
-            let response = response.await?;
+            let (_url, response) = self.send_with_authorized_redirects(request).await?;
             let stream = Arc::new(Mutex::new(response));
             let resource = self.table.push(stream)?;
             Ok(resource)
@@ -701,19 +696,23 @@ impl From<http_client::HttpMethod> for ::http_client::Method {
     }
 }
 
+fn redirect_hop_limit(policy: &http_client::RedirectPolicy) -> u32 {
+    match policy {
+        http_client::RedirectPolicy::NoFollow => 0,
+        http_client::RedirectPolicy::FollowLimit(limit) => *limit,
+        // Cap unbounded follow-all so capability checks cannot loop forever.
+        http_client::RedirectPolicy::FollowAll => 20,
+    }
+}
+
 fn convert_request(
     extension_request: &http_client::HttpRequest,
 ) -> anyhow::Result<::http_client::Request<AsyncBody>> {
+    // Always disable automatic redirects so each hop can be capability-checked.
     let mut request = ::http_client::Request::builder()
         .method(::http_client::Method::from(extension_request.method))
         .uri(&extension_request.url)
-        .follow_redirects(match extension_request.redirect_policy {
-            http_client::RedirectPolicy::NoFollow => ::http_client::RedirectPolicy::NoFollow,
-            http_client::RedirectPolicy::FollowLimit(limit) => {
-                ::http_client::RedirectPolicy::FollowLimit(limit)
-            }
-            http_client::RedirectPolicy::FollowAll => ::http_client::RedirectPolicy::FollowAll,
-        });
+        .follow_redirects(::http_client::RedirectPolicy::NoFollow);
     for (key, value) in &extension_request.headers {
         request = request.header(key, value);
     }
@@ -723,6 +722,42 @@ fn convert_request(
         .map(AsyncBody::from)
         .unwrap_or_default();
     request.body(body).map_err(anyhow::Error::from)
+}
+
+impl WasmState {
+    async fn send_with_authorized_redirects(
+        &mut self,
+        mut request: http_client::HttpRequest,
+    ) -> Result<(String, ::http_client::Response<AsyncBody>)> {
+        let mut remaining_hops = redirect_hop_limit(&request.redirect_policy);
+        loop {
+            let parsed_url = Url::parse(&request.url)
+                .with_context(|| format!("failed to parse fetch URL '{}'", request.url))?;
+            self.capability_granter.grant_http_fetch(&parsed_url)?;
+
+            let http_request = convert_request(&request)?;
+            let http_client = self.host.http_client.clone();
+            let response = http_client.send(http_request).await?;
+            if remaining_hops == 0 || !response.status().is_redirection() {
+                return Ok((request.url, response));
+            }
+
+            let Some(location) = response
+                .headers()
+                .get(::http_client::http::header::LOCATION)
+            else {
+                return Ok((request.url, response));
+            };
+            let location = location
+                .to_str()
+                .context("redirect Location header was not valid UTF-8")?;
+            request.url = parsed_url
+                .join(location)
+                .with_context(|| format!("failed to join redirect Location '{location}'"))?
+                .to_string();
+            remaining_hops -= 1;
+        }
+    }
 }
 
 async fn convert_response(

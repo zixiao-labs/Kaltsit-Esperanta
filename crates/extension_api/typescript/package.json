@@ -1,0 +1,7 @@
+{
+  "name": "zed-extension-api",
+  "version": "0.9.0-proposed",
+  "private": true,
+  "description": "Proposed TypeScript types mirroring the Zed extension pull-request WIT ABI.",
+  "types": "index.d.ts"
+}

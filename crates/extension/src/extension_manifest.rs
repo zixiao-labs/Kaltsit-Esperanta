@@ -120,6 +120,8 @@ pub struct ExtensionManifest {
     pub debug_locators: BTreeMap<Arc<str>, DebugLocatorManifestEntry>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub language_model_providers: BTreeMap<Arc<str>, LanguageModelProviderManifestEntry>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub pull_request_providers: BTreeMap<Arc<str>, PullRequestProviderManifestEntry>,
 }
 
 impl ExtensionManifest {
@@ -156,6 +158,10 @@ impl ExtensionManifest {
 
         if !self.debug_adapters.is_empty() {
             provides.insert(ExtensionProvides::DebugAdapters);
+        }
+
+        if !self.pull_request_providers.is_empty() {
+            provides.insert(ExtensionProvides::PullRequestProviders);
         }
 
         provides
@@ -363,6 +369,12 @@ impl LanguageServerManifestEntry {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct ContextServerManifestEntry {}
 
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PullRequestProviderManifestEntry {
+    #[serde(default)]
+    pub label: Option<String>,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct SlashCommandManifestEntry {
     pub description: String,
@@ -457,6 +469,7 @@ fn manifest_from_old_manifest(
         debug_adapters: Default::default(),
         debug_locators: Default::default(),
         language_model_providers: Default::default(),
+        pull_request_providers: BTreeMap::default(),
     }
 }
 
@@ -491,6 +504,7 @@ mod tests {
             debug_adapters: Default::default(),
             debug_locators: Default::default(),
             language_model_providers: BTreeMap::default(),
+            pull_request_providers: BTreeMap::default(),
         }
     }
 
