@@ -1512,12 +1512,14 @@ impl PickerDelegate for WorktreePickerDelegate {
                                         )
                                         .map(|kb| kb.size(rems_from_px(12_f32))),
                                     )
-                                    .on_click(|_, window, cx| {
-                                        window.dispatch_action(
-                                            menu::SecondaryConfirm.boxed_clone(),
-                                            cx,
-                                        )
-                                    }),
+                                    .on_click(
+                                        |_, window, cx| {
+                                            window.dispatch_action(
+                                                menu::SecondaryConfirm.boxed_clone(),
+                                                cx,
+                                            )
+                                        },
+                                    ),
                                 )
                             })
                             .when(!is_deleting, |this| {
