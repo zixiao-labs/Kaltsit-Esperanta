@@ -95,6 +95,7 @@ rustup target add $target_triple
 
 echo "Compiling ${BIN_NAME} binaries"
 cargo build ${build_flag} --package zed --package cli --target $target_triple
+cargo build ${build_flag} --package extension_cef --bin zeta-cef-helper --target "$target_triple"
 # Build remote_server in separate invocation to prevent feature unification from other crates
 # from influencing dynamic libraries required by it.
 cargo build ${build_flag} --package remote_server --target $target_triple
@@ -196,8 +197,7 @@ function download_git() {
 }
 
 function sign_app_binaries() {
-    rm -rf "${app_path}/Contents/Frameworks"
-    mkdir -p "${app_path}/Contents/Frameworks"
+    local local_signing_key="${MACOS_SIGNING_KEY:--}"
 
     echo "Downloading git binary"
     download_git "${target_triple}" "${app_path}/Contents/MacOS/git"
@@ -208,6 +208,9 @@ function sign_app_binaries() {
     if [[ $can_code_sign = true ]]; then
         echo "Code signing binaries"
         # sequence of codesign commands modeled after this example: https://developer.apple.com/forums/thread/701514
+        for helper_app in "${app_path}/Contents/Frameworks/"*.app; do
+            /usr/bin/codesign --deep --force --timestamp --options runtime --entitlements crates/zed/resources/zed.entitlements --sign "$IDENTITY" "$helper_app" -v
+        done
         /usr/bin/codesign --deep --force --timestamp --options runtime --sign "$IDENTITY" "${app_path}/Contents/MacOS/zeta" -v
         /usr/bin/codesign --deep --force --timestamp --options runtime --sign "$IDENTITY" "${app_path}/Contents/MacOS/git" -v
         /usr/bin/codesign --deep --force --timestamp --options runtime --entitlements crates/zed/resources/zed.entitlements --sign "$IDENTITY" "${app_path}/Contents/MacOS/${BIN_NAME}" -v
@@ -226,8 +229,13 @@ function sign_app_binaries() {
         # then comment out this line.
         cat crates/zed/resources/zed.entitlements | sed '/com.apple.developer.associated-domains/,+1d' > "${app_path}/Contents/Resources/zed.entitlements"
 
-        codesign --force --deep --entitlements "${app_path}/Contents/Resources/zed.entitlements" --sign ${MACOS_SIGNING_KEY:- -} "${app_path}" -v
+        for helper_app in "${app_path}/Contents/Frameworks/"*.app; do
+            codesign --force --deep --entitlements "${app_path}/Contents/Resources/zed.entitlements" --sign "$local_signing_key" "$helper_app" -v
+        done
+        codesign --force --deep --entitlements "${app_path}/Contents/Resources/zed.entitlements" --sign "$local_signing_key" "${app_path}" -v
     fi
+
+    codesign --verify --deep --strict --verbose=4 "${app_path}"
 
     bundle_name=$(basename "$app_path")
 
@@ -341,6 +349,7 @@ upload_debug_symbols
 
 cp target/${target_triple}/${target_dir}/${BIN_NAME} "${app_path}/Contents/MacOS/${BIN_NAME}"
 cp target/${target_triple}/${target_dir}/zeta "${app_path}/Contents/MacOS/zeta"
+script/package-cef-helper-mac "${app_path}" "target/${target_triple}/${target_dir}/zeta-cef-helper"
 sign_app_binaries
 
 sign_binary "target/$target_triple/release/remote_server"

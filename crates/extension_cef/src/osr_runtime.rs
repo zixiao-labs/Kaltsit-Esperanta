@@ -193,9 +193,10 @@ impl CefRuntime {
         library_path: &Path,
     ) -> Result<Self> {
         let framework_dir = framework_dir_from_library_path(library_path)?;
-        let helper_path = find_helper_path().ok_or_else(|| {
+        let main_bundle_path = find_main_bundle_path();
+        let helper_path = find_helper_path(main_bundle_path.as_deref()).ok_or_else(|| {
             anyhow!(
-                "zeta-cef-helper not found; build with `cargo build -p extension_cef --bin zeta-cef-helper` and copy next to the managed CEF root, or set ZETA_CEF_HELPER"
+                "CEF helper not found; package zeta-cef-helper under the app's Contents/Frameworks directory or set ZETA_CEF_HELPER"
             )
         })?;
         let cache_root = cache_root_path(settings);
@@ -211,7 +212,6 @@ impl CefRuntime {
         // SAFETY: called once during host init before subprocess spawn.
         unsafe {
             std::env::set_var("ZETA_CEF_FRAMEWORK", &framework_dir);
-            std::env::set_var("ZETA_CEF_HELPER", &helper_path);
         }
 
         let mut main_args = MainArgsStorage::new();
@@ -253,6 +253,13 @@ impl CefRuntime {
             &mut cef_settings.cache_path,
             &cache_path.to_string_lossy(),
         )?;
+        if let Some(main_bundle_path) = &main_bundle_path {
+            set_cef_string(
+                table,
+                &mut cef_settings.main_bundle_path,
+                &main_bundle_path.to_string_lossy(),
+            )?;
+        }
         if !settings.user_agent.is_empty() {
             set_cef_string(table, &mut cef_settings.user_agent, &settings.user_agent)?;
         }
@@ -276,6 +283,7 @@ impl CefRuntime {
         clear_cef_string(table, &mut cef_settings.resources_dir_path);
         clear_cef_string(table, &mut cef_settings.root_cache_path);
         clear_cef_string(table, &mut cef_settings.cache_path);
+        clear_cef_string(table, &mut cef_settings.main_bundle_path);
         clear_cef_string(table, &mut cef_settings.user_agent);
         clear_cef_string(table, &mut cef_settings.browser_subprocess_path);
 
@@ -660,7 +668,20 @@ fn cache_root_path(settings: &CefSettings) -> PathBuf {
 }
 
 #[cfg(target_os = "macos")]
-fn find_helper_path() -> Option<PathBuf> {
+fn find_main_bundle_path() -> Option<PathBuf> {
+    std::env::current_exe().ok().and_then(|executable| {
+        executable
+            .ancestors()
+            .find(|path| path.extension().is_some_and(|extension| extension == "app"))
+            .map(Path::to_path_buf)
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn find_helper_path(main_bundle_path: Option<&Path>) -> Option<PathBuf> {
+    const HELPER_RELATIVE_PATH: &str =
+        "Contents/Frameworks/zeta-cef-helper.app/Contents/MacOS/zeta-cef-helper";
+
     if let Ok(path) = std::env::var("ZETA_CEF_HELPER") {
         let helper = PathBuf::from(path);
         if helper.is_file() {
@@ -672,21 +693,18 @@ fn find_helper_path() -> Option<PathBuf> {
         );
     }
 
-    let managed = managed_cef_root().join("zeta-cef-helper");
-    if managed.is_file() {
-        return Some(managed);
-    }
-
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(parent) = exe.parent() {
-            let sibling = parent.join("zeta-cef-helper");
-            if sibling.is_file() {
-                return Some(sibling);
-            }
+    if let Some(main_bundle_path) = main_bundle_path {
+        let bundled_helper = main_bundle_path.join(HELPER_RELATIVE_PATH);
+        if bundled_helper.is_file() {
+            return Some(bundled_helper);
         }
     }
 
-    None
+    std::env::current_exe()
+        .ok()
+        .and_then(|executable| executable.parent().map(Path::to_path_buf))
+        .map(|parent| parent.join("zeta-cef-helper"))
+        .filter(|helper| helper.is_file())
 }
 
 #[cfg(target_os = "macos")]
