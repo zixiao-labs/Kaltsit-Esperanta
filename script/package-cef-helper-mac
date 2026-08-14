@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: ${0##*/} <app-path> <helper-binary>" >&2
+    exit 1
+fi
+
+app_path="$1"
+helper_binary="$2"
+info_plist="${app_path}/Contents/Info.plist"
+frameworks_dir="${app_path}/Contents/Frameworks"
+helper_name="zeta-cef-helper"
+
+if [[ ! -f "${info_plist}" ]]; then
+    echo "Missing app Info.plist: ${info_plist}" >&2
+    exit 1
+fi
+if [[ ! -f "${helper_binary}" ]]; then
+    echo "Missing CEF helper binary: ${helper_binary}" >&2
+    exit 1
+fi
+
+bundle_id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "${info_plist}")
+bundle_version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "${info_plist}")
+short_version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${info_plist}")
+minimum_system_version=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "${info_plist}")
+
+name_suffixes=("" " (Alerts)" " (GPU)" " (Plugin)" " (Renderer)")
+bundle_id_suffixes=("" ".alerts" ".gpu" ".plugin" ".renderer")
+
+mkdir -p "${frameworks_dir}"
+
+for index in "${!name_suffixes[@]}"; do
+    executable_name="${helper_name}${name_suffixes[$index]}"
+    helper_app="${frameworks_dir}/${executable_name}.app"
+    executable_dir="${helper_app}/Contents/MacOS"
+
+    rm -rf "${helper_app}"
+    mkdir -p "${executable_dir}"
+    cp "${helper_binary}" "${executable_dir}/${executable_name}"
+    chmod 755 "${executable_dir}/${executable_name}"
+
+    cat > "${helper_app}/Contents/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>${executable_name}</string>
+    <key>CFBundleExecutable</key>
+    <string>${executable_name}</string>
+    <key>CFBundleIdentifier</key>
+    <string>${bundle_id}.helper${bundle_id_suffixes[$index]}</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>${executable_name}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${short_version}</string>
+    <key>CFBundleVersion</key>
+    <string>${bundle_version}</string>
+    <key>LSEnvironment</key>
+    <dict>
+        <key>MallocNanoZone</key>
+        <string>0</string>
+    </dict>
+    <key>LSFileQuarantineEnabled</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>${minimum_system_version}</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+</dict>
+</plist>
+EOF
+
+done
+
+echo "Packaged CEF helper bundles in ${frameworks_dir}"

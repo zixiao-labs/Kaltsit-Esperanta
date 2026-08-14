@@ -99,6 +99,7 @@ fi
 echo "🔨 Build Kal'tsit"
 
 cargo build "$build_flag" --package zed --package cli --target "$target_triple" "${feature_args[@]+"${feature_args[@]}"}"
+cargo build "$build_flag" --package extension_cef --bin zeta-cef-helper --target "$target_triple"
 
 echo "✅ Build Complete"
 
@@ -126,6 +127,18 @@ if [ ! -f "$cli_src" ]; then
 fi
 cp "$cli_src" "${app_path}/Contents/MacOS/${CLI_BIN_NAME}"
 echo "Installed CLI binary ${CLI_BIN_NAME} into app bundle"
+
+cef_helper_src="target/${target_triple}/${target_dir}/zeta-cef-helper"
+if [ ! -f "$cef_helper_src" ]; then
+    cef_helper_src="target/${target_dir}/zeta-cef-helper"
+fi
+script/package-cef-helper-mac "$app_path" "$cef_helper_src"
+
+for helper_app in "${app_path}/Contents/Frameworks/"*.app; do
+    codesign --force --entitlements crates/zed/resources/zed.entitlements --sign - "$helper_app"
+done
+codesign --force --deep --entitlements crates/zed/resources/zed.entitlements --sign - "$app_path"
+codesign --verify --deep --strict --verbose=4 "$app_path"
 
 echo "✅ Package Complete"
 if [ "$with_deno" = true ]; then

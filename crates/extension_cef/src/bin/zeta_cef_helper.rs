@@ -18,6 +18,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     use std::env;
     use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
 
     use libloading::{Library, Symbol};
 
@@ -39,12 +40,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let cef_execute_process: Symbol<CefExecuteProcessFn> =
         unsafe { library.get(b"cef_execute_process\0")? };
 
-    let args: Vec<CString> = env::args()
-        .map(|argument| CString::new(argument).unwrap_or_else(|_| CString::new("").expect("empty")))
-        .collect();
+    let args: Vec<CString> = env::args_os()
+        .map(|argument| CString::new(argument.as_bytes()))
+        .collect::<Result<_, _>>()?;
     let mut argv: Vec<*mut std::ffi::c_char> = args
         .iter()
-        .map(|arg| arg.as_ptr() as *mut std::ffi::c_char)
+        .map(|argument| argument.as_ptr() as *mut std::ffi::c_char)
         .collect();
 
     let main_args = CefMainArgs {
@@ -79,12 +80,17 @@ fn resolve_framework_binary() -> Result<std::path::PathBuf, Box<dyn std::error::
         .into());
     }
 
-    if let Ok(exe) = env::current_exe() {
-        if let Some(parent) = exe.parent() {
-            let sibling =
-                parent.join("Chromium Embedded Framework.framework/Chromium Embedded Framework");
-            if sibling.is_file() {
-                return Ok(sibling);
+    if let Ok(executable) = env::current_exe() {
+        if let Some(app_bundle) = executable
+            .ancestors()
+            .find(|path| path.extension().is_some_and(|extension| extension == "app"))
+        {
+            if let Some(frameworks_dir) = app_bundle.parent() {
+                let binary = frameworks_dir
+                    .join("Chromium Embedded Framework.framework/Chromium Embedded Framework");
+                if binary.is_file() {
+                    return Ok(binary);
+                }
             }
         }
     }
