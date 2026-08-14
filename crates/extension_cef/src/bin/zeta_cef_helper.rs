@@ -18,6 +18,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     use std::env;
     use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
 
     use libloading::{Library, Symbol};
 
@@ -39,7 +40,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let cef_execute_process: Symbol<CefExecuteProcessFn> =
         unsafe { library.get(b"cef_execute_process\0")? };
 
-    let args: Vec<CString> = env::args().map(CString::new).collect::<Result<_, _>>()?;
+    let args: Vec<CString> = env::args_os()
+        .map(|argument| CString::new(argument.as_bytes()))
+        .collect::<Result<_, _>>()?;
     let mut argv: Vec<*mut std::ffi::c_char> = args
         .iter()
         .map(|argument| argument.as_ptr() as *mut std::ffi::c_char)
