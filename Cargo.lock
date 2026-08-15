@@ -8236,6 +8236,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpui_html"
+version = "0.1.0"
+dependencies = [
+ "gpui",
+ "gpui_html_macros",
+]
+
+[[package]]
+name = "gpui_html_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "gpui_linux"
 version = "0.1.0"
 dependencies = [
