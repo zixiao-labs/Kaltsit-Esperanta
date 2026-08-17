@@ -60,6 +60,7 @@ pub mod unstaged_diff;
 pub use blame_ui::GitBlameStatus;
 pub use conflict_view::MergeConflictIndicator;
 
+<<<<<<< HEAD
 pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Entity<Editor>> {
     workspace
         .active_item_as::<ProjectDiff>(cx)
@@ -81,6 +82,8 @@ pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Enti
         })
 }
 
+=======
+>>>>>>> upstream/main
 pub fn init(cx: &mut App) {
     editor::set_blame_renderer(blame_ui::GitBlameRenderer, cx);
     commit_view::init(cx);

@@ -11037,6 +11037,7 @@ pub(crate) fn init_test(cx: &mut TestAppContext) {
                     .get_or_insert_default()
                     .auto_fold_dirs = Some(false);
                 settings.project.worktree.file_scan_exclusions = Some(Vec::new());
+                settings.project.worktree.file_scan_depth = Some(0);
             });
         });
     });
@@ -11056,7 +11057,8 @@ fn init_test_with_editor(cx: &mut TestAppContext) {
                     .project_panel
                     .get_or_insert_default()
                     .auto_fold_dirs = Some(false);
-                settings.project.worktree.file_scan_exclusions = Some(Vec::new())
+                settings.project.worktree.file_scan_exclusions = Some(Vec::new());
+                settings.project.worktree.file_scan_depth = Some(0);
             });
         });
     });
@@ -11077,7 +11079,8 @@ fn init_test_with_git_ui(cx: &mut TestAppContext) {
                     .project_panel
                     .get_or_insert_default()
                     .auto_fold_dirs = Some(false);
-                settings.project.worktree.file_scan_exclusions = Some(Vec::new())
+                settings.project.worktree.file_scan_exclusions = Some(Vec::new());
+                settings.project.worktree.file_scan_depth = Some(0);
             });
         });
     });

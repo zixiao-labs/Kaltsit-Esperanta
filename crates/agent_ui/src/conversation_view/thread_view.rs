@@ -4734,6 +4734,10 @@ impl ThreadView {
                 let editor_focused = editor.focus_handle(cx).is_focused(_window);
                 let keybinding_size = rems_from_px(12_f32);
                 let steer_on = entry.steer;
+<<<<<<< HEAD
+=======
+
+>>>>>>> upstream/main
                 let min_width = rems_from_px(160_f32);
 
                 h_flex()
