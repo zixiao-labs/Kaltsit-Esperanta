@@ -65,7 +65,10 @@ echo "✅ Toolchain Setup Complete"
 
 echo "⬇️ Install Dependencies"
 
-brew install --build-from-source cmake
+if ! command -v cmake &> /dev/null; then
+    echo "cmake not found, installing via Homebrew"
+    brew install cmake
+fi
 
 cargo_bundle_version=$(cargo -q bundle --help 2>&1 | head -n 1 || echo "")
 if [ "$cargo_bundle_version" != "cargo-bundle v0.6.1-zed" ]; then
