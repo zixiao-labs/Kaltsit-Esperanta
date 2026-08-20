@@ -6624,7 +6624,6 @@ dependencies = [
  "core-video",
  "futures 0.3.32",
  "http_client",
- "libc",
  "libloading",
  "log",
  "parking_lot",

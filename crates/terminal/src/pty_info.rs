@@ -2,6 +2,9 @@ use gpui::{Context, Task};
 use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
 use std::{path::PathBuf, sync::Arc};
 
+#[cfg(target_os = "macos")]
+use std::io;
+
 #[cfg(target_os = "windows")]
 use windows::Win32::{Foundation::HANDLE, System::Threading::GetProcessId};
 
@@ -63,6 +66,14 @@ impl ProcessIdGetter {
         }
         Some(Pid::from_u32(pid))
     }
+}
+
+#[cfg(target_os = "macos")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum PtyChildState {
+    Running,
+    Exited,
+    NotWaitable,
 }
 
 #[derive(Clone, Debug)]
@@ -190,6 +201,34 @@ impl PtyProcessInfo {
         }
     }
 
+    #[cfg(target_os = "macos")]
+    pub(crate) fn child_state_without_reaping(&self) -> io::Result<PtyChildState> {
+        let mut signal_info = std::mem::MaybeUninit::<libc::siginfo_t>::zeroed();
+        let child_pid = self.pid_getter.fallback_pid().as_u32();
+        let result = unsafe {
+            libc::waitid(
+                libc::P_PID,
+                child_pid,
+                signal_info.as_mut_ptr(),
+                libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+            )
+        };
+        if result < 0 {
+            let error = io::Error::last_os_error();
+            if error.raw_os_error() == Some(libc::ECHILD) {
+                return Ok(PtyChildState::NotWaitable);
+            }
+            return Err(error);
+        }
+
+        let signal_info = unsafe { signal_info.assume_init() };
+        if unsafe { signal_info.si_pid() } == 0 {
+            Ok(PtyChildState::Running)
+        } else {
+            Ok(PtyChildState::Exited)
+        }
+    }
+
     fn refresh(&self) -> Option<MappedRwLockReadGuard<'_, Process>> {
         let pid = self.pid_getter.pid()?;
         let fallback_pid = self.pid_getter.fallback_pid();
@@ -307,6 +346,47 @@ impl PtyProcessInfo {
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    #[allow(
+        clippy::disallowed_methods,
+        reason = "the test must observe a real child process with waitid"
+    )]
+    fn observes_child_exit_without_reaping_it() {
+        let mut child = std::process::Command::new("/bin/sh")
+            .args(["-c", "exit 7"])
+            .spawn()
+            .expect("failed to spawn child process");
+        let info = PtyProcessInfo::new(ProcessIdGetter::new(-1, child.id()));
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+
+        loop {
+            match info
+                .child_state_without_reaping()
+                .expect("failed to observe child status")
+            {
+                PtyChildState::Running => {
+                    assert!(std::time::Instant::now() < deadline);
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+                PtyChildState::Exited => break,
+                PtyChildState::NotWaitable => panic!("child was reaped before observation"),
+            }
+        }
+
+        // `WNOWAIT` leaves Alacritty's owned `Child` authoritative for the
+        // eventual exit status and PTY drain.
+        assert_eq!(
+            child.wait().expect("child should still be waitable").code(),
+            Some(7)
+        );
+        assert_eq!(
+            info.child_state_without_reaping()
+                .expect("failed to observe reaped child"),
+            PtyChildState::NotWaitable
+        );
+    }
 
     /// Regression test for <https://github.com/zed-industries/zed/issues/58651>:
     /// on Linux, sysinfo keeps an open `/proc/<pid>/stat` handle for every

@@ -25,6 +25,8 @@ use mappings::mouse::{
 use async_channel::{Receiver, Sender};
 use collections::{HashMap, VecDeque};
 use futures::StreamExt;
+#[cfg(target_os = "macos")]
+use pty_info::PtyChildState;
 use pty_info::{ProcessIdGetter, PtyProcessInfo};
 use serde::{Deserialize, Serialize};
 use settings::Settings;
@@ -34,6 +36,8 @@ use theme::{ActiveTheme, Theme};
 use urlencoding;
 use util::{ResultExt as _, paths::PathStyle, truncate_and_trailoff};
 
+#[cfg(target_os = "macos")]
+use std::io;
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 use std::{
@@ -82,6 +86,9 @@ use crate::mappings::keys::to_esc_str;
 /// completes when the whole app is quitting.
 const PROCESS_KILL_GRACE_PERIOD: Duration = Duration::from_millis(100);
 
+#[cfg(target_os = "macos")]
+const CHILD_EXIT_POLL_INTERVAL: Duration = Duration::from_millis(100);
+
 /// Sends SIGTERM to the terminal's shell and foreground process groups, and
 /// returns a future that SIGKILLs whatever survives [`PROCESS_KILL_GRACE_PERIOD`].
 /// Closing the PTY only delivers SIGHUP, and a foreground job that ignores
@@ -101,6 +108,68 @@ fn terminate_processes_with_grace_period(
         process_ids.kill();
         info.kill_child_process();
     }
+}
+
+#[cfg(target_os = "macos")]
+fn notify_child_exit_observers() -> io::Result<()> {
+    let result = unsafe { libc::kill(libc::getpid(), libc::SIGCHLD) };
+    if result == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn start_child_exit_watchdog(info: Arc<PtyProcessInfo>, cx: &Context<Terminal>) {
+    start_child_exit_watchdog_with(info, notify_child_exit_observers, cx);
+}
+
+#[cfg(target_os = "macos")]
+fn start_child_exit_watchdog_with(
+    info: Arc<PtyProcessInfo>,
+    notify: impl Fn() -> io::Result<()> + 'static,
+    cx: &Context<Terminal>,
+) {
+    cx.spawn(async move |terminal, cx| {
+        loop {
+            cx.background_executor()
+                .timer(CHILD_EXIT_POLL_INTERVAL)
+                .await;
+            let task_is_running = match terminal.read_with(cx, |terminal, _cx| {
+                terminal
+                    .task()
+                    .is_some_and(|task| task.status == TaskStatus::Running)
+            }) {
+                Ok(task_is_running) => task_is_running,
+                Err(_) => return,
+            };
+            if !task_is_running {
+                return;
+            }
+
+            match info.child_state_without_reaping() {
+                Ok(PtyChildState::Running) => continue,
+                Ok(PtyChildState::Exited) => {}
+                Ok(PtyChildState::NotWaitable) => return,
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => {
+                    log::warn!("failed to observe terminal child status: {error}");
+                    return;
+                }
+            }
+
+            // CEF creates unrelated child processes in Zed. If their SIGCHLD
+            // activity causes a PTY notification to be missed, send a fresh
+            // notification so Alacritty's existing owner can reap the child,
+            // drain the PTY, and emit the authoritative exit status.
+            if let Err(error) = notify() {
+                log::warn!("failed to notify terminal child exit observers: {error}");
+                return;
+            }
+        }
+    })
+    .detach();
 }
 
 /// Process-wide flag set by headless hosts (e.g. the eval CLI) that have no
@@ -1445,6 +1514,17 @@ impl TerminalBuilder {
             }
             anyhow::Ok(())
         });
+
+        #[cfg(target_os = "macos")]
+        if let TerminalType::Pty { info, .. } = &self.terminal.terminal_type
+            && self
+                .terminal
+                .task()
+                .is_some_and(|task| task.status == TaskStatus::Running)
+        {
+            start_child_exit_watchdog(info.clone(), cx);
+        }
+
         self.terminal
     }
 
@@ -3698,6 +3778,63 @@ mod tests {
             .unwrap();
         let terminal = cx.new(|cx| builder.subscribe(cx));
         (terminal, completion_rx)
+    }
+
+    #[cfg(target_os = "macos")]
+    #[gpui::test]
+    #[allow(
+        clippy::disallowed_methods,
+        reason = "the watchdog test needs a real child process whose exit is not delivered as a terminal event"
+    )]
+    async fn child_exit_watchdog_resignals_when_event_is_missing(cx: &mut TestAppContext) {
+        cx.executor().allow_parking();
+
+        let mut child = std::process::Command::new("/bin/sh")
+            .args(["-c", "exit 7"])
+            .spawn()
+            .expect("failed to spawn child process");
+        let process_info = Arc::new(PtyProcessInfo::new(ProcessIdGetter::new(-1, child.id())));
+        let (_completion_tx, completion_rx) = async_channel::unbounded();
+        let task_state = TaskState {
+            status: TaskStatus::Running,
+            completion_rx,
+            spawned_task: SpawnInTerminal::default(),
+        };
+        let (notification_tx, notification_rx) = async_channel::unbounded();
+
+        let terminal = cx.new(|cx| {
+            let mut builder = TerminalBuilder::new_display_only(
+                SettingsCursorShape::default(),
+                AlternateScroll::On,
+                None,
+                0,
+                cx.background_executor(),
+                PathStyle::local(),
+            );
+            builder.terminal.task = Some(task_state);
+            let terminal = builder.subscribe(cx);
+            start_child_exit_watchdog_with(
+                process_info,
+                move || notification_tx.try_send(()).map_err(io::Error::other),
+                cx,
+            );
+            terminal
+        });
+
+        let notification = notification_rx.recv().fuse();
+        let timeout = cx.background_executor.timer(Duration::from_secs(2)).fuse();
+        futures::pin_mut!(notification, timeout);
+        futures::select_biased! {
+            result = notification => result.expect("watchdog notification channel closed"),
+            _ = timeout => panic!("timed out waiting for the child exit watchdog"),
+        }
+
+        drop(terminal);
+        cx.update(|_| {});
+        assert_eq!(
+            child.wait().expect("child should still be waitable").code(),
+            Some(7)
+        );
     }
 
     #[test]
