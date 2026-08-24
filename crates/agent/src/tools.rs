@@ -1,6 +1,10 @@
 mod apply_code_action_tool;
+<<<<<<< HEAD
 mod ask_user_question_tool;
 mod browser_tool;
+=======
+mod ask_user_tool;
+>>>>>>> upstream/main
 mod context_server_registry;
 mod copy_path_tool;
 mod create_directory_tool;
@@ -74,8 +78,12 @@ where
 }
 
 pub use apply_code_action_tool::*;
+<<<<<<< HEAD
 pub use ask_user_question_tool::*;
 pub use browser_tool::*;
+=======
+pub use ask_user_tool::*;
+>>>>>>> upstream/main
 pub use context_server_registry::*;
 pub use copy_path_tool::*;
 pub use create_directory_tool::*;
@@ -202,8 +210,12 @@ macro_rules! tools {
 //    it never offers a tool the agent can't actually use.
 tools! {
     ApplyCodeActionTool,
+<<<<<<< HEAD
     AskUserQuestionTool,
     BrowserTool,
+=======
+    AskUserTool,
+>>>>>>> upstream/main
     CopyPathTool,
     CreateDirectoryTool,
     CreateThreadTool,

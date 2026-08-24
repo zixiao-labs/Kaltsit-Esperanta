@@ -21,4 +21,10 @@
 <key>NSSpeechRecognitionUsageDescription</key>
 <string>An application in ZetaCode wants to use speech recognition.</string>
 <key>NSRemindersUsageDescription</key>
+<<<<<<< HEAD
 <string>An application in ZetaCode wants to use your reminders.</string>
+=======
+<string>An application in Zed wants to use your reminders.</string>
+<key>NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac</key>
+<true/>
+>>>>>>> upstream/main

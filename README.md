@@ -59,6 +59,7 @@ We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automati
 
 Esperanta itself does not accept sponsorship. If you'd like to financially support the project this fork is built on, Zed Industries accepts sponsorship via GitHub Sponsors — funds go directly to Zed Industries as general company revenue, with no perks or entitlements.
 
+<<<<<<< HEAD
 ## Friendly Links
 
 - [Zed](https://github.com/zed-industries/zed) — the upstream this fork is based on.
@@ -83,3 +84,8 @@ This is out of respect for the open-source community. (Actually, an accident occ
 A: Only @Amiya167 and closure-bot.
 
 The other 1,846 people probably don't know they're here.
+=======
+If you’d like to financially support the project, you can do so via GitHub Sponsors.
+Sponsorships go directly to Zed Industries and are used as general company revenue.
+There are no perks or entitlements associated with sponsorship.
+>>>>>>> upstream/main

@@ -646,6 +646,17 @@ enum RemoveEntryTask {
     Delete(Task<Result<()>>),
 }
 
+struct RemovalPrompt {
+    message: String,
+    detail: Option<&'static str>,
+    confirmation_label: &'static str,
+}
+
+enum RemovalKind {
+    Trash,
+    Delete,
+}
+
 impl ProjectPanel {
     fn new(
         workspace: &mut Workspace,
@@ -1131,7 +1142,10 @@ impl ProjectPanel {
             };
 
             let has_pasteable_content = self.has_pasteable_content(cx);
+<<<<<<< HEAD
             let entity = cx.entity();
+=======
+>>>>>>> upstream/main
             let context_menu = ContextMenu::build(window, cx, |menu, _, _| {
                 menu.context(self.focus_handle.clone()).map(|menu| {
                     if is_read_only {
@@ -1169,6 +1183,7 @@ impl ProjectPanel {
                                 )
                             })
                             .separator()
+<<<<<<< HEAD
                             .action(tr!("Cut"), Box::new(Cut))
                             .action(tr!("Copy"), Box::new(Copy))
                             .action(tr!("Duplicate"), Box::new(Duplicate))
@@ -1177,12 +1192,23 @@ impl ProjectPanel {
                                 tr!("Paste"),
                                 Box::new(Paste),
                             )
+=======
+                            .action("Cut", Box::new(Cut))
+                            .action("Copy", Box::new(Copy))
+                            .action("Duplicate", Box::new(Duplicate))
+                            .action_disabled_when(!has_pasteable_content, "Paste", Box::new(Paste))
+>>>>>>> upstream/main
                             .when(!is_collab, |menu| {
                                 let can_undo = self.undo_manager.can_undo();
                                 let can_redo = self.undo_manager.can_redo();
 
+<<<<<<< HEAD
                                 menu.action_disabled_when(!can_undo, tr!("Undo"), Box::new(Undo))
                                     .action_disabled_when(!can_redo, tr!("Redo"), Box::new(Redo))
+=======
+                                menu.action_disabled_when(!can_undo, "Undo", Box::new(Undo))
+                                    .action_disabled_when(!can_redo, "Redo", Box::new(Redo))
+>>>>>>> upstream/main
                             })
                             .when(is_remote, |menu| {
                                 menu.separator()
@@ -1869,8 +1895,9 @@ impl ProjectPanel {
 
         let edit_task;
         let edited_entry_id;
-        let edited_entry;
         let new_project_path: ProjectPath;
+        let changes: Vec<Change>;
+
         if is_new_entry {
             self.selection = Some(SelectedEntry {
                 worktree_id,
@@ -1881,12 +1908,12 @@ impl ProjectPanel {
                 return None;
             }
 
-            edited_entry = None;
             edited_entry_id = NEW_ENTRY_ID;
             new_project_path = (worktree_id, new_path).into();
             edit_task = self.project.update(cx, |project, cx| {
                 project.create_entry(new_project_path.clone(), is_dir, cx)
             });
+            changes = vec![Change::Created(new_project_path)];
         } else {
             let new_path = if let Some(parent) = entry.path.parent() {
                 parent.join(&filename).into()
@@ -1900,11 +1927,31 @@ impl ProjectPanel {
                 return None;
             }
             edited_entry_id = entry.id;
-            edited_entry = Some(entry);
             new_project_path = (worktree_id, new_path).into();
+
+            // Before renaming, keep track of which directories will need to be
+            // created, so we can remove these when undoing.
+            let created_dirs = crate::undo::missing_parent_dirs(
+                worktree.read(cx),
+                worktree_id,
+                new_project_path.path.as_ref(),
+            );
+
             edit_task = self.project.update(cx, |project, cx| {
                 project.rename_entry(edited_entry_id, new_project_path.clone(), cx)
-            })
+            });
+
+            // Record the directory creations shallowest-first, then the rename,
+            // so undoing reverses them in the right order.
+            changes = created_dirs
+                .into_iter()
+                .rev()
+                .map(Change::DirCreated)
+                .chain(std::iter::once(Change::Renamed(
+                    (worktree_id, entry.path).into(),
+                    new_project_path,
+                )))
+                .collect();
         };
 
         if refocus {
@@ -1940,14 +1987,7 @@ impl ProjectPanel {
                         // changes in excluded paths, but that would mean updating
                         // methods that rely on `EntryId` to now rely on the actual
                         // paths.
-                        let operation = match edited_entry {
-                            Some(old_entry) => {
-                                let project_path = (worktree_id, old_entry.path).into();
-                                Change::Renamed(project_path, new_project_path)
-                            }
-                            None => Change::Created(new_project_path),
-                        };
-                        project_panel.undo_manager.record([operation]).log_err();
+                        project_panel.undo_manager.record(changes).log_err();
 
                         if let Some(selection) = &mut project_panel.selection
                             && selection.entry_id == edited_entry_id
@@ -2500,6 +2540,74 @@ impl ProjectPanel {
         });
     }
 
+    /// Builds the confirmation prompt shared by direct removal and undo/redo.
+    ///
+    /// The `names` slice must contain every path being removed, and this
+    /// function will apply markdown formatting and display truncation. The
+    /// `dirty_buffers` parameter should be the number of those paths that have
+    /// unsaved changes.
+    fn build_removal_prompt<S>(
+        kind: RemovalKind,
+        names: &[S],
+        dirty_buffers: usize,
+    ) -> RemovalPrompt
+    where
+        S: AsRef<str>,
+    {
+        let (message_start, confirmation_label, detail) = match kind {
+            RemovalKind::Trash => ("Do you want to trash", "Trash", None),
+            RemovalKind::Delete => (
+                "Are you sure you want to permanently delete",
+                "Delete",
+                Some("This cannot be undone."),
+            ),
+        };
+
+        let mut message = match names {
+            [name] => format!("{message_start} {}?", MarkdownInlineCode(name.as_ref())),
+            _ => {
+                const CUTOFF_POINT: usize = 10;
+                let mut listed_names = names
+                    .iter()
+                    .take(CUTOFF_POINT)
+                    .map(|name| MarkdownInlineCode(name.as_ref()).to_string())
+                    .collect::<Vec<_>>();
+                let omitted_count = names.len().saturating_sub(CUTOFF_POINT);
+                if omitted_count == 1 {
+                    listed_names.push(".. 1 file not shown".into());
+                } else if omitted_count > 1 {
+                    listed_names.push(format!(".. {omitted_count} files not shown"));
+                }
+
+                format!(
+                    "{message_start} the following {} files?\n{}",
+                    names.len(),
+                    listed_names.join("\n")
+                )
+            }
+        };
+        match dirty_buffers {
+            0 => {}
+            1 if names.len() == 1 => {
+                message.push_str("\n\nIt has unsaved changes, which will be lost.");
+            }
+            1 => {
+                message.push_str("\n\n1 of these has unsaved changes, which will be lost.");
+            }
+            dirty_buffers => {
+                message.push_str(&format!(
+                    "\n\n{dirty_buffers} of these have unsaved changes, which will be lost."
+                ));
+            }
+        }
+
+        RemovalPrompt {
+            message,
+            detail,
+            confirmation_label,
+        }
+    }
+
     // TODO(yara|dino): trashing and deleting are conceptually distinct, even
     // more so with the fact that trashing can now be undone, whereas deleting
     // cannot.
@@ -2538,6 +2646,7 @@ impl ProjectPanel {
                 return None;
             }
             let answer = if !skip_prompt {
+<<<<<<< HEAD
                 let operation = if trash { tr!("Trash") } else { tr!("Delete") };
                 let message_start = if trash {
                     tr!("Do you want to trash")
@@ -2611,6 +2720,26 @@ impl ProjectPanel {
                         PromptButton::new(operation),
                         PromptButton::cancel(tr!("Cancel")),
                     ],
+=======
+                let names = file_paths
+                    .iter()
+                    .map(|(_, _, name)| name.as_str())
+                    .collect::<Vec<_>>();
+
+                let removal_kind = if trash {
+                    RemovalKind::Trash
+                } else {
+                    RemovalKind::Delete
+                };
+
+                let prompt = Self::build_removal_prompt(removal_kind, &names, dirty_buffers);
+
+                Some(window.prompt(
+                    PromptLevel::Info,
+                    &prompt.message,
+                    prompt.detail,
+                    &[prompt.confirmation_label, "Cancel"],
+>>>>>>> upstream/main
                     cx,
                 ))
             } else {
