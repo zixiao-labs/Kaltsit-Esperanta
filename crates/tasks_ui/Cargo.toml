@@ -24,8 +24,11 @@ menu.workspace = true
 picker.workspace = true
 project.workspace = true
 task.workspace = true
+<<<<<<< HEAD
 settings.workspace = true
 serde.workspace = true
+=======
+>>>>>>> upstream/main
 tree-sitter.workspace = true
 tree-sitter-json.workspace = true
 ui.workspace = true

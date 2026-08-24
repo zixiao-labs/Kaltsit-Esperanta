@@ -984,8 +984,10 @@ fn appearance_page() -> SettingsPage {
                                 }
                                 settings::BufferLineHeightDiscriminants::Custom => {
                                     let custom_value =
-                                        theme_settings::BufferLineHeight::from(*settings_value)
-                                            .value();
+                                        theme_settings::buffer_line_height_from_settings(
+                                            *settings_value,
+                                        )
+                                        .value();
                                     settings::BufferLineHeight::Custom(custom_value)
                                 }
                             };
@@ -2355,6 +2357,7 @@ fn editor_page() -> SettingsPage {
                 metadata: None,
                 files: USER,
             }),
+<<<<<<< HEAD
             SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("Git Gutter Width"),
                 description: tr!(
@@ -2364,22 +2367,98 @@ fn editor_page() -> SettingsPage {
                     organization_override: None,
                     json_path: Some("gutter.git_gutter_width"),
                     pick: |settings_content| {
+=======
+            SettingsPageItem::DynamicItem(DynamicItem {
+                discriminant: SettingItem {
+                    title: "Git Gutter Width",
+                    description: "Width of the git diff indicators in the gutter. Default scales with the buffer font size.",
+                    field: Box::new(SettingField {
+                        organization_override: None,
+                        json_path: Some("gutter.git_gutter_width$"),
+                        pick: |settings_content| {
+                            Some(
+                                &dynamic_variants::<settings::GitGutterWidth>()[settings_content
+                                    .editor
+                                    .gutter
+                                    .as_ref()?
+                                    .git_gutter_width
+                                    .as_ref()?
+                                    .discriminant()
+                                    as usize],
+                            )
+                        },
+                        write: |settings_content, value, _| {
+                            let gutter = settings_content.editor.gutter.get_or_insert_default();
+                            gutter.git_gutter_width = value.map(|value| match value {
+                                settings::GitGutterWidthDiscriminants::Default => {
+                                    settings::GitGutterWidth::Default
+                                }
+                                settings::GitGutterWidthDiscriminants::Custom => {
+                                    let width = match gutter.git_gutter_width {
+                                        Some(settings::GitGutterWidth::Custom(width)) => {
+                                            settings::PixelSetting(*width)
+                                        }
+                                        _ => settings::PixelSetting(3.0),
+                                    };
+                                    settings::GitGutterWidth::Custom(width)
+                                }
+                            });
+                        },
+                    }),
+                    metadata: None,
+                    files: USER,
+                },
+                pick_discriminant: |settings_content| {
+                    Some(
+>>>>>>> upstream/main
                         settings_content
                             .editor
                             .gutter
-                            .as_ref()
-                            .and_then(|gutter| gutter.git_gutter_width.as_ref())
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .editor
-                            .gutter
-                            .get_or_insert_default()
-                            .git_gutter_width = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
+                            .as_ref()?
+                            .git_gutter_width
+                            .as_ref()?
+                            .discriminant() as usize,
+                    )
+                },
+                fields: dynamic_variants::<settings::GitGutterWidth>()
+                    .into_iter()
+                    .map(|variant| match variant {
+                        settings::GitGutterWidthDiscriminants::Default => vec![],
+                        settings::GitGutterWidthDiscriminants::Custom => vec![SettingItem {
+                            files: USER,
+                            title: "Custom Width",
+                            description: "Width in pixels of the git diff indicators.",
+                            field: Box::new(SettingField {
+                                organization_override: None,
+                                json_path: Some("gutter.git_gutter_width"),
+                                pick: |settings_content| match settings_content
+                                    .editor
+                                    .gutter
+                                    .as_ref()
+                                    .and_then(|gutter| gutter.git_gutter_width.as_ref())
+                                {
+                                    Some(settings::GitGutterWidth::Custom(value)) => Some(value),
+                                    _ => None,
+                                },
+                                write: |settings_content, value, _| {
+                                    let Some(value) = value else {
+                                        return;
+                                    };
+                                    if let Some(settings::GitGutterWidth::Custom(width)) =
+                                        settings_content
+                                            .editor
+                                            .gutter
+                                            .as_mut()
+                                            .and_then(|gutter| gutter.git_gutter_width.as_mut())
+                                    {
+                                        *width = value;
+                                    }
+                                },
+                            }),
+                            metadata: None,
+                        }],
+                    })
+                    .collect(),
             }),
             SettingsPageItem::SettingItem(SettingItem {
                 title: tr!("Inline Code Actions"),
@@ -3813,7 +3892,7 @@ fn search_and_files_page() -> SettingsPage {
         ]
     }
 
-    fn file_scan_section() -> [SettingsPageItem; 6] {
+    fn file_scan_section() -> [SettingsPageItem; 7] {
         [
             SettingsPageItem::SectionHeader(tr!("File Scan")),
             SettingsPageItem::SettingItem(SettingItem {
@@ -3867,8 +3946,29 @@ fn search_and_files_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Scan Symbolic Links"),
                 description: tr!("When to scan content of linked directories"),
+=======
+                title: "File Scan Depth",
+                description: "Maximum directory depth to eagerly index outside of git repositories; contents of directories at this depth or deeper are indexed on demand. Repositories rooted shallower than this depth are always indexed fully. In projects that are not rooted at a git repository, repositories directly inside a root folder activate their git features immediately; deeper ones activate on first use. 0 means no limit and activates all git repositories immediately",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("file_scan_depth"),
+                    pick: |settings_content| {
+                        settings_content.project.worktree.file_scan_depth.as_ref()
+                    },
+                    write: |settings_content, value, _| {
+                        settings_content.project.worktree.file_scan_depth = value;
+                    },
+                }),
+                metadata: None,
+                files: USER | PROJECT,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Scan Symbolic Links",
+                description: "When to scan content of linked directories",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     json_path: Some("scan_symlinks"),
                     organization_override: None,
@@ -4960,7 +5060,7 @@ fn window_and_layout_page() -> SettingsPage {
         ]
     }
 
-    fn window_section() -> [SettingsPageItem; 3] {
+    fn window_section() -> [SettingsPageItem; 4] {
         [
             SettingsPageItem::SectionHeader(tr!("Window")),
             // todo(settings_ui): Should we filter by platform.as_ref()?
@@ -4981,10 +5081,29 @@ fn window_and_layout_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Window Decorations"),
                 description: tr!(
                     "(Linux only) whether Zed or your compositor should draw window decorations."
                 ),
+=======
+                title: "Fullscreen Mode",
+                description: "(macOS only) which fullscreen mode the toggle fullscreen action enters.",
+                field: Box::new(SettingField {
+                    organization_override: None,
+                    json_path: Some("fullscreen_mode"),
+                    pick: |settings_content| settings_content.workspace.fullscreen_mode.as_ref(),
+                    write: |settings_content, value, _| {
+                        settings_content.workspace.fullscreen_mode = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "Window Decorations",
+                description: "(Linux only) whether Zed or your compositor should draw window decorations.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("window_decorations"),
@@ -5823,8 +5942,13 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Starts Open"),
                 description: tr!("Whether the terminal panel should open on startup."),
+=======
+                title: "Starts Open",
+                description: "Whether the terminal panel should open on startup.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.starts_open"),
@@ -5842,10 +5966,15 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Terminal Panel Flexible Sizing"),
                 description: tr!(
                     "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right."
                 ),
+=======
+                title: "Terminal Panel Flexible Sizing",
+                description: "Whether the terminal panel should use flexible (proportional) sizing when docked to the left or right.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("terminal.flexible"),
@@ -6142,8 +6271,13 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Starts Open"),
                 description: tr!("Whether the git panel should open on startup."),
+=======
+                title: "Starts Open",
+                description: "Whether the git panel should open on startup.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.starts_open"),
@@ -6161,8 +6295,13 @@ fn panels_page() -> SettingsPage {
                 files: USER,
             }),
             SettingsPageItem::SettingItem(SettingItem {
+<<<<<<< HEAD
                 title: tr!("Git Panel Default Width"),
                 description: tr!("Default width of the Git panel in pixels."),
+=======
+                title: "Git Panel Default Width",
+                description: "Default width of the Git panel in pixels.",
+>>>>>>> upstream/main
                 field: Box::new(SettingField {
                     organization_override: None,
                     json_path: Some("git_panel.default_width"),

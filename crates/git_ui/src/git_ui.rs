@@ -60,6 +60,7 @@ pub mod unstaged_diff;
 pub use blame_ui::GitBlameStatus;
 pub use conflict_view::MergeConflictIndicator;
 
+<<<<<<< HEAD
 pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Entity<Editor>> {
     workspace
         .active_item_as::<ProjectDiff>(cx)
@@ -81,6 +82,8 @@ pub fn active_diff_review_editor(workspace: &Workspace, cx: &App) -> Option<Enti
         })
 }
 
+=======
+>>>>>>> upstream/main
 pub fn init(cx: &mut App) {
     editor::set_blame_renderer(blame_ui::GitBlameRenderer, cx);
     commit_view::init(cx);
@@ -274,6 +277,22 @@ pub fn init(cx: &mut App) {
             };
             panel.update(cx, |panel, cx| {
                 panel.stash_all(action, window, cx);
+            });
+        });
+        workspace.register_action(|workspace, action: &git::StashStaged, window, cx| {
+            let Some(panel) = workspace.panel::<git_panel::GitPanel>(cx) else {
+                return;
+            };
+            panel.update(cx, |panel, cx| {
+                panel.stash_staged(action, window, cx);
+            });
+        });
+        workspace.register_action(|workspace, action: &git::StashTracked, window, cx| {
+            let Some(panel) = workspace.panel::<git_panel::GitPanel>(cx) else {
+                return;
+            };
+            panel.update(cx, |panel, cx| {
+                panel.stash_tracked(action, window, cx);
             });
         });
         workspace.register_action(|workspace, action: &git::StashPop, window, cx| {

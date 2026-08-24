@@ -108,7 +108,7 @@ impl MouseContextMenu {
             }
         });
 
-        let selection_init = editor.selections.newest_anchor().clone();
+        let selection_init = *editor.selections.newest_anchor();
 
         let _cursor_move_subscription = cx.subscribe_in(
             &cx.entity(),
@@ -257,9 +257,18 @@ pub fn deploy_context_menu(
                     run_to_cursor || (evaluate_selection && has_selections),
                     |builder| builder.separator(),
                 )
+<<<<<<< HEAD
                 .action(tr!("Go to Definition"), Box::new(GoToDefinition::default()))
                 .action(tr!("Go to Declaration"), Box::new(GoToDeclaration))
                 .action(tr!("Go to Type Definition"), Box::new(GoToTypeDefinition))
+=======
+                .action("Go to Definition", Box::new(GoToDefinition::default()))
+                .action("Go to Declaration", Box::new(GoToDeclaration::default()))
+                .action(
+                    "Go to Type Definition",
+                    Box::new(GoToTypeDefinition::default()),
+                )
+>>>>>>> upstream/main
                 .action(
                     tr!("Go to Implementation"),
                     Box::new(GoToImplementation::default()),
